@@ -1,9 +1,9 @@
 {
   "dependencies": {
-    "ai": "^4.0.31",
     "csv-parse": "^5.6.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.77.4",
+    "openai-edge": "^1.2.2",
     "react-calendly": "^4.3.1",
     "tailwindcss": "^3.4.17"
   },
