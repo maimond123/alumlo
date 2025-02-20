@@ -56,10 +56,6 @@ export function ChartContainer({ children, className }: { children: React.ReactN
   )
 }
 
-export function ChartTooltip({ content }: { content: React.ReactNode }) {
-  return <Tooltip content={content} />
-}
-
 export function ChartTooltipContent({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) {
   if (active && payload && payload.length) {
     return (
@@ -99,7 +95,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
             axisLine={true}
             tickFormatter={(value) => `${value}`}
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
             fill={COLORS[0]} 
@@ -122,7 +118,7 @@ export function LineChart({ data, isZoomed = false }: ChartProps) {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <Tooltip content={<ChartTooltipContent />} />
             </>
           )}
           <Line type="monotone" dataKey="value" stroke={COLORS[0]} strokeWidth={2} dot={{ r: 4 }} isAnimationActive={isZoomed} />
@@ -211,7 +207,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
               />
             ))}
           </Pie>
-          {isZoomed && <ChartTooltip content={<ChartTooltipContent />} />}
+          {isZoomed && <Tooltip content={<ChartTooltipContent />} />}
         </RechartsPieChart>
       </ResponsiveContainer>
     </ChartContainer>
@@ -246,7 +242,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
             fill={COLORS[0]} 
@@ -304,4 +300,6 @@ export const IndustryPieChart: React.FC<IndustryPieChartProps> = ({ data, isZoom
     </ResponsiveContainer>
   );
 };
+
+
 

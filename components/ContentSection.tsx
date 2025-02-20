@@ -15,7 +15,7 @@ interface ContentSectionProps {
 export default function ContentSection({ title, description, children, reversed = false, iconName }: ContentSectionProps) {
   const ref = useRef<HTMLDivElement>(null)
   const isIntersecting = useIntersectionObserver(ref)
-  const Icon = Icons[iconName]
+  const Icon = Icons[iconName] as React.ElementType
 
   return (
     <section 
