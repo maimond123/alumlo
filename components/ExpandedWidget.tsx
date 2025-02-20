@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { ChartData, getChartById } from '../app/data/chartData';
 import { BarChart, LineChart, PieChart } from '../components/chart';
-import ChatBot from './ChatBot';
 
 interface ExpandedWidgetProps {
   widgetId: string;
@@ -75,7 +74,6 @@ const ExpandedWidget: React.FC<ExpandedWidgetProps> = ({ widgetId, onClose }) =>
         <div className="h-[400px] mb-4">
           {renderChart()}
         </div>
-        <ChatBot chartId={widgetId} />
       </motion.div>
     </motion.div>
   );
