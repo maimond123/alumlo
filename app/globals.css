@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your custom styles go here */
+
+@keyframes typing {
+    0% { opacity: .2; }
+    20% { opacity: 1; }
+    100% { opacity: .2; }
+  }
+  
+  .typing-indicator {
+    position: relative;
+  }
+  
+  .typing-indicator::after {
+    content: '...';
+    position: absolute;
+    right: -12px;
+    animation: typing 1.5s infinite;
+  }
