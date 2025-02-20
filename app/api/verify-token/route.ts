@@ -3,9 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client
 const supabase = createClient(
-  "https://cxqxzmcvzzwtqkqoyuti.supabase.co",
-  "REMOVED_CREDENTIAL"
-
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 export async function POST(req: Request) {

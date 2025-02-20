@@ -3,6 +3,7 @@
 import { Send } from 'lucide-react'
 import { useRef, useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { ChartData } from '../app/data/chartData'
+import OpenAI from 'openai'
 
 interface ChatBotProps {
   chartId: string
@@ -13,6 +14,10 @@ interface Message {
   role: 'system' | 'user' | 'assistant'
   content: string
 }
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || ''
+})
 
 const ChatBot: React.FC<ChatBotProps> = ({ chartId, chartData }) => {
   const [messages, setMessages] = useState<Message[]>([])
