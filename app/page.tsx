@@ -17,8 +17,8 @@ export default function Home() {
 
       <main className="pt-16 relative z-10">
         <Hero />
-
-        <ContentSection
+{/* 
+        <ContentSectionx
           title="Elevate Your School's Marketing"
           description="Showcase your school's superiority with compelling data visualizations."
           iconName="BarChart"
@@ -50,8 +50,9 @@ export default function Home() {
             <h2 className="text-4xl font-bold text-center text-emerald-800 mb-12">The AlumIntel Advantage</h2>
             <Stats />
           </div>
-        </section>
+        </section> */}
 
+        {/* Temporarily removed ContentSection components
         <ContentSection
           title="AI-Powered Insights"
           description="Uncover trends and get recommendations with our advanced AI chatbot."
@@ -86,6 +87,8 @@ export default function Home() {
             Start Your Data Journey
           </a>
         </ContentSection>
+        */}
+
       </main>
 
       <Footer />
