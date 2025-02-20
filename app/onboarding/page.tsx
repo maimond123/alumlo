@@ -35,7 +35,7 @@ export default function Onboarding() {
     try {
       console.log("Token being verified:", token);
 
-      const response = await fetch("http://localhost:3001/verify-token", {
+      const response = await fetch("/api/verify-token", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

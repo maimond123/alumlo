@@ -1,4 +1,5 @@
 import './globals.css'
+import './aws-config'
 import { Inter } from 'next/font/google'
 import { SidebarProvider } from '@/components/SidebarProvider'
 
