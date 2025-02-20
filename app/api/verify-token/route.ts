@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import jwt from 'jsonwebtoken'
+import { verify } from 'jsonwebtoken'
 
 const JWT_SECRET = 'REMOVED_CREDENTIAL'
 
@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { token } = await req.json()
 
     // Verify the JWT token
-    const payload = jwt.verify(token, JWT_SECRET) as { email: string }
+    const payload = verify(token, JWT_SECRET) as { email: string }
     
     return NextResponse.json({
       valid: true,

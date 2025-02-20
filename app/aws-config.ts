@@ -1,4 +1,4 @@
-import { Amplify } from 'aws-amplify';
+import { Amplify } from '@aws-amplify/core';
 
 if (!process.env.NEXT_PUBLIC_AWS_REGION || 
     !process.env.NEXT_PUBLIC_USER_POOL_ID || 
