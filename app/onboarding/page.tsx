@@ -33,39 +33,34 @@ export default function Onboarding() {
 
   const verifyToken = async (token: string) => {
     try {
-      console.log("Token being verified:", token);
-
-      const response = await fetch("/api/verify-token", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ token }),
-      })
-
-      console.log("Raw response:", response);
-      const data = await response.json()
-      console.log("Parsed verification response:", data);
+      // Call our API route to verify the token
+      const response = await fetch('/api/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
       
-      if (!data.valid) {
-        throw new Error(data.error || "Invalid token")
+      const data = await response.json();
+      
+      if (data.valid) {
+        setIsTokenValid(true);
+        setEmail(data.email);
+      } else {
+        throw new Error(data.message);
       }
-
-      setIsTokenValid(true)
-      setEmail(data.email)
     } catch (error) {
-      console.error("Full error details:", error)
-      setError(error instanceof Error ? error.message : "Token verification failed")
+      console.error("Token verification failed:", error);
+      setError(error instanceof Error ? error.message : "Token verification failed");
+      setIsTokenValid(false);
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setIsSubmitting(true)
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long")
@@ -81,22 +76,26 @@ export default function Onboarding() {
 
     try {
       if (!email) {
-        throw new Error("Email not found")
+        throw new Error("Email not found");
       }
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email,
-        password: password
-      })
+      const { signUp } = await import('@aws-amplify/auth');
+      await signUp({
+        username: email,
+        password: password,
+        options: {
+          userAttributes: {
+            email: email
+          }
+        }
+      });
 
-      if (signUpError) throw signUpError
-
-      router.push("/data-insights")
+      router.push("/dashboard");
     } catch (error: any) {
-      console.error("Signup error:", error)
-      setError(error.message || "Failed to complete signup")
+      console.error("Signup error:", error);
+      setError(error.message || "Failed to complete signup");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 

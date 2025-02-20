@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Search, RefreshCw, Info } from "lucide-react"
 import { chartData, type ChartData, fetchChartData } from "../data/chartData"
 import { BarChart, LineChart, PieChart } from "../../components/chart"
-import ChartScreen from "../../components/ChartScreen"
+// import ChartScreen from "../../components/ChartScreen"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -207,9 +207,12 @@ export default function DataInsightsPage() {
           </button>
         </div>
 
+        {/* Comment out this section */}
+        {/*
         <AnimatePresence>
           {selectedChart && <ChartScreen chart={selectedChart} onClose={() => setSelectedChart(null)} />}
         </AnimatePresence>
+        */}
       </main>
     </div>
   )

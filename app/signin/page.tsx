@@ -43,7 +43,7 @@ export default function SignIn() {
       if (data?.user) {
         console.log('Successfully signed in user:', data.user)
         console.log('Redirecting to data-insights...')
-        router.push('/data-insights')
+        router.push('/dashboard')
       } else {
         console.warn('No user data received despite successful sign in')
       }

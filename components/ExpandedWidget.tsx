@@ -65,7 +65,7 @@ const ExpandedWidget: React.FC<ExpandedWidgetProps> = ({ widgetId, onClose }) =>
             placeholder="Search within this graph..."
             className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={(e) => {
-              // Implement local search functionality here
+              // Implement search functionality here
               // This could filter the data points or highlight relevant information
             }}
             aria-label="Search within this graph"

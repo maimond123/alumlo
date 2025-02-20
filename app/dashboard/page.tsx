@@ -38,10 +38,17 @@ export default function DashboardPage() {
           }
 
           if (data?.school_name) {
-            // Remove common prefixes like "The" and trim whitespace
-            const cleanedName = data.school_name
+            let cleanedName = data.school_name
               .replace(/^The\s+/i, '')
+              .replace(/\s+School$/i, '')
               .trim()
+            
+            // Capitalize first letter of each word
+            cleanedName = cleanedName
+              .split(' ')
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ')
+
             setSchoolName(cleanedName)
           }
         }
@@ -65,7 +72,7 @@ export default function DashboardPage() {
         {/* Main Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Explore your {schoolName} Data
+            Explore {schoolName} Alumni Data
           </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-6">
