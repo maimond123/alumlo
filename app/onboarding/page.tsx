@@ -7,6 +7,25 @@ import { Loader2, XCircle, Eye, EyeOff } from "lucide-react"
 import { supabase } from "../data/supabase"
 import Image from "next/image"
 import type React from "react"
+import { Amplify } from 'aws-amplify';
+import type { ResourcesConfig } from 'aws-amplify';
+
+// Configure Amplify at the start of the component
+console.log('Onboarding: Configuring AWS Amplify');
+const config: ResourcesConfig = {
+  Auth: {
+    Cognito: {
+      userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID!,
+      userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID!,
+      loginWith: {
+        username: true
+      }
+    }
+  }
+};
+
+console.log('AWS Config:', config);
+Amplify.configure(config);
 
 export default function Onboarding() {
   const router = useRouter()
@@ -61,6 +80,8 @@ export default function Onboarding() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
+    console.log('Attempting signup with config:', config);
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long")
