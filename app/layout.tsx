@@ -1,5 +1,25 @@
 import './globals.css'
+import { Amplify } from 'aws-amplify';
+import type { ResourcesConfig } from 'aws-amplify';
+
+// Immediate configuration
+console.log('Layout: Configuring AWS Amplify');
+const config: ResourcesConfig = {
+  Auth: {
+    Cognito: {
+      userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID!,
+      userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID!,
+      loginWith: {
+        username: true
+      }
+    }
+  }
+};
+
+Amplify.configure(config);
+
 import './aws-config'
+console.log('Layout: Finished importing aws-config');
 import { Inter } from 'next/font/google'
 import { SidebarProvider } from '@/components/SidebarProvider'
 

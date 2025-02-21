@@ -1,3 +1,8 @@
+// Immediate execution check
+console.log('==========================================');
+console.log('AWS CONFIG FILE IS BEING EXECUTED');
+console.log('==========================================');
+
 import { Amplify } from 'aws-amplify';
 import type { ResourcesConfig } from 'aws-amplify';
 
