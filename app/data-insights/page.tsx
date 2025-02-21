@@ -14,6 +14,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
+import { getCurrentUser, signOut } from '@aws-amplify/auth'
 
 interface UserInfo {
   first_name: string
@@ -58,15 +59,13 @@ export default function DataInsightsPage() {
         }
 
         // Get user info
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
+        const { username: userEmail } = await getCurrentUser()
 
-        if (user?.email) {
+        if (userEmail) {
           const { data, error } = await supabase
             .from("customer_information")
             .select("first_name, last_name")
-            .eq("school_email", user.email)
+            .eq("school_email", userEmail)
             .single()
 
           if (error) {

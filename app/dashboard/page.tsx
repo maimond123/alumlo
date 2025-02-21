@@ -17,33 +17,50 @@ const suggestionTags = [
 ]
 
 export default function DashboardPage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { tableId, schoolName } = useSchool()
   const [schoolData, setSchoolData] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
 
   useEffect(() => {
-    const fetchSchoolData = async () => {
-      if (!tableId) return
-
+    const fetchData = async () => {
       try {
-        setLoading(true)
-        const { data, error } = await supabase
-          .from(`${tableId}_data`)  // e.g., "seton_hall_preparatory_data"
+        setIsLoading(true)
+        setError(null)
+
+        // Debug logs
+        console.log("TableId:", tableId)
+        console.log("SchoolName:", schoolName)
+
+        if (!tableId) {
+          console.log("No tableId available")
+          setError("School information not found")
+          return
+        }
+
+        const { data, error: supabaseError } = await supabase
+          .from(`${tableId}_data`)
           .select('*')
 
-        if (error) throw error
+        if (supabaseError) {
+          console.error("Supabase error:", supabaseError)
+          throw supabaseError
+        }
 
+        console.log("Fetched data:", data)
         setSchoolData(data || [])
-      } catch (error) {
-        console.error('Error fetching school data:', error)
+
+      } catch (err) {
+        console.error("Error in fetchData:", err)
+        setError(err instanceof Error ? err.message : "An error occurred")
       } finally {
-        setLoading(false)
+        setIsLoading(false)
       }
     }
 
-    fetchSchoolData()
+    fetchData()
   }, [tableId])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -51,7 +68,21 @@ export default function DashboardPage() {
     console.log("Searching for:", searchQuery)
   }
 
-  if (loading) return <div>Loading...</div>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">

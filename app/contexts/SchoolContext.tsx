@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '../data/supabase'
 import { normalizeSchoolName } from '../../components/schoolNameUtils'
+import { getCurrentUser } from '@aws-amplify/auth'
 
 interface SchoolContextType {
   schoolName: string | null  // Original school name for display
@@ -22,12 +23,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const getSchoolInfo = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email) {
+      const { username: userEmail } = await getCurrentUser()
+      if (userEmail) {
         const { data } = await supabase
           .from('customer_information')
           .select('school_name, table_name')
-          .eq('school_email', user.email)
+          .eq('school_email', userEmail)
           .single()
         
         if (data) {

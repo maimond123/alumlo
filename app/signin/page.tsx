@@ -5,8 +5,8 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
 import NetworkVisualization from '../../components/network-visualization-1'
-import { supabase } from '../data/supabase'
 import { useRouter } from 'next/navigation'
+import { signIn } from '@aws-amplify/auth'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -19,41 +19,44 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log('Starting sign in process...')
-    console.log('Email:', email)
-    console.log('Password length:', password.length)
     
     setIsLoading(true)
     setError(null)
 
     try {
-      console.log('Attempting to sign in with Supabase...')
+      console.log('Attempting to sign in with Cognito...')
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { isSignedIn, nextStep } = await signIn({
+        username: email,
+        password
       })
 
-      console.log('Supabase response:', { data, error })
+      console.log('Cognito response:', { isSignedIn, nextStep })
 
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-
-      if (data?.user) {
-        console.log('Successfully signed in user:', data.user)
-        console.log('Redirecting to data-insights...')
+      if (isSignedIn) {
+        console.log('Successfully signed in user')
+        console.log('Redirecting to dashboard...')
         router.push('/dashboard')
       } else {
-        console.warn('No user data received despite successful sign in')
+        console.warn('Sign in not completed:', nextStep)
+        // Handle additional auth steps if needed
+        if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+          setError('Please reset your password')
+          // Add logic to handle password reset if needed
+        }
       }
 
     } catch (error: any) {
-      console.error('Full error object:', error)
-      console.error('Error name:', error.name)
-      console.error('Error message:', error.message)
-      console.error('Error stack:', error.stack)
-      setError(error.message || 'Failed to sign in')
+      console.error('Sign in error:', error)
+      if (error.name === 'NotAuthorizedException') {
+        setError('Incorrect email or password')
+      } else if (error.name === 'UserNotFoundException') {
+        setError('No account found with this email')
+      } else if (error.name === 'UserNotConfirmedException') {
+        setError('Please verify your email address')
+      } else {
+        setError(error.message || 'Failed to sign in')
+      }
     } finally {
       console.log('Sign in process completed')
       setIsLoading(false)

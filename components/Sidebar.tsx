@@ -9,6 +9,7 @@ import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { useRouter } from 'next/navigation'
+import { getCurrentUser, signOut } from '@aws-amplify/auth'
 
 interface UserInfo {
   first_name: string;
@@ -25,14 +26,14 @@ export default function Sidebar() {
     const getUserInfo = async () => {
       try {
         // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
+        const { username: userEmail } = await getCurrentUser()
         
-        if (user?.email) {
+        if (userEmail) {
           // Fetch user info from customer_information table using school_email
           const { data, error } = await supabase
             .from('customer_information')
             .select('first_name, last_name, school_name')
-            .eq('school_email', user.email)
+            .eq('school_email', userEmail)
             .single()
 
           if (error) {
@@ -63,17 +64,10 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('Error signing out:', error.message)
-        return
-      }
-      
-      // Redirect to home page after successful logout
+      await signOut()
       router.push('/')
-      
     } catch (error) {
-      console.error('Unexpected error during sign out:', error)
+      console.error('Error signing out:', error)
     }
   }
 
