@@ -27,23 +27,21 @@ export default function SignIn() {
     try {
       console.log('Attempting to sign in with Cognito...')
       
-      const { isSignedIn, nextStep } = await signIn({
+      const signInResult = await signIn({
         username: email,
-        password
+        password: password,
       })
 
-      console.log('Cognito response:', { isSignedIn, nextStep })
+      console.log('Cognito response:', signInResult)
 
-      if (isSignedIn) {
+      if (signInResult.isSignedIn) {
         console.log('Successfully signed in user')
         console.log('Redirecting to dashboard...')
         router.push('/dashboard')
       } else {
-        console.warn('Sign in not completed:', nextStep)
-        // Handle additional auth steps if needed
-        if (nextStep.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        console.warn('Sign in not completed:', signInResult.nextStep)
+        if (signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
           setError('Please reset your password')
-          // Add logic to handle password reset if needed
         }
       }
 
