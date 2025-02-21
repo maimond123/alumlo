@@ -23,6 +23,8 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [confirmationCode, setConfirmationCode] = useState("")
 
   useEffect(() => {
     const token = searchParams.get("token")
@@ -81,8 +83,7 @@ export default function Onboarding() {
       if (!email) {
         throw new Error("Email not found");
       }
-
-      // First, sign up with Cognito
+      
       const { signUp } = await import('aws-amplify/auth');
       await signUp({
         username: email,
@@ -90,9 +91,35 @@ export default function Onboarding() {
         options: {
           userAttributes: {
             email: email
-          },
-          autoSignIn: true // Enable auto sign-in after sign-up
+          }
         }
+      });
+
+      setShowConfirmation(true); // Show confirmation code input
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      if (error.name === 'UsernameExistsException') {
+        setError("An account with this email already exists. Please sign in instead.");
+      } else {
+        setError(error.message || "Failed to complete signup");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (!email) throw new Error("Email not found");
+
+      const { confirmSignUp } = await import('aws-amplify/auth');
+      await confirmSignUp({
+        username: email,
+        confirmationCode: confirmationCode
       });
 
       // Update user status in Supabase
@@ -104,18 +131,13 @@ export default function Onboarding() {
         .eq('school_email', email);
 
       if (supabaseError) {
-        console.error('Error updating account status:', supabaseError);
         throw new Error('Failed to update account status');
       }
 
       router.push("/dashboard");
     } catch (error: any) {
-      console.error("Signup error:", error);
-      if (error.name === 'UsernameExistsException') {
-        setError("An account with this email already exists. Please sign in instead.");
-      } else {
-        setError(error.message || "Failed to complete signup");
-      }
+      console.error("Confirmation error:", error);
+      setError(error.message || "Failed to confirm signup");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +183,7 @@ export default function Onboarding() {
           <h2 className="mt-4 text-2xl font-semibold text-gray-700">Complete Your Account Setup</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={showConfirmation ? handleConfirmation : handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -175,51 +197,70 @@ export default function Onboarding() {
             />
           </div>
 
-          <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Create Password
-            </label>
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-            </button>
-          </div>
+          {!showConfirmation ? (
+            <>
+              <div className="relative">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Create Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                </button>
+              </div>
 
-          <div className="relative">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-              Confirm Password
-            </label>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400" />
-              )}
-            </button>
-          </div>
+              <div className="relative">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div>
+              <label htmlFor="confirmationCode" className="block text-sm font-medium text-gray-700">
+                Confirmation Code
+              </label>
+              <input
+                type="text"
+                id="confirmationCode"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                required
+                placeholder="Enter the code sent to your email"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              />
+            </div>
+          )}
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -232,10 +273,10 @@ export default function Onboarding() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  Setting up...
+                  {showConfirmation ? "Confirming..." : "Setting up..."}
                 </>
               ) : (
-                "Complete Setup"
+                showConfirmation ? "Confirm Account" : "Complete Setup"
               )}
             </button>
           </div>
