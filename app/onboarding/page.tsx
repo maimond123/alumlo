@@ -90,7 +90,8 @@ export default function Onboarding() {
         options: {
           userAttributes: {
             email: email
-          }
+          },
+          autoSignIn: true // Enable auto sign-in after sign-up
         }
       });
 
