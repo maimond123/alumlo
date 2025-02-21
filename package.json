@@ -9,11 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-amplify/auth": "^5.5.4",
+    "@aws-amplify/auth": "^6.0.12",
     "@supabase/supabase-js": "^2.48.1",
     "@types/jsonwebtoken": "^9.0.8",
     "ai": "^4.0.31",
-    "aws-amplify": "^5.3.12",
+    "aws-amplify": "^6.0.12",
     "chart.js": "^4.4.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
