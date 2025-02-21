@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 interface UserInfo {
   first_name: string;
   last_name: string;
+  school_name: string;
 }
 
 export default function Sidebar() {
@@ -30,7 +31,7 @@ export default function Sidebar() {
           // Fetch user info from customer_information table using school_email
           const { data, error } = await supabase
             .from('customer_information')
-            .select('first_name, last_name')
+            .select('first_name, last_name, school_name')
             .eq('school_email', user.email)
             .single()
 

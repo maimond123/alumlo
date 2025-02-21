@@ -81,8 +81,6 @@ export default function Onboarding() {
     setError(null);
     setIsSubmitting(true);
 
-    console.log('Attempting signup with config:', config);
-
     if (password.length < 8) {
       setError("Password must be at least 8 characters long")
       setIsSubmitting(false)
@@ -100,6 +98,7 @@ export default function Onboarding() {
         throw new Error("Email not found");
       }
 
+      // First, sign up with Cognito
       const { signUp } = await import('@aws-amplify/auth');
       await signUp({
         username: email,
@@ -111,10 +110,27 @@ export default function Onboarding() {
         }
       });
 
+      // Update user status in Supabase
+      const { error: supabaseError } = await supabase
+        .from('customer_information')
+        .update({ 
+          account_status: 'active'
+        })
+        .eq('school_email', email);
+
+      if (supabaseError) {
+        console.error('Error updating account status:', supabaseError);
+        throw new Error('Failed to update account status');
+      }
+
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Signup error:", error);
-      setError(error.message || "Failed to complete signup");
+      if (error.name === 'UsernameExistsException') {
+        setError("An account with this email already exists. Please sign in instead.");
+      } else {
+        setError(error.message || "Failed to complete signup");
+      }
     } finally {
       setIsSubmitting(false);
     }

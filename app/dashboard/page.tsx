@@ -7,6 +7,7 @@ import NetworkVisualization from "../../components/network-visualization-2"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
+import { useSchool } from "../contexts/SchoolContext"
 
 const suggestionTags = [
   "Working on AI at FAANG",
@@ -16,54 +17,41 @@ const suggestionTags = [
 ]
 
 export default function DashboardPage() {
+  const { tableId, schoolName } = useSchool()
+  const [schoolData, setSchoolData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
-  const [schoolName, setSchoolName] = useState("")
 
   useEffect(() => {
-    const getSchoolName = async () => {
+    const fetchSchoolData = async () => {
+      if (!tableId) return
+
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (user?.email) {
-          const { data, error } = await supabase
-            .from('customer_information')
-            .select('school_name')
-            .eq('school_email', user.email)
-            .single()
+        setLoading(true)
+        const { data, error } = await supabase
+          .from(`${tableId}_data`)  // e.g., "seton_hall_preparatory_data"
+          .select('*')
 
-          if (error) {
-            console.error('Error fetching school name:', error)
-            return
-          }
+        if (error) throw error
 
-          if (data?.school_name) {
-            let cleanedName = data.school_name
-              .replace(/^The\s+/i, '')
-              .replace(/\s+School$/i, '')
-              .trim()
-            
-            // Capitalize first letter of each word
-            cleanedName = cleanedName
-              .split(' ')
-              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ')
-
-            setSchoolName(cleanedName)
-          }
-        }
+        setSchoolData(data || [])
       } catch (error) {
-        console.error('Error in getSchoolName:', error)
+        console.error('Error fetching school data:', error)
+      } finally {
+        setLoading(false)
       }
     }
 
-    getSchoolName()
-  }, [])
+    fetchSchoolData()
+  }, [tableId])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Searching for:", searchQuery)
   }
+
+  if (loading) return <div>Loading...</div>
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">

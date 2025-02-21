@@ -13,6 +13,7 @@ import NetworkVisualization from '../../components/network-visualization-1'
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
+import { useSchool } from "../contexts/SchoolContext"
 
 interface UserInfo {
   first_name: string
@@ -30,6 +31,7 @@ export default function DataInsightsPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [progress, setProgress] = useState(0)
+  const { schoolName } = useSchool()
 
   useEffect(() => {
     const initializePage = async () => {
@@ -92,6 +94,33 @@ export default function DataInsightsPage() {
 
     initializePage()
   }, [fromSignin])
+
+  const fetchSchoolData = async () => {
+    if (!schoolName) return []
+    
+    try {
+      const { data, error } = await supabase
+        .from(schoolName.toLowerCase().replace(/\s+/g, '_'))
+        .select('*')
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error fetching school data:', error)
+      return []
+    }
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (schoolName) {
+        const data = await fetchSchoolData()
+        setCharts(data)
+      }
+    }
+    
+    loadData()
+  }, [schoolName])
 
   const handleSearch = useCallback(
     (query: string) => {

@@ -9,6 +9,7 @@ import Navigation from '../../components/navigation-signup'
 import Link from 'next/link'
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
+import { normalizeSchoolName } from '../../components/schoolNameUtils'
 
 export default function Signup() {
   const [showCalendly, setShowCalendly] = useState(false)
@@ -40,15 +41,8 @@ export default function Signup() {
     }
 
     try {
-      console.log("Supabase instance:", supabase);
-      console.log("Table name:", "customer_information");
-      console.log("Attempting to insert data:", {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        school_email: formData.schoolEmail,
-        school_name: formData.schoolName,
-        school_website: formData.schoolWebsite,
-      });
+      // Generate normalized table name
+      const normalizedTableName = normalizeSchoolName(formData.schoolName)
 
       const { data, error } = await supabase.from("customer_information").insert([
         {
@@ -57,6 +51,7 @@ export default function Signup() {
           school_email: formData.schoolEmail,
           school_name: formData.schoolName,
           school_website: formData.schoolWebsite,
+          table_name: normalizedTableName  // Store the normalized name
         },
       ]);
 
