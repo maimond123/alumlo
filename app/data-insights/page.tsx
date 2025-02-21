@@ -14,7 +14,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
-import { getCurrentUser, signOut } from '@aws-amplify/auth'
+import { getCurrentUser, signOut } from 'aws-amplify/auth'
 
 interface UserInfo {
   first_name: string

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { getCurrentUser } from '@aws-amplify/auth'
+import { getCurrentUser } from 'aws-amplify/auth'
 import { supabase } from '../data/supabase'
 import type { ReactNode } from 'react'
 

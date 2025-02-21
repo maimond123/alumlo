@@ -25,7 +25,14 @@ const config: ResourcesConfig = {
       userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID!,
       userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID!,
       loginWith: {
-        username: true
+        username: true,
+        oauth: {
+          domain: 'alumintel.auth.us-east-2.amazoncognito.com',
+          scopes: ['email', 'openid', 'profile'],
+          redirectSignIn: ['www.alumintel.com/dashboard'],
+          redirectSignOut: ['www.alumintel.com/'],
+          responseType: 'code'
+        }
       }
     }
   }

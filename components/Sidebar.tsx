@@ -9,7 +9,7 @@ import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { useRouter } from 'next/navigation'
-import { getCurrentUser, signOut } from '@aws-amplify/auth'
+import { getCurrentUser, signOut } from 'aws-amplify/auth'
 
 interface UserInfo {
   first_name: string;

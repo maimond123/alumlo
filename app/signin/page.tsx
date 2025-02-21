@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
 import NetworkVisualization from '../../components/network-visualization-1'
 import { useRouter } from 'next/navigation'
-import { signIn } from '@aws-amplify/auth'
+import { signIn } from 'aws-amplify/auth'
+import '../aws-config'  
 
 export default function SignIn() {
   const [email, setEmail] = useState('')

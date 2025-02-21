@@ -9,23 +9,7 @@ import Image from "next/image"
 import type React from "react"
 import { Amplify } from 'aws-amplify';
 import type { ResourcesConfig } from 'aws-amplify';
-
-// Configure Amplify at the start of the component
-console.log('Onboarding: Configuring AWS Amplify');
-const config: ResourcesConfig = {
-  Auth: {
-    Cognito: {
-      userPoolId: process.env.NEXT_PUBLIC_USER_POOL_ID!,
-      userPoolClientId: process.env.NEXT_PUBLIC_USER_POOL_CLIENT_ID!,
-      loginWith: {
-        username: true
-      }
-    }
-  }
-};
-
-console.log('AWS Config:', config);
-Amplify.configure(config);
+import '../aws-config'
 
 export default function Onboarding() {
   const router = useRouter()
@@ -99,7 +83,7 @@ export default function Onboarding() {
       }
 
       // First, sign up with Cognito
-      const { signUp } = await import('@aws-amplify/auth');
+      const { signUp } = await import('aws-amplify/auth');
       await signUp({
         username: email,
         password: password,
