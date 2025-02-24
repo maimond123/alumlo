@@ -188,15 +188,6 @@ export default function DataInsightsPage() {
       <Sidebar />
       <main style={{ marginLeft: isSidebarOpen ? "18rem" : "5rem" }} className="flex-1 transition-all duration-300">
         <div className="p-8">
-          <div className="mb-8 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Welcome back, {userInfo ? `${userInfo.first_name} ${userInfo.last_name}` : "Loading..."}!
-              </h1>
-              <p className="text-sm text-gray-500">Here's an overview of all our alumni insights</p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {searchResults.map((chart) => (
               <motion.div

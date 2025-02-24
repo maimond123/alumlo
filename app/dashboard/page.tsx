@@ -7,7 +7,20 @@ import NetworkVisualization from "../../components/network-visualization-2"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
-import { useSchool } from "../contexts/SchoolContext"
+import '../aws-config'  
+import { getCurrentUser} from 'aws-amplify/auth'
+import { useRouter } from "next/navigation"
+
+// Add the new interface for search results
+interface SearchResult {
+  id: string
+  name: string
+  title: string
+  location: string
+  url_link: string
+  similarity_score: number
+  summary: string
+}
 
 const suggestionTags = [
   "Working on AI at FAANG",
@@ -17,55 +30,81 @@ const suggestionTags = [
 ]
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { tableId, schoolName } = useSchool()
-  const [schoolData, setSchoolData] = useState<any[]>([])
+  const [formattedSchoolName, setFormattedSchoolName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
+  
+  // Add new states for search functionality
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSchoolName = async () => {
       try {
-        setIsLoading(true)
-        setError(null)
+        const user = await getCurrentUser()
+        const userEmail = user.signInDetails?.loginId
 
-        // Debug logs
-        console.log("TableId:", tableId)
-        console.log("SchoolName:", schoolName)
+        if (!userEmail) {
+          console.error('No email found in user data:', user)
+          throw new Error('No user email found')
+        }
 
-        if (!tableId) {
-          console.log("No tableId available")
-          setError("School information not found")
+        console.log('Querying with email:', userEmail)
+        const { data, error } = await supabase
+          .from('customer_information')
+          .select('school_name')
+          .eq('school_email', userEmail)
+          .single()
+
+        if (error) {
+          console.error('Supabase query error:', error)
+          throw error
+        }
+
+        const formatted = data.school_name.replace(/_/g, ' ')
+        setFormattedSchoolName(formatted)
+        setIsLoading(false)
+      } catch (err: any) {
+        console.error('Error fetching school name:', err)
+        if (err.message?.includes('not authenticated')) {
+          router.push('/login')
           return
         }
-
-        const { data, error: supabaseError } = await supabase
-          .from(`${tableId}_data`)
-          .select('*')
-
-        if (supabaseError) {
-          console.error("Supabase error:", supabaseError)
-          throw supabaseError
-        }
-
-        console.log("Fetched data:", data)
-        setSchoolData(data || [])
-
-      } catch (err) {
-        console.error("Error in fetchData:", err)
-        setError(err instanceof Error ? err.message : "An error occurred")
-      } finally {
+        setError('Failed to load school data')
         setIsLoading(false)
       }
     }
 
-    fetchData()
-  }, [tableId])
+    fetchSchoolName()
+  }, [router])
 
-  const handleSearch = (e: React.FormEvent) => {
+  // Update handleSearch to include search functionality
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Searching for:", searchQuery)
+    if (!searchQuery.trim()) return
+
+    setIsSearching(true)
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: searchQuery }),
+      })
+
+      if (!response.ok) throw new Error('Search failed')
+      
+      const data = await response.json()
+      setSearchResults(data.results)
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setIsSearching(false)
+    }
   }
 
   if (isLoading) {
@@ -88,10 +127,9 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        {/* Main Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Explore {schoolName} Alumni Data
+            Explore {formattedSchoolName} Alumni Data
           </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-6">
@@ -105,6 +143,7 @@ export default function DashboardPage() {
               />
               <button
                 type="submit"
+                disabled={isSearching}
                 className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
               >
                 <Search className="w-6 h-6" />
@@ -112,19 +151,48 @@ export default function DashboardPage() {
             </div>
           </form>
 
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
             {suggestionTags.map((tag, index) => (
               <button
                 key={index}
+                onClick={() => setSearchQuery(tag)}
                 className="px-4 py-2 bg-white/90 hover:bg-white rounded-full text-gray-700 text-sm transition-colors shadow-md"
               >
                 {tag}
               </button>
             ))}
           </div>
+
+          {/* Search Results */}
+          {isSearching ? (
+            <div className="text-center">
+              <p>Searching...</p>
+            </div>
+          ) : searchResults.length > 0 ? (
+            <div className="w-full max-w-4xl mt-8 grid gap-4 overflow-y-auto max-h-[60vh]">
+              {searchResults.map((result) => (
+                <a
+                  key={result.id}
+                  href={result.url_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+                >
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                    <p className="text-gray-600">{result.title}</p>
+                    <p className="text-gray-500">{result.location}</p>
+                    <p className="mt-2 text-gray-700">{result.summary}</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Match score: {(result.similarity_score * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </main>
     </div>
   )
 }
-

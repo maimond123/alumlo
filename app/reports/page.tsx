@@ -10,12 +10,56 @@ import { saveAs } from "file-saver"
 import Image from "next/image"
 import { PieChart, BarChart, SalaryBarChart, IndustryPieChart } from '../../components/chart'
 import { supabase } from '../data/supabase'
+import { getCurrentUser} from 'aws-amplify/auth'
+import { useRouter } from 'next/navigation'
+
+const router = useRouter()
+const [schoolName, setSchoolName] = useState<string>('')
+
+useEffect(() => {
+  const fetchSchoolName = async () => {
+    try {
+      const user = await getCurrentUser()
+      const userEmail = user.signInDetails?.loginId
+
+      if (!userEmail) {
+        console.error('No email found in user data:', user)
+        throw new Error('No user email found')
+      }
+
+      const { data, error } = await supabase
+        .from('customer_information')
+        .select('school_name')
+        .eq('school_email', userEmail)
+        .single()
+
+      if (error) {
+        console.error('Supabase query error:', error)
+        throw error
+      }
+
+      if (data) {
+        setSchoolName(data.school_name)
+      }
+
+    } catch (err: any) {
+      console.error('Error fetching school name:', err)
+      if (err.message?.includes('not authenticated')) {
+        router.push('/login')
+        return
+      }
+    }
+  }
+
+  fetchSchoolName()
+}, [router])
+
 
 const reportOptions = [
   { id: "salary", label: "Salary Distribution" },
   { id: "major", label: "Major Distribution" },
   { id: "graduate_school", label: "Graduate School Distribution" },
-  { id: "location", label: "Geographic Distribution" },
+  { id: "location", label: "Geographic Distribution"},
   { id: "industry", label: "Industry Sectors" },
 ]
 
@@ -37,6 +81,7 @@ export default function ReportsPage() {
   const reportRef = useRef<HTMLDivElement>(null)
   const [salaryData, setSalaryData] = useState<any>(null)
   const [industryData, setIndustryData] = useState<any>(null)
+  const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
 
   const toggleOption = (id: string) => {
     setSelectedOptions((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
@@ -119,12 +164,11 @@ export default function ReportsPage() {
   }
 
   useEffect(() => {
-    if (selectedOptions.includes('salary') && selectedYears.length > 0) {
+    if (selectedOptions.includes('salary') && selectedYears.length > 0 && schoolName) {
       const fetchSalaryData = async () => {
         const { data, error } = await supabase
-          .from('school_profiles')
+          .from(schoolName)
           .select('current_salary_breakdown, class_year')
-          .eq('highschool_name', 'Lawrenceville')
           .in('class_year', selectedYears)
           .not('current_salary_breakdown', 'is', null);
 
@@ -140,15 +184,14 @@ export default function ReportsPage() {
 
       fetchSalaryData();
     }
-  }, [selectedOptions, selectedYears]);
+  }, [selectedOptions, selectedYears, schoolName]);
 
   useEffect(() => {
-    if (selectedOptions.includes('industry') && selectedYears.length > 0) {
+    if (selectedOptions.includes('industry') && selectedYears.length > 0 && schoolName) {
       const fetchIndustryData = async () => {
         const { data, error } = await supabase
-          .from('school_profiles')
+          .from(schoolName)
           .select('current_industry_breakdown_pie_graph, class_year')
-          .eq('highschool_name', 'Pingry')
           .in('class_year', selectedYears)
           .not('current_industry_breakdown_pie_graph', 'is', null);
 
@@ -164,7 +207,47 @@ export default function ReportsPage() {
 
       fetchIndustryData();
     }
-  }, [selectedOptions, selectedYears]);
+  }, [selectedOptions, selectedYears, schoolName]);
+
+  useEffect(() => {
+    if (selectedOptions.includes('location') && selectedYears.length > 0 && schoolName) {
+      const fetchLocationData = async () => {
+        const { data, error } = await supabase
+          .from(schoolName)
+          .select('current_location_breakdown, class_year')
+          .in('class_year', selectedYears)
+          .not('current_location_breakdown', 'is', null);
+
+        if (error) {
+          console.error('Error fetching location data:', error);
+          return;
+        }
+
+        if (data) {
+          // Process the location data
+          const locationCounts: { [key: string]: number } = {};
+          
+          data.forEach(profile => {
+            if (profile.current_location_breakdown) {
+              Object.entries(profile.current_location_breakdown).forEach(([city, count]) => {
+                locationCounts[city] = (locationCounts[city] || 0) + Number(count);
+              });
+            }
+          });
+
+          // Convert to chart format and sort by value
+          const chartData = Object.entries(locationCounts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10); // Take top 10 cities
+
+          setLocationData(chartData);
+        }
+      };
+
+      fetchLocationData();
+    }
+  }, [selectedOptions, selectedYears, schoolName]);
 
   const ReportContent = () => {
     return (
@@ -250,6 +333,17 @@ export default function ReportsPage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {selectedOptions.includes('location') && locationData.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                  <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
+                  <div className="h-[400px]">
+                    <BarChart
+                      data={locationData}
+                      isZoomed={true}
+                    />
+                  </div>
                 </div>
               )}
             </div>

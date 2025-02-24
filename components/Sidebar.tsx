@@ -10,6 +10,7 @@ import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { useRouter } from 'next/navigation'
 import { getCurrentUser, signOut } from 'aws-amplify/auth'
+import '../app/aws-config'
 
 interface UserInfo {
   first_name: string;
@@ -25,25 +26,29 @@ export default function Sidebar() {
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        // Get current user
-        const { username: userEmail } = await getCurrentUser()
+        // Get current user and their attributes
+        const user = await getCurrentUser()
+        const userEmail = user.signInDetails?.loginId // Get email from signInDetails
         
-        if (userEmail) {
-          // Fetch user info from customer_information table using school_email
-          const { data, error } = await supabase
-            .from('customer_information')
-            .select('first_name, last_name, school_name')
-            .eq('school_email', userEmail)
-            .single()
+        if (!userEmail) {
+          console.error('No email found for user')
+          return
+        }
 
-          if (error) {
-            console.error('Error fetching user info:', error)
-            return
-          }
+        // Fetch user info from customer_information table using school_email
+        const { data, error } = await supabase
+          .from('customer_information')
+          .select('first_name, last_name, school_name')
+          .eq('school_email', userEmail)
+          .single()
 
-          if (data) {
-            setUserInfo(data)
-          }
+        if (error) {
+          console.error('Error fetching user info:', error)
+          return
+        }
+
+        if (data) {
+          setUserInfo(data)
         }
       } catch (error) {
         console.error('Error in getUserInfo:', error)
@@ -138,9 +143,6 @@ export default function Sidebar() {
           </SidebarLink>
           <SidebarLink href="/reports" icon={FileText} isOpen={isSidebarOpen}>
             Reports
-          </SidebarLink>
-          <SidebarLink href="/settings" icon={Settings} isOpen={isSidebarOpen}>
-            Settings
           </SidebarLink>
           <SidebarLink href="/support" icon={HelpCircle} isOpen={isSidebarOpen}>
             Support
