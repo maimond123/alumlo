@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { LinkedInProfileSearchEngine } from '../../lib/search/ai_search'
+import { LinkedInProfileSearchEngine } from '../../data/ai_search'
 
 export default async function handler(
   req: NextApiRequest,
