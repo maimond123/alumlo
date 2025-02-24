@@ -13,61 +13,19 @@ import { supabase } from '../data/supabase'
 import { getCurrentUser} from 'aws-amplify/auth'
 import { useRouter } from 'next/navigation'
 
-const router = useRouter()
-const [schoolName, setSchoolName] = useState<string>('')
-
-useEffect(() => {
-  const fetchSchoolName = async () => {
-    try {
-      const user = await getCurrentUser()
-      const userEmail = user.signInDetails?.loginId
-
-      if (!userEmail) {
-        console.error('No email found in user data:', user)
-        throw new Error('No user email found')
-      }
-
-      const { data, error } = await supabase
-        .from('customer_information')
-        .select('school_name')
-        .eq('school_email', userEmail)
-        .single()
-
-      if (error) {
-        console.error('Supabase query error:', error)
-        throw error
-      }
-
-      if (data) {
-        setSchoolName(data.school_name)
-      }
-
-    } catch (err: any) {
-      console.error('Error fetching school name:', err)
-      if (err.message?.includes('not authenticated')) {
-        router.push('/login')
-        return
-      }
-    }
-  }
-
-  fetchSchoolName()
-}, [router])
-
-
-const reportOptions = [
-  { id: "salary", label: "Salary Distribution" },
-  { id: "major", label: "Major Distribution" },
-  { id: "graduate_school", label: "Graduate School Distribution" },
-  { id: "location", label: "Geographic Distribution"},
-  { id: "industry", label: "Industry Sectors" },
-]
-
-const years = Array.from({ length: 2024 - 1950 + 1 }, (_, i) => (2024 - i).toString())
-const decades = Array.from({ length: 8 }, (_, i) => `${2020 - i * 10}s`)
-
-
 export default function ReportsPage() {
+  return (
+    <div className="flex h-screen bg-white overflow-hidden">
+      <Sidebar />
+      <ReportsContent />
+    </div>
+  )
+}
+
+function ReportsContent() {
+  const router = useRouter()
+  const [schoolName, setSchoolName] = useState<string>('')
+  const { isSidebarOpen } = useSidebar()
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
   const [selectedYears, setSelectedYears] = useState<string[]>([])
   const [yearInput, setYearInput] = useState("")
@@ -77,11 +35,59 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [generatedReport, setGeneratedReport] = useState<any>(null)
   const [isDecadeView, setIsDecadeView] = useState(false)
-  const { isSidebarOpen } = useSidebar()
   const reportRef = useRef<HTMLDivElement>(null)
   const [salaryData, setSalaryData] = useState<any>(null)
   const [industryData, setIndustryData] = useState<any>(null)
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      try {
+        const user = await getCurrentUser()
+        const userEmail = user.signInDetails?.loginId
+
+        if (!userEmail) {
+          console.error('No email found in user data:', user)
+          throw new Error('No user email found')
+        }
+
+        const { data, error } = await supabase
+          .from('customer_information')
+          .select('school_name')
+          .eq('school_email', userEmail)
+          .single()
+
+        if (error) {
+          console.error('Supabase query error:', error)
+          throw error
+        }
+
+        if (data) {
+          setSchoolName(data.school_name)
+        }
+
+      } catch (err: any) {
+        console.error('Error fetching school name:', err)
+        if (err.message?.includes('not authenticated')) {
+          router.push('/login')
+          return
+        }
+      }
+    }
+
+    fetchSchoolName()
+  }, [router])
+
+  const reportOptions = [
+    { id: "salary", label: "Salary Distribution" },
+    { id: "major", label: "Major Distribution" },
+    { id: "graduate_school", label: "Graduate School Distribution" },
+    { id: "location", label: "Geographic Distribution"},
+    { id: "industry", label: "Industry Sectors" },
+  ]
+
+  const years = Array.from({ length: 2024 - 1950 + 1 }, (_, i) => (2024 - i).toString())
+  const decades = Array.from({ length: 8 }, (_, i) => `${2020 - i * 10}s`)
 
   const toggleOption = (id: string) => {
     setSelectedOptions((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
@@ -355,171 +361,168 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className="p-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <h1 className="text-3xl font-bold mb-6">Report Builder</h1>
+    <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
+      <div className="p-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <h1 className="text-3xl font-bold mb-6">Report Builder</h1>
 
-            <div className="flex gap-6 h-[calc(100vh-12rem)]">
-              {/* Left Column - Checkboxes and Year Selection */}
-              <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold mb-4">
-                  Select Data Points ({selectedOptions.length}/{reportOptions.length})
-                </h2>
-                <div className="space-y-4">
-                  {reportOptions.map((option) => (
-                    <div key={option.id} className="flex items-center">
-                      <button
-                        className={`w-6 h-6 rounded ${
-                          selectedOptions.includes(option.id)
-                            ? "bg-emerald-500 text-white"
-                            : "bg-white border border-gray-300 hover:border-emerald-500"
-                        } mr-3 flex items-center justify-center transition-colors`}
-                        onClick={() => toggleOption(option.id)}
-                      >
-                        {selectedOptions.includes(option.id) && <Check className="w-4 h-4" />}
-                      </button>
-                      <label
-                        htmlFor={option.id}
-                        className="text-gray-700 cursor-pointer flex-grow"
-                        onClick={() => toggleOption(option.id)}
-                      >
-                        {option.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-
-                <h2 className="text-xl font-semibold mb-4 mt-8">Select Class Years</h2>
-                <div className="relative mb-4">
-                  <input
-                    type="text"
-                    value={yearInput}
-                    onChange={(e) => handleYearInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        if (years.includes(yearInput) && !selectedYears.includes(yearInput)) {
-                          selectYear(yearInput)
-                        }
-                      }
-                    }}
-                    placeholder="Search years..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  {suggestedYears.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-auto">
-                      {suggestedYears.map((year, index) => (
-                        <li
-                          key={index}
-                          onClick={() => selectYear(year)}
-                          className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                            year === "Select All Years"
-                              ? "font-semibold text-emerald-600 border-b border-gray-200"
-                              : year === "Clear"
-                                ? "font-semibold text-red-600 border-b border-gray-200"
-                                : year === "Select by Decade" || year === "Select by Year"
-                                  ? "font-semibold text-blue-600 border-b border-gray-200"
-                                  : ""
-                          }`}
-                        >
-                          {year}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="mb-4 border border-gray-200 rounded-lg p-2">
-                  <div className="h-20 overflow-y-auto">
-                    <div className="grid grid-cols-5 gap-1">
-                      {selectedYears.map((year) => (
-                        <div
-                          key={year}
-                          className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md flex items-center justify-between text-sm"
-                        >
-                          <span className="truncate">{year}</span>
-                          <button
-                            onClick={() => removeYear(year)}
-                            className="ml-1 text-emerald-600 hover:text-emerald-800 flex-shrink-0"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+          <div className="flex gap-6 h-[calc(100vh-12rem)]">
+            {/* Left Column - Checkboxes and Year Selection */}
+            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-semibold mb-4">
+                Select Data Points ({selectedOptions.length}/{reportOptions.length})
+              </h2>
+              <div className="space-y-4">
+                {reportOptions.map((option) => (
+                  <div key={option.id} className="flex items-center">
+                    <button
+                      className={`w-6 h-6 rounded ${
+                        selectedOptions.includes(option.id)
+                          ? "bg-emerald-500 text-white"
+                          : "bg-white border border-gray-300 hover:border-emerald-500"
+                      } mr-3 flex items-center justify-center transition-colors`}
+                      onClick={() => toggleOption(option.id)}
+                    >
+                      {selectedOptions.includes(option.id) && <Check className="w-4 h-4" />}
+                    </button>
+                    <label
+                      htmlFor={option.id}
+                      className="text-gray-700 cursor-pointer flex-grow"
+                      onClick={() => toggleOption(option.id)}
+                    >
+                      {option.label}
+                    </label>
                   </div>
-                </div>
-
-                <button
-                  onClick={handleGenerateReport}
-                  className={`w-full ${
-                    isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500 hover:bg-emerald-600"
-                  } text-white py-2 px-4 rounded-md transition-colors mt-6 flex items-center justify-center`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Generating...
-                    </>
-                  ) : (
-                    "Generate Report"
-                  )}
-                </button>
+                ))}
               </div>
 
-              {/* Right Column - Report Preview */}
-              <div className="w-2/3 flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Report Preview</h2>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={handleDownload}
-                      className="bg-golden-yellow text-white py-2 px-4 rounded-md hover:bg-yellow-400 transition-colors flex items-center"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Report
-                    </button>
-                    <button
-                      onClick={() => setIsExpanded(true)}
-                      className="bg-emerald-500 text-white py-2 px-4 rounded-md hover:bg-emerald-600 transition-colors flex items-center"
-                    >
-                      <Maximize2 className="w-4 h-4 mr-2" />
-                      Expand Preview
-                    </button>
+              <h2 className="text-xl font-semibold mb-4 mt-8">Select Class Years</h2>
+              <div className="relative mb-4">
+                <input
+                  type="text"
+                  value={yearInput}
+                  onChange={(e) => handleYearInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (years.includes(yearInput) && !selectedYears.includes(yearInput)) {
+                        selectYear(yearInput)
+                      }
+                    }
+                  }}
+                  placeholder="Search years..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                {suggestedYears.length > 0 && (
+                  <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-auto">
+                    {suggestedYears.map((year, index) => (
+                      <li
+                        key={index}
+                        onClick={() => selectYear(year)}
+                        className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                          year === "Select All Years"
+                            ? "font-semibold text-emerald-600 border-b border-gray-200"
+                            : year === "Clear"
+                              ? "font-semibold text-red-600 border-b border-gray-200"
+                              : year === "Select by Decade" || year === "Select by Year"
+                                ? "font-semibold text-blue-600 border-b border-gray-200"
+                                : ""
+                        }`}
+                      >
+                        {year}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="mb-4 border border-gray-200 rounded-lg p-2">
+                <div className="h-20 overflow-y-auto">
+                  <div className="grid grid-cols-5 gap-1">
+                    {selectedYears.map((year) => (
+                      <div
+                        key={year}
+                        className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md flex items-center justify-between text-sm"
+                      >
+                        <span className="truncate">{year}</span>
+                        <button
+                          onClick={() => removeYear(year)}
+                          className="ml-1 text-emerald-600 hover:text-emerald-800 flex-shrink-0"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex-1 bg-gray-700 rounded-lg overflow-auto">
-                  <div className="min-h-full p-8 flex justify-center">
-                    <ReportContent />
-                  </div>
+              </div>
+
+              <button
+                onClick={handleGenerateReport}
+                className={`w-full ${
+                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500 hover:bg-emerald-600"
+                } text-white py-2 px-4 rounded-md transition-colors mt-6 flex items-center justify-center`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Report"
+                )}
+              </button>
+            </div>
+
+            {/* Right Column - Report Preview */}
+            <div className="w-2/3 flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Report Preview</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleDownload}
+                    className="bg-golden-yellow text-white py-2 px-4 rounded-md hover:bg-yellow-400 transition-colors flex items-center"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Report
+                  </button>
+                  <button
+                    onClick={() => setIsExpanded(true)}
+                    className="bg-emerald-500 text-white py-2 px-4 rounded-md hover:bg-emerald-600 transition-colors flex items-center"
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Expand Preview
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 bg-gray-700 rounded-lg overflow-auto">
+                <div className="min-h-full p-8 flex justify-center">
+                  <ReportContent />
                 </div>
               </div>
             </div>
-          </motion.div>
-        </div>
-      </main>
+          </div>
+        </motion.div>
+      </div>
 
       <AnimatePresence>
         {isExpanded && (
@@ -564,7 +567,7 @@ export default function ReportsPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   )
 }
 
