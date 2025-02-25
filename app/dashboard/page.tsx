@@ -8,7 +8,7 @@ import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import '../aws-config'  
-import { getCurrentUser} from 'aws-amplify/auth'
+import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
 
 // Add the new interface for search results
@@ -44,11 +44,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchSchoolName = async () => {
       try {
-        const user = await getCurrentUser()
-        const userEmail = user.signInDetails?.loginId
+        const userEmail = await getUserEmail()
 
         if (!userEmail) {
-          console.error('No email found in user data:', user)
+          console.error('No email found in user data:', userEmail)
           throw new Error('No user email found')
         }
 
