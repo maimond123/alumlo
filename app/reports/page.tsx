@@ -10,8 +10,8 @@ import { saveAs } from "file-saver"
 import Image from "next/image"
 import { PieChart, BarChart, SalaryBarChart, IndustryPieChart } from '../../components/chart'
 import { supabase } from '../data/supabase'
-import { getCurrentUser} from 'aws-amplify/auth'
 import { useRouter } from 'next/navigation'
+import { getUserEmail } from '../utils/auth'
 
 export default function ReportsPage() {
   return (
@@ -43,29 +43,29 @@ function ReportsContent() {
   useEffect(() => {
     const fetchSchoolName = async () => {
       try {
-        const user = await getCurrentUser()
-        const userEmail = user.signInDetails?.loginId
-
+        const userEmail = await getUserEmail()
+        
         if (!userEmail) {
-          console.error('No email found in user data:', user)
+          console.error('No email found for user')
           throw new Error('No user email found')
         }
-
+    
         const { data, error } = await supabase
           .from('customer_information')
           .select('school_name')
           .eq('school_email', userEmail)
           .single()
-
+      
+  
         if (error) {
           console.error('Supabase query error:', error)
           throw error
         }
-
+  
         if (data) {
           setSchoolName(data.school_name)
         }
-
+  
       } catch (err: any) {
         console.error('Error fetching school name:', err)
         if (err.message?.includes('not authenticated')) {
@@ -74,10 +74,9 @@ function ReportsContent() {
         }
       }
     }
-
+  
     fetchSchoolName()
   }, [router])
-
   const reportOptions = [
     { id: "salary", label: "Salary Distribution" },
     { id: "major", label: "Major Distribution" },

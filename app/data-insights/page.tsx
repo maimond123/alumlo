@@ -3,9 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, RefreshCw, Info } from "lucide-react"
-import { chartData, type ChartData, fetchChartData } from "../data/chartData"
 import { BarChart, LineChart, PieChart } from "../../components/chart"
-// import ChartScreen from "../../components/ChartScreen"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -14,16 +12,18 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
-import { getCurrentUser, signOut } from 'aws-amplify/auth'
+import { getUserEmail } from "../utils/auth"
 
 interface UserInfo {
   first_name: string
   last_name: string
 }
 
-
-interface SchoolChartData extends ChartData {
-  year?: string;  
+interface SchoolChartData {
+  id: string;
+  title: string;
+  type: string;
+  year?: string;
 }
 
 function YearSelector({ selectedYear, onChange }: { selectedYear: string, onChange: (year: string) => void }) {
@@ -45,9 +45,9 @@ export default function DataInsightsPage() {
   const searchParams = useSearchParams()
   const fromSignin = searchParams.get('fromSignin') === 'true'
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<ChartData[]>([])
-  const [charts, setCharts] = useState<ChartData[]>(chartData)
-  const [selectedChart, setSelectedChart] = useState<ChartData | null>(null)
+  const [searchResults, setSearchResults] = useState<SchoolChartData[]>([])
+  const [charts, setCharts] = useState<SchoolChartData[]>([])
+  const [selectedChart, setSelectedChart] = useState<SchoolChartData | null>(null)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [progress, setProgress] = useState(0)
@@ -58,6 +58,14 @@ export default function DataInsightsPage() {
   const [industryData, setIndustryData] = useState<any>(null)
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
+
+  // Define the four specific charts we want to show
+  const schoolCharts: SchoolChartData[] = [
+    { id: "salary", title: "Salary Distribution", type: "salary" },
+    { id: "industry", title: "Industry Sectors", type: "industry" },
+    { id: "location", title: "Geographic Distribution", type: "location" },
+    { id: "graduate_school", title: "Graduate School Distribution", type: "graduate_school" }
+  ];
 
   useEffect(() => {
     const initializePage = async () => {
@@ -82,9 +90,9 @@ export default function DataInsightsPage() {
           // Wait for the full duration before completing if from signin
           await new Promise((resolve) => setTimeout(resolve, duration))
         }
+        
         // Get user info
-        const user = await getCurrentUser()
-        const userEmail = user.signInDetails?.loginId || user.username
+        const userEmail = await getUserEmail()
 
         if (userEmail) {
           const { data, error } = await supabase
@@ -103,10 +111,9 @@ export default function DataInsightsPage() {
           }
         }
 
-        // Load chart data
-        const chartData = await fetchChartData()
-        setCharts(chartData)
-        setSearchResults(chartData)
+        // Set the charts to our predefined school charts
+        setCharts(schoolCharts)
+        setSearchResults(schoolCharts)
 
         if (progressInterval) clearInterval(progressInterval)
         setIsLoading(false)
@@ -120,92 +127,81 @@ export default function DataInsightsPage() {
   }, [fromSignin])
 
   const fetchSchoolData = async () => {
-    if (!schoolName) return []
+    if (!schoolName) return
     
     try {
       const tableName = schoolName.toLowerCase().replace(/\s+/g, '_') + '_distribution'
       
-      // Fetch all data
-      const { data: salaryData } = await supabase
+      // Fetch all data for the selected year
+      const { data: salaryData, error: salaryError } = await supabase
         .from(tableName)
         .select('current_salary_distribuiton, class_year')
         .eq('class_year', selectedYear)
       
-      const { data: industryData } = await supabase
+      if (salaryError) {
+        console.error('Error fetching salary data:', salaryError)
+      } else if (salaryData && salaryData.length > 0) {
+        setSalaryData(salaryData[0].current_salary_distribuiton)
+      }
+      
+      const { data: industryData, error: industryError } = await supabase
         .from(tableName)
         .select('current_industry_distribuiton, class_year')
         .eq('class_year', selectedYear)
       
-      const { data: locationResponse } = await supabase
+      if (industryError) {
+        console.error('Error fetching industry data:', industryError)
+      } else if (industryData && industryData.length > 0) {
+        setIndustryData(industryData[0].current_industry_distribuiton)
+      }
+      
+      const { data: locationData, error: locationError } = await supabase
         .from(tableName)
         .select('current_job_location_distribuiton, class_year')
         .eq('class_year', selectedYear)
       
-      const { data: gradData } = await supabase
+      if (locationError) {
+        console.error('Error fetching location data:', locationError)
+      } else if (locationData && locationData.length > 0) {
+        // Process location data
+        const locationCounts: { [key: string]: number } = {};
+        
+        if (locationData[0].current_job_location_distribuiton) {
+          Object.entries(locationData[0].current_job_location_distribuiton).forEach(([city, count]) => {
+            locationCounts[city] = Number(count);
+          });
+        }
+        
+        // Convert to chart format and sort by value
+        const chartData = Object.entries(locationCounts)
+          .map(([name, value]) => ({ name, value }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 10); // Take top 10 cities
+        
+        setLocationData(chartData);
+      }
+      
+      const { data: gradSchoolData, error: gradSchoolError } = await supabase
         .from(tableName)
         .select('graduate_school_distribuiton, class_year')
         .eq('class_year', selectedYear)
-
-      // Transform the data to match ChartData interface
-      const transformedCharts: ChartData[] = [
-        {
-          id: 'salary-chart',
-          title: 'Salary Distribution',
-          description: 'Distribution of alumni salaries',
-          type: 'salary',
-          data: salaryData || []
-        },
-        {
-          id: 'industry-chart',
-          title: 'Industry Distribution',
-          description: 'Distribution of alumni across industries',
-          type: 'industry',
-          data: industryData || []
-        },
-        {
-          id: 'location-chart',
-          title: 'Location Distribution',
-          description: 'Geographic distribution of alumni',
-          type: 'location',
-          data: locationResponse || []
-        },
-        {
-          id: 'graduate-school-chart',
-          title: 'Graduate School Distribution',
-          description: 'Distribution of graduate school attendance',
-          type: 'graduate_school',
-          data: gradData || []
-        }
-      ]
-
-      // Set individual chart data for rendering
-      setSalaryData(salaryData || [])
-      setIndustryData(industryData || [])
-      setLocationData(locationResponse ? 
-        locationResponse.map(item => ({
-          name: item.current_job_location_distribuiton,
-          value: 1
-        })) : []
-      )
-      setGraduateSchoolData(gradData || [])
       
-      return transformedCharts
+      if (gradSchoolError) {
+        console.error('Error fetching graduate school data:', gradSchoolError)
+      } else if (gradSchoolData && gradSchoolData.length > 0) {
+        setGraduateSchoolData(gradSchoolData[0].graduate_school_distribuiton)
+      }
+      
     } catch (error) {
       console.error('Error fetching school data:', error)
-      return []
     }
   }
 
   useEffect(() => {
-    const loadData = async () => {
-      if (schoolName) {
-        const data = await fetchSchoolData()
-        setCharts(data)
-      }
+    if (schoolName && selectedYear) {
+      fetchSchoolData()
     }
-    
-    loadData()
-  }, [schoolName])
+  }, [schoolName, selectedYear])
 
   const handleSearch = useCallback(
     (query: string) => {
@@ -213,7 +209,9 @@ export default function DataInsightsPage() {
       if (query.trim() === "") {
         setSearchResults(charts)
       } else {
-        const filteredResults = charts.filter((chart) => chart.title.toLowerCase().includes(query.toLowerCase()))
+        const filteredResults = charts.filter((chart) => 
+          chart.title.toLowerCase().includes(query.toLowerCase())
+        )
         setSearchResults(filteredResults)
       }
     },
@@ -235,7 +233,7 @@ export default function DataInsightsPage() {
     }
   }
 
-  const handleWidgetClick = (chart: ChartData) => {
+  const handleWidgetClick = (chart: SchoolChartData) => {
     setSelectedChart(chart)
   }
 
@@ -288,7 +286,7 @@ export default function DataInsightsPage() {
                   <h3 className="text-lg font-medium text-gray-900">{chart.title}</h3>
                   <Info className="w-4 h-4 text-gray-400" />
                 </div>
-                <div className="h-56 flex items-center justify-center">{renderChart(chart as SchoolChartData)}</div>
+                <div className="h-56 flex items-center justify-center">{renderChart(chart)}</div>
               </motion.div>
             ))}
           </div>
@@ -317,15 +315,7 @@ export default function DataInsightsPage() {
             <RefreshCw className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Comment out this section */}
-        {/*
-        <AnimatePresence>
-          {selectedChart && <ChartScreen chart={selectedChart} onClose={() => setSelectedChart(null)} />}
-        </AnimatePresence>
-        */}
       </main>
     </div>
   )
 }
-
