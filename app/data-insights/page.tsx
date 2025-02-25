@@ -82,9 +82,9 @@ export default function DataInsightsPage() {
           // Wait for the full duration before completing if from signin
           await new Promise((resolve) => setTimeout(resolve, duration))
         }
-
         // Get user info
-        const { username: userEmail } = await getCurrentUser()
+        const user = await getCurrentUser()
+        const userEmail = user.signInDetails?.loginId || user.username
 
         if (userEmail) {
           const { data, error } = await supabase
