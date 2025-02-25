@@ -73,16 +73,28 @@ export default function Sidebar() {
           console.error('No email found for user');
           return;
         }
+        
+        // Log the exact query we're about to make
+        console.log('About to query Supabase with:', {
+          table: 'customer_information',
+          select: 'first_name, last_name, school_name',
+          filter: `school_email=eq.${userEmail}`
+        });
   
         // Fetch user info from customer_information table using school_email
+        // Force the email to be a string by using string concatenation
+        const emailString = String(userEmail);
+        console.log('Email as explicit string:', emailString);
+        
         const { data, error } = await supabase
           .from('customer_information')
           .select('first_name, last_name, school_name')
-          .eq('school_email', userEmail)
+          .eq('school_email', emailString)
           .single();
   
         if (error) {
           console.error('Error fetching user info:', error);
+          console.error('Full error object:', JSON.stringify(error, null, 2));
           return;
         }
   
