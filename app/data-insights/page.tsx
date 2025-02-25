@@ -21,6 +21,25 @@ interface UserInfo {
   last_name: string
 }
 
+
+interface SchoolChartData extends ChartData {
+  year?: string;  
+}
+
+function YearSelector({ selectedYear, onChange }: { selectedYear: string, onChange: (year: string) => void }) {
+  return (
+    <input
+      type="number"
+      value={selectedYear}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Year"
+      min="1950"
+      max="2024"
+      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
+    />
+  )
+}
+
 export default function DataInsightsPage() {
   const { isSidebarOpen } = useSidebar()
   const searchParams = useSearchParams()
@@ -33,6 +52,12 @@ export default function DataInsightsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [progress, setProgress] = useState(0)
   const { schoolName } = useSchool()
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
+  const [expandedYear, setExpandedYear] = useState(selectedYear)
+  const [salaryData, setSalaryData] = useState<any>(null)
+  const [industryData, setIndustryData] = useState<any>(null)
+  const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
+  const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
 
   useEffect(() => {
     const initializePage = async () => {
@@ -98,12 +123,73 @@ export default function DataInsightsPage() {
     if (!schoolName) return []
     
     try {
-      const { data, error } = await supabase
-        .from(schoolName.toLowerCase().replace(/\s+/g, '_'))
-        .select('*')
+      const tableName = schoolName.toLowerCase().replace(/\s+/g, '_') + '_distribution'
       
-      if (error) throw error
-      return data || []
+      // Fetch all data
+      const { data: salaryData } = await supabase
+        .from(tableName)
+        .select('current_salary_distribuiton, class_year')
+        .eq('class_year', selectedYear)
+      
+      const { data: industryData } = await supabase
+        .from(tableName)
+        .select('current_industry_distribuiton, class_year')
+        .eq('class_year', selectedYear)
+      
+      const { data: locationResponse } = await supabase
+        .from(tableName)
+        .select('current_job_location_distribuiton, class_year')
+        .eq('class_year', selectedYear)
+      
+      const { data: gradData } = await supabase
+        .from(tableName)
+        .select('graduate_school_distribuiton, class_year')
+        .eq('class_year', selectedYear)
+
+      // Transform the data to match ChartData interface
+      const transformedCharts: ChartData[] = [
+        {
+          id: 'salary-chart',
+          title: 'Salary Distribution',
+          description: 'Distribution of alumni salaries',
+          type: 'salary',
+          data: salaryData || []
+        },
+        {
+          id: 'industry-chart',
+          title: 'Industry Distribution',
+          description: 'Distribution of alumni across industries',
+          type: 'industry',
+          data: industryData || []
+        },
+        {
+          id: 'location-chart',
+          title: 'Location Distribution',
+          description: 'Geographic distribution of alumni',
+          type: 'location',
+          data: locationResponse || []
+        },
+        {
+          id: 'graduate-school-chart',
+          title: 'Graduate School Distribution',
+          description: 'Distribution of graduate school attendance',
+          type: 'graduate_school',
+          data: gradData || []
+        }
+      ]
+
+      // Set individual chart data for rendering
+      setSalaryData(salaryData || [])
+      setIndustryData(industryData || [])
+      setLocationData(locationResponse ? 
+        locationResponse.map(item => ({
+          name: item.current_job_location_distribuiton,
+          value: 1
+        })) : []
+      )
+      setGraduateSchoolData(gradData || [])
+      
+      return transformedCharts
     } catch (error) {
       console.error('Error fetching school data:', error)
       return []
@@ -134,14 +220,16 @@ export default function DataInsightsPage() {
     [charts],
   )
 
-  const renderChart = (chart: ChartData) => {
+  const renderChart = (chart: SchoolChartData) => {
     switch (chart.type) {
-      case "bar":
-        return <BarChart data={chart.data} />
-      case "line":
-        return <LineChart data={chart.data} />
-      case "pie":
-        return <PieChart data={chart.data} />
+      case "salary":
+        return <BarChart data={salaryData} />
+      case "industry":
+        return <PieChart data={industryData} />
+      case "location":
+        return <BarChart data={locationData} />
+      case "graduate_school":
+        return <PieChart data={graduateSchoolData} />
       default:
         return <div>Unsupported chart type</div>
     }
@@ -200,7 +288,7 @@ export default function DataInsightsPage() {
                   <h3 className="text-lg font-medium text-gray-900">{chart.title}</h3>
                   <Info className="w-4 h-4 text-gray-400" />
                 </div>
-                <div className="h-56 flex items-center justify-center">{renderChart(chart)}</div>
+                <div className="h-56 flex items-center justify-center">{renderChart(chart as SchoolChartData)}</div>
               </motion.div>
             ))}
           </div>
@@ -218,6 +306,10 @@ export default function DataInsightsPage() {
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           </div>
+          <YearSelector 
+            selectedYear={selectedYear} 
+            onChange={setSelectedYear}
+          />
           <button
             onClick={() => window.location.reload()}
             className="p-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:text-[#1c3d4c] transition-colors"

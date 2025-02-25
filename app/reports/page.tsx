@@ -173,10 +173,10 @@ function ReportsContent() {
     if (selectedOptions.includes('salary') && selectedYears.length > 0 && schoolName) {
       const fetchSalaryData = async () => {
         const { data, error } = await supabase
-          .from(schoolName)
-          .select('current_salary_breakdown, class_year')
+          .from(schoolName + '_distribution')
+          .select('current_salary_distribuiton, class_year')
           .in('class_year', selectedYears)
-          .not('current_salary_breakdown', 'is', null);
+          .not('current_salary_distribuiton', 'is', null);
 
         if (error) {
           console.error('Error fetching salary data:', error);
@@ -196,10 +196,10 @@ function ReportsContent() {
     if (selectedOptions.includes('industry') && selectedYears.length > 0 && schoolName) {
       const fetchIndustryData = async () => {
         const { data, error } = await supabase
-          .from(schoolName)
-          .select('current_industry_breakdown_pie_graph, class_year')
+          .from(schoolName + '_distribution')
+          .select('current_industry_distribuiton, class_year')
           .in('class_year', selectedYears)
-          .not('current_industry_breakdown_pie_graph', 'is', null);
+          .not('current_industry_distribuiton', 'is', null);
 
         if (error) {
           console.error('Error fetching industry data:', error);
@@ -219,10 +219,10 @@ function ReportsContent() {
     if (selectedOptions.includes('location') && selectedYears.length > 0 && schoolName) {
       const fetchLocationData = async () => {
         const { data, error } = await supabase
-          .from(schoolName)
-          .select('current_location_breakdown, class_year')
+          .from(schoolName + '_distribution')
+          .select('current_job_location_distribuiton, class_year')
           .in('class_year', selectedYears)
-          .not('current_location_breakdown', 'is', null);
+          .not('current_job_location_distribuiton', 'is', null);
 
         if (error) {
           console.error('Error fetching location data:', error);
@@ -234,8 +234,8 @@ function ReportsContent() {
           const locationCounts: { [key: string]: number } = {};
           
           data.forEach(profile => {
-            if (profile.current_location_breakdown) {
-              Object.entries(profile.current_location_breakdown).forEach(([city, count]) => {
+            if (profile.current_job_location_distribuiton) {
+              Object.entries(profile.current_job_location_distribuiton).forEach(([city, count]) => {
                 locationCounts[city] = (locationCounts[city] || 0) + Number(count);
               });
             }

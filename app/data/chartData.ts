@@ -2,10 +2,9 @@ import { supabase } from './supabase'
 
 export interface ChartData {
   id: string;
-  type: 'bar' | 'line' | 'pie';
   title: string;
   description: string;
-  dataDescription?: string;
+  type: 'line' | 'bar' | 'pie' | 'salary' | 'industry' | 'location' | 'graduate_school';
   data: any;
 }
 
