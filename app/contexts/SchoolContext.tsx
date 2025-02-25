@@ -31,16 +31,26 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         const user = await getCurrentUser().catch(() => null)
         
         // If no user, just set loading to false and return
-        if (!user?.username) {
+        if (!user) {
           setIsLoading(false)
           return
         }
-
+  
+        // Get the actual email from the user object
+        // This is likely the issue - you need the email, not the UUID
+        const userEmail = user.signInDetails?.loginId || user.username
+        
+        if (!userEmail) {
+          console.error('No email found for user:', user)
+          setIsLoading(false)
+          return
+        }
+  
         // If we have a user, get their school info
         const { data } = await supabase
           .from('customer_information')
           .select('school_name, table_name')
-          .eq('school_email', user.username)
+          .eq('school_email', userEmail)
           .single()
         
         if (data) {
@@ -53,7 +63,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       }
     }
-
+  
     getSchoolInfo()
   }, [])
 
