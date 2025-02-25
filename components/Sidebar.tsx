@@ -22,6 +22,15 @@ export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const router = useRouter()
+  
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -34,6 +43,8 @@ export default function Sidebar() {
           console.error('No email found for user')
           return
         }
+
+        console.log('Fetching user info with email:', userEmail)
 
         // Fetch user info from customer_information table using school_email
         const { data, error } = await supabase
@@ -56,26 +67,7 @@ export default function Sidebar() {
     }
 
     getUserInfo()
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      getUserInfo()
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [])
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
-
   // Get initials from full name
   const getInitials = () => {
     if (!userInfo) return '??'

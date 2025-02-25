@@ -7,4 +7,8 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Supabase URL and Key must be provided as environment variables.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey) 
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false // Since we're using Cognito, not Supabase Auth
+  }
+})
