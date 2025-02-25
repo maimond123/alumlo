@@ -32,7 +32,7 @@ You are currently analyzing chart ${chartId}:
 - Chart Type: ${chart.type}
 - Chart Title: ${chart.title}
 - Description: ${chart.description}
-- Data Overview: ${chart.dataDescription || chart.description}
+- Data Overview: ${chart.description}
 
 The actual data values are:
 ${formattedData}
