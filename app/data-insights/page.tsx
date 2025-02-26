@@ -503,7 +503,7 @@ export default function DataInsightsPage() {
                         setSelectedYear(expandedYear)
                         fetchSchoolData()
                       }}
-                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-golden-yellow-800 transition-colors"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-golden-yellow/80 transition-colors"
                     >
                       Update Year
                     </button>
@@ -552,7 +552,7 @@ export default function DataInsightsPage() {
                       <div 
                         className={`inline-block p-3 rounded-lg max-w-[85%] ${
                           msg.role === 'user' 
-                            ? 'bg-teal-500 text-gray-900' 
+                            ? 'bg-teal-500/80 text-gray-900' 
                             : 'bg-green-800/10 text-gray-700'
                         }`}
                       >
