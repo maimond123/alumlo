@@ -10,6 +10,8 @@ import { supabase } from "../data/supabase"
 import '../aws-config'  
 import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
+import { Amplify } from 'aws-amplify'
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth'
 
 // Add the new interface for search results
 interface SearchResult {
@@ -41,44 +43,83 @@ export default function DashboardPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
+  const [authState, setAuthState] = useState({
+    isLoading: true,
+    isAuthenticated: false,
+    authError: null,
+    userEmail: null
+  })
+
   useEffect(() => {
-    const fetchSchoolName = async () => {
+    const checkAuthStatus = async () => {
+      console.log("Dashboard: Checking auth status...")
       try {
-        const userEmail = await getUserEmail()
-
-        if (!userEmail) {
-          console.error('No email found in user data:', userEmail)
-          throw new Error('No user email found')
-        }
-
-        console.log('Querying with email:', userEmail)
-        const { data, error } = await supabase
-          .from('customer_information')
-          .select('school_name')
-          .eq('school_email', userEmail)
-          .single()
-
-        if (error) {
-          console.error('Supabase query error:', error)
-          throw error
-        }
-
-        const formatted = data.school_name.replace(/_/g, ' ')
-        setFormattedSchoolName(formatted)
-        setIsLoading(false)
-      } catch (err: any) {
-        console.error('Error fetching school name:', err)
-        if (err.message?.includes('not authenticated')) {
-          router.push('/login')
-          return
-        }
-        setError('Failed to load school data')
-        setIsLoading(false)
+        const { username, userId, signInDetails } = await getCurrentUser()
+        const session = await fetchAuthSession()
+        console.log("Dashboard: User authenticated:", username)
+        console.log("Dashboard: Session:", session)
+        
+        setAuthState({
+          isLoading: false,
+          isAuthenticated: true,
+          authError: null,
+          userEmail: signInDetails?.loginId // This might be the email depending on your setup
+        })
+      } catch (error) {
+        console.error("Dashboard: Auth error:", error)
+        setAuthState({
+          isLoading: false,
+          isAuthenticated: false,
+          authError: error,
+          userEmail: null
+        })
       }
     }
 
-    fetchSchoolName()
-  }, [router])
+    checkAuthStatus()
+  }, [])
+
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      console.log("Dashboard: User authenticated, fetching data...")
+      const fetchSchoolName = async () => {
+        try {
+          const userEmail = await getUserEmail()
+
+          if (!userEmail) {
+            console.error('No email found in user data:', userEmail)
+            throw new Error('No user email found')
+          }
+
+          console.log('Querying with email:', userEmail)
+          const { data, error } = await supabase
+            .from('customer_information')
+            .select('school_name')
+            .eq('school_email', userEmail)
+            .single()
+
+          if (error) {
+            console.error('Supabase query error:', error)
+            throw error
+          }
+
+          const formatted = data.school_name.replace(/_/g, ' ')
+          setFormattedSchoolName(formatted)
+          setIsLoading(false)
+        } catch (err: any) {
+          console.error('Error fetching school name:', err)
+          if (err.message?.includes('not authenticated')) {
+            router.push('/login')
+            return
+          }
+          setError('Failed to load school data')
+          setIsLoading(false)
+        }
+      }
+
+      fetchSchoolName()
+    }
+  }, [authState.isAuthenticated, router])
 
   // Update handleSearch to include search functionality
   const handleSearch = async (e: React.FormEvent) => {
@@ -104,6 +145,14 @@ export default function DashboardPage() {
     } finally {
       setIsSearching(false)
     }
+  }
+
+  if (authState.isLoading) {
+    return <div>Loading authentication status...</div>
+  }
+
+  if (!authState.isAuthenticated) {
+    return <div>Please log in to access the dashboard. Error: {authState.authError?.message}</div>
   }
 
   if (isLoading) {
