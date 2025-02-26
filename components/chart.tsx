@@ -78,7 +78,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 110 : 60 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 10 : 60 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
