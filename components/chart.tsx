@@ -74,7 +74,7 @@ export function ChartTooltipContent({ active, payload, label }: { active?: boole
 
 export function BarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-500px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
