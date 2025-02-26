@@ -435,7 +435,7 @@ const fetchSchoolData = async () => {
                       setSelectedYear(expandedYear);
                       fetchSchoolData();
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
                     Update Year
                   </button>
@@ -451,7 +451,7 @@ const fetchSchoolData = async () => {
                 />
               </div>
               
-              {/* Expanded chart visualization - taking up all available space */}
+              {/* Expanded chart visualization */}
               <motion.div 
                 layoutId={`chart-content-${selectedChart.id}`}
                 className="h-[calc(100%-140px)]"
@@ -474,7 +474,7 @@ const fetchSchoolData = async () => {
               
               {/* Chat messages area */}
               <div className="flex-1 p-4 overflow-auto">
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="mb-4 p-3 bg-green-800/10 rounded-lg">
                   <p className="text-sm text-gray-700">
                     <span className="font-semibold">AI Assistant:</span> What would you like to know about this {selectedChart.title.toLowerCase()} data?
                   </p>
@@ -491,7 +491,7 @@ const fetchSchoolData = async () => {
                     placeholder="Ask a question about this data..."
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
                     Send
                   </button>
                 </div>
@@ -581,7 +581,6 @@ const fetchSchoolData = async () => {
                     >
                       {chart.title}
                     </motion.h3>
-                    <Info className="w-4 h-4 text-gray-400" />
                   </div>
                   <motion.div 
                     layoutId={`chart-content-${chart.id}`}
