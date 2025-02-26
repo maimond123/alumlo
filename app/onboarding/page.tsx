@@ -112,37 +112,50 @@ export default function Onboarding() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
-
+  
     try {
       if (!email) throw new Error("Email not found");
-
+  
+      // Step 1: Confirm the sign-up
       const { confirmSignUp } = await import('aws-amplify/auth');
       await confirmSignUp({
         username: email,
         confirmationCode: confirmationCode
       });
-
-      // Update user status in Supabase
+  
+      // Step 2: Update user status in Supabase
       const { error: supabaseError } = await supabase
         .from('customer_information')
         .update({ 
           account_status: 'active'
         })
         .eq('school_email', email);
-
+  
       if (supabaseError) {
         throw new Error('Failed to update account status');
       }
-
-      // Automatically sign in the user after successful confirmation
-      const { signIn } = await import('aws-amplify/auth');
-      await signIn({
-        username: email,
-        password: password,
-      });
-
-      // Now redirect to dashboard
-      router.push("/dashboard");
+  
+      // Step 3: Sign in the user after confirmation is complete
+      try {
+        const { signIn } = await import('aws-amplify/auth');
+        const signInResult = await signIn({
+          username: email,
+          password: password,
+        });
+        
+        console.log("Sign in successful:", signInResult);
+        
+        // Step 4: Redirect to dashboard only after successful sign-in
+        router.push("/dashboard");
+      } catch (signInError: any) {
+        console.error("Sign in error after confirmation:", signInError);
+        setError("Account confirmed, but sign-in failed. Please go to the login page.");
+        
+        // Even if sign-in fails, we can still redirect to login
+        setTimeout(() => {
+          router.push("/signin");
+        }, 3000);
+      }
     } catch (error: any) {
       console.error("Confirmation error:", error);
       setError(error.message || "Failed to confirm signup");
@@ -150,6 +163,7 @@ export default function Onboarding() {
       setIsSubmitting(false);
     }
   }
+
 
   if (isVerifying) {
     return (
