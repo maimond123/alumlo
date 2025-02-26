@@ -98,7 +98,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
-            fill={COLORS[2]} 
+            fill="#2d6a4f80" 
             radius={[4, 4, 0, 0]} 
             isAnimationActive={isZoomed} 
           />
