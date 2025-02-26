@@ -552,7 +552,7 @@ export default function DataInsightsPage() {
                       <div 
                         className={`inline-block p-3 rounded-lg max-w-[85%] ${
                           msg.role === 'user' 
-                            ? 'bg-golden-yellow text-gray-900' 
+                            ? 'bg-teal-500 text-gray-900' 
                             : 'bg-green-800/10 text-gray-700'
                         }`}
                       >
