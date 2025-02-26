@@ -520,7 +520,7 @@ export default function DataInsightsPage() {
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-7xl h-[80vh] flex flex-col"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-8xl h-[80vh] flex flex-col"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -630,6 +630,16 @@ export default function DataInsightsPage() {
       </AnimatePresence>
     );
   };
+
+  // Add this effect to reset chat messages when a new chart is selected
+  useEffect(() => {
+    if (selectedChart) {
+      // Reset chat messages to initial state when a new chart is selected
+      setChatMessages([
+        { role: 'assistant', content: 'What would you like to know about this data?' }
+      ]);
+    }
+  }, [selectedChart]); // This effect runs whenever selectedChart changes
 
   if (isLoading && fromSignin) {
     return (
