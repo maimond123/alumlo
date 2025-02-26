@@ -237,11 +237,27 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Salary data response:", salaryData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, salaryData }))
-        if (salaryData && salaryData.length > 0) {
-          console.log("DEBUG: Setting salary data:", salaryData[0].current_salary_distribution)
-          setSalaryData(salaryData[0].current_salary_distribution)
+        if (salaryData && salaryData.length > 0 && salaryData[0].current_salary_distribution) {
+          console.log("DEBUG: Raw salary data:", salaryData[0].current_salary_distribution);
+          
+          // Transform the object format into the array format expected by BarChart
+          const chartData = Object.entries(salaryData[0].current_salary_distribution)
+            .map(([range, count]) => ({ 
+              name: range, 
+              value: typeof count === 'number' ? count : Number(count) 
+            }))
+            .sort((a, b) => {
+              // Sort by salary range
+              const aStart = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
+              const bStart = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
+              return !isNaN(aStart) && !isNaN(bStart) ? aStart - bStart : 0;
+            });
+          
+          console.log("DEBUG: Transformed salary data:", chartData);
+          setSalaryData(chartData);
         } else {
-          console.warn("DEBUG: No salary data found for year:", selectedYear)
+          console.warn("DEBUG: No salary data found for year:", selectedYear);
+          setSalaryData(null);
         }
       }
 
@@ -357,7 +373,12 @@ export default function DataInsightsPage() {
 
     switch (chart.type) {
       case "salary":
-        return salaryData ? (
+        console.log("DEBUG: Salary data type:", typeof salaryData);
+        console.log("DEBUG: Salary data value:", salaryData);
+        console.log("DEBUG: Is salary data array?", Array.isArray(salaryData));
+        console.log("DEBUG: Salary data length:", Array.isArray(salaryData) ? salaryData.length : "N/A");
+        
+        return salaryData && (Array.isArray(salaryData) ? salaryData.length > 0 : true) ? (
           <div className="w-full h-full">
             <BarChart data={salaryData} />
           </div>
