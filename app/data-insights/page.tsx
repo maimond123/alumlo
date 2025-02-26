@@ -674,27 +674,7 @@ export default function DataInsightsPage() {
       <Sidebar />
       <main style={{ marginLeft: isSidebarOpen ? "18rem" : "5rem" }} className="flex-1 transition-all duration-300">
         <div className="p-8">
-          {/* Debug Info Panel - Remove in production */}
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h3 className="font-bold mb-2">Debug Info:</h3>
-            <div className="text-xs overflow-auto max-h-40">
-              <p>School Name: {schoolName || "Not set"}</p>
-              <p>Selected Year: {selectedYear}</p>
-              <p>Charts Set: {charts.length > 0 ? "Yes" : "No"}</p>
-              <p>Search Results: {searchResults.length}</p>
-              <p>
-                Data Available:
-                {salaryData ? " Salary ✓" : " Salary ✗"}
-                {industryData ? " Industry ✓" : " Industry ✗"}
-                {locationData && locationData.length > 0 ? " Location ✓" : " Location ✗"}
-                {graduateSchoolData ? " Grad School ✓" : " Grad School ✗"}
-              </p>
-              <details>
-                <summary>Full Debug Object</summary>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-              </details>
-            </div>
-          </div>
+          {/* Debug Info Panel removed */}
 
           {/* Check if searchResults exists before mapping */}
           {searchResults && searchResults.length > 0 ? (
