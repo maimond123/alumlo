@@ -579,9 +579,6 @@ export default function DataInsightsPage() {
 
               {/* Chat sidebar */}
               <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: 0 }}
-                transition={{ delay: 0.3 }}
                 className="w-1/3 border-l border-gray-200 flex flex-col bg-gray-50"
               >
                 <div className="p-4 border-b border-gray-200 bg-white">
