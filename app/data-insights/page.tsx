@@ -341,70 +341,51 @@ export default function DataInsightsPage() {
     [charts],
   )
 
-  const renderChart = useCallback((chart: SchoolChartData) => {
-    // Check if we're in the expanded view
-    const isExpanded = selectedChart && selectedChart.id === chart.id;
-    
-    // Use a percentage height for expanded view, fixed height for widget view
-    const heightClass = isExpanded ? "h-[75%]" : "h-[300px]";
-    
+  const renderChart = (chart: SchoolChartData) => {
+    console.log(`DEBUG: Rendering chart type: ${chart.type}`, {
+      salaryData,
+      industryData,
+      locationData,
+      graduateSchoolData,
+    })
+
     switch (chart.type) {
       case "salary":
-        return (
-          <div className={`w-full ${heightClass}`}>
-            {salaryData ? (
-              <BarChart data={salaryData} />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">No salary data available for {selectedYear}</p>
-              </div>
-            )}
+        return salaryData ? (
+          <div className="w-full h-full">
+            <BarChart data={salaryData} />
           </div>
-        );
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">No salary data available</div>
+        )
       case "industry":
-        return (
-          <div className={`w-full ${heightClass}`}>
-            {industryData ? (
-              <PieChart data={industryData} />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">No industry data available for {selectedYear}</p>
-              </div>
-            )}
+        return industryData ? (
+          <div className="w-full h-full">
+            <PieChart data={industryData} />
           </div>
-        );
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">No industry data available</div>
+        )
       case "location":
-        return (
-          <div className={`w-full ${heightClass}`}>
-            {locationData && locationData.length > 0 ? (
-              <PieChart data={locationData} />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">No location data available for {selectedYear}</p>
-              </div>
-            )}
+        return locationData && locationData.length > 0 ? (
+          <div className="w-full h-full min-h-[400px] flex items-stretch">
+            <BarChart data={locationData} />
           </div>
-        );
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">No location data available</div>
+        )
       case "graduate_school":
-        return (
-          <div className={`w-full ${heightClass}`}>
-            {graduateSchoolData ? (
-              <PieChart data={graduateSchoolData} />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">No graduate school data available for {selectedYear}</p>
-              </div>
-            )}
+        return graduateSchoolData ? (
+          <div className="w-full h-full">
+            <PieChart data={graduateSchoolData} />
           </div>
-        );
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">No graduate school data available</div>
+        )
       default:
-        return (
-          <div className={`w-full ${heightClass} flex items-center justify-center`}>
-            <p className="text-gray-500">Chart type not supported</p>
-          </div>
-        );
+        return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>
     }
-  }, [salaryData, industryData, locationData, graduateSchoolData, selectedYear, selectedChart]);
+  }
 
   const handleWidgetClick = (chart: SchoolChartData) => {
     console.log("DEBUG: Chart clicked:", chart)
@@ -484,11 +465,11 @@ export default function DataInsightsPage() {
                 />
               </div>
 
-              {/* Expanded chart visualization */}
+              {/* Expanded chart visualization - using flex-grow to fill available space */}
               <motion.div
                 layoutId={`chart-content-${selectedChart.id}`}
-                className="flex-grow overflow-hidden h-full"
-                style={{ minHeight: "75vh" }} // Set a minimum height for the expanded view
+                className="flex-grow overflow-hidden"
+                style={{ minHeight: 0 }} // This is crucial for flex children to respect container bounds
               >
                 {renderChart(selectedChart)}
               </motion.div>
