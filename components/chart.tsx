@@ -223,32 +223,33 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
+          layout="vertical"
+          margin={{ top: 20, right: 50, left: isZoomed ? 120 : 100, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
-            dataKey="name" 
+            type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
-            tickLine={false} 
-            axisLine={true}
-            angle={-45}
-            textAnchor="end"
-            height={isZoomed ? 100 : 80}
-          />
-          <YAxis 
-            stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
+            fontSize={isZoomed ? 12 : 10} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
           />
+          <YAxis 
+            type="category"
+            dataKey="name"
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 10} 
+            tickLine={false} 
+            axisLine={true}
+            width={isZoomed ? 110 : 90}
+          />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
             fill="#00C49F80" 
-            radius={[4, 4, 0, 0]} 
+            radius={[0, 4, 4, 0]} 
             isAnimationActive={isZoomed} 
           />
         </RechartsBarChart>
@@ -263,32 +264,33 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
+          layout="vertical"
+          margin={{ top: 20, right: 50, left: isZoomed ? 120 : 100, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
-            dataKey="name" 
+            type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
-            tickLine={false} 
-            axisLine={true}
-            angle={-45}
-            textAnchor="end"
-            height={isZoomed ? 100 : 80}
-          />
-          <YAxis 
-            stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
+            fontSize={isZoomed ? 12 : 10} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
           />
+          <YAxis 
+            type="category"
+            dataKey="name"
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 10} 
+            tickLine={false} 
+            axisLine={true}
+            width={isZoomed ? 110 : 90}
+          />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
             fill="#00C49F80" 
-            radius={[4, 4, 0, 0]} 
+            radius={[0, 4, 4, 0]} 
             isAnimationActive={isZoomed} 
           />
         </RechartsBarChart>
