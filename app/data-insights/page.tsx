@@ -520,7 +520,7 @@ export default function DataInsightsPage() {
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-8xl h-[80vh] flex flex-col"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-7.5xl h-[80vh] flex flex-col"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -543,15 +543,6 @@ export default function DataInsightsPage() {
                       Update Year
                     </button>
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search within this data..."
-                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-forest-green-500"
-                    aria-label="Search within this data"
-                  />
                 </div>
 
                 {/* Chart content - with vertical centering */}
