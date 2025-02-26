@@ -327,13 +327,6 @@ const fetchSchoolData = async () => {
     }
   }
 
-  useEffect(() => {
-    console.log("DEBUG: schoolName or selectedYear changed", { schoolName, selectedYear })
-    if (schoolName && selectedYear) {
-      fetchSchoolData()
-    }
-  }, [schoolName, selectedYear])
-
   const handleSearch = useCallback(
     (query: string) => {
       console.log("DEBUG: Searching for:", query)
@@ -377,7 +370,90 @@ const fetchSchoolData = async () => {
   const handleWidgetClick = (chart: SchoolChartData) => {
     console.log("DEBUG: Chart clicked:", chart)
     setSelectedChart(chart)
+    setExpandedYear(selectedYear)
   }
+
+  const closeExpandedWidget = () => {
+    setSelectedChart(null)
+  }
+
+  const renderExpandedWidget = () => {
+    if (!selectedChart) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={closeExpandedWidget}
+        />
+        
+        <div className="relative bg-white rounded-xl shadow-2xl w-[90vw] h-[80vh] flex overflow-hidden">
+          <div className="flex-1 p-8 overflow-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">{selectedChart.title}</h2>
+              <div className="flex items-center gap-4">
+                <YearSelector 
+                  selectedYear={expandedYear} 
+                  onChange={(year) => setExpandedYear(year)} 
+                />
+                <button 
+                  onClick={() => {
+                    setSelectedYear(expandedYear);
+                    fetchSchoolData();
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Update
+                </button>
+                <button 
+                  onClick={closeExpandedWidget}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="h-[calc(100%-80px)]">
+              {renderChart(selectedChart)}
+            </div>
+          </div>
+          
+          <div className="w-1/3 border-l border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
+              <p className="text-sm text-gray-500">Ask questions about this data</p>
+            </div>
+            
+            <div className="flex-1 p-4 overflow-auto bg-gray-50">
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">AI Assistant:</span> What would you like to know about this {selectedChart.title.toLowerCase()} data?
+                </p>
+              </div>
+              
+            </div>
+            
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask a question about this data..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (isLoading && fromSignin) {
     return (
@@ -486,6 +562,7 @@ const fetchSchoolData = async () => {
           </button>
         </div>
       </main>
+      {selectedChart && renderExpandedWidget()}
     </div>
   )
 }
