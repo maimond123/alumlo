@@ -17,7 +17,7 @@ interface IndustryChartProps extends ChartProps {
   showLegend?: boolean;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+const COLORS = ['#0088FE', '#2E7D32', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 const INDUSTRY_COLORS: Record<string, string> = {
   'Technology & Software': '#0088FE',           // Bright Blue
@@ -98,7 +98,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
-            fill={COLORS[22]} 
+            fill={COLORS[1]} 
             radius={[4, 4, 0, 0]} 
             isAnimationActive={isZoomed} 
           />

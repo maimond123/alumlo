@@ -503,7 +503,7 @@ export default function DataInsightsPage() {
                         setSelectedYear(expandedYear)
                         fetchSchoolData()
                       }}
-                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-green-800 transition-colors"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-golden-yellow-800 transition-colors"
                     >
                       Update Year
                     </button>
