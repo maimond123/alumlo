@@ -123,6 +123,8 @@ export default function Onboarding() {
         confirmationCode: confirmationCode
       });
   
+      console.log("Account confirmed successfully");
+  
       // Step 2: Update user status in Supabase
       const { error: supabaseError } = await supabase
         .from('customer_information')
@@ -135,26 +137,29 @@ export default function Onboarding() {
         throw new Error('Failed to update account status');
       }
   
-      // Step 3: Sign in the user after confirmation is complete
+      // Step 3: Check authentication status before redirecting
       try {
-        const { signIn } = await import('aws-amplify/auth');
-        const signInResult = await signIn({
-          username: email,
-          password: password,
-        });
+        const { fetchAuthSession } = await import('aws-amplify/auth');
+        const session = await fetchAuthSession();
         
-        console.log("Sign in successful:", signInResult);
+        if (session.tokens) {
+          console.log("User is authenticated, redirecting to dashboard");
+          router.push("/dashboard");
+        } else {
+          console.log("User is not authenticated after confirmation, redirecting to signin");
+          setError("Account confirmed successfully. Please sign in to continue.");
+          
+          setTimeout(() => {
+            router.push("/signin");
+          }, 2000);
+        }
+      } catch (authError) {
+        console.error("Error checking authentication:", authError);
+        setError("Account confirmed successfully. Please sign in to continue.");
         
-        // Step 4: Redirect to dashboard only after successful sign-in
-        router.push("/dashboard");
-      } catch (signInError: any) {
-        console.error("Sign in error after confirmation:", signInError);
-        setError("Account confirmed, but sign-in failed. Please go to the login page.");
-        
-        // Even if sign-in fails, we can still redirect to login
         setTimeout(() => {
           router.push("/signin");
-        }, 3000);
+        }, 2000);
       }
     } catch (error: any) {
       console.error("Confirmation error:", error);
