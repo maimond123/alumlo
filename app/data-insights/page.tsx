@@ -427,7 +427,7 @@ export default function DataInsightsPage() {
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
               <div className="flex-1 p-8 flex flex-col overflow-hidden">
                 <div className="flex justify-between items-center mb-6">
@@ -462,7 +462,7 @@ export default function DataInsightsPage() {
                   layoutId={`chart-content-${selectedChart.id}`} 
                   className="flex-1 flex items-center justify-center overflow-hidden"
                 >
-                  <div className="w-full h-[75%]">
+                  <div className="w-full" style={{ height: "75%" }}>
                     {renderChart(selectedChart)}
                   </div>
                 </motion.div>
