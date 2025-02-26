@@ -223,11 +223,20 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          layout="vertical"
-          margin={{ top: 20, right: 50, left: isZoomed ? 120 : 100, bottom: 20 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 100 : 80 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 8} 
+            tickLine={false} 
+            axisLine={true}
+            angle={-45}
+            textAnchor="end"
+            height={isZoomed ? 100 : 80}
+          />
+          <YAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
             fontSize={isZoomed ? 12 : 8} 
@@ -236,20 +245,11 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             allowDecimals={false}
             tickFormatter={(value) => `$${Math.round(value/1000)}k`}
           />
-          <YAxis 
-            type="category"
-            dataKey="name"
-            stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
-            tickLine={false} 
-            axisLine={true}
-            width={isZoomed ? 110 : 90}
-          />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
             fill="#00C49F80" 
-            radius={[0, 4, 4, 0]} 
+            radius={[4, 4, 0, 0]} 
             isAnimationActive={isZoomed} 
           />
         </RechartsBarChart>
