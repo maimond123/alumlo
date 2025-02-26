@@ -74,7 +74,7 @@ export function ChartTooltipContent({ active, payload, label }: { active?: boole
 
 export function BarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[300px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -110,7 +110,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
 
 export function LineChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[300px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsLineChart data={data}>
           {isZoomed && (
@@ -184,7 +184,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
   };
 
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[300px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Pie
@@ -216,7 +216,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
 
 export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[300px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
