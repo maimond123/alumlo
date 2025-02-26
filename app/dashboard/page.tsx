@@ -46,8 +46,8 @@ export default function DashboardPage() {
   const [authState, setAuthState] = useState({
     isLoading: true,
     isAuthenticated: false,
-    authError: null,
-    userEmail: null
+    authError: null as unknown | null,
+    userEmail: null as string | null
   })
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function DashboardPage() {
           isLoading: false,
           isAuthenticated: true,
           authError: null,
-          userEmail: signInDetails?.loginId // This might be the email depending on your setup
+          userEmail: signInDetails?.loginId || null
         })
       } catch (error) {
         console.error("Dashboard: Auth error:", error)
@@ -152,7 +152,7 @@ export default function DashboardPage() {
   }
 
   if (!authState.isAuthenticated) {
-    return <div>Please log in to access the dashboard. Error: {authState.authError?.message}</div>
+    return <div>Please log in to access the dashboard. Error: {authState.authError instanceof Error ? authState.authError.message : String(authState.authError)}</div>
   }
 
   if (isLoading) {
