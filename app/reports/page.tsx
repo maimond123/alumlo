@@ -458,7 +458,7 @@ function ReportsContent() {
               <button
                 onClick={handleGenerateReport}
                 className={`w-full ${
-                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500/95 hover:scale-105 transform transition-transform duration-300"
+                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500/95 hover:scale-105 transform transition-transform duration-300"
                 } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center`}
                 disabled={isLoading}
               >
