@@ -219,7 +219,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
 
 export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
@@ -230,7 +230,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 10} 
+            fontSize={isZoomed ? 12 : 8} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
@@ -240,7 +240,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             type="category"
             dataKey="name"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 10} 
+            fontSize={isZoomed ? 12 : 8} 
             tickLine={false} 
             axisLine={true}
             width={isZoomed ? 110 : 90}
@@ -260,7 +260,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
 
 export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
@@ -271,7 +271,7 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 10} 
+            fontSize={isZoomed ? 12 : 8} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
@@ -281,7 +281,7 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
             type="category"
             dataKey="name"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 10} 
+            fontSize={isZoomed ? 12 : 8} 
             tickLine={false} 
             axisLine={true}
             width={isZoomed ? 110 : 90}
