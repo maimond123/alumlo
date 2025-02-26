@@ -515,7 +515,7 @@ const fetchSchoolData = async () => {
 
           {/* Check if searchResults exists before mapping */}
           {searchResults && searchResults.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {searchResults.map((chart) => (
                 <motion.div
                   key={chart.id}
@@ -527,7 +527,7 @@ const fetchSchoolData = async () => {
                     <h3 className="text-lg font-medium text-gray-900">{chart.title}</h3>
                     <Info className="w-4 h-4 text-gray-400" />
                   </div>
-                  <div className="h-56 flex items-center justify-center">{renderChart(chart)}</div>
+                  <div className="h-64 flex items-center justify-center">{renderChart(chart)}</div>
                 </motion.div>
               ))}
             </div>
