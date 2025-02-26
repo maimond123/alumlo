@@ -416,14 +416,14 @@ export default function DataInsightsPage() {
     return (
       <AnimatePresence>
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-6xl h-[80vh] flex flex-col"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-7xl h-[80vh] flex flex-col"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -496,9 +496,9 @@ export default function DataInsightsPage() {
                     <input
                       type="text"
                       placeholder="Ask a question about this data..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-green-500"
                     />
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button className="px-4 py-2 bg-forest-green-500 text-white rounded-lg hover:bg-forest-green-600">
                       Send
                     </button>
                   </div>
