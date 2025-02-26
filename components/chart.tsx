@@ -74,7 +74,7 @@ export function ChartTooltipContent({ active, payload, label }: { active?: boole
 
 export function BarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-420px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
@@ -89,7 +89,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
             axisLine={true}
             angle={-45}
             textAnchor="end"
-            height={80}
+            height={70}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
