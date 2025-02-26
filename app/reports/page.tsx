@@ -458,8 +458,8 @@ function ReportsContent() {
               <button
                 onClick={handleGenerateReport}
                 className={`w-full ${
-                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500 hover:bg-emerald-600"
-                } text-white py-2 px-4 rounded-md transition-colors mt-6 flex items-center justify-center`}
+                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:scale-107 transform transition-transform duration-300"
+                } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center`}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -499,14 +499,14 @@ function ReportsContent() {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleDownload}
-                    className="bg-golden-yellow text-white py-2 px-4 rounded-md hover:bg-yellow-400 transition-colors flex items-center"
+                    className="bg-black text-white py-2 px-4 rounded-md hover:scale-107 transform transition-transform duration-300 flex items-center"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Report
                   </button>
                   <button
                     onClick={() => setIsExpanded(true)}
-                    className="bg-emerald-500 text-white py-2 px-4 rounded-md hover:bg-emerald-600 transition-colors flex items-center"
+                    className="bg-black text-white py-2 px-4 rounded-md hover:scale-107 transform transition-transform duration-300 flex items-center"
                   >
                     <Maximize2 className="w-4 h-4 mr-2" />
                     Expand Preview
