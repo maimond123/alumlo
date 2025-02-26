@@ -12,7 +12,7 @@ import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
 import { getUserEmail } from "../utils/auth"
-import { SalaryBarChart } from "../../components/chart"
+import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 
 interface UserInfo {
   first_name: string
@@ -380,7 +380,7 @@ export default function DataInsightsPage() {
         )
       case "location":
         return locationData && locationData.length > 0 ? (
-          <PieChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
+          <GeographyBarChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading location data...</div>
         )

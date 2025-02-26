@@ -247,7 +247,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
             dataKey="value" 
-            fill={COLORS[0]} 
+            fill="#00C49F80" 
             radius={[4, 4, 0, 0]} 
             isAnimationActive={isZoomed} 
           />
@@ -256,6 +256,48 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
     </ChartContainer>
   )
 }
+
+
+export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
+  return (
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart 
+          data={data}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--foreground))" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={true}
+            angle={-45}
+            textAnchor="end"
+            height={isZoomed ? 100 : 80}
+          />
+          <YAxis 
+            stroke="hsl(var(--foreground))" 
+            fontSize={12} 
+            tickLine={false} 
+            axisLine={true}
+            allowDecimals={false}
+            tickFormatter={(value) => Math.round(value).toString()}
+          />
+          <Tooltip content={<ChartTooltipContent />} />
+          <Bar 
+            dataKey="value" 
+            fill="#00C49F80" 
+            radius={[4, 4, 0, 0]} 
+            isAnimationActive={isZoomed} 
+          />
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  )
+}
+
 
 interface IndustryPieChartProps {
   data: Array<{
