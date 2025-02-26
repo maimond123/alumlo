@@ -12,6 +12,7 @@ import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
 import { getUserEmail } from "../utils/auth"
+import { SalaryBarChart } from "../../components/chart"
 
 interface UserInfo {
   first_name: string
@@ -364,50 +365,30 @@ export default function DataInsightsPage() {
   )
 
   const renderChart = (chart: SchoolChartData) => {
-    console.log(`DEBUG: Rendering chart type: ${chart.type}`, {
-      salaryData,
-      industryData,
-      locationData,
-      graduateSchoolData,
-    })
-
     switch (chart.type) {
       case "salary":
-        console.log("DEBUG: Salary data type:", typeof salaryData);
-        console.log("DEBUG: Salary data value:", salaryData);
-        console.log("DEBUG: Is salary data array?", Array.isArray(salaryData));
-        console.log("DEBUG: Salary data length:", Array.isArray(salaryData) ? salaryData.length : "N/A");
-        
-        return salaryData && (Array.isArray(salaryData) ? salaryData.length > 0 : true) ? (
-          <div className="w-full h-full">
-            <BarChart data={salaryData} />
-          </div>
+        return salaryData ? (
+          <SalaryBarChart data={salaryData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">No salary data available</div>
+          <div className="w-full h-full flex items-center justify-center">Loading salary data...</div>
         )
       case "industry":
         return industryData ? (
-          <div className="w-full h-full">
-            <PieChart data={industryData} />
-          </div>
+          <PieChart data={industryData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">No industry data available</div>
+          <div className="w-full h-full flex items-center justify-center">Loading industry data...</div>
         )
       case "location":
         return locationData && locationData.length > 0 ? (
-          <div className="w-full h-full min-h-[500px] flex items-stretch">
-            <BarChart data={locationData} />
-          </div>
+          <PieChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">No location data available</div>
+          <div className="w-full h-full flex items-center justify-center">Loading location data...</div>
         )
       case "graduate_school":
         return graduateSchoolData ? (
-          <div className="w-full h-full">
-            <PieChart data={graduateSchoolData} />
-          </div>
+          <PieChart data={graduateSchoolData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">No graduate school data available</div>
+          <div className="w-full h-full flex items-center justify-center">Loading graduate school data...</div>
         )
       default:
         return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>

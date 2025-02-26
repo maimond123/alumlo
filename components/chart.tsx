@@ -219,11 +219,11 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
 
 export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-[400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 90 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
@@ -234,8 +234,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             axisLine={true}
             angle={-45}
             textAnchor="end"
-            height={80}
-            tickFormatter={(value) => `$${value}k`}
+            height={isZoomed ? 100 : 80}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
