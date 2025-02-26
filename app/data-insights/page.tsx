@@ -578,7 +578,7 @@ export default function DataInsightsPage() {
                     <button 
                       onClick={handleSendMessage}
                       disabled={isSending}
-                      className="px-4 py-2 bg-golden-yellow text-white rounded-lg hover:bg-golden-yellow/80 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50"
                     >
                       {isSending ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
