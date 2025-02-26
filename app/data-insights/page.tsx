@@ -411,113 +411,105 @@ export default function DataInsightsPage() {
   }
 
   const renderExpandedWidget = () => {
-    if (!selectedChart) return null
+    if (!selectedChart) return null;
 
     return (
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
-          key="expanded-overlay"
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          onClick={() => setSelectedChart(null)}
         >
-          {/* Blurred background overlay */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={closeExpandedWidget}
-          />
-
-          {/* Expanded widget container */}
-          <motion.div
+            className="bg-white rounded-xl overflow-hidden w-full max-w-4xl h-[80vh] flex flex-col"
             layoutId={`chart-${selectedChart.id}`}
-            className="relative bg-white rounded-xl shadow-2xl w-[90vw] h-[80vh] flex overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Left side - Chart visualization */}
-            <div className="flex-1 p-8 flex flex-col overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
-                  {selectedChart.title}
-                </motion.h2>
-                <div className="flex items-center gap-4">
-                  <YearSelector selectedYear={expandedYear} onChange={(year) => setExpandedYear(year)} />
-                  <button
-                    onClick={() => {
-                      setSelectedYear(expandedYear)
-                      fetchSchoolData()
-                    }}
-                    className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Update Year
-                  </button>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Search within this data..."
-                  className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Search within this data"
-                />
-              </div>
-
-              {/* Expanded chart visualization - using flex-grow to fill available space */}
-              <motion.div
-                layoutId={`chart-content-${selectedChart.id}`}
-                className="flex-grow overflow-hidden"
-                style={{ minHeight: 0 }} // This is crucial for flex children to respect container bounds
-              >
-                {renderChart(selectedChart)}
-              </motion.div>
-            </div>
-
-            {/* Right side - Chat functionality */}
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="w-1/3 border-l border-gray-200 flex flex-col bg-gray-50"
-            >
-              <div className="p-4 border-b border-gray-200 bg-white">
-                <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
-                <p className="text-sm text-gray-500">Ask questions about this data</p>
-              </div>
-
-              {/* Chat messages area */}
-              <div className="flex-1 p-4 overflow-auto">
-                <div className="mb-4 p-3 bg-green-800/10 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-semibold">AI Assistant:</span> What would you like to know about this{" "}
-                    {selectedChart.title.toLowerCase()} data?
-                  </p>
+            <div className="flex flex-1 overflow-hidden">
+              {/* Left side - Chart visualization */}
+              <div className="flex-1 p-8 flex flex-col overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                  <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
+                    {selectedChart.title}
+                  </motion.h2>
+                  <div className="flex items-center gap-4">
+                    <YearSelector selectedYear={expandedYear} onChange={(year) => setExpandedYear(year)} />
+                    <button
+                      onClick={() => {
+                        setSelectedYear(expandedYear)
+                        fetchSchoolData()
+                      }}
+                      className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Update Year
+                    </button>
+                  </div>
                 </div>
 
-                {/* You can add more message components here */}
-              </div>
-
-              {/* Chat input */}
-              <div className="p-4 border-t border-gray-200 bg-white">
-                <div className="flex gap-2">
+                <div className="mb-4">
                   <input
                     type="text"
-                    placeholder="Ask a question about this data..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Search within this data..."
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                    aria-label="Search within this data"
                   />
-                  <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                    Send
-                  </button>
                 </div>
+
+                {/* Chart content - with vertical centering */}
+                <motion.div 
+                  layoutId={`chart-content-${selectedChart.id}`} 
+                  className="flex-1 flex items-center justify-center overflow-hidden"
+                >
+                  <div className="w-full h-[75%]">
+                    {renderChart(selectedChart)}
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
+
+              {/* Chat sidebar */}
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="w-1/3 border-l border-gray-200 flex flex-col bg-gray-50"
+              >
+                <div className="p-4 border-b border-gray-200 bg-white">
+                  <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
+                  <p className="text-sm text-gray-500">Ask questions about this data</p>
+                </div>
+
+                {/* Chat messages area */}
+                <div className="flex-1 p-4 overflow-auto">
+                  <div className="mb-4 p-3 bg-green-800/10 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">AI Assistant:</span> What would you like to know about this{" "}
+                      {selectedChart.title.toLowerCase()} data?
+                    </p>
+                  </div>
+                </div>
+
+                {/* Chat input */}
+                <div className="p-4 border-t border-gray-200 bg-white">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ask a question about this data..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </motion.div>
         </motion.div>
       </AnimatePresence>
-    )
-  }
+    );
+  };
 
   if (isLoading && fromSignin) {
     return (
