@@ -355,15 +355,31 @@ const fetchSchoolData = async () => {
     
     switch (chart.type) {
       case "salary":
-        return salaryData ? <BarChart data={salaryData} /> : <div>No salary data available</div>
+        return salaryData ? (
+          <div className="w-full h-full">
+            <BarChart data={salaryData} />
+          </div>
+        ) : <div className="w-full h-full flex items-center justify-center">No salary data available</div>
       case "industry":
-        return industryData ? <PieChart data={industryData} /> : <div>No industry data available</div>
+        return industryData ? (
+          <div className="w-full h-full">
+            <PieChart data={industryData} />
+          </div>
+        ) : <div className="w-full h-full flex items-center justify-center">No industry data available</div>
       case "location":
-        return locationData && locationData.length > 0 ? <BarChart data={locationData} /> : <div>No location data available</div>
+        return locationData && locationData.length > 0 ? (
+          <div className="w-full h-full">
+            <BarChart data={locationData} />
+          </div>
+        ) : <div className="w-full h-full flex items-center justify-center">No location data available</div>
       case "graduate_school":
-        return graduateSchoolData ? <PieChart data={graduateSchoolData} /> : <div>No graduate school data available</div>
+        return graduateSchoolData ? (
+          <div className="w-full h-full">
+            <PieChart data={graduateSchoolData} />
+          </div>
+        ) : <div className="w-full h-full flex items-center justify-center">No graduate school data available</div>
       default:
-        return <div>Unsupported chart type</div>
+        return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>
     }
   }
 
@@ -417,7 +433,7 @@ const fetchSchoolData = async () => {
             className="relative bg-white rounded-xl shadow-2xl w-[90vw] h-[80vh] flex overflow-hidden"
           >
             {/* Left side - Chart visualization */}
-            <div className="flex-1 p-8 overflow-auto">
+            <div className="flex-1 p-8 flex flex-col overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <motion.h2 
                   layoutId={`title-${selectedChart.id}`}
@@ -451,10 +467,11 @@ const fetchSchoolData = async () => {
                 />
               </div>
               
-              {/* Expanded chart visualization */}
+              {/* Expanded chart visualization - using flex-grow to fill available space */}
               <motion.div 
                 layoutId={`chart-content-${selectedChart.id}`}
-                className="h-[calc(100%-140px)]"
+                className="flex-grow overflow-hidden"
+                style={{ minHeight: 0 }} // This is crucial for flex children to respect container bounds
               >
                 {renderChart(selectedChart)}
               </motion.div>
