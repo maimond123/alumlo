@@ -423,7 +423,7 @@ export default function DataInsightsPage() {
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-4xl h-[80vh] flex flex-col"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-6xl h-[80vh] flex flex-col"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
           >
