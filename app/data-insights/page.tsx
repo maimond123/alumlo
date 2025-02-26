@@ -39,6 +39,22 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
   )
 }
 
+// Add this utility function to help with debugging element dimensions
+const logElementDimensions = (element: HTMLElement | null, label: string) => {
+  if (!element) return;
+  
+  const rect = element.getBoundingClientRect();
+  console.log(`DEBUG: ${label} dimensions:`, {
+    width: rect.width,
+    height: rect.height,
+    top: rect.top,
+    left: rect.left,
+    bottom: rect.bottom,
+    right: rect.right,
+    element
+  });
+};
+
 export default function DataInsightsPage() {
   const { isSidebarOpen } = useSidebar()
   const searchParams = useSearchParams()
@@ -347,8 +363,9 @@ export default function DataInsightsPage() {
       industryData,
       locationData,
       graduateSchoolData,
-    })
-
+      isExpanded: Boolean(selectedChart)
+    });
+    
     switch (chart.type) {
       case "salary":
         return salaryData ? (
@@ -368,8 +385,20 @@ export default function DataInsightsPage() {
         )
       case "location":
         return locationData && locationData.length > 0 ? (
-          <div className="w-full h-full min-h-[400px] flex items-stretch">
-            <BarChart data={locationData} />
+          <div 
+            className="w-full h-full flex items-stretch"
+          >
+            <BarChart 
+              data={locationData} 
+            />
+            <div 
+              ref={(el) => {
+                if (el && selectedChart) {
+                  logElementDimensions(el, "BarChart parent element");
+                }
+              }}
+              className="absolute inset-0 pointer-events-none"
+            />
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">No location data available</div>
@@ -413,6 +442,19 @@ export default function DataInsightsPage() {
   const renderExpandedWidget = () => {
     if (!selectedChart) return null
 
+    // Add a useEffect to log dimensions after render
+    useEffect(() => {
+      if (selectedChart) {
+        setTimeout(() => {
+          const chartContainer = document.querySelector('[data-chart-container="true"]');
+          logElementDimensions(chartContainer as HTMLElement, "Chart container after render");
+          
+          const chartElement = chartContainer?.querySelector('[data-chart-element="true"]');
+          logElementDimensions(chartElement as HTMLElement, "Chart element after render");
+        }, 500); // Wait for layout to settle
+      }
+    }, [selectedChart]);
+
     return (
       <AnimatePresence mode="wait">
         <motion.div
@@ -435,9 +477,21 @@ export default function DataInsightsPage() {
           <motion.div
             layoutId={`chart-${selectedChart.id}`}
             className="relative bg-white rounded-xl shadow-2xl w-[90vw] h-[80vh] flex overflow-hidden"
+            ref={(el) => {
+              if (el) {
+                logElementDimensions(el, "Expanded widget container");
+              }
+            }}
           >
             {/* Left side - Chart visualization */}
-            <div className="flex-1 p-8 flex flex-col overflow-hidden">
+            <div 
+              className="flex-1 p-8 flex flex-col overflow-hidden"
+              ref={(el) => {
+                if (el) {
+                  logElementDimensions(el, "Left panel container");
+                }
+              }}
+            >
               <div className="flex justify-between items-center mb-6">
                 <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
                   {selectedChart.title}
@@ -465,13 +519,39 @@ export default function DataInsightsPage() {
                 />
               </div>
 
-              {/* Expanded chart visualization - using flex-grow to fill available space */}
-              <motion.div
+              {/* Expanded chart visualization */}
+              <motion.div 
                 layoutId={`chart-content-${selectedChart.id}`}
-                className="flex-grow overflow-hidden"
-                style={{ minHeight: 0 }} // This is crucial for flex children to respect container bounds
+                className="flex-grow w-full overflow-hidden"
+                style={{ 
+                  minHeight: 0,
+                  height: "calc(100% - 140px)" // Explicit height calculation
+                }}
+                data-chart-container="true"
+                ref={(el) => {
+                  if (el) {
+                    console.log("DEBUG: Chart container styles:", {
+                      width: el.style.width,
+                      height: el.style.height,
+                      computedWidth: window.getComputedStyle(el).width,
+                      computedHeight: window.getComputedStyle(el).height,
+                      parentHeight: el.parentElement?.clientHeight
+                    });
+                    logElementDimensions(el, "Chart container");
+                  }
+                }}
               >
-                {renderChart(selectedChart)}
+                <div 
+                  className="w-full h-full" 
+                  data-chart-element="true"
+                  ref={(el) => {
+                    if (el) {
+                      logElementDimensions(el, "Chart wrapper");
+                    }
+                  }}
+                >
+                  {renderChart(selectedChart)}
+                </div>
               </motion.div>
             </div>
 
