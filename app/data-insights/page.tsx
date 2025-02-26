@@ -223,7 +223,7 @@ const fetchSchoolData = async () => {
       console.log("DEBUG: Fetching salary data...")
       const { data: salaryData, error: salaryError } = await supabase
         .from(tableName)
-        .select('current_salary_distribuiton, class_year')
+        .select('current_salary_distribution, class_year')
         .eq('class_year', selectedYear)
       
       if (salaryError) {
@@ -233,8 +233,8 @@ const fetchSchoolData = async () => {
         console.log("DEBUG: Salary data response:", salaryData)
         setDebugInfo((prev: Record<string, any>) => ({...prev, salaryData}))
         if (salaryData && salaryData.length > 0) {
-          console.log("DEBUG: Setting salary data:", salaryData[0].current_salary_distribuiton)
-          setSalaryData(salaryData[0].current_salary_distribuiton)
+          console.log("DEBUG: Setting salary data:", salaryData[0].current_salary_distribution)
+          setSalaryData(salaryData[0].current_salary_distribution)
         } else {
           console.warn("DEBUG: No salary data found for year:", selectedYear)
         }
@@ -244,7 +244,7 @@ const fetchSchoolData = async () => {
       console.log("DEBUG: Fetching industry data...")
       const { data: industryData, error: industryError } = await supabase
         .from(tableName)
-        .select('current_industry_distribuiton, class_year')
+        .select('current_industry_distribution, class_year')
         .eq('class_year', selectedYear)
       
       if (industryError) {
@@ -254,8 +254,8 @@ const fetchSchoolData = async () => {
         console.log("DEBUG: Industry data response:", industryData)
         setDebugInfo((prev: Record<string, any>) => ({...prev, industryData}))
         if (industryData && industryData.length > 0) {
-          console.log("DEBUG: Setting industry data:", industryData[0].current_industry_distribuiton)
-          setIndustryData(industryData[0].current_industry_distribuiton)
+          console.log("DEBUG: Setting industry data:", industryData[0].current_industry_distribution)
+          setIndustryData(industryData[0].current_industry_distribution)
         } else {
           console.warn("DEBUG: No industry data found for year:", selectedYear)
         }
@@ -265,7 +265,7 @@ const fetchSchoolData = async () => {
       console.log("DEBUG: Fetching location data...")
       const { data: locationData, error: locationError } = await supabase
         .from(tableName)
-        .select('current_job_location_distribuiton, class_year')
+        .select('current_job_location_distribution, class_year')
         .eq('class_year', selectedYear)
       
       if (locationError) {
@@ -279,8 +279,8 @@ const fetchSchoolData = async () => {
           // Process location data
           const locationCounts: { [key: string]: number } = {};
           
-          if (locationData[0].current_job_location_distribuiton) {
-            Object.entries(locationData[0].current_job_location_distribuiton).forEach(([city, count]) => {
+          if (locationData[0].current_job_location_distribution) {
+            Object.entries(locationData[0].current_job_location_distribution).forEach(([city, count]) => {
               locationCounts[city] = Number(count);
             });
             
@@ -304,7 +304,7 @@ const fetchSchoolData = async () => {
       console.log("DEBUG: Fetching graduate school data...")
       const { data: gradSchoolData, error: gradSchoolError } = await supabase
         .from(tableName)
-        .select('graduate_school_distribuiton, class_year')
+        .select('graduate_school_distribution, class_year')
         .eq('class_year', selectedYear)
       
       if (gradSchoolError) {
@@ -314,8 +314,8 @@ const fetchSchoolData = async () => {
         console.log("DEBUG: Graduate school data response:", gradSchoolData)
         setDebugInfo((prev: Record<string, any>) => ({...prev, gradSchoolData}))
         if (gradSchoolData && gradSchoolData.length > 0) {
-          console.log("DEBUG: Setting graduate school data:", gradSchoolData[0].graduate_school_distribuiton)
-          setGraduateSchoolData(gradSchoolData[0].graduate_school_distribuiton)
+          console.log("DEBUG: Setting graduate school data:", gradSchoolData[0].graduate_school_distribution)
+          setGraduateSchoolData(gradSchoolData[0].graduate_school_distribution)
         } else {
           console.warn("DEBUG: No graduate school data found for year:", selectedYear)
         }
