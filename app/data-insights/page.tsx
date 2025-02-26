@@ -374,24 +374,29 @@ const fetchSchoolData = async () => {
   }
 
   const closeExpandedWidget = () => {
-    // First set a flag to disable animations
-    document.body.classList.add('disable-animations');
+    // Create a temporary div to hold the position of the chart
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.opacity = '0';
+    document.body.appendChild(tempDiv);
     
-    // Close the expanded widget
-    setSelectedChart(null);
-    
-    // Remove the flag after a short delay to allow the transition to complete
+    // Set a timeout to remove the chart after the animation completes
     setTimeout(() => {
-      document.body.classList.remove('disable-animations');
-    }, 300);
+      setSelectedChart(null);
+      // Remove the temporary div after a short delay
+      setTimeout(() => {
+        document.body.removeChild(tempDiv);
+      }, 100);
+    }, 10);
   }
 
   const renderExpandedWidget = () => {
     if (!selectedChart) return null;
 
     return (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <motion.div 
+          key="expanded-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -564,9 +569,10 @@ const fetchSchoolData = async () => {
                   key={chart.id}
                   layoutId={`chart-${chart.id}`}
                   onClick={() => handleWidgetClick(chart)}
-                  className="bg-white rounded-lg p-6 cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-                  whileHover={selectedChart ? undefined : { y: -5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  className={`bg-white rounded-lg p-6 cursor-pointer shadow-lg transition-shadow ${
+                    selectedChart ? '' : 'hover:shadow-xl hover:-translate-y-1'
+                  }`}
+                  transition={{ duration: 0.3 }}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <motion.h3 
