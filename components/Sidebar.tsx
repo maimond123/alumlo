@@ -184,7 +184,7 @@ export default function Sidebar() {
 
         <button
           onClick={handleLogout}
-          className="mt-auto flex items-center text-white/70 hover:text-white transition-transform duration-300 ease-in-out"
+          className="mt-auto flex items-center text-white/90 hover:text-white transition-transform duration-300 ease-in-out"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(1rem)" }}
         >
           <LogOut className="w-8 h-8 shrink-0" />
