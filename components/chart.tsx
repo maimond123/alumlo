@@ -234,7 +234,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
-            tickFormatter={(value) => Math.round(value).toString()}
+            tickFormatter={(value) => `$${Math.round(value/1000)}k`}
           />
           <YAxis 
             type="category"
