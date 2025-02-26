@@ -138,18 +138,87 @@ export default function DataInsightsPage() {
     initializePage()
   }, [fromSignin])
 
-  const fetchSchoolData = async () => {
-    if (!schoolName) {
-      console.error("DEBUG: No school name available, cannot fetch data")
-      setDebugInfo((prev: Record<string, any>) => ({...prev, fetchError: "No school name available"}))
-      return
+  // Add this at the top of your component
+useEffect(() => {
+  console.log("DEBUG: Component mounted, initial state:", {
+    schoolName,
+    selectedYear,
+    isSchoolNameSet: Boolean(schoolName),
+    isSelectedYearSet: Boolean(selectedYear)
+  })
+}, [])
+
+// Add this to track when schoolName changes
+useEffect(() => {
+  console.log("DEBUG: schoolName changed:", {
+    schoolName,
+    schoolNameType: typeof schoolName,
+    timestamp: new Date().toISOString()
+  })
+  
+  // Force a data fetch when schoolName becomes available
+  if (schoolName) {
+    console.log("DEBUG: schoolName is now available, triggering fetchSchoolData")
+    fetchSchoolData()
+  }
+}, [schoolName])
+
+// Modify your existing useEffect for schoolName/selectedYear
+useEffect(() => {
+  console.log("DEBUG: schoolName or selectedYear changed", { 
+    schoolName, 
+    selectedYear,
+    schoolNameType: typeof schoolName,
+    selectedYearType: typeof selectedYear,
+    timestamp: new Date().toISOString()
+  })
+  
+  if (schoolName && selectedYear) {
+    console.log("DEBUG: Both schoolName and selectedYear available, calling fetchSchoolData")
+    fetchSchoolData()
+  } else {
+    console.log("DEBUG: Not fetching data because:", {
+      hasSchoolName: Boolean(schoolName),
+      hasSelectedYear: Boolean(selectedYear)
+    })
+  }
+}, [schoolName, selectedYear])
+
+// Modify the beginning of fetchSchoolData to add more diagnostics
+const fetchSchoolData = async () => {
+  console.log("DEBUG: fetchSchoolData called with:", {
+    schoolName,
+    selectedYear,
+    timestamp: new Date().toISOString()
+  })
+  
+  if (!schoolName) {
+    console.error("DEBUG: No school name available, cannot fetch data")
+    setDebugInfo((prev: Record<string, any>) => ({...prev, fetchError: "No school name available"}))
+    return
+  }
+  
+  try {
+    const tableName = schoolName.toLowerCase().replace(/\s+/g, '_') + '_distribution'
+    console.log(`DEBUG: Will fetch from table: ${tableName} for year: ${selectedYear}`)
+    
+    // Add a check to see if the table exists
+    try {
+      const { count, error: tableCheckError } = await supabase
+        .from(tableName)
+        .select('*', { count: 'exact', head: true })
+      
+      console.log(`DEBUG: Table check result for ${tableName}:`, { count, tableCheckError })
+      
+      if (tableCheckError) {
+        console.error(`DEBUG: Table ${tableName} check error:`, tableCheckError)
+        setDebugInfo((prev: Record<string, any>) => ({...prev, tableError: tableCheckError}))
+      }
+    } catch (tableError) {
+      console.error(`DEBUG: Error checking table ${tableName}:`, tableError)
     }
     
-    try {
-      const tableName = schoolName.toLowerCase().replace(/\s+/g, '_') + '_distribution'
-      console.log(`DEBUG: Fetching data from table: ${tableName} for year: ${selectedYear}`)
-      setDebugInfo((prev: Record<string, any>) => ({...prev, tableName, selectedYear}))
-      
+    // Continue with your existing code...
       // Fetch salary data
       console.log("DEBUG: Fetching salary data...")
       const { data: salaryData, error: salaryError } = await supabase

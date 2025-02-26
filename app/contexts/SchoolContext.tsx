@@ -24,21 +24,28 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [tableId, setTableId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Add debug log when schoolName changes
+  useEffect(() => {
+    console.log("DEBUG: SchoolContext - schoolName changed to:", schoolName)
+  }, [schoolName])
+
   useEffect(() => {
     const getSchoolInfo = async () => {
       try {
+        console.log("DEBUG: SchoolContext - fetching school info")
         // Try to get current user
         const user = await getCurrentUser().catch(() => null)
         
         // If no user, just set loading to false and return
         if (!user) {
+          console.log("DEBUG: SchoolContext - no user found")
           setIsLoading(false)
           return
         }
   
         // Get the actual email from the user object
-        // This is likely the issue - you need the email, not the UUID
         const userEmail = user.signInDetails?.loginId || user.username
+        console.log("DEBUG: SchoolContext - user email:", userEmail)
         
         if (!userEmail) {
           console.error('No email found for user:', user)
@@ -47,15 +54,25 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         }
   
         // If we have a user, get their school info
-        const { data } = await supabase
+        console.log("DEBUG: SchoolContext - querying Supabase for school info")
+        const { data, error } = await supabase
           .from('customer_information')
           .select('school_name, table_name')
           .eq('school_email', userEmail)
           .single()
         
+        if (error) {
+          console.error("DEBUG: SchoolContext - Supabase error:", error)
+        }
+        
+        console.log("DEBUG: SchoolContext - Supabase response:", data)
+        
         if (data) {
+          console.log("DEBUG: SchoolContext - setting school name to:", data.school_name)
           setSchoolName(data.school_name)
           setTableId(data.table_name)
+        } else {
+          console.log("DEBUG: SchoolContext - no data returned from Supabase")
         }
       } catch (error) {
         console.error('Error in getSchoolInfo:', error)
