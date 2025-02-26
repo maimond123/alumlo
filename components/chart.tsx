@@ -229,7 +229,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             dataKey="name" 
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             angle={-45}
@@ -238,10 +238,15 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
             tickFormatter={(value) => {
               if (value.includes('-')) {
                 const [min, max] = value.split('-');
-                const minClean = min.replace('$', '').trim();
-                const maxClean = max.replace('$', '').trim();
-                const minK = Math.round(parseInt(minClean) / 1000);
-                const maxK = Math.round(parseInt(maxClean) / 1000);
+                const minClean = min.replace(/[^\d$]/g, '').replace('$', '');
+                const maxClean = max.replace(/[^\d$]/g, '').replace('$', '');
+                
+                const minVal = parseInt(minClean);
+                const maxVal = parseInt(maxClean);
+                
+                const minK = !isNaN(minVal) ? Math.round(minVal / 1000) : 0;
+                const maxK = !isNaN(maxVal) ? Math.round(maxVal / 1000) : 0;
+                
                 return `$${minK}k-${maxK}k`;
               }
               return value;
@@ -250,7 +255,7 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
           <YAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
@@ -281,7 +286,7 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             dataKey="name" 
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             angle={-45}
@@ -291,7 +296,7 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           <YAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
