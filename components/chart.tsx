@@ -78,7 +78,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
@@ -93,7 +93,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={11} 
             tickLine={false} 
             axisLine={true}
             tickFormatter={(value) => `${value}`}
