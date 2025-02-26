@@ -368,7 +368,7 @@ export default function DataInsightsPage() {
         )
       case "location":
         return locationData && locationData.length > 0 ? (
-          <div className="w-full h-full min-h-[400px] flex items-stretch">
+          <div className="w-full h-full min-h-[500px] flex items-stretch">
             <BarChart data={locationData} />
           </div>
         ) : (
