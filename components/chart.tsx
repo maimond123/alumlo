@@ -89,7 +89,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
             axisLine={true}
             angle={-45}
             textAnchor="end"
-            height={70}
+            height={90}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
