@@ -218,37 +218,84 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
 }
 
 export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
+  // Transform the data to use simplified labels (just numbers)
+  const transformedData = data.map(item => {
+    // Extract the numeric part from salary ranges like "$20,000-$40,000"
+    const range = item.name;
+    let simplifiedLabel = "";
+    
+    if (range.includes('-')) {
+      // For ranges like "$20,000-$40,000", extract the lower bound
+      const lowerBound = range.split('-')[0].replace(/\D/g, '');
+      // Convert to thousands (e.g., 20000 -> 20)
+      simplifiedLabel = (parseInt(lowerBound) / 1000).toString();
+    } else if (range.includes('+')) {
+      // For ranges like "$100,000+", extract the number
+      const lowerBound = range.replace(/\D/g, '');
+      // Convert to thousands with plus sign
+      simplifiedLabel = (parseInt(lowerBound) / 1000).toString() + "+";
+    } else {
+      // For any other format, just use the original
+      simplifiedLabel = range;
+    }
+    
+    return {
+      ...item,
+      name: simplifiedLabel
+    };
+  });
+
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
+          data={transformedData}
+          layout="vertical"
+          margin={{ top: 20, right: 50, left: isZoomed ? 120 : 100, bottom: 40 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
-            dataKey="name" 
+            type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
-            tickLine={false} 
-            axisLine={true}
-            angle={-45}
-            textAnchor="end"
-            height={isZoomed ? 100 : 80}
-          />
-          <YAxis 
-            stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 8} 
+            fontSize={isZoomed ? 12 : 10} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
+            label={{ 
+              value: "Students", 
+              position: "bottom", 
+              offset: 0,
+              fontSize: isZoomed ? 14 : 12,
+              fill: "hsl(var(--foreground))"
+            }}
           />
-          <Tooltip content={<ChartTooltipContent />} />
+          <YAxis 
+            type="category"
+            dataKey="name"
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 10} 
+            tickLine={false} 
+            axisLine={true}
+            width={isZoomed ? 110 : 90}
+            label={{ 
+              value: "Estimated Salary (in thousands $)", 
+              angle: -90, 
+              position: "left",
+              offset: 15,
+              fontSize: isZoomed ? 14 : 12,
+              fill: "hsl(var(--foreground))"
+            }}
+          />
+          <Tooltip 
+            content={<ChartTooltipContent />} 
+            formatter={(value, name) => [value, "Students"]}
+            labelFormatter={(label) => `$${label}k`}
+          />
           <Bar 
             dataKey="value" 
             fill="#00C49F80" 
-            radius={[4, 4, 0, 0]} 
+            radius={[0, 4, 4, 0]} 
             isAnimationActive={isZoomed} 
           />
         </RechartsBarChart>
