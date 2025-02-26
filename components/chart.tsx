@@ -256,15 +256,13 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
     </ChartContainer>
   )
 }
-
-
 export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart 
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 120 : 90 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 10 : 60 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
@@ -279,11 +277,10 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={11} 
             tickLine={false} 
             axisLine={true}
-            allowDecimals={false}
-            tickFormatter={(value) => Math.round(value).toString()}
+            tickFormatter={(value) => `${value}`}
           />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
@@ -297,7 +294,6 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
     </ChartContainer>
   )
 }
-
 
 interface IndustryPieChartProps {
   data: Array<{
