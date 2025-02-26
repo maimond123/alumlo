@@ -374,7 +374,16 @@ const fetchSchoolData = async () => {
   }
 
   const closeExpandedWidget = () => {
-    setSelectedChart(null)
+    // First set a flag to disable animations
+    document.body.classList.add('disable-animations');
+    
+    // Close the expanded widget
+    setSelectedChart(null);
+    
+    // Remove the flag after a short delay to allow the transition to complete
+    setTimeout(() => {
+      document.body.classList.remove('disable-animations');
+    }, 300);
   }
 
   const renderExpandedWidget = () => {
@@ -556,7 +565,7 @@ const fetchSchoolData = async () => {
                   layoutId={`chart-${chart.id}`}
                   onClick={() => handleWidgetClick(chart)}
                   className="bg-white rounded-lg p-6 cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-                  whileHover={selectedChart ? {} : { y: -5 }}
+                  whileHover={selectedChart ? undefined : { y: -5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <div className="flex justify-between items-start mb-4">
