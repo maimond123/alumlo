@@ -74,9 +74,12 @@ export function ChartTooltipContent({ active, payload, label }: { active?: boole
 
 export function BarChart({ data, isZoomed = false }: ChartProps) {
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-500px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[500px]' : 'h-400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsBarChart data={data}>
+        <RechartsBarChart 
+          data={data}
+          margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
             dataKey="name" 
@@ -86,7 +89,7 @@ export function BarChart({ data, isZoomed = false }: ChartProps) {
             axisLine={true}
             angle={-45}
             textAnchor="end"
-            height={60}
+            height={80}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
