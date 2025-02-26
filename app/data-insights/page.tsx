@@ -503,7 +503,7 @@ export default function DataInsightsPage() {
                         setSelectedYear(expandedYear)
                         fetchSchoolData()
                       }}
-                      className="px-4 py-2 bg-green-800 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-green-800 transition-colors"
                     >
                       Update Year
                     </button>
@@ -552,7 +552,7 @@ export default function DataInsightsPage() {
                       <div 
                         className={`inline-block p-3 rounded-lg max-w-[85%] ${
                           msg.role === 'user' 
-                            ? 'bg-forest-green-500 text-white' 
+                            ? 'bg-golden-yellow text-gray-900' 
                             : 'bg-green-800/10 text-gray-700'
                         }`}
                       >
@@ -578,7 +578,7 @@ export default function DataInsightsPage() {
                     <button 
                       onClick={handleSendMessage}
                       disabled={isSending}
-                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black-800 transition-colors disabled:opacity-50"
                     >
                       {isSending ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
