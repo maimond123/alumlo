@@ -423,16 +423,7 @@ const fetchSchoolData = async () => {
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Update
-                  </button>
-                  <button 
-                    onClick={closeExpandedWidget}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
+                    Update Year
                   </button>
                 </div>
               </div>
@@ -446,7 +437,7 @@ const fetchSchoolData = async () => {
                 />
               </div>
               
-              {/* Expanded chart visualization */}
+              {/* Expanded chart visualization - taking up all available space */}
               <motion.div 
                 layoutId={`chart-content-${selectedChart.id}`}
                 className="h-[calc(100%-140px)]"
@@ -565,7 +556,7 @@ const fetchSchoolData = async () => {
                   layoutId={`chart-${chart.id}`}
                   onClick={() => handleWidgetClick(chart)}
                   className="bg-white rounded-lg p-6 cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
-                  whileHover={{ y: -5 }}
+                  whileHover={selectedChart ? {} : { y: -5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <div className="flex justify-between items-start mb-4">
