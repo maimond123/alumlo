@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, RefreshCw } from "lucide-react"
 import { BarChart, PieChart } from "../../components/chart"
@@ -58,6 +58,12 @@ export default function DataInsightsPage() {
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+    { role: 'assistant', content: 'What would you like to know about this data?' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Define the four specific charts we want to show
   const schoolCharts: SchoolChartData[] = [
@@ -410,6 +416,62 @@ export default function DataInsightsPage() {
     }, 10)
   }
 
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || isSending || !selectedChart) return;
+    
+    const userMessage = { role: 'user' as const, content: chatInput };
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsSending(true);
+    
+    try {
+      // Simulate AI response for now - you can replace with actual API call
+      setTimeout(() => {
+        const aiResponse = { 
+          role: 'assistant' as const, 
+          content: `I analyzed the ${selectedChart.title} data. Based on what you asked about "${chatInput}", I can tell you that this shows interesting patterns in the ${selectedChart.type} distribution.` 
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+        setIsSending(false);
+      }, 1000);
+      
+      // Uncomment this for real API integration
+      /*
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMessage],
+          chartId: selectedChart.id,
+          chartType: selectedChart.type,
+          chartTitle: selectedChart.title,
+          chartData: selectedChart.type === 'salary' ? salaryData : 
+                    selectedChart.type === 'industry' ? industryData :
+                    selectedChart.type === 'location' ? locationData : graduateSchoolData
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to send message');
+      
+      const data = await response.json();
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+      */
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error processing your request.' 
+      }]);
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
+  // Add this effect to scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
   const renderExpandedWidget = () => {
     if (!selectedChart) return null;
 
@@ -482,12 +544,23 @@ export default function DataInsightsPage() {
 
                 {/* Chat messages area */}
                 <div className="flex-1 p-4 overflow-auto">
-                  <div className="mb-4 p-3 bg-green-800/10 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-semibold">AI Assistant:</span> What would you like to know about this{" "}
-                      {selectedChart.title.toLowerCase()} data?
-                    </p>
-                  </div>
+                  {chatMessages.map((msg, index) => (
+                    <div 
+                      key={index} 
+                      className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+                    >
+                      <div 
+                        className={`inline-block p-3 rounded-lg max-w-[85%] ${
+                          msg.role === 'user' 
+                            ? 'bg-forest-green-500 text-white' 
+                            : 'bg-green-800/10 text-gray-700'
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Chat input */}
@@ -495,11 +568,23 @@ export default function DataInsightsPage() {
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Ask a question about this data..."
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                      disabled={isSending}
                     />
-                    <button className="px-4 py-2 bg-forest-green-500 text-white rounded-lg hover:bg-forest-green-600">
-                      Send
+                    <button 
+                      onClick={handleSendMessage}
+                      disabled={isSending}
+                      className="px-4 py-2 bg-forest-green-500 text-white rounded-lg hover:bg-forest-green-600 transition-colors disabled:opacity-50"
+                    >
+                      {isSending ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        'Send'
+                      )}
                     </button>
                   </div>
                 </div>
