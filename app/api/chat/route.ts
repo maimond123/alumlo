@@ -1,27 +1,66 @@
 import OpenAI from 'openai'
 import { getChartById } from '../../data/chartData'
 
+// Define an interface for the chart data structure
+interface ChartItem {
+  name: string;
+  value: number;
+}
+
+interface Chart {
+  id: string;
+  type: string;
+  title: string;
+  data: ChartItem[];
+  description: string;
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || ''
 })
 
 export async function POST(req: Request) {
-  const { messages, chartId } = await req.json()
+  const { messages, chartId, chartType, chartTitle, chartData } = await req.json()
 
   try {
-    const chart = await getChartById(chartId)
-    if (!chart) {
-      return new Response(JSON.stringify({ error: 'Chart not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      })
+    // Use the provided chart data if available, otherwise fall back to fetching it
+    let chart: Chart;
+    let formattedData: string;
+    
+    if (chartData) {
+      // Use the data provided from the client
+      chart = {
+        id: chartId,
+        type: chartType,
+        title: chartTitle,
+        data: chartData,
+        description: `${chartTitle} visualization`
+      };
+      
+      // Format the data for better readability
+      formattedData = chartData.map((item: ChartItem) => 
+        `${item.name}: ${item.value}${chartType === 'pie' || chartType === 'industry' ? '%' : ''}`
+      ).join('\n');
+    } else {
+      // Fall back to fetching from database
+      const fetchedChart = await getChartById(chartId)
+      if (!fetchedChart) {
+        return new Response(JSON.stringify({ error: 'Chart not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+      
+      chart = fetchedChart as Chart;
+      
+      // Format the data for better readability
+      formattedData = chart.data.map((item: ChartItem) => 
+        `${item.name}: ${item.value}${chart.type === 'pie' ? '%' : ''}`
+      ).join('\n');
     }
 
-    // Format the data for better readability
-    const formattedData = chart.data.map((item: { name: string; value: number }) => `${item.name}: ${item.value}${chart.type === 'pie' ? '%' : ''}`).join('\n')
-
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       stream: true,
       messages: [
         {

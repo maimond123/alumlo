@@ -423,20 +423,19 @@ export default function DataInsightsPage() {
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
     setIsSending(true);
+
+    console.log("NIGGA DEBUG: Sending message:")
     
     try {
-      // Simulate AI response for now - you can replace with actual API call
-      setTimeout(() => {
-        const aiResponse = { 
-          role: 'assistant' as const, 
-          content: `I analyzed the ${selectedChart.title} data. Based on what you asked about "${chatInput}", I can tell you that this shows interesting patterns in the ${selectedChart.type} distribution.` 
-        };
-        setChatMessages(prev => [...prev, aiResponse]);
-        setIsSending(false);
-      }, 1000);
+      // Get the appropriate chart data based on the selected chart type
+      const chartData = 
+        selectedChart.type === 'salary' ? salaryData : 
+        selectedChart.type === 'industry' ? industryData :
+        selectedChart.type === 'location' ? locationData : 
+        selectedChart.type === 'graduate_school' ? graduateSchoolData : null;
       
-      // Uncomment this for real API integration
-      /*
+        console.log("NIGGA DEBUG: LOCATION Chart data:", locationData)
+      // Use the actual API endpoint with the chart data
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -445,17 +444,53 @@ export default function DataInsightsPage() {
           chartId: selectedChart.id,
           chartType: selectedChart.type,
           chartTitle: selectedChart.title,
-          chartData: selectedChart.type === 'salary' ? salaryData : 
-                    selectedChart.type === 'industry' ? industryData :
-                    selectedChart.type === 'location' ? locationData : graduateSchoolData
+          chartData: chartData
         })
       });
       
       if (!response.ok) throw new Error('Failed to send message');
       
-      const data = await response.json();
-      setChatMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
-      */
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+      
+      let assistantMessage = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        // Convert the chunk to text
+        const chunk = new TextDecoder().decode(value);
+        
+        // Process each line (event)
+        const lines = chunk.split('\n\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+              assistantMessage += data.content || '';
+              
+              // Update the message in real-time
+              setChatMessages(prev => {
+                const newMessages = [...prev];
+                // Check if we already added an assistant message
+                const lastMessage = newMessages[newMessages.length - 1];
+                if (lastMessage.role === 'assistant' && newMessages.length > chatMessages.length) {
+                  // Update existing message
+                  lastMessage.content = assistantMessage;
+                  return newMessages;
+                } else {
+                  // Add new assistant message
+                  return [...newMessages, { role: 'assistant', content: assistantMessage }];
+                }
+              });
+            } catch (e) {
+              console.error('Error parsing SSE data:', e);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Chat error:', error);
       setChatMessages(prev => [...prev, { 
