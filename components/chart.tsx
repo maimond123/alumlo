@@ -229,22 +229,20 @@ export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             dataKey="name" 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             angle={-45}
             textAnchor="end"
             height={isZoomed ? 100 : 80}
-            tick={isZoomed}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
-            tick={isZoomed}
           />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 
@@ -271,22 +269,20 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             dataKey="name" 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             angle={-45}
             textAnchor="end"
             height={isZoomed ? 100 : 80}
-            tick={isZoomed}
           />
           <YAxis 
             stroke="hsl(var(--foreground))" 
-            fontSize={12} 
+            fontSize={isZoomed ? 12 : 9} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
             tickFormatter={(value) => Math.round(value).toString()}
-            tick={isZoomed}
           />
           <Tooltip content={<ChartTooltipContent />} />
           <Bar 

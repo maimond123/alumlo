@@ -103,7 +103,11 @@ export default function DashboardPage() {
             throw error
           }
 
-          const formatted = data.school_name.replace(/_/g, ' ')
+          const formatted = data.school_name
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
           setFormattedSchoolName(formatted)
           setIsLoading(false)
         } catch (err: any) {
