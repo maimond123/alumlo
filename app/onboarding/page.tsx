@@ -134,6 +134,14 @@ export default function Onboarding() {
         throw new Error('Failed to update account status');
       }
 
+      // Automatically sign in the user after successful confirmation
+      const { signIn } = await import('aws-amplify/auth');
+      await signIn({
+        username: email,
+        password: password,
+      });
+
+      // Now redirect to dashboard
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Confirmation error:", error);
