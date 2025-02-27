@@ -68,6 +68,14 @@ export interface SearchResult {
   education?: string
 }
 
+export interface SearchFilters {
+  company?: string
+  industry?: string
+  title?: string
+  location?: string
+  school?: string
+}
+
 export class LinkedInProfileSearchEngine {
   private supabase
   private embedder: any = null
@@ -194,16 +202,61 @@ export class LinkedInProfileSearchEngine {
       console.log(`Extracting metadata for ${profile.name}...`)
       const metadata = this.extractEnhancedMetadata(profile)
       console.log(`Metadata extracted:`, metadata)
-  
+
+      // Extract structured metadata for new columns
+      const currentJob = profile.experiences?.[0] || null
+      const currentCompany = currentJob?.company || null
+      const currentTitle = currentJob?.title || null
+      const currentIndustry = currentJob?.company_industry || profile.industry || null
+      const location = currentJob?.location || profile.current_job_location || profile.location || null
+      
+      // Extract years experience as a number
+      let yearsExperience: number | null = null
+      if (profile.years_of_experience) {
+        if (profile.years_of_experience.includes('-')) {
+          // Handle ranges like "5-7 years" by taking the average
+          const parts = profile.years_of_experience.match(/^(\d+)-(\d+)/)
+          if (parts && parts.length >= 3) {
+            yearsExperience = Math.floor((parseInt(parts[1]) + parseInt(parts[2])) / 2)
+          }
+        } else {
+          // Handle single values like "5 years"
+          const match = profile.years_of_experience.match(/^(\d+)/)
+          if (match && match.length >= 2) {
+            yearsExperience = parseInt(match[1])
+          }
+        }
+      }
+      
+      // Extract all companies and industries from experiences
+      const allCompanies = profile.experiences?.map(exp => exp.company).filter(Boolean) || []
+      const allIndustries = profile.experiences?.map(exp => exp.company_industry).filter(Boolean) || []
+      
+      // If industry is provided at profile level but not in experiences, add it
+      if (profile.industry && !allIndustries.includes(profile.industry)) {
+        allIndustries.push(profile.industry)
+      }
+
       console.log(`Inserting profile ${profile.name} into database...`)
       const { data, error } = await this.supabase
         .from('lawrenceville_vector')
         .insert({
           profile_data: profile,
           embedding: Array.from(embedding.data),
-          ...metadata
+          ...metadata,
+          // Add structured metadata columns
+          current_company: currentCompany,
+          current_title: currentTitle,
+          current_industry: currentIndustry,
+          years_experience: yearsExperience,
+          high_school: profile.high_school || [],
+          undergraduate_school: profile.undergraduate_school || [],
+          graduate_school: profile.graduate_school || [],
+          graduation_year: profile.graduation_year,
+          all_companies: allCompanies,
+          all_industries: allIndustries
         })
-  
+
       if (error) {
         console.error(`Supabase error for ${profile.name}:`, JSON.stringify(error, null, 2))
         throw new Error(`Supabase error: ${error.message || JSON.stringify(error)}`)
@@ -222,28 +275,53 @@ export class LinkedInProfileSearchEngine {
       throw error
     }
   }
-  async search(query: string, top_k: number = 10): Promise<SearchResult[]> {
-    console.log('[Engine] Search method called with:', { query, top_k });
+  async search(query: string, filters: SearchFilters = {}, top_k: number = 10): Promise<SearchResult[]> {
+    console.log('[Engine] Search method called with:', { query, filters, top_k });
     
     try {
       await this.initializeEmbedder();
-      console.log('[Engine] Embedder initialized');
       
-      console.log('[Engine] Generating query embedding');
+      // Generate query embedding
       const queryEmbedding = await this.embedder(query, { 
         pooling: 'mean', 
         normalize: true 
       });
-      console.log('[Engine] Query embedding generated');
-
-      console.log('[Engine] Calling Supabase RPC function');
+      
+      // Extract potential filter terms from the query
+      const queryLower = query.toLowerCase();
+      let companyFilter = filters.company;
+      let industryFilter = filters.industry;
+      let titleFilter = filters.title;
+      let locationFilter = filters.location;
+      let schoolFilter = filters.school;
+      
+      // If no explicit filters provided, try to extract from query
+      if (!companyFilter && !industryFilter && !titleFilter && !locationFilter && !schoolFilter) {
+        // Simple extraction logic - could be made more sophisticated
+        if (queryLower.includes('goldman') || queryLower.includes('sachs')) {
+          companyFilter = 'Goldman Sachs';
+        }
+        
+        if (queryLower.includes('finance') || queryLower.includes('banking')) {
+          industryFilter = 'Financial Services';
+        }
+        
+        // More extraction logic here...
+      }
+      
+      // Call the hybrid search function
       const { data: results, error } = await this.supabase
-        .rpc('simple_vector_search', {
+        .rpc('hybrid_search', {
           query_embedding: Array.from(queryEmbedding.data),
-          threshold: 0.3,
+          similarity_threshold: 0.3,
+          company_filter: companyFilter,
+          industry_filter: industryFilter,
+          title_filter: titleFilter,
+          location_filter: locationFilter,
+          school_filter: schoolFilter,
           limit_count: top_k
         });
-
+        
       if (error) {
         console.error('[Engine] Supabase RPC error:', error);
         throw error;
