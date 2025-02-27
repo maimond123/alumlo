@@ -226,35 +226,23 @@ export class LinkedInProfileSearchEngine {
     console.log('[Engine] Search method called with:', { query, top_k });
     
     try {
-      console.log('[Engine] Loading transformers module');
-      // This is where your code loads the transformers module
-      let transformers;
-      if (typeof window !== 'undefined') {
-        console.log('[Engine] Loading client-side transformers');
-        transformers = await import('@xenova/transformers/dist/transformers.min.js');
-      } else {
-        console.log('[Engine] Loading server-side transformers');
-        transformers = await import('@xenova/transformers');
-      }
-      console.log('[Engine] Transformers module loaded successfully');
-      
-      await this.initializeEmbedder()
+      await this.initializeEmbedder();
       console.log('[Engine] Embedder initialized');
       
       console.log('[Engine] Generating query embedding');
       const queryEmbedding = await this.embedder(query, { 
         pooling: 'mean', 
         normalize: true 
-      })
+      });
       console.log('[Engine] Query embedding generated');
 
       console.log('[Engine] Calling Supabase RPC function');
       const { data: results, error } = await this.supabase
-        .rpc('match_lawrenceville_profiles', {
+        .rpc('match_profiles', {
           query_embedding: Array.from(queryEmbedding.data),
           match_threshold: 0.7,
           match_count: top_k
-        })
+        });
 
       if (error) {
         console.error('[Engine] Supabase RPC error:', error);
