@@ -236,16 +236,12 @@ export class LinkedInProfileSearchEngine {
       });
       console.log('[Engine] Query embedding generated');
 
-      console.log('[Engine] Calling Supabase RPC function with all parameters');
+      console.log('[Engine] Calling Supabase RPC function');
       const { data: results, error } = await this.supabase
-        .rpc('match_profiles', {
+        .rpc('simple_vector_search', {
           query_embedding: Array.from(queryEmbedding.data),
-          match_threshold: 0.7,
-          match_count: top_k,
-          location: null,
-          years_experience: null,
-          estimated_salary: null,
-          industry: null
+          threshold: 0.7,
+          limit_count: top_k
         });
 
       if (error) {
