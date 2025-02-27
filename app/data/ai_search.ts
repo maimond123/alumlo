@@ -173,29 +173,48 @@ export class LinkedInProfileSearchEngine {
     try {
       await this.ensureEmbedderInitialized()
       
+      console.log(`Creating profile text for ${profile.name}...`)
       const profileText = this.createProfileText(profile)
+      console.log(`Profile text created, length: ${profileText.length}`)
+      
+      console.log(`Generating embedding for ${profile.name}...`)
       const embedding = await this.embedder(profileText, { 
         pooling: 'mean', 
         normalize: true 
       })
+      console.log(`Embedding generated, dimensions: ${embedding.data.length}`)
+      
+      console.log(`Extracting metadata for ${profile.name}...`)
       const metadata = this.extractEnhancedMetadata(profile)
-
+      console.log(`Metadata extracted:`, metadata)
+  
+      console.log(`Inserting profile ${profile.name} into database...`)
       const { data, error } = await this.supabase
-        .from('vector_profiles')
+        .from('lawrenceville_vector')
         .insert({
           profile_data: profile,
           embedding: Array.from(embedding.data),
           ...metadata
         })
-
-      if (error) throw error
+  
+      if (error) {
+        console.error(`Supabase error for ${profile.name}:`, JSON.stringify(error, null, 2))
+        throw new Error(`Supabase error: ${error.message || JSON.stringify(error)}`)
+      }
+      
+      console.log(`Successfully added profile ${profile.name} to database`)
       return data
     } catch (error) {
-      console.error('Error adding profile to database:', error)
+      console.error(`Error adding profile ${profile.name} to database:`, error)
+      if (error instanceof Error) {
+        console.error(`Error message: ${error.message}`)
+        console.error(`Error stack: ${error.stack}`)
+      } else {
+        console.error(`Non-Error object thrown:`, JSON.stringify(error, null, 2))
+      }
       throw error
     }
   }
-
   async search(query: string, top_k: number = 10): Promise<SearchResult[]> {
     try {
       await this.ensureEmbedderInitialized()
@@ -206,7 +225,7 @@ export class LinkedInProfileSearchEngine {
       })
 
       const { data: results, error } = await this.supabase
-        .rpc('match_profiles', {
+        .rpc('match_lawrenceville_profiles', {
           query_embedding: Array.from(queryEmbedding.data),
           match_threshold: 0.7,
           match_count: top_k
