@@ -1,20 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { NextRequest, NextResponse } from 'next/server'
 import { LinkedInProfileSearchEngine } from '../../data/ai_search'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
-  }
-
+export async function POST(req: NextRequest) {
   try {
+    const { query, top_k = 10 } = await req.json()
+    
+    if (!query || typeof query !== 'string') {
+      return NextResponse.json({ error: 'Invalid query parameter' }, { status: 400 })
+    }
+
     const search_engine = new LinkedInProfileSearchEngine()
-    const results = await search_engine.search(req.body.query, req.body.top_k || 10)
-    res.status(200).json({ results })
+    const results = await search_engine.search(query, top_k)
+    
+    return NextResponse.json({ results })
   } catch (error) {
     console.error('Search error:', error)
-    res.status(500).json({ error: 'Search failed' })
+    return NextResponse.json({ error: 'Search failed' }, { status: 500 })
   }
 }

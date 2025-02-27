@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
   
+  
   // Add new states for search functionality
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -125,12 +126,13 @@ export default function DashboardPage() {
     }
   }, [authState.isAuthenticated, router])
 
-  // Update handleSearch to include search functionality
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
 
     setIsSearching(true)
+    setSearchResults([]) // Clear previous results
+    
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -140,17 +142,25 @@ export default function DashboardPage() {
         body: JSON.stringify({ query: searchQuery }),
       })
 
-      if (!response.ok) throw new Error('Search failed')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Search failed')
+      }
       
       const data = await response.json()
       setSearchResults(data.results)
+      
+      if (data.results.length === 0) {
+        console.log('No results found for query:', searchQuery)
+      }
     } catch (error) {
       console.error('Search error:', error)
+      // You could add a toast notification here for better UX
     } finally {
       setIsSearching(false)
     }
   }
-
+  
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -217,30 +227,44 @@ export default function DashboardPage() {
 
           {/* Search Results */}
           {isSearching ? (
-            <div className="text-center">
-              <p>Searching...</p>
+            <div className="text-center p-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
+              <p>Searching alumni database...</p>
             </div>
           ) : searchResults.length > 0 ? (
-            <div className="w-full max-w-4xl mt-8 grid gap-4 overflow-y-auto max-h-[60vh]">
-              {searchResults.map((result) => (
-                <a
-                  key={result.id}
-                  href={result.url_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
-                >
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                    <p className="text-gray-600">{result.title}</p>
-                    <p className="text-gray-500">{result.location}</p>
-                    <p className="mt-2 text-gray-700">{result.summary}</p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Match score: {(result.similarity_score * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                </a>
-              ))}
+            <div className="w-full max-w-4xl mt-8">
+              <h2 className="text-xl font-semibold mb-4 text-gray-700">
+                Found {searchResults.length} alumni matching your search
+              </h2>
+              <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
+                {searchResults.map((result) => (
+                  <a
+                    key={result.id}
+                    href={result.url_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                        <p className="text-gray-600">{result.title}</p>
+                        <p className="text-gray-500">{result.location}</p>
+                        <p className="mt-2 text-gray-700">{result.summary}</p>
+                        <div className="mt-2 flex items-center">
+                          <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">
+                            Match: {(result.similarity_score * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : searchQuery.trim() !== "" ? (
+            <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm mt-8">
+              <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
             </div>
           ) : null}
         </div>
