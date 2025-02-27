@@ -1,5 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
-import { pipeline } from '@xenova/transformers'
+import { env } from 'process';
+
+// Use a dynamic import for the transformers library
+const getTransformers = async () => {
+  // Use the web version in the browser, node version on the server
+  if (typeof window !== 'undefined') {
+    return await import('@xenova/transformers/dist/transformers.min.js');
+  } else {
+    return await import('@xenova/transformers');
+  }
+};
 
 // Define the Profile interface to match your actual data structure
 export interface Experience {
@@ -72,24 +82,20 @@ export class LinkedInProfileSearchEngine {
     }
 
     this.supabase = createClient(supabaseUrl, supabaseKey)
-    this.initializeEmbedder()
   }
 
-  private async initializeEmbedder() {
+  async initializeEmbedder() {
     try {
-      console.log('Initializing embedder with model:', this.modelName)
-      this.embedder = await pipeline('feature-extraction', this.modelName)
-      console.log('Embedder initialized successfully')
+      console.log("Initializing embedder with model:", this.modelName);
+      
+      if (!this.embedder) {
+        const { pipeline } = await getTransformers();
+        this.embedder = await pipeline('feature-extraction', this.modelName);
+        console.log("Embedder initialized successfully");
+      }
     } catch (error) {
-      console.error('Error initializing embedder:', error)
-      throw error
-    }
-  }
-
-  private async ensureEmbedderInitialized() {
-    if (!this.embedder) {
-      console.log('Embedder not initialized, initializing now...')
-      await this.initializeEmbedder()
+      console.error("Error initializing embedder:", error);
+      throw error;
     }
   }
 
@@ -171,7 +177,7 @@ export class LinkedInProfileSearchEngine {
 
   async addProfileToDb(profile: Profile) {
     try {
-      await this.ensureEmbedderInitialized()
+      await this.initializeEmbedder()
       
       console.log(`Creating profile text for ${profile.name}...`)
       const profileText = this.createProfileText(profile)
@@ -217,7 +223,7 @@ export class LinkedInProfileSearchEngine {
   }
   async search(query: string, top_k: number = 10): Promise<SearchResult[]> {
     try {
-      await this.ensureEmbedderInitialized()
+      await this.initializeEmbedder()
       
       const queryEmbedding = await this.embedder(query, { 
         pooling: 'mean', 
