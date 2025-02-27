@@ -249,6 +249,13 @@ export class LinkedInProfileSearchEngine {
         throw error;
       }
       
+      console.log('[Engine] Search results received:', results ? results.length : 0);
+      
+      if (!results || results.length === 0) {
+        console.log('[Engine] No search results found');
+        return [];
+      }
+      
       console.log('[Engine] Processing search results');
       const processedResults = results.map((result: any) => {
         const profile = result.profile_data;
