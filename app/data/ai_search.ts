@@ -74,6 +74,7 @@ export class LinkedInProfileSearchEngine {
   private modelName = 'Xenova/all-MiniLM-L6-v2'
 
   constructor() {
+    console.log('[Engine] Initializing LinkedInProfileSearchEngine');
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -222,14 +223,32 @@ export class LinkedInProfileSearchEngine {
     }
   }
   async search(query: string, top_k: number = 10): Promise<SearchResult[]> {
+    console.log('[Engine] Search method called with:', { query, top_k });
+    
     try {
-      await this.initializeEmbedder()
+      console.log('[Engine] Loading transformers module');
+      // This is where your code loads the transformers module
+      let transformers;
+      if (typeof window !== 'undefined') {
+        console.log('[Engine] Loading client-side transformers');
+        transformers = await import('@xenova/transformers/dist/transformers.min.js');
+      } else {
+        console.log('[Engine] Loading server-side transformers');
+        transformers = await import('@xenova/transformers');
+      }
+      console.log('[Engine] Transformers module loaded successfully');
       
+      await this.initializeEmbedder()
+      console.log('[Engine] Embedder initialized');
+      
+      console.log('[Engine] Generating query embedding');
       const queryEmbedding = await this.embedder(query, { 
         pooling: 'mean', 
         normalize: true 
       })
+      console.log('[Engine] Query embedding generated');
 
+      console.log('[Engine] Calling Supabase RPC function');
       const { data: results, error } = await this.supabase
         .rpc('match_lawrenceville_profiles', {
           query_embedding: Array.from(queryEmbedding.data),
@@ -237,19 +256,13 @@ export class LinkedInProfileSearchEngine {
           match_count: top_k
         })
 
-      if (error) throw error
-
-      return results.map((result: { 
-        id: string | number;
-        profile_data: Profile;
-        similarity: number;
-        location?: string;
-        years_experience?: number;
-        estimated_salary?: number;
-        industry?: string;
-        url_link?: string;
-        name?: string;
-      }) => {
+      if (error) {
+        console.error('[Engine] Supabase RPC error:', error);
+        throw error;
+      }
+      
+      console.log('[Engine] Processing search results');
+      const processedResults = results.map((result: any) => {
         const profile = result.profile_data;
         const currentJob = profile.experiences && profile.experiences.length > 0 
           ? profile.experiences[0] 
@@ -284,10 +297,13 @@ export class LinkedInProfileSearchEngine {
             ? `${profile.education[0].school}${profile.education[0].program ? ` - ${profile.education[0].program}` : ''}` 
             : undefined
         }
-      })
+      });
+      
+      console.log('[Engine] Search completed successfully');
+      return processedResults;
     } catch (error) {
-      console.error('Error performing search:', error)
-      throw error
+      console.error('[Engine] Error in search method:', error);
+      throw error;
     }
   }
 }

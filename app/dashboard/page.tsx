@@ -126,40 +126,46 @@ export default function DashboardPage() {
     }
   }, [authState.isAuthenticated, router])
 
+  
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-
-    setIsSearching(true)
-    setSearchResults([]) // Clear previous results
+    e.preventDefault();
+    console.log('[Client] Search initiated with query:', searchQuery);
     
+    setIsSearching(true);
     try {
+      console.log('[Client] About to send request to /api/search');
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query: searchQuery }),
-      })
-
+      });
+      
+      console.log('[Client] Response received, status:', response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Search failed')
+        console.error('[Client] Error response from server');
+        const errorData = await response.json();
+        console.error('[Client] Error details:', errorData);
+        throw new Error('Search failed');
       }
       
-      const data = await response.json()
-      setSearchResults(data.results)
+      console.log('[Client] Parsing response JSON');
+      const data = await response.json();
+      console.log('[Client] Search results:', data);
       
-      if (data.results.length === 0) {
-        console.log('No results found for query:', searchQuery)
-      }
+      // Process search results
+      const results = data.results;
+      setSearchResults(results);
+      return results;
     } catch (error) {
-      console.error('Search error:', error)
-      // You could add a toast notification here for better UX
+      console.error('[Client] Search error:', error);
+      throw error;
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
   
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
