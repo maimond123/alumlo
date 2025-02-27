@@ -240,7 +240,7 @@ export class LinkedInProfileSearchEngine {
       const { data: results, error } = await this.supabase
         .rpc('simple_vector_search', {
           query_embedding: Array.from(queryEmbedding.data),
-          threshold: 0.7,
+          threshold: 0.3,
           limit_count: top_k
         });
 
@@ -282,16 +282,16 @@ export class LinkedInProfileSearchEngine {
           url_link: result.url_link || profile.linkedin_url || profile.profile_url || '#',
           similarity_score: result.similarity,
           summary: summary || 'No summary available',
-          industry: result.industry || profile.industry,
-          years_experience: result.years_experience || profile.years_of_experience,
-          estimated_salary: result.estimated_salary || profile.current_estimated_salary,
+          industry: profile.industry,
+          years_experience: profile.years_of_experience,
+          estimated_salary: profile.current_estimated_salary,
           profile_photo_url: profile.profile_photo_url,
           current_job: currentJob ? currentJob.title : undefined,
           current_company: currentJob ? currentJob.company : undefined,
           education: profile.education && profile.education.length > 0 
             ? `${profile.education[0].school}${profile.education[0].program ? ` - ${profile.education[0].program}` : ''}` 
             : undefined
-        }
+        };
       });
       
       console.log('[Engine] Search completed successfully');
