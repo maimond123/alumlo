@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { LinkedInProfileSearchEngine } from '../../data/ai_search';
 
 export async function POST(req: NextRequest) {
+  console.log('Search API route handler started');
+  
   try {
-    const { query, top_k = 10 } = await req.json();
+    console.log('Parsing request body');
+    const body = await req.json().catch(e => {
+      console.error('Failed to parse request body:', e);
+      throw e;
+    });
+    
+    const { query, top_k = 10 } = body;
+    console.log('Request parsed successfully:', { query, top_k });
     
     if (!query || typeof query !== 'string') {
+      console.log('Invalid query parameter');
       return NextResponse.json({ error: 'Invalid query parameter' }, { status: 400 });
     }
 
@@ -15,6 +25,7 @@ export async function POST(req: NextRequest) {
     console.log('Executing search with query:', query);
     const results = await search_engine.search(query, top_k);
     
+    console.log('Search completed successfully');
     return NextResponse.json({ results });
   } catch (error) {
     console.error('Search error:', error);
