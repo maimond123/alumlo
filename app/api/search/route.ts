@@ -36,8 +36,15 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('[API] Initializing search engine');
+    // Try each step separately to identify where the error occurs
+    console.log('[API] Creating search engine instance');
     const search_engine = new LinkedInProfileSearchEngine();
+    
+    console.log('[API] Initializing embedder');
+    await search_engine.initializeEmbedder().catch(error => {
+      console.error('[API] Error initializing embedder:', error);
+      throw new Error(`Embedder initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    });
     
     console.log('[API] Executing search with query:', query);
     const results = await search_engine.search(query, top_k);
@@ -46,10 +53,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ results });
   } catch (error) {
     console.error('[API] Error in search:', error);
+    
+    // Provide more detailed error information
+    let errorMessage = 'Unknown error';
+    let errorStack = '';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorStack = error.stack || '';
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error && typeof error === 'object') {
+      errorMessage = JSON.stringify(error);
+    }
+    
     return NextResponse.json({ 
       results: [],
       error: 'Search failed', 
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: errorMessage,
+      stack: errorStack
     }, { status: 200 }); // Using 200 to ensure client gets the response
   }
 }
