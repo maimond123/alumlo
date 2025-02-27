@@ -43,6 +43,6 @@ export async function POST(req: NextRequest) {
       error: 'API route failed', 
       details: error instanceof Error ? error.message : 'Unknown error',
       transformersLoaded: false
-    }, { status: 500 });
+    }, { status: 200 }); // Using 200 to ensure client gets the response
   }
 }
