@@ -379,4 +379,60 @@ export class LinkedInProfileSearchEngine {
       throw error;
     }
   }
+
+  async fixEmbeddingFormat() {
+    console.log("Starting embedding format fix...");
+    
+    try {
+      // Fetch profiles with string embeddings
+      const { data: profiles, error } = await this.supabase
+        .from('lawrenceville_vector')
+        .select('id, embedding')
+        .not('embedding', 'is', null);
+      
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        return;
+      }
+      
+      console.log(`Fetched ${profiles.length} profiles to check`);
+      let fixedCount = 0;
+      
+      for (const profile of profiles) {
+        // Check if embedding is a string
+        if (typeof profile.embedding === 'string') {
+          try {
+            // Parse the string to get the array
+            let embeddingArray;
+            if (profile.embedding.startsWith('[') && profile.embedding.endsWith(']')) {
+              embeddingArray = JSON.parse(profile.embedding);
+            } else {
+              console.log(`Skipping profile ${profile.id}: embedding is string but not in JSON format`);
+              continue;
+            }
+            
+            // Update the profile with the array embedding
+            const { error: updateError } = await this.supabase
+              .from('lawrenceville_vector')
+              .update({ embedding: embeddingArray })
+              .eq('id', profile.id);
+            
+            if (updateError) {
+              console.error(`Error updating profile ${profile.id}:`, updateError);
+            } else {
+              fixedCount++;
+              console.log(`Fixed embedding format for profile ${profile.id}`);
+            }
+          } catch (parseError) {
+            console.error(`Error parsing embedding for profile ${profile.id}:`, parseError);
+          }
+        }
+      }
+      
+      console.log(`Fixed ${fixedCount} profiles with string embeddings`);
+    } catch (error) {
+      console.error("Error fixing embedding format:", error);
+      throw error;
+    }
+  }
 }
