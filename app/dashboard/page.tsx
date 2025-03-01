@@ -15,13 +15,15 @@ import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth'
 
 // Add the new interface for search results
 interface SearchResult {
-  id: string
-  name: string
-  title: string
-  location: string
-  url_link: string
-  similarity_score: number
-  summary: string
+  id: number;
+  name: string;
+  linkedin_url: string;
+  current_company: string;
+  current_title: string;
+  current_industry: string;
+  location: string;
+  years_experience: number;
+  similarity: number;
 }
 
 const suggestionTags = [
@@ -139,7 +141,7 @@ export default function DashboardPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query: searchQuery, top_k: 10 }),
       });
       
       console.log('[Client] Response received, status:', response.status);
@@ -246,7 +248,7 @@ export default function DashboardPage() {
                 {searchResults.map((result) => (
                   <a
                     key={result.id}
-                    href={result.url_link}
+                    href={result.linkedin_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
@@ -254,12 +256,15 @@ export default function DashboardPage() {
                     <div className="flex items-start">
                       <div className="flex-1">
                         <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                        <p className="text-gray-600">{result.title}</p>
+                        <p className="text-gray-600">{result.current_title} at {result.current_company}</p>
                         <p className="text-gray-500">{result.location}</p>
-                        <p className="mt-2 text-gray-700">{result.summary}</p>
+                        <p className="text-gray-500">Industry: {result.current_industry}</p>
+                        {result.years_experience && (
+                          <p className="text-gray-500">{result.years_experience} years of experience</p>
+                        )}
                         <div className="mt-2 flex items-center">
                           <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">
-                            Match: {(result.similarity_score * 100).toFixed(1)}%
+                            Match: {(result.similarity * 100).toFixed(1)}%
                           </div>
                         </div>
                       </div>

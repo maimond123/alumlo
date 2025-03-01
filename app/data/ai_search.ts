@@ -51,35 +51,52 @@ export interface Profile {
   [key: string]: any // Allow for additional fields
 }
 
-export interface SearchResult {
-  id: string
-  name: string
-  title: string
-  location: string
-  url_link: string
-  similarity_score: number
-  summary: string
-  industry?: string
-  years_experience?: number | string
-  estimated_salary?: number
-  profile_photo_url?: string
-  current_job?: string
-  current_company?: string
-  education?: string
+export interface SearchFilters {
+  company?: string;
+  industry?: string;
+  title?: string;
+  location?: string;
+  school?: string;
 }
 
-export interface SearchFilters {
-  company?: string
-  industry?: string
-  title?: string
-  location?: string
-  school?: string
+export interface SearchResult {
+  id: number;
+  name: string;
+  linkedin_url: string;
+  current_company: string;
+  current_title: string;
+  current_industry: string;
+  location: string;
+  years_experience: number;
+  similarity: number;
+}
+
+export interface ProfileDetail {
+  id: number;
+  name: string;
+  linkedin_url: string;
+  current_company: string;
+  current_title: string;
+  current_industry: string;
+  location: string;
+  years_experience: number;
+  graduation_year: number;
+  estimated_salary: string;
+  companies: string[];
+  titles: string[];
+  industries: string[];
+  undergraduate_schools: string[];
+  graduate_schools: string[];
+  certificate_programs: string[];
+  experiences_text: string;
+  education_text: string;
 }
 
 export class LinkedInProfileSearchEngine {
   private supabase
   private embedder: any = null
   private modelName = 'Xenova/all-MiniLM-L6-v2'
+  private embeddingDimension = 1536;
 
   constructor() {
     console.log('[Engine] Initializing LinkedInProfileSearchEngine');
@@ -184,102 +201,17 @@ export class LinkedInProfileSearchEngine {
     }
   }
 
+  /**
+   * @deprecated This method is no longer used as profiles are added through the backend
+   */
   async addProfileToDb(profile: Profile) {
+    console.warn('addProfileToDb is deprecated - profiles should be added through the backend')
+    throw new Error('Method not implemented: profiles should be added through the backend')
+  }
+
+  async search(query: string, top_k: number = 10, filters: SearchFilters = {}) {
     try {
       await this.initializeEmbedder()
-      
-      console.log(`Creating profile text for ${profile.name}...`)
-      const profileText = this.createProfileText(profile)
-      console.log(`Profile text created, length: ${profileText.length}`)
-      
-      console.log(`Generating embedding for ${profile.name}...`)
-      const embedding = await this.embedder(profileText, { 
-        pooling: 'mean', 
-        normalize: true 
-      })
-      console.log(`Embedding generated, dimensions: ${embedding.data.length}`)
-      
-      console.log(`Extracting metadata for ${profile.name}...`)
-      const metadata = this.extractEnhancedMetadata(profile)
-      console.log(`Metadata extracted:`, metadata)
-
-      // Extract structured metadata for new columns
-      const currentJob = profile.experiences?.[0] || null
-      const currentCompany = currentJob?.company || null
-      const currentTitle = currentJob?.title || null
-      const currentIndustry = currentJob?.company_industry || profile.industry || null
-      const location = currentJob?.location || profile.current_job_location || profile.location || null
-      
-      // Extract years experience as a number
-      let yearsExperience: number | null = null
-      if (profile.years_of_experience) {
-        if (profile.years_of_experience.includes('-')) {
-          // Handle ranges like "5-7 years" by taking the average
-          const parts = profile.years_of_experience.match(/^(\d+)-(\d+)/)
-          if (parts && parts.length >= 3) {
-            yearsExperience = Math.floor((parseInt(parts[1]) + parseInt(parts[2])) / 2)
-          }
-        } else {
-          // Handle single values like "5 years"
-          const match = profile.years_of_experience.match(/^(\d+)/)
-          if (match && match.length >= 2) {
-            yearsExperience = parseInt(match[1])
-          }
-        }
-      }
-      
-      // Extract all companies and industries from experiences
-      const allCompanies = profile.experiences?.map(exp => exp.company).filter(Boolean) || []
-      const allIndustries = profile.experiences?.map(exp => exp.company_industry).filter(Boolean) || []
-      
-      // If industry is provided at profile level but not in experiences, add it
-      if (profile.industry && !allIndustries.includes(profile.industry)) {
-        allIndustries.push(profile.industry)
-      }
-
-      console.log(`Inserting profile ${profile.name} into database...`)
-      const { data, error } = await this.supabase
-        .from('lawrenceville_vector')
-        .insert({
-          profile_data: profile,
-          embedding: Array.from(embedding.data),
-          ...metadata,
-          // Add structured metadata columns
-          current_company: currentCompany,
-          current_title: currentTitle,
-          current_industry: currentIndustry,
-          years_experience: yearsExperience,
-          high_school: profile.high_school || [],
-          undergraduate_school: profile.undergraduate_school || [],
-          graduate_school: profile.graduate_school || [],
-          graduation_year: profile.graduation_year,
-          all_companies: allCompanies,
-          all_industries: allIndustries
-        })
-
-      if (error) {
-        console.error(`Supabase error for ${profile.name}:`, JSON.stringify(error, null, 2))
-        throw new Error(`Supabase error: ${error.message || JSON.stringify(error)}`)
-      }
-      
-      console.log(`Successfully added profile ${profile.name} to database`)
-      return data
-    } catch (error) {
-      console.error(`Error adding profile ${profile.name} to database:`, error)
-      if (error instanceof Error) {
-        console.error(`Error message: ${error.message}`)
-        console.error(`Error stack: ${error.stack}`)
-      } else {
-        console.error(`Non-Error object thrown:`, JSON.stringify(error, null, 2))
-      }
-      throw error
-    }
-  }
-  async search(query: string, filters: SearchFilters = {}, top_k: number = 10): Promise<SearchResult[]> {
-    console.log('[Engine] Search method called with:', { query, filters, top_k });
-    
-    try {
-      await this.initializeEmbedder();
       
       // Generate query embedding
       const queryEmbedding = await this.embedder(query, { 
@@ -287,96 +219,54 @@ export class LinkedInProfileSearchEngine {
         normalize: true 
       });
       
-      // Extract potential filter terms from the query
-      const queryLower = query.toLowerCase();
-      let companyFilter = filters.company;
-      let industryFilter = filters.industry;
-      let titleFilter = filters.title;
-      let locationFilter = filters.location;
-      let schoolFilter = filters.school;
+      // Convert embedding to array format for Supabase
+      const embeddingArray = Array.from(queryEmbedding.data)
       
-      // If no explicit filters provided, try to extract from query
-      if (!companyFilter && !industryFilter && !titleFilter && !locationFilter && !schoolFilter) {
-        // Simple extraction logic - could be made more sophisticated
-        if (queryLower.includes('goldman') || queryLower.includes('sachs')) {
-          companyFilter = 'Goldman Sachs';
-        }
-        
-        if (queryLower.includes('finance') || queryLower.includes('banking')) {
-          industryFilter = 'Financial Services';
-        }
-        
-        // More extraction logic here...
-      }
+      console.log(`Searching for "${query}" with embedding of length ${embeddingArray.length}`)
       
-      // Call the hybrid search function
-      const { data: results, error } = await this.supabase
-        .rpc('hybrid_search', {
-          query_embedding: Array.from(queryEmbedding.data),
-          similarity_threshold: 0.3,
-          company_filter: companyFilter,
-          industry_filter: industryFilter,
-          title_filter: titleFilter,
-          location_filter: locationFilter,
-          school_filter: schoolFilter,
-          limit_count: top_k
-        });
-        
-      if (error) {
-        console.error('[Engine] Supabase RPC error:', error);
-        throw error;
-      }
+      // Extract filters
+      const { 
+        company, 
+        industry, 
+        title, 
+        location, 
+        school 
+      } = filters;
       
-      console.log('[Engine] Search results received:', results ? results.length : 0);
-      
-      if (!results || results.length === 0) {
-        console.log('[Engine] No search results found');
-        return [];
-      }
-      
-      console.log('[Engine] Processing search results');
-      const processedResults = results.map((result: any) => {
-        const profile = result.profile_data;
-        const currentJob = profile.experiences && profile.experiences.length > 0 
-          ? profile.experiences[0] 
-          : null;
-          
-        // Create a summary from experiences and education
-        let summary = '';
-        if (currentJob) {
-          summary = `Currently ${currentJob.title} at ${currentJob.company}. `;
-        }
-        
-        if (profile.education && profile.education.length > 0) {
-          const latestEducation = profile.education[0];
-          summary += `Educated at ${latestEducation.school}${latestEducation.program ? ` in ${latestEducation.program}` : ''}.`;
-        }
-        
-        return {
-          id: result.id.toString(),
-          name: result.name || profile.name || 'Unknown',
-          title: currentJob ? currentJob.title : 'No title',
-          location: result.location || profile.location || profile.current_job_location || 'Unknown location',
-          url_link: result.url_link || profile.linkedin_url || profile.profile_url || '#',
-          similarity_score: result.similarity,
-          summary: summary || 'No summary available',
-          industry: profile.industry,
-          years_experience: profile.years_of_experience,
-          estimated_salary: profile.current_estimated_salary,
-          profile_photo_url: profile.profile_photo_url,
-          current_job: currentJob ? currentJob.title : undefined,
-          current_company: currentJob ? currentJob.company : undefined,
-          education: profile.education && profile.education.length > 0 
-            ? `${profile.education[0].school}${profile.education[0].program ? ` - ${profile.education[0].program}` : ''}` 
-            : undefined
-        };
+      // Call the hybrid_search function with the embedding and filters
+      const { data, error } = await this.supabase.rpc('hybrid_search', {
+        query_embedding: embeddingArray,
+        similarity_threshold: 0.3,
+        company_filter: company || null,
+        industry_filter: industry || null,
+        title_filter: title || null,
+        location_filter: location || null,
+        school_filter: school || null,
+        limit_count: top_k
       });
       
-      console.log('[Engine] Search completed successfully');
-      return processedResults;
+      if (error) {
+        console.error("Error in vector search:", error)
+        throw new Error(`Vector search failed: ${error.message}`)
+      }
+      
+      console.log(`Search returned ${data.length} results`)
+      
+      // Format the results to match your frontend expectations
+      return data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        linkedin_url: item.linkedin_url,
+        current_company: item.current_company,
+        current_title: item.current_title,
+        current_industry: item.current_general_industry,
+        location: item.current_job_location,
+        years_experience: item.years_of_experience,
+        similarity: item.similarity
+      }));
     } catch (error) {
-      console.error('[Engine] Error in search method:', error);
-      throw error;
+      console.error("Error in search:", error)
+      throw error
     }
   }
 
@@ -433,6 +323,68 @@ export class LinkedInProfileSearchEngine {
     } catch (error) {
       console.error("Error fixing embedding format:", error);
       throw error;
+    }
+  }
+
+  async getProfileById(id: number) {
+    try {
+      const { data, error } = await this.supabase
+        .from('lawrenceville_vector')  // Update table name if needed
+        .select(`
+          id, 
+          name, 
+          linkedin_url,
+          current_company,
+          current_title,
+          current_general_industry,
+          current_job_location,
+          years_of_experience,
+          graduation_year,
+          current_estimated_salary,
+          all_companies,
+          all_titles,
+          all_industries,
+          undergraduate_school,
+          graduate_school,
+          certificate_program,
+          natural_language_experiences,
+          natural_language_education
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error(`Error fetching profile ${id}:`, error)
+        throw new Error(`Failed to fetch profile: ${error.message}`)
+      }
+      
+      if (!data) {
+        throw new Error(`Profile with ID ${id} not found`)
+      }
+      
+      return {
+        id: data.id,
+        name: data.name,
+        linkedin_url: data.linkedin_url,
+        current_company: data.current_company,
+        current_title: data.current_title,
+        current_industry: data.current_general_industry,
+        location: data.current_job_location,
+        years_experience: data.years_of_experience,
+        graduation_year: data.graduation_year,
+        estimated_salary: data.current_estimated_salary,
+        companies: data.all_companies || [],
+        titles: data.all_titles || [],
+        industries: data.all_industries || [],
+        undergraduate_schools: data.undergraduate_school || [],
+        graduate_schools: data.graduate_school || [],
+        certificate_programs: data.certificate_program || [],
+        experiences_text: data.natural_language_experiences,
+        education_text: data.natural_language_education
+      };
+    } catch (error) {
+      console.error(`Error in getProfileById:`, error)
+      throw error
     }
   }
 }
