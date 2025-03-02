@@ -41,6 +41,11 @@ function ReportsContent() {
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [industrySalaryData, setIndustrySalaryData] = useState<Array<{ name: string; value: number }>>([])
   const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
+  const [explanations, setExplanations] = useState<{[key: string]: {factual: string, strategic: string}}>({});
+  const [executiveSummary, setExecutiveSummary] = useState<string>('');
+  const [recommendations, setRecommendations] = useState<string>('');
+  const [isLoadingExplanations, setIsLoadingExplanations] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -323,6 +328,280 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName]);
 
+  const generateExplanations = async () => {
+    if (!generatedReport) return;
+    
+    setIsLoadingExplanations(true);
+    
+    // Calculate how many pages we'll need (1 for intro, 1 for each visualization)
+    const visualizationCount = selectedOptions.length;
+    setTotalPages(visualizationCount + 2); // +1 for intro, +1 for recommendations
+    
+    const explanationPromises = selectedOptions.map(async (option) => {
+      let chartData;
+      let chartTitle;
+      
+      switch(option) {
+        case 'salary':
+          if (!salaryData) return null;
+          const salaryYearData = salaryData.find((item: any) => 
+            item.class_year.toString() === selectedYears[0].toString()
+          );
+          if (!salaryYearData?.current_salary_distribution) return null;
+          chartData = Object.entries(salaryYearData.current_salary_distribution)
+            .map(([range, count]) => ({
+              name: range,
+              value: typeof count === 'number' ? count : Number(count)
+            }));
+          chartTitle = "Salary Distribution";
+          break;
+          
+        case 'industry':
+          if (!industryData) return null;
+          const industryYearData = industryData.find((item: any) => 
+            item.class_year.toString() === selectedYears[0].toString()
+          );
+          if (!industryYearData?.current_industry_distribution) return null;
+          chartData = Object.entries(industryYearData.current_industry_distribution)
+            .map(([industry, value]) => ({
+              name: industry,
+              value: typeof value === 'number' ? value : Number(value)
+            }));
+          chartTitle = "Industry Distribution";
+          break;
+          
+        case 'location':
+          if (!locationData.length) return null;
+          chartData = locationData;
+          chartTitle = "Geographic Distribution";
+          break;
+          
+        case 'graduate_school':
+          if (!graduateSchoolData) return null;
+          const gradSchoolYearData = graduateSchoolData.find((item: any) => 
+            item.class_year.toString() === selectedYears[0].toString()
+          );
+          if (!gradSchoolYearData?.graduate_school_distribution) return null;
+          chartData = Object.entries(gradSchoolYearData.graduate_school_distribution)
+            .map(([school, value]) => ({
+              name: school,
+              value: typeof value === 'number' ? value : Number(value)
+            }));
+          chartTitle = "Graduate School Distribution";
+          break;
+          
+        case 'salary_by_industry':
+          if (!industrySalaryData.length) return null;
+          chartData = industrySalaryData;
+          chartTitle = "Average Salary by Industry";
+          break;
+          
+        default:
+          return null;
+      }
+      
+      if (!chartData) return null;
+      
+      try {
+        // Call AI to generate explanations
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [
+              { 
+                role: 'user', 
+                content: `Please provide two sections of analysis for this ${chartTitle} data: 
+                1. A factual interpretation (what the chart shows with specific data points)
+                2. Strategic implications (why it matters to the school and how to use this information strategically)`
+              }
+            ],
+            chartId: option,
+            chartType: option === 'location' || option === 'salary_by_industry' ? 'bar' : 
+                      (option === 'industry' || option === 'graduate_school' ? 'pie' : 'bar'),
+            chartTitle,
+            chartData
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to generate explanation');
+        }
+        
+        // Process streaming response
+        const reader = response.body?.getReader();
+        let result = '';
+        
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = new TextDecoder().decode(value);
+            const lines = chunk.split('\n\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(5));
+                  result += data.content || '';
+                } catch (e) {
+                  console.error('Error parsing JSON:', e);
+                }
+              }
+            }
+          }
+        }
+        
+        // Split into factual and strategic sections
+        const sections = result.split(/(?=Strategic implications)/i);
+        const factual = sections[0].replace(/Factual interpretation:?/i, '').trim();
+        const strategic = sections.length > 1 ? sections[1].trim() : '';
+        
+        return { option, explanation: { factual, strategic } };
+      } catch (error) {
+        console.error(`Error generating explanation for ${option}:`, error);
+        return { 
+          option, 
+          explanation: { 
+            factual: `Unable to generate analysis for ${chartTitle}.`,
+            strategic: `Please refer to the visualization for insights.`
+          } 
+        };
+      }
+    });
+    
+    // Wait for all explanations
+    const results = await Promise.all(explanationPromises);
+    
+    // Update explanations state
+    const explanationsMap: {[key: string]: {factual: string, strategic: string}} = {};
+    results.forEach(result => {
+      if (result) {
+        explanationsMap[result.option] = result.explanation;
+      }
+    });
+    setExplanations(explanationsMap);
+    
+    // Generate executive summary
+    try {
+      const summaryResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ 
+            role: 'user', 
+            content: `Create a concise executive summary (2-3 paragraphs) for a report containing the following visualizations: ${selectedOptions.map(option => 
+              option === 'salary' ? 'Salary Distribution' :
+              option === 'industry' ? 'Industry Distribution' :
+              option === 'location' ? 'Geographic Distribution' :
+              option === 'graduate_school' ? 'Graduate School Distribution' :
+              option === 'salary_by_industry' ? 'Average Salary by Industry' : option
+            ).join(', ')}.`
+          }],
+          chartId: 'executive_summary',
+          chartType: 'summary',
+          chartTitle: 'Executive Summary',
+          chartData: []
+        }),
+      });
+      
+      if (summaryResponse.ok) {
+        const reader = summaryResponse.body?.getReader();
+        let summaryResult = '';
+        
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = new TextDecoder().decode(value);
+            const lines = chunk.split('\n\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(5));
+                  summaryResult += data.content || '';
+                } catch (e) {
+                  console.error('Error parsing JSON:', e);
+                }
+              }
+            }
+          }
+        }
+        
+        setExecutiveSummary(summaryResult);
+      }
+      
+      // Generate recommendations
+      const recommendationsResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ 
+            role: 'user', 
+            content: `Based on the visualizations in this report (${selectedOptions.map(option => 
+              option === 'salary' ? 'Salary Distribution' :
+              option === 'industry' ? 'Industry Distribution' :
+              option === 'location' ? 'Geographic Distribution' :
+              option === 'graduate_school' ? 'Graduate School Distribution' :
+              option === 'salary_by_industry' ? 'Average Salary by Industry' : option
+            ).join(', ')}), provide 3-4 specific, actionable recommendations for the school.`
+          }],
+          chartId: 'recommendations',
+          chartType: 'recommendations',
+          chartTitle: 'Recommendations',
+          chartData: []
+        }),
+      });
+      
+      if (recommendationsResponse.ok) {
+        const reader = recommendationsResponse.body?.getReader();
+        let recommendationsResult = '';
+        
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = new TextDecoder().decode(value);
+            const lines = chunk.split('\n\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(5));
+                  recommendationsResult += data.content || '';
+                } catch (e) {
+                  console.error('Error parsing JSON:', e);
+                }
+              }
+            }
+          }
+        }
+        
+        setRecommendations(recommendationsResult);
+      }
+    } catch (error) {
+      console.error('Error generating summary or recommendations:', error);
+    }
+    
+    setIsLoadingExplanations(false);
+  };
+
+  useEffect(() => {
+    if (generatedReport) {
+      generateExplanations();
+    }
+  }, [generatedReport]);
+
   const ReportContent = () => {
     return (
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
@@ -337,138 +616,266 @@ function ReportsContent() {
               <p>Select data points to preview your report</p>
             </div>
           ) : (
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-6">Alumni Success Metrics Report</h1>
-              {salaryData && selectedOptions.includes('salary') && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">Salary Distribution</h3>
-                  {selectedYears.map(year => {
-                    const yearData = salaryData.find((item: { class_year: number | string }) => 
-                      item.class_year.toString() === year.toString()
-                    );
-
-                    console.log('Year data for salary:', yearData);
-                    if (!yearData?.current_salary_distribution) return null;
-
-                    // Transform the data for the bar chart
-                    const chartData = Object.entries(yearData.current_salary_distribution)
-                      .map(([range, count]) => ({
-                        name: range, 
-                        value: typeof count === 'number' ? count : Number(count),
-                        fill: '#4A90E2'
-                      }))
-                      .sort((a, b) => {
-                        const aValue = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
-                        const bValue = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
-                        return aValue - bValue;
-                      });
-
-                    return (
-                      <div key={year} className="mb-8">
-                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                        <div className="h-64">
-                          <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
-                          <SalaryBarChart 
-                            data={chartData}
-                          />
-                          <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
-                        </div>
+            <>
+              {currentPage === 1 && (
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-6">Alumni Success Metrics Report</h1>
+                  
+                  {/* Executive Summary */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
+                    {isLoadingExplanations ? (
+                      <div className="h-40 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-              {industryData && selectedOptions.includes('industry') && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">Industry Distribution</h3>
-                  {selectedYears.map(year => {
-                    const yearData = industryData.find((item: { class_year: number | string }) => 
-                      item.class_year.toString() === year.toString()
-                    );
-
-                    if (!yearData?.current_industry_distribution) return null;
-
-                    // Transform the data for the pie chart
-                    const chartData = Object.entries(yearData.current_industry_distribution)
-                      .map(([industry, value]) => ({
-                        name: industry,
-                        value: typeof value === 'number' ? value : Number(value)
-                      }));
-
-                    return (
-                      <div key={year} className="mb-8">
-                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                        <div className="h-[400px]">
-                          <IndustryPieChart 
-                            data={chartData}
-                            isZoomed={true}
-                          />
-                        </div>
+                    ) : (
+                      <div className="prose">
+                        {executiveSummary ? (
+                          <p className="text-gray-700">{executiveSummary}</p>
+                        ) : (
+                          <p className="text-gray-500 italic">Executive summary will appear here once generated.</p>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-              {selectedOptions.includes('location') && locationData.length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                  <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
-                  <div className="h-[400px]">
-                    <GeographyBarChart
-                      data={locationData}
-                      isZoomed={true}
-                    />
+                    )}
+                  </div>
+                  
+                  {/* Table of Contents */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Report Contents</h2>
+                    <ul className="list-disc pl-5 text-gray-700">
+                      {selectedOptions.map((option, index) => (
+                        <li key={option} className="mb-2">
+                          {option === 'salary' ? 'Salary Distribution' :
+                           option === 'industry' ? 'Industry Distribution' :
+                           option === 'location' ? 'Geographic Distribution' :
+                           option === 'graduate_school' ? 'Graduate School Distribution' :
+                           option === 'salary_by_industry' ? 'Average Salary by Industry' : option}
+                          {` (Page ${index + 2})`}
+                        </li>
+                      ))}
+                      <li className="mb-2">Recommendations {`(Page ${selectedOptions.length + 2})`}</li>
+                    </ul>
+                  </div>
+                  
+                  {/* Report Methodology */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Methodology</h2>
+                    <p className="text-gray-700">
+                      This report analyzes alumni data from classes {selectedYears.join(', ')}. 
+                      The visualizations present key metrics related to career outcomes, 
+                      industry placement, geographic distribution, and educational advancement 
+                      of our alumni. Data was collected through the AlumIntel platform.
+                    </p>
                   </div>
                 </div>
               )}
-              {graduateSchoolData && selectedOptions.includes('graduate_school') && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">Graduate School Distribution</h3>
-                  {selectedYears.map(year => {
-                    const yearData = graduateSchoolData.find((item: { class_year: number | string }) => 
-                      item.class_year.toString() === year.toString()
+              
+              {/* Visualization Pages - One per page */}
+              {selectedOptions.map((option, index) => {
+                if (currentPage !== index + 2) return null;
+                
+                let visualizationContent;
+                switch(option) {
+                  case 'salary':
+                    visualizationContent = (
+                      <>
+                        <h2 className="text-xl font-semibold mb-4">Salary Distribution</h2>
+                        {selectedYears.map(year => {
+                          const yearData = salaryData?.find((item: { class_year: number | string }) => 
+                            item.class_year.toString() === year.toString()
+                          );
+                          
+                          if (!yearData?.current_salary_distribution) return null;
+                          
+                          const chartData = Object.entries(yearData.current_salary_distribution)
+                            .map(([range, count]) => ({
+                              name: range, 
+                              value: typeof count === 'number' ? count : Number(count),
+                              fill: '#4A90E2'
+                            }))
+                            .sort((a, b) => {
+                              const aValue = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
+                              const bValue = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
+                              return aValue - bValue;
+                            });
+                          
+                          return (
+                            <div key={year} className="mb-6">
+                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
+                              <div className="h-48 mb-4">
+                                <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
+                                <SalaryBarChart data={chartData} />
+                                <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
                     );
-
-                    if (!yearData?.graduate_school_distribution) return null;
-
-                    // Transform the data for the pie chart
-                    const chartData = Object.entries(yearData.graduate_school_distribution)
-                      .map(([school, value]) => ({
-                        name: school,
-                        value: typeof value === 'number' ? value : Number(value)
-                      }));
-
-                    return (
-                      <div key={year} className="mb-8">
-                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                        <div className="h-[400px]">
-                          <PieChart 
-                            data={chartData}
-                            isZoomed={true}
-                          />
+                    break;
+                    
+                  case 'industry':
+                    visualizationContent = (
+                      <>
+                        <h2 className="text-xl font-semibold mb-4">Industry Distribution</h2>
+                        {selectedYears.map(year => {
+                          const yearData = industryData?.find((item: { class_year: number | string }) => 
+                            item.class_year.toString() === year.toString()
+                          );
+                          
+                          if (!yearData?.current_industry_distribution) return null;
+                          
+                          const chartData = Object.entries(yearData.current_industry_distribution)
+                            .map(([industry, value]) => ({
+                              name: industry,
+                              value: typeof value === 'number' ? value : Number(value)
+                            }));
+                          
+                          return (
+                            <div key={year} className="mb-6">
+                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
+                              <div className="h-64 mb-4">
+                                <IndustryPieChart data={chartData} isZoomed={true} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    );
+                    break;
+                    
+                  case 'location':
+                    visualizationContent = (
+                      <>
+                        <h2 className="text-xl font-semibold mb-4">Geographic Distribution</h2>
+                        <div className="h-64 mb-6">
+                          <GeographyBarChart data={locationData} isZoomed={true} />
                         </div>
-                      </div>
+                      </>
                     );
-                  })}
-                </div>
-              )}
-              {industrySalaryData && selectedOptions.includes('salary_by_industry') && (
-                <div className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">Average Salary by Industry</h3>
-                  <div className="h-[400px]">
-                    <AverageSalaryByIndustryBarChart
-                      data={industrySalaryData}
-                      isZoomed={true}
-                    />
+                    break;
+                    
+                  case 'graduate_school':
+                    visualizationContent = (
+                      <>
+                        <h2 className="text-xl font-semibold mb-4">Graduate School Distribution</h2>
+                        {selectedYears.map(year => {
+                          const yearData = graduateSchoolData?.find((item: { class_year: number | string }) => 
+                            item.class_year.toString() === year.toString()
+                          );
+                          
+                          if (!yearData?.graduate_school_distribution) return null;
+                          
+                          const chartData = Object.entries(yearData.graduate_school_distribution)
+                            .map(([school, value]) => ({
+                              name: school,
+                              value: typeof value === 'number' ? value : Number(value)
+                            }));
+                          
+                          return (
+                            <div key={year} className="mb-6">
+                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
+                              <div className="h-64 mb-4">
+                                <PieChart data={chartData} isZoomed={true} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    );
+                    break;
+                    
+                  case 'salary_by_industry':
+                    visualizationContent = (
+                      <>
+                        <h2 className="text-xl font-semibold mb-4">Average Salary by Industry</h2>
+                        <div className="h-64 mb-6">
+                          <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={true} />
+                        </div>
+                      </>
+                    );
+                    break;
+                    
+                  default:
+                    visualizationContent = null;
+                }
+                
+                return (
+                  <div key={option}>
+                    {visualizationContent}
+                    
+                    {/* Data Explanations */}
+                    <div className="mt-4">
+                      {isLoadingExplanations ? (
+                        <div className="h-40 flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <h3 className="text-lg font-medium mb-2">Key Findings</h3>
+                          <div className="prose mb-4">
+                            {explanations[option]?.factual ? (
+                              <p className="text-gray-700">{explanations[option].factual}</p>
+                            ) : (
+                              <p className="text-gray-500 italic">Analysis will appear here once generated.</p>
+                            )}
+                          </div>
+                          
+                          <h3 className="text-lg font-medium mb-2">Strategic Implications</h3>
+                          <div className="prose">
+                            {explanations[option]?.strategic ? (
+                              <p className="text-gray-700">{explanations[option].strategic}</p>
+                            ) : (
+                              <p className="text-gray-500 italic">Strategic insights will appear here once generated.</p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+              
+              {/* Recommendations Page */}
+              {currentPage === selectedOptions.length + 2 && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
+                  {isLoadingExplanations ? (
+                    <div className="h-40 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                    </div>
+                  ) : (
+                    <div className="prose">
+                      {recommendations ? (
+                        <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: recommendations }}></div>
+                      ) : (
+                        <p className="text-gray-500 italic">Recommendations will appear here once generated.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
-        <div className="absolute bottom-4 right-4 text-gray-500">Page {currentPage} of 2</div>
+        <div className="absolute bottom-4 right-4 text-gray-500">
+          Page {currentPage} of {totalPages}
+        </div>
       </div>
-    )
-  }
+    );
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
     <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
@@ -656,7 +1063,7 @@ function ReportsContent() {
               <ReportContent />
               <div className="mt-4 flex justify-center space-x-4">
                 <button
-                  onClick={() => setCurrentPage(1)}
+                  onClick={handlePreviousPage}
                   disabled={currentPage === 1}
                   className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -664,8 +1071,8 @@ function ReportsContent() {
                   Previous Page
                 </button>
                 <button
-                  onClick={() => setCurrentPage(2)}
-                  disabled={currentPage === 2}
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
                   className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next Page

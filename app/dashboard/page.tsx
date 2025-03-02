@@ -26,7 +26,7 @@ interface SearchResult {
   similarity: number;
 }
 
-const suggestionTags = [
+const Tags = [
   "Working on AI at FAANG",
   "People who started companies in Web3",
   "Recent graduates in Silicon Valley",
@@ -101,7 +101,7 @@ const tagScrollAnimation = `
 .scrolling-tags {
   display: inline-flex;
   white-space: nowrap;
-  animation: scrollTags 90s linear infinite; /* Slowed down from 30s to 60s */
+  animation: scrollTags 110s linear infinite; /* Slowed down from 30s to 60s */
   padding-right: 2rem;
 }
 
