@@ -136,8 +136,8 @@ export default function Onboarding() {
       if (supabaseError) {
         throw new Error('Failed to update account status');
       }
-  
-      // Redirect to signin page with confirmation success message
+      
+      // Redirect to signin page with confirmed=true parameter
       router.push("/signin?confirmed=true");
     } catch (error: any) {
       console.error("Confirmation error:", error);
