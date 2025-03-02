@@ -31,7 +31,81 @@ const suggestionTags = [
   "People who started companies in Web3",
   "Recent graduates in Silicon Valley",
   "Alumni in Healthcare Tech",
+  "Engineers at SpaceX",
+  "Harvard MBA graduates in Finance",
+  "Product Managers in New York",
+  "Data Scientists at startups",
+  "Alumni working in Renewable Energy",
+  "Lawyers at top firms in Chicago",
+  "Graduates with PhDs in Computer Science",
+  "Marketing Directors in Los Angeles",
+  "People who worked at Goldman Sachs",
+  "Software Engineers who became CTOs",
+  "Alumni in Pharmaceutical Research",
+  "Consultants at McKinsey",
+  "Graduates working in Singapore",
+  "UX Designers at tech companies",
+  "People with experience in Biotech",
+  "Stanford graduates in Venture Capital",
+  "Alumni who founded EdTech startups",
+  "Doctors working in telemedicine",
+  "MBA graduates in Consumer Goods",
+  "People working remotely in Tech",
+  "Alumni with experience at Amazon",
+  "Architects in sustainable design",
+  "Graduates working in London",
+  "Data Engineers in Financial Services",
+  "People who transitioned to Nonprofit",
+  "MIT graduates in Robotics",
+  "Alumni in Media and Entertainment",
+  "Product Designers in San Francisco",
+  "People with experience in Cybersecurity",
+  "Graduates working at Microsoft",
+  "Investment Bankers in Hong Kong",
+  "Alumni who became professors",
+  "Software Developers in Austin",
+  "People with experience in Supply Chain",
+  "Yale Law graduates in Public Policy",
+  "Alumni working in Hospitality",
+  "Machine Learning Engineers at Google",
+  "Graduates in Advertising in Chicago",
+  "People who started E-commerce businesses",
+  "Alumni with experience in Real Estate",
+  "Project Managers in Seattle",
+  "Graduates working in Aerospace",
+  "People with experience in Healthcare Administration",
+  "Columbia graduates in Journalism",
+  "Alumni in Sustainable Fashion",
+  "DevOps Engineers at unicorn startups"
 ]
+
+// Add this CSS to your component or a global stylesheet
+const tagScrollAnimation = `
+@keyframes scrollTags {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.scrolling-tags-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.scrolling-tags {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: scrollTags 60s linear infinite;
+}
+
+.scrolling-tags:hover {
+  animation-play-state: paused;
+}
+`;
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -169,6 +243,48 @@ export default function DashboardPage() {
     }
   };
   
+  // Add this new function to handle tag clicks
+  const handleTagClick = async (query: string) => {
+    setSearchQuery(query); // Set the search input to the tag text
+    
+    console.log('[Client] Search initiated with tag:', query);
+    setIsSearching(true);
+    
+    try {
+      console.log('[Client] About to send request to /api/search');
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, top_k: 10 }),
+      });
+      
+      console.log('[Client] Response received, status:', response.status);
+      
+      if (!response.ok) {
+        console.error('[Client] Error response from server');
+        const errorData = await response.json();
+        console.error('[Client] Error details:', errorData);
+        throw new Error('Search failed');
+      }
+      
+      console.log('[Client] Parsing response JSON');
+      const data = await response.json();
+      console.log('[Client] Search results:', data);
+      
+      // Process search results
+      const results = data.results;
+      setSearchResults(results);
+      return results;
+    } catch (error) {
+      console.error('[Client] Search error:', error);
+      throw error;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -221,16 +337,23 @@ export default function DashboardPage() {
             </div>
           </form>
 
-          <div className="flex flex-wrap gap-3 justify-center mb-8">
-            {suggestionTags.map((tag, index) => (
-              <button
-                key={index}
-                onClick={() => setSearchQuery(tag)}
-                className="px-4 py-2 bg-white/90 hover:bg-white rounded-full text-gray-700 text-sm transition-colors shadow-md"
-              >
-                {tag}
-              </button>
-            ))}
+          <style jsx>{tagScrollAnimation}</style>
+          
+          <div className="mt-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Try searching for:</h3>
+            <div className="scrolling-tags-container">
+              <div className="scrolling-tags">
+                {suggestionTags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    onClick={() => handleTagClick(tag)}
+                    className="inline-block bg-emerald-50 text-emerald-700 rounded-full px-3 py-1 text-sm font-medium mr-2 mb-2 cursor-pointer hover:bg-emerald-100 transition-colors"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Search Results */}

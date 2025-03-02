@@ -145,10 +145,27 @@ export class LinkedInProfileSearchEngine {
     }
   }
   
-  async getProfileById(id: number): Promise<ProfileDetail> {
+  async getProfileById(id: number, schoolName?: string): Promise<ProfileDetail> {
     try {
+      // Determine the table name based on the provided school name or fetch from localStorage
+      let tableName: string;
+      
+      if (schoolName) {
+        tableName = `${schoolName}_vector`;
+      } else {
+        // Try to get the school name from localStorage if running in browser
+        const storedSchoolName = typeof window !== 'undefined' ? 
+          localStorage.getItem('schoolName') : null;
+        
+        tableName = storedSchoolName ? 
+          `${storedSchoolName}_vector` : 
+          'lawrenceville_vector'; // Fallback to default
+      }
+      
+      console.log(`Fetching profile from table: ${tableName}`);
+      
       const { data, error } = await this.supabase
-        .from('lawrenceville_vector')  // Update table name if needed
+        .from(tableName)
         .select(`
           id, 
           name, 
