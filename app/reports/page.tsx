@@ -40,7 +40,6 @@ function ReportsContent() {
   const [industryData, setIndustryData] = useState<any>(null)
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [industrySalaryData, setIndustrySalaryData] = useState<Array<{ name: string; value: number }>>([])
-  const [graduateSchoolData, setGraduateSchoolData] = useState<Array<{ name: string; value: number }>>([])
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -299,188 +298,118 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName]);
 
-  useEffect(() => {
-    if (selectedOptions.includes('graduate_school') && selectedYears.length > 0 && schoolName) {
-      const fetchGraduateSchoolData = async () => {
-        const { data, error } = await supabase
-          .from(schoolName + '_distribution')
-          .select('graduate_school_distribution, class_year')
-          .in('class_year', selectedYears)
-          .not('graduate_school_distribution', 'is', null);
-
-        if (error) {
-          console.error('Error fetching graduate school data:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          // Process the graduate school data
-          const gradSchoolCounts: { [key: string]: number } = {};
-          
-          data.forEach(profile => {
-            if (profile.graduate_school_distribution) {
-              Object.entries(profile.graduate_school_distribution).forEach(([school, count]) => {
-                gradSchoolCounts[school] = (gradSchoolCounts[school] || 0) + Number(count);
-              });
-            }
-          });
-
-          // Convert to chart format and sort by value
-          const chartData = Object.entries(gradSchoolCounts)
-            .map(([name, value]) => ({ name, value }))
-            .sort((a, b) => b.value - a.value);
-
-          setGraduateSchoolData(chartData);
-        }
-      };
-
-      fetchGraduateSchoolData();
-    }
-  }, [selectedOptions, selectedYears, schoolName]);
-
   const ReportContent = () => {
     return (
-      <div ref={reportRef} className="bg-white p-8 rounded-lg shadow-lg w-full">
-        {/* Report header */}
-        <div className="flex items-center mb-6">
-          <Image src="/assets/icons8-atom-96.png" alt="Logo" width={48} height={48} />
-          <div className="ml-4">
-            <h2 className="text-2xl font-bold text-gray-800">{schoolName} Alumni Report</h2>
-            <p className="text-gray-500">Generated on {new Date().toLocaleDateString()}</p>
-          </div>
+      <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
+        <div className="absolute top-8 left-8 flex items-center">
+          <Image src="/assets/icons8-atom-24.png" alt="AlumIntel Logo" width={24} height={24} />
+          <span className="ml-2 text-xl font-bold text-black">AlumIntel</span>
         </div>
+        <div className="p-8 pt-20">
+          {!generatedReport ? (
+            <div className="min-h-[calc(11in-4rem)] flex flex-col items-center justify-center text-gray-500">
+              <BarChart4 className="w-16 h-16 mb-4 text-black" />
+              <p>Select data points to preview your report</p>
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">Alumni Success Metrics Report</h1>
+              {salaryData && selectedOptions.includes('salary') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Salary Distribution</h3>
+                  {selectedYears.map(year => {
+                    const yearData = salaryData.find((item: { class_year: number | string }) => 
+                      item.class_year.toString() === year.toString()
+                    );
 
-        {/* Report content */}
-        {currentPage === 1 ? (
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Overview</h3>
-            <p className="text-gray-700 mb-6">
-              This report provides insights into alumni outcomes for {schoolName} graduates from the selected years.
-            </p>
+                    if (!yearData?.current_salary_breakdown) return null;
 
-            {/* Salary Distribution */}
-            {salaryData && selectedOptions.includes('salary') && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Salary Distribution</h3>
-                {selectedYears.map(year => {
-                  const yearData = salaryData.find((item: { class_year: number | string }) => 
-                    item.class_year.toString() === year.toString()
-                  );
+                    // Transform the data for the bar chart
+                    const chartData = Object.entries(yearData.current_salary_breakdown)
+                      .map(([range, count]) => ({
+                        name: range.replace('$', '').replace(',', ''),  // Clean up the range format
+                        value: count as number,
+                        fill: '#4A90E2'
+                      }))
+                      .sort((a, b) => {
+                        const aValue = parseInt(a.name.split('-')[0]);
+                        const bValue = parseInt(b.name.split('-')[0]);
+                        return aValue - bValue;
+                      });
 
-                  if (!yearData?.current_salary_distribution) return null;
-
-                  // Transform the data for the bar chart
-                  const chartData = Object.entries(yearData.current_salary_distribution)
-                    .map(([range, count]) => ({
-                      name: range.replace('$', '').replace(',', ''),
-                      value: count as number,
-                      fill: '#4A90E2'
-                    }))
-                    .sort((a, b) => {
-                      const aValue = parseInt(a.name.split('-')[0]);
-                      const bValue = parseInt(b.name.split('-')[0]);
-                      return aValue - bValue;
-                    });
-
-                  return (
-                    <div key={year} className="mb-8">
-                      <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                      <div className="h-64">
-                        <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
-                        <SalaryBarChart 
-                          data={chartData}
-                          isZoomed={false}
-                        />
-                        <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
+                    return (
+                      <div key={year} className="mb-8">
+                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
+                        <div className="h-64">
+                          <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
+                          <SalaryBarChart 
+                            data={chartData}
+                          />
+                          <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+              {industryData && selectedOptions.includes('industry') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Industry Distribution</h3>
+                  {selectedYears.map(year => {
+                    const yearData = industryData.find((item: { class_year: number | string }) => 
+                      item.class_year.toString() === year.toString()
+                    );
 
-            {/* Industry Distribution */}
-            {industryData && selectedOptions.includes('industry') && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Industry Distribution</h3>
-                {selectedYears.map(year => {
-                  const yearData = industryData.find((item: { class_year: number | string }) => 
-                    item.class_year.toString() === year.toString()
-                  );
+                    if (!yearData?.current_industry_breakdown_pie_graph) return null;
 
-                  if (!yearData?.current_industry_breakdown_pie_graph) return null;
+                    // Transform the data for the pie chart
+                    const chartData = Object.entries(yearData.current_industry_breakdown_pie_graph)
+                      .map(([industry, percentage]) => ({
+                        name: industry,
+                        value: (percentage as number) * 100  // Multiply by 100 to convert decimal to percentage
+                      }));
 
-                  // Transform the data for the pie chart
-                  const chartData = Object.entries(yearData.current_industry_breakdown_pie_graph)
-                    .map(([industry, percentage]) => ({
-                      name: industry,
-                      value: (percentage as number) * 100  // Multiply by 100 to convert decimal to percentage
-                    }));
-
-                  return (
-                    <div key={year} className="mb-8">
-                      <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                      <div className="h-[300px]">
-                        <IndustryPieChart 
-                          data={chartData}
-                          isZoomed={false}
-                          showLegend={true}
-                        />
+                    return (
+                      <div key={year} className="mb-8">
+                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
+                        <div className="h-[400px]">
+                          <IndustryPieChart 
+                            data={chartData}
+                            isZoomed={true}
+                            showLegend={true}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Geographic Distribution */}
-            {selectedOptions.includes('location') && locationData.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
-                <div className="h-[300px]">
-                  <GeographyBarChart
-                    data={locationData}
-                    isZoomed={false}
-                  />
+                    );
+                  })}
                 </div>
-              </div>
-            )}
-
-            {/* Average Salary by Industry */}
-            {industrySalaryData && selectedOptions.includes('salary_by_industry') && industrySalaryData.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Average Salary by Industry</h3>
-                <div className="h-[300px]">
-                  <AverageSalaryByIndustryBarChart
-                    data={industrySalaryData}
-                    isZoomed={false}
-                  />
+              )}
+              {selectedOptions.includes('location') && locationData.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                  <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
+                  <div className="h-[400px]">
+                    <GeographyBarChart
+                      data={locationData}
+                      isZoomed={true}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Graduate School Distribution */}
-            {graduateSchoolData && selectedOptions.includes('graduate_school') && graduateSchoolData.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Graduate School Distribution</h3>
-                <div className="h-[300px]">
-                  <PieChart
-                    data={graduateSchoolData}
-                    isZoomed={false}
-                  />
+              )}
+              {industrySalaryData && selectedOptions.includes('salary_by_industry') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Average Salary by Industry</h3>
+                  <div className="h-[400px]">
+                    <AverageSalaryByIndustryBarChart
+                      data={industrySalaryData}
+                      isZoomed={true}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Additional Insights</h3>
-            <p className="text-gray-700 mb-6">
-              Further analysis and recommendations based on the data.
-            </p>
-            {/* Additional content for page 2 */}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
+        <div className="absolute bottom-4 right-4 text-gray-500">Page {currentPage} of 2</div>
       </div>
     )
   }
