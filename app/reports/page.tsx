@@ -255,6 +255,49 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName]);
 
+  useEffect(() => {
+    if (selectedOptions.includes('salary_by_industry') && selectedYears.length > 0 && schoolName) {
+      const fetchIndustrySalaryData = async () => {
+        const { data, error } = await supabase
+          .from(schoolName + '_distribution')
+          .select('average_salary_by_industry_distribution, class_year')
+          .in('class_year', selectedYears)
+          .not('average_salary_by_industry_distribution', 'is', null);
+
+        if (error) {
+          console.error('Error fetching industry salary data:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Process the industry salary data
+          const industrySalaries: { [key: string]: number } = {};
+          
+          data.forEach(profile => {
+            if (profile.average_salary_by_industry_distribution) {
+              Object.entries(profile.average_salary_by_industry_distribution).forEach(([industry, salary]) => {
+                if (industrySalaries[industry]) {
+                  industrySalaries[industry] = (industrySalaries[industry] + Number(salary)) / 2;
+                } else {
+                  industrySalaries[industry] = Number(salary);
+                }
+              });
+            }
+          });
+
+          // Convert to chart format and sort by value
+          const chartData = Object.entries(industrySalaries)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value);
+
+          setIndustrySalaryData(chartData);
+        }
+      };
+
+      fetchIndustrySalaryData();
+    }
+  }, [selectedOptions, selectedYears, schoolName]);
+
   const ReportContent = () => {
     return (
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
@@ -352,12 +395,12 @@ function ReportsContent() {
                   </div>
                 </div>
               )}
-              {selectedOptions.includes('salary_by_industry') && industryData && industryData.length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              {industrySalaryData && selectedOptions.includes('salary_by_industry') && (
+                <div className="mb-8">
                   <h3 className="text-xl font-semibold mb-4">Average Salary by Industry</h3>
                   <div className="h-[400px]">
                     <AverageSalaryByIndustryBarChart
-                      data={industryData}
+                      data={industrySalaryData}
                       isZoomed={true}
                     />
                   </div>
