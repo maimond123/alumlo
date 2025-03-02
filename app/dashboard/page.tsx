@@ -101,7 +101,7 @@ const tagScrollAnimation = `
 .scrolling-tags {
   display: inline-flex;
   white-space: nowrap;
-  animation: scrollTags 60s linear infinite; /* Slowed down from 30s to 60s */
+  animation: scrollTags 90s linear infinite; /* Slowed down from 30s to 60s */
   padding-right: 2rem;
 }
 
