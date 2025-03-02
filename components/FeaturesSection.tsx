@@ -37,21 +37,21 @@ export default function FeaturesSection() {
       id: 'search',
       title: 'Natural Language Alumni Search',
       description: 'Find any alumni with conversational queries like "Who works at Google in AI?" and connect directly to their LinkedIn profiles. Our advanced AI understands complex questions and delivers precise results instantly.',
-      icon: <Search className="w-12 h-12 text-emerald-600" />,
+      icon: <Search className="w-12 h-12 text-black" />,
       color: 'from-amber-50 to-amber-100'
     },
     {
       id: 'visualizations',
       title: 'AI-Powered Data Visualizations',
       description: 'Explore interactive charts with AI-generated insights that explain trends and patterns in your alumni network. Uncover hidden connections and opportunities that traditional analytics might miss.',
-      icon: <BarChart className="w-12 h-12 text-emerald-600" />,
+      icon: <BarChart className="w-12 h-12 text-black" />,
       color: 'from-emerald-50 to-emerald-100'
     },
     {
       id: 'reports',
       title: 'Beautiful Downloadable Reports',
       description: 'Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. Customize layouts, colors, and content to match your institution\'s branding.',
-      icon: <FileText className="w-12 h-12 text-emerald-600" />,
+      icon: <FileText className="w-12 h-12 text-black" />,
       color: 'from-blue-50 to-blue-100'
     }
   ]
