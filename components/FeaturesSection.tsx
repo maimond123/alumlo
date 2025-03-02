@@ -6,20 +6,31 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function FeaturesSection() {
-  const [activeFeature, setActiveFeature] = useState(0)
-  const { ref, inView } = useInView({
+  // Create separate refs for each section
+  const { ref: searchRef, inView: searchInView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true
+  })
+  
+  const { ref: visualizationsRef, inView: visualizationsInView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true
+  })
+  
+  const { ref: reportsRef, inView: reportsInView } = useInView({
     threshold: 0.1,
     triggerOnce: true
   })
 
-  useEffect(() => {
-    // Auto-rotate through features
-    const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % 3)
-    }, 7000)
-    
-    return () => clearInterval(interval)
-  }, [])
+  // Demo state for search feature
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
+  
+  // Demo state for visualization feature
+  const [activeChart, setActiveChart] = useState(0)
+  
+  // Demo state for reports feature
+  const [reportPage, setReportPage] = useState(0)
 
   const features = [
     {
@@ -27,7 +38,6 @@ export default function FeaturesSection() {
       title: 'Natural Language Alumni Search',
       description: 'Find any alumni with conversational queries like "Who works at Google in AI?" and connect directly to their LinkedIn profiles. Our advanced AI understands complex questions and delivers precise results instantly.',
       icon: <Search className="w-12 h-12 text-emerald-600" />,
-      imageSrc: '/placeholder-search.png', // Replace with actual screenshot
       color: 'from-amber-50 to-amber-100'
     },
     {
@@ -35,7 +45,6 @@ export default function FeaturesSection() {
       title: 'AI-Powered Data Visualizations',
       description: 'Explore interactive charts with AI-generated insights that explain trends and patterns in your alumni network. Uncover hidden connections and opportunities that traditional analytics might miss.',
       icon: <BarChart className="w-12 h-12 text-emerald-600" />,
-      imageSrc: '/placeholder-visualization.png', // Replace with actual screenshot
       color: 'from-emerald-50 to-emerald-100'
     },
     {
@@ -43,111 +52,439 @@ export default function FeaturesSection() {
       title: 'Beautiful Downloadable Reports',
       description: 'Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. Customize layouts, colors, and content to match your institution\'s branding.',
       icon: <FileText className="w-12 h-12 text-emerald-600" />,
-      imageSrc: '/placeholder-report.png', // Replace with actual screenshot
       color: 'from-blue-50 to-blue-100'
     }
   ]
 
-  const nextFeature = () => {
-    setActiveFeature((prev) => (prev + 1) % features.length)
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      setIsSearching(true)
+      setTimeout(() => setIsSearching(false), 1500)
+    }
   }
-
-  const prevFeature = () => {
-    setActiveFeature((prev) => (prev - 1 + features.length) % features.length)
-  }
-
-  const currentFeature = features[activeFeature]
 
   return (
-    <section 
-      ref={ref}
-      className={`py-20 bg-white transition-opacity duration-1000 ease-in-out ${
-        inView ? 'opacity-100' : 'opacity-0'
-      }`}
-    >
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-emerald-700 mb-12 text-center">Powerful Features for Schools</h2>
-        
-        <div className="relative">
-          {/* Feature Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="flex space-x-2">
-              {features.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveFeature(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === activeFeature ? 'bg-emerald-600 scale-125' : 'bg-emerald-200'
-                  }`}
-                  aria-label={`Go to feature ${index + 1}`}
+    <>
+      {/* Feature 1: Search */}
+      <section 
+        ref={searchRef}
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
+          searchInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}
+      >
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 mb-6">
+                <Search className="w-10 h-10 text-emerald-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[0].title}</h2>
+              <p className="text-lg text-emerald-700 mb-6">{features[0].description}</p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  </div>
+                  <span>Find alumni by industry, company, or job title</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  </div>
+                  <span>Discover connections between alumni</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  </div>
+                  <span>Ask complex questions in natural language</span>
+                </li>
+              </ul>
+              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
+                Learn more <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Interactive Search Demo */}
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-8 shadow-lg">
+              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Try a search query</h3>
+              <div className="relative mb-6">
+                <input
+                  type="text"
+                  placeholder="e.g., 'Who works at Google in AI?'"
+                  className="w-full p-4 pr-12 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
-              ))}
+                <button 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 hover:text-emerald-800"
+                  onClick={handleSearch}
+                >
+                  <Search className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 min-h-[200px]">
+                {isSearching ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
+                  </div>
+                ) : searchQuery && !isSearching ? (
+                  <div className="space-y-4">
+                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                      <div className="font-medium">Sarah Johnson</div>
+                      <div className="text-sm text-gray-600">AI Research Scientist at Google</div>
+                    </div>
+                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                      <div className="font-medium">Michael Chen</div>
+                      <div className="text-sm text-gray-600">Machine Learning Engineer at Google</div>
+                    </div>
+                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                      <div className="font-medium">Priya Patel</div>
+                      <div className="text-sm text-gray-600">AI Product Manager at Google</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                    Enter a search query to find alumni
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Feature Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Feature Description */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeFeature}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col"
-              >
-                <div className={`p-2 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br ${currentFeature.color} mb-6`}>
-                  {currentFeature.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-emerald-800 mb-4">{currentFeature.title}</h3>
-                <p className="text-lg text-emerald-700 mb-6">{currentFeature.description}</p>
-                <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors w-fit">
-                  Learn more <ArrowRight className="ml-2 w-5 h-5" />
+      {/* Feature 2: Visualizations */}
+      <section 
+        ref={visualizationsRef}
+        className={`py-24 bg-emerald-50 transition-all duration-1000 ease-in-out ${
+          visualizationsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}
+      >
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Interactive Visualization Demo */}
+            <div className="bg-white rounded-xl p-8 shadow-lg order-2 lg:order-1">
+              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Interactive Charts</h3>
+              
+              <div className="flex space-x-2 mb-4">
+                <button 
+                  onClick={() => setActiveChart(0)}
+                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
+                >
+                  Industries
                 </button>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Feature Demo/Visualization */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeFeature}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.5 }}
-                className={`bg-gradient-to-br ${currentFeature.color} rounded-xl p-6 shadow-lg aspect-video flex items-center justify-center`}
-              >
-                {/* Replace with actual demo content */}
-                <div className="text-center">
-                  <div className="mb-4 opacity-80">Interactive Demo</div>
-                  <div className="w-full h-48 bg-white/50 rounded-lg flex items-center justify-center">
-                    {currentFeature.icon}
+                <button 
+                  onClick={() => setActiveChart(1)}
+                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
+                >
+                  Locations
+                </button>
+                <button 
+                  onClick={() => setActiveChart(2)}
+                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 2 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
+                >
+                  Salaries
+                </button>
+              </div>
+              
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 min-h-[250px] flex items-center justify-center">
+                {activeChart === 0 && (
+                  <div className="w-full h-full flex flex-col">
+                    <div className="text-center mb-2 text-sm text-emerald-800 font-medium">Top Industries</div>
+                    <div className="flex-1 flex items-end space-x-2">
+                      <div className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '85%'}}></div>
+                        <div className="text-xs mt-1">Tech</div>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '65%'}}></div>
+                        <div className="text-xs mt-1">Finance</div>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '45%'}}></div>
+                        <div className="text-xs mt-1">Health</div>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '35%'}}></div>
+                        <div className="text-xs mt-1">Education</div>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center">
+                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '25%'}}></div>
+                        <div className="text-xs mt-1">Retail</div>
+                      </div>
+                    </div>
                   </div>
+                )}
+                
+                {activeChart === 1 && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="relative w-48 h-48">
+                      <div className="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
+                      <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent" style={{transform: 'rotate(45deg)'}}></div>
+                      <div className="absolute inset-0 flex items-center justify-center flex-col">
+                        <div className="text-3xl font-bold text-emerald-700">42%</div>
+                        <div className="text-sm text-emerald-600">San Francisco</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {activeChart === 2 && (
+                  <div className="w-full h-full">
+                    <div className="text-center mb-2 text-sm text-emerald-800 font-medium">Salary Growth</div>
+                    <svg viewBox="0 0 100 50" className="w-full h-40">
+                      <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
+                        fill="none" 
+                        stroke="#059669" 
+                        strokeWidth="2" 
+                      />
+                      <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
+                        fill="url(#gradient)" 
+                        fillOpacity="0.2" 
+                        stroke="none" 
+                      />
+                      <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="#059669" stopOpacity="0.8"/>
+                          <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <div>0 Years</div>
+                      <div>5 Years</div>
+                      <div>10 Years</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                <div className="text-sm font-medium text-emerald-800">AI Insight:</div>
+                <div className="text-sm text-emerald-700">
+                  {activeChart === 0 && "Tech industry employment has grown 23% in the last 2 years among your alumni."}
+                  {activeChart === 1 && "42% of your alumni work in the San Francisco Bay Area, a 15% increase since 2020."}
+                  {activeChart === 2 && "Alumni salaries increase by an average of 12% per year in the first 5 years after graduation."}
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation Arrows */}
-          <div className="flex justify-between absolute top-1/2 -translate-y-1/2 w-full left-0 px-4 pointer-events-none">
-            <button 
-              onClick={prevFeature}
-              className="bg-white/80 hover:bg-white text-emerald-700 p-2 rounded-full shadow-md pointer-events-auto transition-all hover:scale-110"
-              aria-label="Previous feature"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button 
-              onClick={nextFeature}
-              className="bg-white/80 hover:bg-white text-emerald-700 p-2 rounded-full shadow-md pointer-events-auto transition-all hover:scale-110"
-              aria-label="Next feature"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+              </div>
+            </div>
+            
+            <div className="order-1 lg:order-2">
+              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6">
+                <BarChart className="w-10 h-10 text-emerald-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[1].title}</h2>
+              <p className="text-lg text-emerald-700 mb-6">{features[1].description}</p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Interactive charts update in real-time</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>AI-generated insights explain what the data means</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Customize visualizations for your specific needs</span>
+                </li>
+              </ul>
+              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
+                Learn more <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Feature 3: Reports */}
+      <section 
+        ref={reportsRef}
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
+          reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}
+      >
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 mb-6">
+                <FileText className="w-10 h-10 text-emerald-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[2].title}</h2>
+              <p className="text-lg text-emerald-700 mb-6">{features[2].description}</p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  </div>
+                  <span>Export in PDF, PowerPoint, or Excel formats</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  </div>
+                  <span>Customize with your school's branding</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  </div>
+                  <span>Schedule automated reports for stakeholders</span>
+                </li>
+              </ul>
+              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
+                Learn more <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Interactive Report Demo */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8 shadow-lg">
+              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Preview Report</h3>
+              
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-emerald-600 text-white p-4 flex justify-between items-center">
+                  <div className="font-medium">Alumni Success Report</div>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => setReportPage(0)}
+                      className={`w-2 h-2 rounded-full ${reportPage === 0 ? 'bg-white' : 'bg-white/50'}`}
+                    ></button>
+                    <button 
+                      onClick={() => setReportPage(1)}
+                      className={`w-2 h-2 rounded-full ${reportPage === 1 ? 'bg-white' : 'bg-white/50'}`}
+                    ></button>
+                    <button 
+                      onClick={() => setReportPage(2)}
+                      className={`w-2 h-2 rounded-full ${reportPage === 2 ? 'bg-white' : 'bg-white/50'}`}
+                    ></button>
+                  </div>
+                </div>
+                
+                <div className="p-6 min-h-[250px]">
+                  {reportPage === 0 && (
+                    <div className="space-y-4">
+                      <div className="text-lg font-bold text-emerald-800">Executive Summary</div>
+                      <div className="h-3 bg-gray-200 rounded-full w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded-full w-5/6"></div>
+                      <div className="h-3 bg-gray-200 rounded-full w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded-full w-4/6"></div>
+                      <div className="mt-6 flex justify-between">
+                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
+                          <div className="text-2xl font-bold text-emerald-700">94%</div>
+                          <div className="text-xs text-emerald-600">Employment Rate</div>
+                        </div>
+                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
+                          <div className="text-2xl font-bold text-emerald-700">$78K</div>
+                          <div className="text-xs text-emerald-600">Avg. Starting Salary</div>
+                        </div>
+                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
+                          <div className="text-2xl font-bold text-emerald-700">87%</div>
+                          <div className="text-xs text-emerald-600">Satisfaction Rate</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {reportPage === 1 && (
+                    <div className="space-y-4">
+                      <div className="text-lg font-bold text-emerald-800">Industry Breakdown</div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1/3 text-sm">Technology</div>
+                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
+                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '65%'}}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1/3 text-sm">Finance</div>
+                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
+                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '45%'}}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1/3 text-sm">Healthcare</div>
+                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
+                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '35%'}}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1/3 text-sm">Education</div>
+                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
+                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '25%'}}></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1/3 text-sm">Other</div>
+                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
+                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '15%'}}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {reportPage === 2 && (
+                    <div className="space-y-4">
+                      <div className="text-lg font-bold text-emerald-800">Geographic Distribution</div>
+                      <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <div className="w-32 h-32 relative">
+                          <div className="absolute w-8 h-8 bg-emerald-500 rounded-full top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white text-xs">42%</div>
+                          <div className="absolute w-6 h-6 bg-emerald-500 rounded-full top-1/2 right-1/4 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white text-xs">28%</div>
+                          <div className="absolute w-5 h-5 bg-emerald-500 rounded-full bottom-1/4 left-1/3 transform -translate-x-1/2 translate-y-1/2 flex items-center justify-center text-white text-xs">15%</div>
+                          <div className="absolute w-4 h-4 bg-emerald-500 rounded-full bottom-1/3 right-1/3 transform translate-x-1/2 translate-y-1/2 flex items-center justify-center text-white text-xs">8%</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <div>West Coast: 42%</div>
+                        <div>East Coast: 28%</div>
+                        <div>Midwest: 15%</div>
+                        <div>Other: 15%</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="border-t border-gray-200 p-4 flex justify-between items-center">
+                  <button 
+                    onClick={() => setReportPage(Math.max(0, reportPage - 1))}
+                    className="text-emerald-600 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={reportPage === 0}
+                  >
+                    Previous
+                  </button>
+                  <div className="text-sm text-gray-500">Page {reportPage + 1} of 3</div>
+                  <button 
+                    onClick={() => setReportPage(Math.min(2, reportPage + 1))}
+                    className="text-emerald-600 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={reportPage === 2}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex justify-center space-x-3">
+                <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PDF
+                </button>
+                <button className="px-4 py-2 bg-white border border-emerald-600 text-emerald-600 rounded-lg text-sm hover:bg-emerald-50 transition-colors">
+                  Customize
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }
