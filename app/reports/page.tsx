@@ -40,6 +40,7 @@ function ReportsContent() {
   const [industryData, setIndustryData] = useState<any>(null)
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [industrySalaryData, setIndustrySalaryData] = useState<Array<{ name: string; value: number }>>([])
+  const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -183,6 +184,7 @@ function ReportsContent() {
           return;
         }
 
+        console.log('Salary data fetched:', data);
         if (data) {
           setSalaryData(data);
         }
@@ -298,6 +300,29 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName]);
 
+  useEffect(() => {
+    if (selectedOptions.includes('graduate_school') && selectedYears.length > 0 && schoolName) {
+      const fetchGraduateSchoolData = async () => {
+        const { data, error } = await supabase
+          .from(schoolName + '_distribution')
+          .select('graduate_school_distribution, class_year')
+          .in('class_year', selectedYears)
+          .not('graduate_school_distribution', 'is', null);
+
+        if (error) {
+          console.error('Error fetching graduate school data:', error);
+          return;
+        }
+
+        if (data) {
+          setGraduateSchoolData(data);
+        }
+      };
+
+      fetchGraduateSchoolData();
+    }
+  }, [selectedOptions, selectedYears, schoolName]);
+
   const ReportContent = () => {
     return (
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
@@ -322,18 +347,19 @@ function ReportsContent() {
                       item.class_year.toString() === year.toString()
                     );
 
-                    if (!yearData?.current_salary_breakdown) return null;
+                    console.log('Year data for salary:', yearData);
+                    if (!yearData?.current_salary_distribution) return null;
 
                     // Transform the data for the bar chart
-                    const chartData = Object.entries(yearData.current_salary_breakdown)
+                    const chartData = Object.entries(yearData.current_salary_distribution)
                       .map(([range, count]) => ({
-                        name: range.replace('$', '').replace(',', ''),  // Clean up the range format
-                        value: count as number,
+                        name: range, 
+                        value: typeof count === 'number' ? count : Number(count),
                         fill: '#4A90E2'
                       }))
                       .sort((a, b) => {
-                        const aValue = parseInt(a.name.split('-')[0]);
-                        const bValue = parseInt(b.name.split('-')[0]);
+                        const aValue = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
+                        const bValue = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
                         return aValue - bValue;
                       });
 
@@ -360,13 +386,13 @@ function ReportsContent() {
                       item.class_year.toString() === year.toString()
                     );
 
-                    if (!yearData?.current_industry_breakdown_pie_graph) return null;
+                    if (!yearData?.current_industry_distribution) return null;
 
                     // Transform the data for the pie chart
-                    const chartData = Object.entries(yearData.current_industry_breakdown_pie_graph)
-                      .map(([industry, percentage]) => ({
+                    const chartData = Object.entries(yearData.current_industry_distribution)
+                      .map(([industry, value]) => ({
                         name: industry,
-                        value: (percentage as number) * 100  // Multiply by 100 to convert decimal to percentage
+                        value: typeof value === 'number' ? value : Number(value)
                       }));
 
                     return (
@@ -376,7 +402,6 @@ function ReportsContent() {
                           <IndustryPieChart 
                             data={chartData}
                             isZoomed={true}
-                            showLegend={true}
                           />
                         </div>
                       </div>
@@ -393,6 +418,37 @@ function ReportsContent() {
                       isZoomed={true}
                     />
                   </div>
+                </div>
+              )}
+              {graduateSchoolData && selectedOptions.includes('graduate_school') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Graduate School Distribution</h3>
+                  {selectedYears.map(year => {
+                    const yearData = graduateSchoolData.find((item: { class_year: number | string }) => 
+                      item.class_year.toString() === year.toString()
+                    );
+
+                    if (!yearData?.graduate_school_distribution) return null;
+
+                    // Transform the data for the pie chart
+                    const chartData = Object.entries(yearData.graduate_school_distribution)
+                      .map(([school, value]) => ({
+                        name: school,
+                        value: typeof value === 'number' ? value : Number(value)
+                      }));
+
+                    return (
+                      <div key={year} className="mb-8">
+                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
+                        <div className="h-[400px]">
+                          <PieChart 
+                            data={chartData}
+                            isZoomed={true}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
               {industrySalaryData && selectedOptions.includes('salary_by_industry') && (
