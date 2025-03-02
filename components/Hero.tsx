@@ -61,7 +61,7 @@ export default function Hero() {
           </h1>
           
           <p className="text-xl text-emerald-700 mb-8 max-w-2xl">
-            Transform how you understand, engage with, and showcase your alumni network with powerful search, visualizations, and reports.
+            Empower your institution with powerful data visualizations and AI-driven insights to showcase your school's unique advantages.
           </p>
           
           <div className="mb-12">
