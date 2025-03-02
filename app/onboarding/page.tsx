@@ -137,31 +137,8 @@ export default function Onboarding() {
         throw new Error('Failed to update account status');
       }
   
-      // Step 3: Try to sign in automatically after confirmation
-      try {
-        const { signIn } = await import('aws-amplify/auth');
-        await signIn({
-          username: email,
-          password: password,
-        });
-        
-        // Check if sign-in was successful
-        const { fetchAuthSession } = await import('aws-amplify/auth');
-        const session = await fetchAuthSession();
-        
-        if (session.tokens) {
-          console.log("User authenticated successfully, redirecting to dashboard");
-          router.push("/dashboard");
-        } else {
-          // Handle silently - just redirect to signin
-          console.log("Automatic sign-in unsuccessful, redirecting to signin page");
-          router.push("/signin?confirmed=true");
-        }
-      } catch (signInError) {
-        // If auto sign-in fails, redirect to signin page with success message
-        console.log("Automatic sign-in failed, redirecting to signin page");
-        router.push("/signin?confirmed=true");
-      }
+      // Redirect to signin page with confirmation success message
+      router.push("/signin?confirmed=true");
     } catch (error: any) {
       console.error("Confirmation error:", error);
       setError(error.message || "Failed to confirm signup");
