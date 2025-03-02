@@ -259,7 +259,7 @@ function ReportsContent() {
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
         <div className="absolute top-8 left-8 flex items-center">
           <Image src="/assets/icons8-atom-24.png" alt="AlumIntel Logo" width={24} height={24} />
-          <span className="ml-2 text-xl font-bold text-emerald-800">AlumIntel</span>
+          <span className="ml-2 text-xl font-bold text-black">AlumIntel</span>
         </div>
         <div className="p-8 pt-20">
           {!generatedReport ? (
