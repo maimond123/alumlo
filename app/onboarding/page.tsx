@@ -137,11 +137,28 @@ export default function Onboarding() {
         throw new Error('Failed to update account status');
       }
       
-      // Redirect to signin page with confirmed=true parameter
-      router.push("/signin?confirmed=true");
+      // Step 3: Sign in the user directly and redirect to dashboard
+      try {
+        const { signIn } = await import('aws-amplify/auth');
+        const signInResult = await signIn({
+          username: email,
+          password: password,
+        });
+        
+        // Redirect directly to dashboard regardless of sign-in result
+        // This prevents the "already signed in" error
+        router.push("/dashboard");
+        
+      } catch (signInError) {
+        // Even if sign-in fails, redirect to dashboard
+        // The dashboard will handle authentication state
+        console.error("Sign-in error (suppressed):", signInError);
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       console.error("Confirmation error:", error);
-      setError(error.message || "Failed to confirm signup");
+      // Don't show the actual error to the user
+      setError("Failed to confirm your account. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
