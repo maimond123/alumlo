@@ -31,6 +31,7 @@ function ReportsContent() {
   const [yearInput, setYearInput] = useState("")
   const [suggestedYears, setSuggestedYears] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [generatedReport, setGeneratedReport] = useState<any>(null)
   const [isDecadeView, setIsDecadeView] = useState(false)
@@ -253,112 +254,110 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName]);
 
-  const handleOutsideClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setIsExpanded(false);
-    }
-  };
-
   const ReportContent = () => {
     return (
-      <div ref={reportRef} className="bg-white rounded-lg shadow-lg overflow-auto">
-        <div className="p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800">{schoolName} Alumni Report</h2>
-            <p className="text-gray-500">
-              Generated on {new Date().toLocaleDateString()} • Class Years: {selectedYears.join(', ')}
-            </p>
-          </div>
-
-          <div className="space-y-8">
-            {salaryData && selectedOptions.includes('salary') && (
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h3 className="text-xl font-semibold mb-4">Salary Distribution</h3>
-                {selectedYears.map(year => {
-                  const yearData = salaryData.find((item: { class_year: number | string }) => 
-                    item.class_year.toString() === year.toString()
-                  );
-
-                  if (!yearData?.current_salary_breakdown) return null;
-
-                  // Transform the data for the bar chart
-                  const chartData = Object.entries(yearData.current_salary_breakdown)
-                    .map(([range, count]) => ({
-                      name: range.replace('$', '').replace(',', ''),  // Clean up the range format
-                      value: count as number,
-                      fill: '#4A90E2'
-                    }))
-                    .sort((a, b) => {
-                      const aValue = parseInt(a.name.split('-')[0]);
-                      const bValue = parseInt(b.name.split('-')[0]);
-                      return aValue - bValue;
-                    });
-
-                  return (
-                    <div key={year} className="mb-8">
-                      <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                      <div className="h-64">
-                        <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
-                        <SalaryBarChart 
-                          data={chartData}
-                        />
-                        <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {industryData && selectedOptions.includes('industry') && (
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-4">Industry Distribution</h3>
-                {selectedYears.map(year => {
-                  const yearData = industryData.find((item: { class_year: number | string }) => 
-                    item.class_year.toString() === year.toString()
-                  );
-
-                  if (!yearData?.current_industry_breakdown_pie_graph) return null;
-
-                  // Transform the data for the pie chart
-                  const chartData = Object.entries(yearData.current_industry_breakdown_pie_graph)
-                    .map(([industry, percentage]) => ({
-                      name: industry,
-                      value: (percentage as number) * 100  // Multiply by 100 to convert decimal to percentage
-                    }));
-
-                  return (
-                    <div key={year} className="mb-8">
-                      <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
-                      <div className="h-[400px]">
-                        <IndustryPieChart 
-                          data={chartData}
-                          isZoomed={true}
-                          showLegend={true}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {selectedOptions.includes('location') && locationData.length > 0 && (
-              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
-                <div className="h-[400px]">
-                  <BarChart
-                    data={locationData}
-                    isZoomed={true}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+      <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
+        <div className="absolute top-8 left-8 flex items-center">
+          <Image src="/icons8-atom-24.png" alt="AlumIntel Logo" width={32} height={32} />
+          <span className="ml-2 text-xl font-bold text-emerald-800">AlumIntel</span>
         </div>
+        <div className="p-8 pt-20">
+          {!generatedReport ? (
+            <div className="min-h-[calc(11in-4rem)] flex flex-col items-center justify-center text-gray-500">
+              <BarChart4 className="w-16 h-16 mb-4 text-emerald-500" />
+              <p>Select data points to preview your report</p>
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-6">Alumni Success Metrics Report</h1>
+              {salaryData && selectedOptions.includes('salary') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Salary Distribution</h3>
+                  {selectedYears.map(year => {
+                    const yearData = salaryData.find((item: { class_year: number | string }) => 
+                      item.class_year.toString() === year.toString()
+                    );
+
+                    if (!yearData?.current_salary_breakdown) return null;
+
+                    // Transform the data for the bar chart
+                    const chartData = Object.entries(yearData.current_salary_breakdown)
+                      .map(([range, count]) => ({
+                        name: range.replace('$', '').replace(',', ''),  // Clean up the range format
+                        value: count as number,
+                        fill: '#4A90E2'
+                      }))
+                      .sort((a, b) => {
+                        const aValue = parseInt(a.name.split('-')[0]);
+                        const bValue = parseInt(b.name.split('-')[0]);
+                        return aValue - bValue;
+                      });
+
+                    return (
+                      <div key={year} className="mb-8">
+                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
+                        <div className="h-64">
+                          <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
+                          <SalaryBarChart 
+                            data={chartData}
+                          />
+                          <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {industryData && selectedOptions.includes('industry') && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">Industry Distribution</h3>
+                  {selectedYears.map(year => {
+                    const yearData = industryData.find((item: { class_year: number | string }) => 
+                      item.class_year.toString() === year.toString()
+                    );
+
+                    if (!yearData?.current_industry_breakdown_pie_graph) return null;
+
+                    // Transform the data for the pie chart
+                    const chartData = Object.entries(yearData.current_industry_breakdown_pie_graph)
+                      .map(([industry, percentage]) => ({
+                        name: industry,
+                        value: (percentage as number) * 100  // Multiply by 100 to convert decimal to percentage
+                      }));
+
+                    return (
+                      <div key={year} className="mb-8">
+                        <h4 className="text-lg font-medium mb-2">Class of {year}</h4>
+                        <div className="h-[400px]">
+                          <IndustryPieChart 
+                            data={chartData}
+                            isZoomed={true}
+                            showLegend={true}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {selectedOptions.includes('location') && locationData.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                  <h3 className="text-xl font-semibold mb-4">Geographic Distribution</h3>
+                  <div className="h-[400px]">
+                    <BarChart
+                      data={locationData}
+                      isZoomed={true}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="absolute bottom-4 right-4 text-gray-500">Page {currentPage} of 2</div>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
@@ -531,7 +530,11 @@ function ReportsContent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50"
-            onClick={handleOutsideClick}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsExpanded(false);
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0.9 }}
@@ -539,7 +542,31 @@ function ReportsContent() {
               exit={{ scale: 0.9 }}
               className="bg-gray-700 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg"
             >
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
               <ReportContent />
+              <div className="mt-4 flex justify-center space-x-4">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous Page
+                </button>
+                <button
+                  onClick={() => setCurrentPage(2)}
+                  disabled={currentPage === 2}
+                  className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next Page
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
