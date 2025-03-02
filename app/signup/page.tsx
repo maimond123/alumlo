@@ -205,18 +205,6 @@ export default function Signup() {
                     .
                   </p>
                 </motion.div>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.1 }}
-                  className="mt-4"
-                >
-                  <Link href="/data-insights">
-                    <button className="w-full bg-teal-500 text-white px-8 py-4 rounded-full text-xl font-semibold hover:bg-teal-600 transition-colors">
-                      Go to Data Insights (temporary)
-                    </button>
-                  </Link>
-                </motion.div>
               </div>
             </div>
           </div>
