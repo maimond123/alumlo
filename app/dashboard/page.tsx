@@ -95,12 +95,13 @@ const tagScrollAnimation = `
   max-width: 2xl;
   overflow: hidden;
   position: relative;
+  margin-top: 0.5rem;
 }
 
 .scrolling-tags {
   display: inline-flex;
   white-space: nowrap;
-  animation: scrollTags 30s linear infinite;
+  animation: scrollTags 60s linear infinite; /* Slowed down from 30s to 60s */
   padding-right: 2rem;
 }
 
@@ -343,7 +344,7 @@ export default function DashboardPage() {
             Explore {formattedSchoolName} Alumni Data
           </h1>
 
-          <form onSubmit={handleSearch} className="w-full max-w-2xl mb-6">
+          <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
             <div className="relative">
               <input
                 type="text"
@@ -364,8 +365,7 @@ export default function DashboardPage() {
 
           <style jsx>{tagScrollAnimation}</style>
           
-          <div className="mt-6 w-full max-w-2xl">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Try searching for:</h3>
+          <div className="w-full max-w-2xl">
             <div className="scrolling-tags-container">
               <div className="scrolling-tags">
                 {/* First copy of tags */}
