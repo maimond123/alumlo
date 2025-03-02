@@ -79,19 +79,20 @@ const suggestionTags = [
   "DevOps Engineers at unicorn startups"
 ]
 
-// Add this CSS to your component or a global stylesheet
+// Update the CSS animation for a better infinite scroll effect
 const tagScrollAnimation = `
 @keyframes scrollTags {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
 .scrolling-tags-container {
   width: 100%;
+  max-width: 2xl;
   overflow: hidden;
   position: relative;
 }
@@ -99,11 +100,35 @@ const tagScrollAnimation = `
 .scrolling-tags {
   display: inline-flex;
   white-space: nowrap;
-  animation: scrollTags 60s linear infinite;
+  animation: scrollTags 30s linear infinite;
+  padding-right: 2rem;
 }
 
-.scrolling-tags:hover {
-  animation-play-state: paused;
+.scrolling-tags-content {
+  display: inline-flex;
+  padding-right: 2rem;
+}
+
+.scrolling-tags-content:last-child {
+  padding-right: 0;
+}
+
+.tag-item {
+  display: inline-block;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(4, 120, 87);
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tag-item:hover {
+  background-color: rgba(16, 185, 129, 0.2);
 }
 `;
 
@@ -339,19 +364,35 @@ export default function DashboardPage() {
 
           <style jsx>{tagScrollAnimation}</style>
           
-          <div className="mt-6">
+          <div className="mt-6 w-full max-w-2xl">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Try searching for:</h3>
             <div className="scrolling-tags-container">
               <div className="scrolling-tags">
-                {suggestionTags.map((tag, index) => (
-                  <span 
-                    key={index}
-                    onClick={() => handleTagClick(tag)}
-                    className="inline-block bg-emerald-50 text-emerald-700 rounded-full px-3 py-1 text-sm font-medium mr-2 mb-2 cursor-pointer hover:bg-emerald-100 transition-colors"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {/* First copy of tags */}
+                <div className="scrolling-tags-content">
+                  {suggestionTags.map((tag, index) => (
+                    <span 
+                      key={`first-${index}`}
+                      onClick={() => handleTagClick(tag)}
+                      className="tag-item"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Second copy of tags to create the infinite loop effect */}
+                <div className="scrolling-tags-content">
+                  {suggestionTags.map((tag, index) => (
+                    <span 
+                      key={`second-${index}`}
+                      onClick={() => handleTagClick(tag)}
+                      className="tag-item"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
