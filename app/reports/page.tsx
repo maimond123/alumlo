@@ -174,9 +174,9 @@ function ReportsContent() {
       const fetchSalaryData = async () => {
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
-          .select('current_salary_distribuiton, class_year')
+          .select('current_salary_distribution, class_year')
           .in('class_year', selectedYears)
-          .not('current_salary_distribuiton', 'is', null);
+          .not('current_salary_distribution', 'is', null);
 
         if (error) {
           console.error('Error fetching salary data:', error);
@@ -197,9 +197,9 @@ function ReportsContent() {
       const fetchIndustryData = async () => {
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
-          .select('current_industry_distribuiton, class_year')
+          .select('current_industry_distribution, class_year')
           .in('class_year', selectedYears)
-          .not('current_industry_distribuiton', 'is', null);
+          .not('current_industry_distribution', 'is', null);
 
         if (error) {
           console.error('Error fetching industry data:', error);
@@ -220,9 +220,9 @@ function ReportsContent() {
       const fetchLocationData = async () => {
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
-          .select('current_job_location_distribuiton, class_year')
+          .select('current_job_location_distribution, class_year')
           .in('class_year', selectedYears)
-          .not('current_job_location_distribuiton', 'is', null);
+          .not('current_job_location_distribution', 'is', null);
 
         if (error) {
           console.error('Error fetching location data:', error);
@@ -234,8 +234,8 @@ function ReportsContent() {
           const locationCounts: { [key: string]: number } = {};
           
           data.forEach(profile => {
-            if (profile.current_job_location_distribuiton) {
-              Object.entries(profile.current_job_location_distribuiton).forEach(([city, count]) => {
+            if (profile.current_job_location_distribution) {
+              Object.entries(profile.current_job_location_distribution).forEach(([city, count]) => {
                 locationCounts[city] = (locationCounts[city] || 0) + Number(count);
               });
             }
