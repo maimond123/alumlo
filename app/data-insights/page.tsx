@@ -282,11 +282,17 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Industry data response:", industryData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryData }))
-        if (industryData && industryData.length > 0) {
+        if (industryData && industryData.length > 0 && industryData[0].current_industry_distribution) {
           console.log("DEBUG: Setting industry data:", industryData[0].current_industry_distribution)
-          setIndustryData(industryData[0].current_industry_distribution)
+          const formattedData = Object.entries(industryData[0].current_industry_distribution)
+            .map(([name, value]) => ({ 
+              name, 
+              value: typeof value === 'number' ? value : Number(value) 
+            }));
+          setIndustryData(formattedData);
         } else {
           console.warn("DEBUG: No industry data found for year:", selectedYear)
+          setIndustryData([]);
         }
       }
 
@@ -342,11 +348,17 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Graduate school data response:", gradSchoolData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, gradSchoolData }))
-        if (gradSchoolData && gradSchoolData.length > 0) {
+        if (gradSchoolData && gradSchoolData.length > 0 && gradSchoolData[0].graduate_school_distribution) {
           console.log("DEBUG: Setting graduate school data:", gradSchoolData[0].graduate_school_distribution)
-          setGraduateSchoolData(gradSchoolData[0].graduate_school_distribution)
+          const formattedData = Object.entries(gradSchoolData[0].graduate_school_distribution)
+            .map(([name, value]) => ({ 
+              name, 
+              value: typeof value === 'number' ? value : Number(value) 
+            }));
+          setGraduateSchoolData(formattedData);
         } else {
           console.warn("DEBUG: No graduate school data found for year:", selectedYear)
+          setGraduateSchoolData([]);
         }
       }
 
@@ -469,7 +481,7 @@ export default function DataInsightsPage() {
   const renderChart = (chart: SchoolChartData) => {
     switch (chart.type) {
       case "salary":
-        return salaryData ? (
+        return salaryData && Array.isArray(salaryData) ? (
           <SalaryBarChart data={salaryData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading salary data...</div>
@@ -481,7 +493,7 @@ export default function DataInsightsPage() {
           <div className="w-full h-full flex items-center justify-center">Loading industry data...</div>
         )
       case "location":
-        return locationData && locationData.length > 0 ? (
+        return locationData && Array.isArray(locationData) && locationData.length > 0 ? (
           <GeographyBarChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading location data...</div>
@@ -493,7 +505,7 @@ export default function DataInsightsPage() {
           <div className="w-full h-full flex items-center justify-center">Loading graduate school data...</div>
         )
       case "industry_salary":
-        return industrySalaryData && industrySalaryData.length > 0 ? (
+        return industrySalaryData && Array.isArray(industrySalaryData) && industrySalaryData.length > 0 ? (
           <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading industry salary data...</div>
