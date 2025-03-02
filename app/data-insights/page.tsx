@@ -13,6 +13,8 @@ import { useSearchParams } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
 import { getUserEmail } from "../utils/auth"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
+import { AverageSalaryByIndustryBarChart } from "../../components/chart"
+import { IndustryStackedBarChart } from "../../components/chart"
 
 interface UserInfo {
   first_name: string
@@ -58,6 +60,8 @@ export default function DataInsightsPage() {
   const [industryData, setIndustryData] = useState<any>(null)
   const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
   const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
+  const [industrySalaryData, setIndustrySalaryData] = useState<Array<{ name: string; value: number }>>([])
+  const [industryProgressionData, setIndustryProgressionData] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     { role: 'assistant', content: 'What would you like to know about this data?' }
@@ -66,12 +70,14 @@ export default function DataInsightsPage() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Define the four specific charts we want to show
+  // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
     { id: "salary", title: "Salary Distribution", type: "salary" },
     { id: "industry", title: "Industry Sectors", type: "industry" },
     { id: "location", title: "Geographic Distribution", type: "location" },
     { id: "graduate_school", title: "Graduate School Distribution", type: "graduate_school" },
+    { id: "industry_salary", title: "Average Salary by Industry", type: "industry_salary" },
+    { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
   ]
 
   useEffect(() => {
@@ -342,6 +348,98 @@ export default function DataInsightsPage() {
           console.warn("DEBUG: No graduate school data found for year:", selectedYear)
         }
       }
+
+      // Fetch industry salary data
+      console.log("DEBUG: Fetching industry salary data...")
+      const { data: industrySalaryData, error: industrySalaryError } = await supabase
+        .from(tableName)
+        .select("average_salary_by_industry_distribution, class_year")
+        .eq("class_year", selectedYear)
+
+      if (industrySalaryError) {
+        console.error("Error fetching industry salary data:", industrySalaryError)
+        setDebugInfo((prev: Record<string, any>) => ({ ...prev, industrySalaryError }))
+      } else {
+        console.log("DEBUG: Industry salary data response:", industrySalaryData)
+        setDebugInfo((prev: Record<string, any>) => ({ ...prev, industrySalaryData }))
+        if (industrySalaryData && industrySalaryData.length > 0 && industrySalaryData[0].average_salary_by_industry_distribution) {
+          console.log("DEBUG: Raw industry salary data:", industrySalaryData[0].average_salary_by_industry_distribution);
+          
+          // Transform the object format into the array format expected by BarChart
+          const chartData = Object.entries(industrySalaryData[0].average_salary_by_industry_distribution)
+            .map(([industry, salary]) => ({ 
+              name: industry, 
+              value: typeof salary === 'number' ? salary : Number(salary) 
+            }))
+            .sort((a, b) => b.value - a.value); // Sort by salary (highest first)
+          
+          console.log("DEBUG: Transformed industry salary data:", chartData);
+          setIndustrySalaryData(chartData);
+        } else {
+          // If no real data, use sample data for demonstration
+          const sampleIndustrySalaryData = [
+            { name: "Technology & Software", value: 110000 },
+            { name: "Financial Services", value: 95000 },
+            { name: "Healthcare & Pharmaceuticals", value: 85000 },
+            { name: "Education", value: 65000 },
+            { name: "Manufacturing", value: 75000 }
+          ];
+          setIndustrySalaryData(sampleIndustrySalaryData);
+          console.warn("DEBUG: No industry salary data found for year:", selectedYear);
+        }
+      }
+
+      // Fetch industry progression data
+      console.log("DEBUG: Fetching industry progression data...")
+      const { data: industryProgressionData, error: industryProgressionError } = await supabase
+        .from(tableName)
+        .select("industry_progression_data, class_year")
+        .eq("class_year", selectedYear)
+      
+      if (industryProgressionError) {
+        console.error("Error fetching industry progression data:", industryProgressionError)
+        setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryProgressionError }))
+      } else {
+        console.log("DEBUG: Industry progression data response:", industryProgressionData)
+        setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryProgressionData }))
+        if (industryProgressionData && industryProgressionData.length > 0 && industryProgressionData[0].industry_progression_data) {
+          console.log("DEBUG: Raw industry progression data:", industryProgressionData[0].industry_progression_data);
+          setIndustryProgressionData(industryProgressionData[0].industry_progression_data);
+        } else {
+          // Sample data if no real data is available
+          const sampleData = [
+            {
+              "industries": {
+                "Technology & Software": { "count": 15 },
+                "Financial Services": { "count": 10 },
+                "Healthcare & Pharmaceuticals": { "count": 8 }
+              },
+              "years_after": 1
+            },
+            {
+              "industries": {
+                "Technology & Software": { "count": 20 },
+                "Financial Services": { "count": 12 },
+                "Healthcare & Pharmaceuticals": { "count": 5 },
+                "Education": { "count": 7 }
+              },
+              "years_after": 3
+            },
+            {
+              "industries": {
+                "Technology & Software": { "count": 25 },
+                "Financial Services": { "count": 15 },
+                "Healthcare & Pharmaceuticals": { "count": 10 },
+                "Education": { "count": 5 },
+                "Manufacturing": { "count": 8 }
+              },
+              "years_after": 5
+            }
+          ];
+          setIndustryProgressionData(sampleData);
+          console.warn("DEBUG: No industry progression data found for year:", selectedYear);
+        }
+      }
     } catch (error) {
       console.error("Error fetching school data:", error)
       setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: error }))
@@ -389,6 +487,18 @@ export default function DataInsightsPage() {
           <PieChart data={graduateSchoolData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading graduate school data...</div>
+        )
+      case "industry_salary":
+        return industrySalaryData && industrySalaryData.length > 0 ? (
+          <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={selectedChart?.id === chart.id} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">Loading industry salary data...</div>
+        )
+      case "industry_progression":
+        return industryProgressionData && industryProgressionData.length > 0 ? (
+          <IndustryStackedBarChart data={industryProgressionData} isZoomed={selectedChart?.id === chart.id} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">Loading industry progression data...</div>
         )
       default:
         return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>

@@ -52,6 +52,24 @@ const INDUSTRY_COLORS: Record<string, string> = {
   'Sports & Recreation': '#16A085'              // Bright Teal (reusing)
 }
 
+// Define the interface for the industry data
+interface IndustryCount {
+  [industry: string]: {
+    count: number;
+  };
+}
+
+// Define the interface for the stacked bar chart data
+interface StackedBarChartData {
+  years_after: number;
+  industries: IndustryCount;
+}
+
+interface IndustryStackedBarChartProps {
+  data: StackedBarChartData[];
+  isZoomed?: boolean;
+}
+
 export function ChartContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`w-full ${className}`}>
@@ -364,6 +382,119 @@ export const IndustryPieChart: React.FC<IndustryPieChartProps> = ({ data, isZoom
     </ResponsiveContainer>
   );
 };
+
+export function AverageSalaryByIndustryBarChart({ data, isZoomed = false }: ChartProps) {
+  return (
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart 
+          data={data}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 100 : 80 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="name" 
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 9} 
+            tickLine={false} 
+            axisLine={true}
+            angle={-45}
+            textAnchor="end"
+            height={isZoomed ? 100 : 80}
+          />
+          <YAxis 
+            type="number"
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 9} 
+            tickLine={false} 
+            axisLine={true}
+            allowDecimals={false}
+            tickFormatter={(value) => `$${Math.round(value / 1000)}k`}
+          />
+          <Tooltip 
+            content={<ChartTooltipContent />}
+            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Average Salary']}
+          />
+          <Bar 
+            dataKey="value" 
+            fill="#FFBB2880" // Golden yellow with 0.5 opacity
+            radius={[4, 4, 0, 0]} 
+            isAnimationActive={isZoomed} 
+          />
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  )
+}
+
+export function IndustryStackedBarChart({ data, isZoomed = false }: IndustryStackedBarChartProps) {
+  // Transform the data for the stacked bar chart
+  const transformedData = data.map(yearData => {
+    const result: any = { years_after: yearData.years_after };
+    
+    // Add each industry as a separate key in the result object
+    Object.entries(yearData.industries).forEach(([industry, { count }]) => {
+      result[industry] = count;
+    });
+    
+    return result;
+  });
+  
+  // Get all unique industries across all years
+  const allIndustries = new Set<string>();
+  data.forEach(yearData => {
+    Object.keys(yearData.industries).forEach(industry => {
+      allIndustries.add(industry);
+    });
+  });
+  
+  // Convert to array for mapping
+  const industries = Array.from(allIndustries);
+  
+  return (
+    <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart
+          data={transformedData}
+          margin={{ top: 20, right: 30, left: 20, bottom: isZoomed ? 100 : 80 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis 
+            dataKey="years_after" 
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 9} 
+            tickLine={false} 
+            axisLine={true}
+            label={{ value: 'Years After Graduation', position: 'insideBottom', offset: -10 }}
+          />
+          <YAxis 
+            stroke="hsl(var(--foreground))" 
+            fontSize={isZoomed ? 12 : 9} 
+            tickLine={false} 
+            axisLine={true}
+            label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip 
+            formatter={(value: number, name: string) => [value, name]}
+            labelFormatter={(label) => `${label} Year${label !== 1 ? 's' : ''} After Graduation`}
+          />
+          <Legend />
+          
+          {/* Create a Bar for each industry */}
+          {industries.map((industry, index) => (
+            <Bar 
+              key={industry}
+              dataKey={industry}
+              stackId="a"
+              fill={INDUSTRY_COLORS[industry] || COLORS[index % COLORS.length]}
+              name={industry}
+            />
+          ))}
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  );
+}
 
 
 

@@ -137,29 +137,30 @@ export default function Onboarding() {
         throw new Error('Failed to update account status');
       }
   
-      // Step 3: Check authentication status before redirecting
+      // Step 3: Try to sign in automatically after confirmation
       try {
+        const { signIn } = await import('aws-amplify/auth');
+        await signIn({
+          username: email,
+          password: password,
+        });
+        
+        // Check if sign-in was successful
         const { fetchAuthSession } = await import('aws-amplify/auth');
         const session = await fetchAuthSession();
         
         if (session.tokens) {
-          console.log("User is authenticated, redirecting to dashboard");
+          console.log("User authenticated successfully, redirecting to dashboard");
           router.push("/dashboard");
         } else {
-          console.log("User is not authenticated after confirmation, redirecting to signin");
-          setError("Account confirmed successfully. Please sign in to continue.");
-          
-          setTimeout(() => {
-            router.push("/signin");
-          }, 2000);
+          // Handle silently - just redirect to signin
+          console.log("Automatic sign-in unsuccessful, redirecting to signin page");
+          router.push("/signin?confirmed=true");
         }
-      } catch (authError) {
-        console.error("Error checking authentication:", authError);
-        setError("Account confirmed successfully. Please sign in to continue.");
-        
-        setTimeout(() => {
-          router.push("/signin");
-        }, 2000);
+      } catch (signInError) {
+        // If auto sign-in fails, redirect to signin page with success message
+        console.log("Automatic sign-in failed, redirecting to signin page");
+        router.push("/signin?confirmed=true");
       }
     } catch (error: any) {
       console.error("Confirmation error:", error);
