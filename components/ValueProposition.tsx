@@ -63,7 +63,7 @@ export default function ValueProposition() {
         <div className="mt-16 text-center">
           <Link href="/signup">
             <button className="bg-emerald-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-colors">
-              Start Your Free Trial
+              Start Today
             </button>
           </Link>
         </div>
