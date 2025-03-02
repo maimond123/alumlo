@@ -19,33 +19,37 @@ interface IndustryChartProps extends ChartProps {
 
 const COLORS = ['#0088FE', '#2E7D32', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
+// const PIE_COLORS = ['#00C49F', '#FFBB28', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'] 
+
 const INDUSTRY_COLORS: Record<string, string> = {
-  'Technology & Software': '#0088FE',           // Bright Blue
-  'Healthcare & Pharmaceuticals': '#00C49F',    // Teal
-  'Financial Services': '#FFBB28',              // Golden Yellow
-  'Manufacturing': '#FF8042',                   // Orange
-  'Retail & Consumer Goods': '#8884D8',        // Purple
-  'Media & Entertainment': '#FF6B6B',          // Coral Red
-  'Management Consulting': '#4ECDC4',          // Turquoise
-  'Legal Services': '#45B7D1',                 // Sky Blue
-  'Accounting & Tax': '#96CEB4',              // Sage Green
-  'Marketing & Advertising': '#FF7F50',       // Dark Coral
-  'Human Resources': '#9D7FD8',               // Lavender
-  'Research & Development': '#7FB7BE',        // Steel Blue
-  'Energy & Utilities': '#F7D794',            // Pale Gold
-  'Education': '#26A69A',                     // Dark Teal
-  'Real Estate': '#78909C',                   // Blue Grey
-  'Transportation & Logistics': '#FF9800',     // Deep Orange
-  'Telecommunications': '#29B6F6',            // Light Blue
-  'Agriculture': '#66BB6A',                   // Green
-  'Construction': '#FFA726',                  // Light Orange
-  'Hospitality & Tourism': '#EF5350',         // Red
-  'Government & Public Sector': '#7E57C2',    // Deep Purple
-  'Defense & Aerospace': '#546E7A',           // Dark Blue Grey
-  'Environmental Services': '#2E7D32',        // Forest Green
-  'Non-Profit & NGO': '#EC407A',             // Pink
-  'Professional Services': '#5C6BC0',         // Indigo
-  'Other': '#757575'                         // Grey
+  'Technology & Software': '#FFBB28',           // Golden Yellow
+  'Healthcare & Pharmaceuticals': '#FFD66A',    // Lightened Golden Yellow
+  'Financial Services': '#F39C12',              // Golden Amber
+  'Insurance': '#E67E22',                       // Amber
+  'Manufacturing': '#C27C00',                   // Dark Yellow
+  'Retail & Consumer Goods': '#F1C40F',         // Bright Yellow
+  'Fashion': '#00C49F',                         // Teal
+  'Media & Entertainment': '#1ABC9C',           // Bright Teal
+  'Management Consulting': '#16A085',           // Soft Teal
+  'Legal Services': '#48C9B0',                  // Pastel Teal
+  'Accounting & Tax': '#00B894',                // Deep Teal
+  'Marketing & Advertising': '#1D8586',         // Muted Teal
+  'Human Resources': '#2E7D32',                 // Forest Green
+  'Research & Development': '#27AE60',          // Bright Green
+  'Energy & Utilities': '#1E824C',              // Dark Green
+  'Education': '#58D68D',                       // Pastel Green
+  'Real Estate': '#229954',                     // Muted Green
+  'Transportation & Logistics': '#2ECC71',      // Soft Green
+  'Telecommunications': '#000000',              // Black
+  'Agriculture': '#333333',                     // Dark Grey
+  'Food & Beverage': '#4D4D4D',                 // Light Grey
+  'Construction': '#808080',                    // Mid Grey
+  'Hospitality & Tourism': '#FF5733',           // Warm Orange
+  'Government & Public Sector': '#9B59B6',      // Purple
+  'Defense & Aerospace': '#D35400',             // Burnt Orange
+  'Environmental Services': '#BDC3C7',          // Light Silver
+  'Non-Profit & NGO': '#F39C12',                // Golden Yellow (reusing)
+  'Sports & Recreation': '#16A085'              // Bright Teal (reusing)
 }
 
 export function ChartContainer({ children, className }: { children: React.ReactNode; className?: string }) {
