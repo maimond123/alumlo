@@ -77,7 +77,8 @@ export default function DataInsightsPage() {
     { id: "location", title: "Geographic Distribution", type: "location" },
     { id: "graduate_school", title: "Graduate School Distribution", type: "graduate_school" },
     { id: "industry_salary", title: "Average Salary by Industry", type: "industry_salary" },
-    { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
+    // Commenting out industry progression chart
+    // { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
   ]
 
   useEffect(() => {
@@ -389,6 +390,8 @@ export default function DataInsightsPage() {
         }
       }
 
+      // Commenting out industry progression data fetch
+      /*
       // Fetch industry progression data
       console.log("DEBUG: Fetching industry progression data...")
       const { data: industryProgressionData, error: industryProgressionError } = await supabase
@@ -440,6 +443,7 @@ export default function DataInsightsPage() {
           console.warn("DEBUG: No industry progression data found for year:", selectedYear);
         }
       }
+      */
     } catch (error) {
       console.error("Error fetching school data:", error)
       setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: error }))
@@ -494,12 +498,15 @@ export default function DataInsightsPage() {
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading industry salary data...</div>
         )
+      // Commenting out industry progression case
+      /*
       case "industry_progression":
         return industryProgressionData && industryProgressionData.length > 0 ? (
           <IndustryStackedBarChart data={industryProgressionData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading industry progression data...</div>
         )
+      */
       default:
         return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>
     }
