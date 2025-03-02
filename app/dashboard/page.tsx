@@ -26,7 +26,7 @@ interface SearchResult {
   similarity: number;
 }
 
-const Tags = [
+const suggestionTags = [
   "Working on AI at FAANG",
   "People who started companies in Web3",
   "Recent graduates in Silicon Valley",
