@@ -702,7 +702,7 @@ function ReportsContent() {
                           return (
                             <div key={year} className="mb-6">
                               <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
-                              <div className="h-48 mb-4">
+                              <div className="h-64 mb-4">
                                 <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
                                 <SalaryBarChart data={chartData} />
                                 <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
