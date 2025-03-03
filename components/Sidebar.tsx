@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Settings, HelpCircle, LogOut, Home } from "lucide-react"
+import { BarChart2, FileText, Settings, HelpCircle, LogOut, Home, Upload } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
@@ -176,6 +176,9 @@ export default function Sidebar() {
           </SidebarLink>
           <SidebarLink href="/reports" icon={FileText} isOpen={isSidebarOpen}>
             Reports
+          </SidebarLink>
+          <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen}>
+            Upload Data
           </SidebarLink>
           <SidebarLink href="/support" icon={HelpCircle} isOpen={isSidebarOpen}>
             Support
