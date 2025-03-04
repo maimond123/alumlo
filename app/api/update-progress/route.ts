@@ -8,7 +8,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('uploaded_data_progress_tracker')
       .select('*')
-      .in('status', ['processing', 'queued'])
+      .eq('status', 'processing')
       .lt('progress', 100); // Only those that haven't reached 100%
     
     if (error) throw error;

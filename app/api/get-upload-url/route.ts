@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
     // After getting URL, store the metadata in uploaded_data_progress
     const { error: metadataError } = await supabase
-      .from('uploaded_data_progress')
+      .from('uploaded_data_progress_tracker')
       .insert({
         id: uploadId,
         filename: fileName,

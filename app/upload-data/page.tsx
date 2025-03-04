@@ -248,7 +248,7 @@ useEffect(() => {
             file_name: file.name,
             file_size: file.size,
             file_type: file.type,
-            status: 'processing',
+            status: 'queued',
             progress: 10, // Starting with 10%
             uploaded_by: userEmail,
             school_name: schoolName
@@ -263,8 +263,8 @@ useEffect(() => {
       const { error: updateError } = await supabase
         .from('uploaded_data_progress_tracker')
         .update({ 
-          status: 'queued',
-          message: 'File uploaded successfully and queued for processing'
+          status: 'processing',
+          message: 'File is '
         })
         .eq('id', newUploadId)
       
