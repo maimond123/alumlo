@@ -297,9 +297,9 @@ export default function UploadDataPage() {
               Please upload a CSV or Excel file containing student information with the following columns:
             </p>
             <ul className="list-disc pl-5 mb-6 text-gray-700">
-              <li>Student First Name</li>
-              <li>Student Last Name</li>
-              <li>College/University they are attending</li>
+              <li>Student First Name (Column 1)</li>
+              <li>Student Last Name (Column 2)</li>
+              <li>College/University they are attending (Column 3)</li>
             </ul>
             <p className="text-gray-700">
               Your file will be processed within 24-48 hours, and the data will be added to your system.
