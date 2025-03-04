@@ -49,10 +49,13 @@ export async function POST(request: Request) {
       .from('uploaded_data_progress_tracker')
       .insert({
         id: uploadId,
-        filename: fileName,
-        user_email: userEmail,
-        school: schoolName,
-        status: 'pending',
+        file_name: fileName,
+        file_size: null,
+        file_type: null,
+        status: 'queued',
+        progress: 10,
+        uploaded_by: userEmail,
+        school_name: schoolName,
         created_at: new Date().toISOString()
       })
 
