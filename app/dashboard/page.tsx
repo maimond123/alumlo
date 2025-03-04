@@ -3,14 +3,12 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react"
-import NetworkVisualization from "../../components/network-visualization-2"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import '../aws-config'  
 import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
-import { Amplify } from 'aws-amplify'
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth'
 
 // Add the new interface for search results

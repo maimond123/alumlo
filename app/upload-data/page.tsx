@@ -18,6 +18,7 @@ export default function UploadDataPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [recentUploads, setRecentUploads] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [schoolName, setSchoolName] = useState<string | null>(null)
 
   useEffect(() => {
     // Fetch recent uploads when component mounts
@@ -28,7 +29,7 @@ export default function UploadDataPage() {
         if (!userEmail) return
 
         const { data, error } = await supabase
-          .from('data_uploads')
+          .from('uploaded_data_progress_tracker')
           .select('*')
           .eq('uploaded_by', userEmail)
           .order('created_at', { ascending: false })
@@ -46,6 +47,38 @@ export default function UploadDataPage() {
 
     fetchRecentUploads()
   }, [uploadStatus]) // Refetch when upload status changes
+
+  useEffect(() => {
+    const fetchSchoolName = async () => {
+      try {
+        const userEmail = await getUserEmail()
+
+        if (!userEmail) {
+          console.error('No email found in user data:', userEmail)
+          throw new Error('No user email found')
+        }
+
+        console.log('Querying with email:', userEmail)
+        const { data, error } = await supabase
+          .from('customer_information')
+          .select('school_name')
+          .eq('school_email', userEmail)
+          .single()
+
+        if (error) {
+          console.error('Supabase query error:', error)
+          throw error
+        }
+
+        setSchoolName(data.school_name)
+      } catch (err) {
+        console.error('Error fetching school name:', err)
+        setErrorMessage('Failed to load school data')
+      }
+    }
+
+    fetchSchoolName()
+  }, [])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -97,25 +130,28 @@ export default function UploadDataPage() {
 
   const handleUpload = async () => {
     if (!file) return
+    if (!schoolName) {
+      setErrorMessage('School information not found')
+      setUploadStatus('error')
+      return
+    }
 
     try {
       setUploadStatus('uploading')
       
-      // Generate a unique ID for this upload
       const newUploadId = uuidv4()
       setUploadId(newUploadId)
-      setUploadProgress(10) // Start with 10%
+      setUploadProgress(10)
       
-      // Get user email
       const userEmail = await getUserEmail()
       
       if (!userEmail) {
         throw new Error('User not authenticated')
       }
       
-      // Create entry in uploads table
-      const { data: uploadData, error: uploadError } = await supabase
-        .from('data_uploads')
+      // 1. Create entry in uploads table
+      const { error: uploadError } = await supabase
+        .from('uploaded_data_progress_tracker')
         .insert([
           { 
             id: newUploadId,
@@ -124,60 +160,54 @@ export default function UploadDataPage() {
             file_type: file.type,
             status: 'processing',
             progress: 10,
-            uploaded_by: userEmail
+            uploaded_by: userEmail,
+            school_name: schoolName
           }
         ])
-        .select()
       
       if (uploadError) {
         throw uploadError
       }
       
-      setUploadProgress(30) // Update progress
+      setUploadProgress(30)
       
-      // Simulate file upload to storage
-      // In a real implementation, you would upload the file to Supabase Storage
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 2. Upload file to Supabase Storage
+      const { error: storageError } = await supabase
+        .storage
+        .from('student_data_uploads')  // Create this bucket in Supabase
+        .upload(`${newUploadId}/${file.name}`, file)
+
+      if (storageError) {
+        throw storageError
+      }
+      
       setUploadProgress(70)
       
-      // Update upload status
+      // 3. Update upload status
       const { error: updateError } = await supabase
-        .from('data_uploads')
-        .update({ progress: 70, status: 'validating' })
+        .from('uploaded_data_progress_tracker')
+        .update({ 
+          progress: 70, 
+          status: 'queued',
+          message: 'File uploaded successfully and queued for processing'
+        })
         .eq('id', newUploadId)
       
       if (updateError) {
         throw updateError
       }
       
-      // Simulate validation and processing
-      await new Promise(resolve => setTimeout(resolve, 1000))
       setUploadProgress(100)
-      
-      // Final update to mark as queued for processing
-      const { error: finalUpdateError } = await supabase
-        .from('data_uploads')
-        .update({ 
-          progress: 100, 
-          status: 'queued',
-          message: 'File has been received and queued for processing'
-        })
-        .eq('id', newUploadId)
-      
-      if (finalUpdateError) {
-        throw finalUpdateError
-      }
-      
       setUploadStatus('success')
+      
     } catch (error) {
       console.error('Upload error:', error)
       setErrorMessage('An error occurred during upload. Please try again.')
       setUploadStatus('error')
       
-      // Update error in database if we have an upload ID
       if (uploadId) {
         await supabase
-          .from('data_uploads')
+          .from('uploaded_data_progress_tracker')
           .update({ 
             status: 'error',
             message: 'Error during upload'
