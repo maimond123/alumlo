@@ -196,13 +196,20 @@ export default function UploadDataPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get upload URL')
+        const errorData = await response.json()
+        console.error('Failed to get upload URL:', errorData)
+        throw new Error(`Failed to get upload URL: ${errorData.error || response.statusText}`)
       }
 
-      const { signedURL } = await response.json()
+      const data = await response.json()
+      
+      if (!data.signedURL) {
+        console.error('No signed URL in response:', data)
+        throw new Error('No upload URL provided')
+      }
 
       // 2. Upload file using presigned URL
-      const uploadResponse = await fetch(signedURL, {
+      const uploadResponse = await fetch(data.signedURL, {
         method: 'PUT',
         headers: {
           'Content-Type': file.type,

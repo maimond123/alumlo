@@ -35,10 +35,19 @@ export async function POST(request: Request) {
       .from('student_data_uploads')
       .createSignedUploadUrl(`${uploadId}/${fileName}`)
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+
+    if (!data?.signedUrl) {
+      throw new Error('No signed URL generated')
+    }
 
     // Return with CORS headers
-    return new NextResponse(JSON.stringify(data), {
+    return new NextResponse(JSON.stringify({
+      signedURL: data.signedUrl  // Make sure we're returning the correct property
+    }), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
@@ -49,7 +58,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error generating signed URL:', error)
     return new NextResponse(
-      JSON.stringify({ error: 'Failed to generate upload URL' }), 
+      JSON.stringify({ 
+        error: 'Failed to generate upload URL',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }), 
       { 
         status: 500,
         headers: {
