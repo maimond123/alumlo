@@ -51,16 +51,17 @@ export default function UploadDataPage() {
   }, [uploadStatus]) // Refetch when upload status changes
 
   // Add this useEffect to poll for progress updates
+// Update your polling effect (around line 54-96)
 useEffect(() => {
   let intervalId: NodeJS.Timeout;
   
-  // Only poll if we have an uploadId and are in uploading status
   if (uploadId && uploadStatus === 'uploading') {
     const checkProgress = async () => {
       try {
+        // Fixed query - use eq() method instead of directly in URL
         const { data, error } = await supabase
           .from('uploaded_data_progress_tracker')
-          .select('progress, status')
+          .select('progress, status, created_at') // Use created_at instead of upload_time
           .eq('id', uploadId)
           .single();
           
@@ -70,10 +71,8 @@ useEffect(() => {
         }
         
         if (data) {
-          // Update local progress state to match the database
           setUploadProgress(data.progress);
           
-          // If status has changed to completed, update the local status
           if (data.status === 'completed') {
             setUploadStatus('success');
           } else if (data.status === 'error') {
@@ -85,7 +84,6 @@ useEffect(() => {
       }
     };
     
-    // Check immediately and then every 30 seconds
     checkProgress();
     intervalId = setInterval(checkProgress, 30000);
   }
@@ -94,6 +92,7 @@ useEffect(() => {
     if (intervalId) clearInterval(intervalId);
   };
 }, [uploadId, uploadStatus]);
+
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -252,8 +251,7 @@ useEffect(() => {
             status: 'processing',
             progress: 10, // Starting with 10%
             uploaded_by: userEmail,
-            school_name: schoolName,
-            upload_time: new Date().toISOString() // Store upload time for increment calculations
+            school_name: schoolName
           }
         ])
       

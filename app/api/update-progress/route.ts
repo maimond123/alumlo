@@ -17,9 +17,9 @@ export async function GET() {
     const updates = [];
     
     for (const upload of data || []) {
-      const uploadTime = new Date(upload.upload_time);
-      const now = new Date();
-      const hoursSinceUpload = (now.getTime() - uploadTime.getTime()) / (1000 * 60 * 60);
+        const uploadTime = new Date(upload.created_at); // Changed from upload_time to created_at
+        const now = new Date();
+        const hoursSinceUpload = (now.getTime() - uploadTime.getTime()) / (1000 * 60 * 60);      
       
       // Calculate how many 3-hour periods have passed (each worth 5%)
       const periodsElapsed = Math.floor(hoursSinceUpload / 3);
