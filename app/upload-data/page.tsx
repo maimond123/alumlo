@@ -9,6 +9,7 @@ import { getUserEmail } from "../utils/auth"
 import { v4 as uuidv4 } from 'uuid'
 import { createClient } from '@supabase/supabase-js'
 
+
 export default function UploadDataPage() {
   const { isSidebarOpen } = useSidebar()
   const [file, setFile] = useState<File | null>(null)
@@ -48,6 +49,51 @@ export default function UploadDataPage() {
 
     fetchRecentUploads()
   }, [uploadStatus]) // Refetch when upload status changes
+
+  // Add this useEffect to poll for progress updates
+useEffect(() => {
+  let intervalId: NodeJS.Timeout;
+  
+  // Only poll if we have an uploadId and are in uploading status
+  if (uploadId && uploadStatus === 'uploading') {
+    const checkProgress = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('uploaded_data_progress_tracker')
+          .select('progress, status')
+          .eq('id', uploadId)
+          .single();
+          
+        if (error) {
+          console.error('Error checking progress:', error);
+          return;
+        }
+        
+        if (data) {
+          // Update local progress state to match the database
+          setUploadProgress(data.progress);
+          
+          // If status has changed to completed, update the local status
+          if (data.status === 'completed') {
+            setUploadStatus('success');
+          } else if (data.status === 'error') {
+            setUploadStatus('error');
+          }
+        }
+      } catch (err) {
+        console.error('Error polling for progress:', err);
+      }
+    };
+    
+    // Check immediately and then every 30 seconds
+    checkProgress();
+    intervalId = setInterval(checkProgress, 30000);
+  }
+  
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [uploadId, uploadStatus]);
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -167,20 +213,20 @@ export default function UploadDataPage() {
       setUploadStatus('error')
       return
     }
-
+  
     try {
       setUploadStatus('uploading')
       
       const newUploadId = uuidv4()
       setUploadId(newUploadId)
-      setUploadProgress(10)
+      setUploadProgress(10) // Initial progress at 10%
       
       const userEmail = await getUserEmail()
       
       if (!userEmail) {
         throw new Error('User not authenticated')
       }
-
+  
       // 1. Get presigned URL
       const response = await fetch('/api/get-upload-url', {
         method: 'POST',
@@ -194,20 +240,20 @@ export default function UploadDataPage() {
           schoolName
         })
       })
-
+  
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Failed to get upload URL:', errorData)
         throw new Error(`Failed to get upload URL: ${errorData.error || response.statusText}`)
       }
-
+  
       const data = await response.json()
       
       if (!data.signedURL) {
         console.error('No signed URL in response:', data)
         throw new Error('No upload URL provided')
       }
-
+  
       // 2. Upload file using presigned URL
       const uploadResponse = await fetch(data.signedURL, {
         method: 'PUT',
@@ -216,15 +262,15 @@ export default function UploadDataPage() {
         },
         body: file
       })
-
+  
       if (!uploadResponse.ok) {
         console.error('Upload failed with status:', uploadResponse.status)
         const errorText = await uploadResponse.text()
         console.error('Error details:', errorText)
         throw new Error(`Failed to upload file: ${uploadResponse.status}`)
       }
-
-      // 3. Create entry in uploads table
+  
+      // 3. Create entry in uploads table with initial 10% progress
       const { error: uploadError } = await supabase
         .from('uploaded_data_progress_tracker')
         .insert([
@@ -234,9 +280,10 @@ export default function UploadDataPage() {
             file_size: file.size,
             file_type: file.type,
             status: 'processing',
-            progress: 10,
+            progress: 10, // Starting with 10%
             uploaded_by: userEmail,
-            school_name: schoolName
+            school_name: schoolName,
+            upload_time: new Date().toISOString() // Store upload time for increment calculations
           }
         ])
       
@@ -244,13 +291,10 @@ export default function UploadDataPage() {
         throw uploadError
       }
       
-      setUploadProgress(70)
-      
-      // 4. Update upload status
+      // 4. Update upload status to queued
       const { error: updateError } = await supabase
         .from('uploaded_data_progress_tracker')
         .update({ 
-          progress: 70, 
           status: 'queued',
           message: 'File uploaded successfully and queued for processing'
         })
@@ -260,7 +304,8 @@ export default function UploadDataPage() {
         throw updateError
       }
       
-      setUploadProgress(100)
+      // No automatic progress update to 70% or 100% here
+      // Will poll for updates instead
       setUploadStatus('success')
       
     } catch (error) {
