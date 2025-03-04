@@ -29,6 +29,23 @@ export async function POST(request: Request) {
   try {
     const { fileName, uploadId, userEmail, schoolName } = await request.json()
     
+    // Store the metadata in uploaded_data_progress
+    const { error: metadataError } = await supabase
+      .from('uploaded_data_progress')
+      .insert({
+        id: uploadId,
+        filename: fileName,
+        user_email: userEmail,
+        school: schoolName,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      })
+
+    if (metadataError) {
+      console.error('Error storing upload metadata:', metadataError)
+      throw metadataError
+    }
+
     // Generate signed URL with options
     const { data, error } = await supabase
       .storage
@@ -46,7 +63,8 @@ export async function POST(request: Request) {
 
     // Return with CORS headers
     return new NextResponse(JSON.stringify({
-      signedURL: data.signedUrl  // Make sure we're returning the correct property
+      signedURL: data.signedUrl,
+      uploadId: uploadId
     }), {
       headers: {
         'Content-Type': 'application/json',
