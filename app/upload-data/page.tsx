@@ -191,44 +191,37 @@ export default function UploadDataPage() {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
       <main className={`flex-1 overflow-y-auto p-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Student Data</h1>
-            <p className="text-gray-600 text-lg">Import your student information using CSV or Excel files</p>
+        <div className="max-w-6xl mx-auto">
+          {/* Centered Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">Upload Student Data</h1>
+            <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
           </div>
           
-          <div className="bg-gradient-to-r from-emerald-50 to-white p-6 rounded-xl shadow-sm border border-emerald-100 mb-8">
-            <h2 className="text-xl font-semibold text-emerald-900 mb-4 flex items-center">
-              <FileSpreadsheet className="w-5 h-5 mr-2 text-emerald-600" />
-              Upload Instructions
-            </h2>
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Upload Instructions</h2>
             <p className="text-gray-700 mb-4">
               Please upload a CSV or Excel file containing student information with the following columns:
             </p>
-            <ul className="space-y-2 mb-6 text-gray-700">
-              {['Student First Name', 'Student Last Name', 'College/University they are attending'].map((item) => (
-                <li key={item} className="flex items-center">
-                  <Check className="w-4 h-4 text-emerald-500 mr-2" />
-                  {item}
-                </li>
-              ))}
+            <ul className="list-disc pl-5 mb-6 text-gray-700">
+              <li>Student First Name</li>
+              <li>Student Last Name</li>
+              <li>College/University they are attending</li>
             </ul>
-            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
-              <p className="text-emerald-700 text-sm">
-                Your file will be processed within 24-48 hours, and the data will be added to your system.
-              </p>
-            </div>
+            <p className="text-gray-700">
+              Your file will be processed within 24-48 hours, and the data will be added to your system.
+            </p>
           </div>
 
           {uploadStatus === 'success' ? (
-            <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-200 mb-8">
+            <div className="bg-green-50 p-6 rounded-lg border border-green-200 mb-8">
               <div className="flex items-start">
-                <div className="flex-shrink-0 bg-emerald-100 p-2 rounded-full">
-                  <Check className="w-6 h-6 text-emerald-600" />
+                <div className="flex-shrink-0">
+                  <Check className="w-6 h-6 text-green-500" />
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-emerald-900">Upload Successful!</h3>
-                  <div className="mt-2 text-emerald-700">
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-green-800">Upload Successful!</h3>
+                  <div className="mt-2 text-green-700">
                     <p>Your file has been successfully uploaded and is now being processed.</p>
                     <p className="mt-1">You will see the processed data in your system within 24-48 hours.</p>
                   </div>
@@ -239,7 +232,7 @@ export default function UploadDataPage() {
                       setUploadId(null)
                       setUploadProgress(0)
                     }}
-                    className="mt-4 px-6 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors duration-200"
+                    className="mt-4 px-4 py-2 bg-white text-green-600 rounded border border-green-300 hover:bg-green-50 transition-colors"
                   >
                     Upload Another File
                   </button>
@@ -248,9 +241,9 @@ export default function UploadDataPage() {
             </div>
           ) : (
             <div 
-              className={`border-3 border-dashed rounded-xl p-10 text-center mb-8 transition-all duration-200 ${
+              className={`border-2 border-dashed rounded-lg p-8 text-center mb-8 transition-colors ${
                 isDragOver 
-                  ? 'border-emerald-500 bg-emerald-50 shadow-lg scale-[1.02]' 
+                  ? 'border-emerald-500 bg-emerald-50' 
                   : errorMessage 
                     ? 'border-red-300 bg-red-50' 
                     : 'border-gray-300 hover:border-emerald-300 hover:bg-gray-50'
@@ -332,24 +325,20 @@ export default function UploadDataPage() {
             </div>
           )}
 
-          {/* Progress Tracker - Updated styling */}
+          {/* Progress Tracker for Current Upload */}
           {uploadStatus === 'uploading' && uploadId && (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center">
-                  <FileSpreadsheet className="w-5 h-5 text-emerald-500 mr-2" />
-                  <h3 className="font-medium text-gray-900">{file?.name}</h3>
-                </div>
-                <span className="text-sm font-medium text-emerald-600">{uploadProgress}%</span>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-gray-900">{file?.name}</h3>
+                <span className="text-sm text-gray-500">{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+                  className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" 
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              <p className="mt-2 text-sm text-gray-600 flex items-center">
-                <span className="animate-pulse mr-2">●</span>
+              <p className="mt-2 text-sm text-gray-600">
                 {uploadProgress < 50 
                   ? 'Uploading file...' 
                   : uploadProgress < 90 
@@ -359,18 +348,17 @@ export default function UploadDataPage() {
             </div>
           )}
           
-          {/* Recent Uploads - Updated styling */}
+          {/* History of Uploads */}
           <div className="mt-12">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Uploads</h2>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <h2 className="text-xl font-semibold mb-4">Recent Uploads</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['File Name', 'Upload Date', 'Status', 'Progress'].map((header) => (
-                      <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {header}
-                      </th>
-                    ))}
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
