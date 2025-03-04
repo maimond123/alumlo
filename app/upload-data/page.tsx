@@ -457,7 +457,9 @@ useEffect(() => {
           {/* History of Uploads */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-gray-800">Recent Uploads</h2>
-            <div className="mt-4 max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg shadow">
+
+            {/* Added wrapper div with fixed height and scrolling */}
+            <div className="mt-4 max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
@@ -476,6 +478,7 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+       
                   {recentUploads.length > 0 ? (
                     recentUploads.map((upload) => (
                       <tr key={upload.id}>
