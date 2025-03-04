@@ -190,10 +190,10 @@ export default function UploadDataPage() {
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
-      <main className={`flex-1 overflow-y-auto p-8 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
+      <main className={`flex-1 overflow-y-auto p-8 pt-16 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className="max-w-6xl mx-auto">
           {/* Centered Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900">Upload Student Data</h1>
             <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
           </div>
