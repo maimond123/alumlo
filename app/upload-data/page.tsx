@@ -61,13 +61,13 @@ useEffect(() => {
         // Fixed query - use eq() method instead of directly in URL
         const { data, error } = await supabase
           .from('uploaded_data_progress_tracker')
-          .select('progress, status, created_at') // Use created_at instead of upload_time
+          .select('progress, status, created_at')
           .eq('id', uploadId)
-          .single();
+          .maybeSingle();
           
-        if (error) {
-          console.error('Error checking progress:', error);
-          return;
+        if (error && error.code === 'PGRST116') {
+          console.log('Record not found yet, will retry');
+          return; // Skip this polling cycle
         }
         
         if (data) {
