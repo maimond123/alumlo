@@ -33,7 +33,6 @@ export default function UploadDataPage() {
         .select('*')
         .eq('uploaded_by', userEmail)
         .order('created_at', { ascending: false })
-        .limit(5)
       
       if (error) throw error
       
@@ -517,13 +516,23 @@ useEffect(() => {
                           {new Date(upload.created_at).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${upload.status === 'queued' ? 'bg-blue-100 text-blue-800' : 
-                              upload.status === 'processing' ? 'bg-yellow-100 text-yellow-800' : 
-                              upload.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                              'bg-red-100 text-red-800'}`}>
-                            {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
-                          </span>
+                          <div className="flex flex-col space-y-1">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${upload.status === 'queued' ? 'bg-blue-100 text-blue-800' : 
+                                upload.status === 'processing' ? 'bg-yellow-100 text-yellow-800' : 
+                                upload.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                'bg-red-100 text-red-800'}`}>
+                              {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
+                            </span>
+                            {upload.progress !== undefined && (
+                              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                <div 
+                                  className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
+                                  style={{ width: `${upload.progress}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-3">
