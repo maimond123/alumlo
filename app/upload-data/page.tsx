@@ -7,6 +7,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
 import { v4 as uuidv4 } from 'uuid'
+import { createClient } from '@supabase/supabase-js'
 
 export default function UploadDataPage() {
   const { isSidebarOpen } = useSidebar()
@@ -105,10 +106,41 @@ export default function UploadDataPage() {
     }
   }
 
-  const validateAndSetFile = (file: File) => {
+  const validateAndSetFile = async (file: File) => {
     const fileType = file.name.split('.').pop()?.toLowerCase()
     
     if (fileType === 'csv' || fileType === 'xlsx' || fileType === 'xls') {
+      // For CSV files, we can do a quick preview check
+      if (fileType === 'csv') {
+        try {
+          const text = await file.text()
+          const lines = text.split('\n')
+          const headers = lines[0].split(',')
+          
+          // Check number of columns
+          if (headers.length !== 3) {
+            setErrorMessage('File must contain exactly 3 columns: First Name, Last Name, and University')
+            setFile(null)
+            return
+          }
+          
+          // Check first few rows for data consistency
+          const previewRows = lines.slice(1, 4)
+          for (let i = 0; i < previewRows.length; i++) {
+            const cells = previewRows[i].split(',')
+            if (cells.length !== 3 || cells.some(cell => !cell.trim())) {
+              setErrorMessage(`Invalid data format in row ${i + 2}. Each row must have 3 non-empty values`)
+              setFile(null)
+              return
+            }
+          }
+        } catch (error) {
+          setErrorMessage('Error reading file. Please ensure it is a valid CSV file')
+          setFile(null)
+          return
+        }
+      }
+      
       setFile(file)
       setErrorMessage(null)
     } else {
@@ -148,8 +180,38 @@ export default function UploadDataPage() {
       if (!userEmail) {
         throw new Error('User not authenticated')
       }
-      
-      // 1. Create entry in uploads table
+
+      // 1. Get presigned URL
+      const response = await fetch('/api/get-upload-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          uploadId: newUploadId,
+          userEmail,
+          schoolName
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get upload URL')
+      }
+
+      const { signedURL } = await response.json()
+
+      // 2. Upload file using presigned URL
+      const uploadResponse = await fetch(signedURL, {
+        method: 'PUT',
+        body: file
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file')
+      }
+
+      // 3. Create entry in uploads table
       const { error: uploadError } = await supabase
         .from('uploaded_data_progress_tracker')
         .insert([
@@ -169,21 +231,9 @@ export default function UploadDataPage() {
         throw uploadError
       }
       
-      setUploadProgress(30)
-      
-      // 2. Upload file to Supabase Storage
-      const { error: storageError } = await supabase
-        .storage
-        .from('student_data_uploads')  // Create this bucket in Supabase
-        .upload(`${newUploadId}/${file.name}`, file)
-
-      if (storageError) {
-        throw storageError
-      }
-      
       setUploadProgress(70)
       
-      // 3. Update upload status
+      // 4. Update upload status
       const { error: updateError } = await supabase
         .from('uploaded_data_progress_tracker')
         .update({ 
@@ -216,7 +266,7 @@ export default function UploadDataPage() {
       }
     }
   }
-
+ 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
