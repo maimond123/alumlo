@@ -156,44 +156,14 @@ useEffect(() => {
     const fileType = file.name.split('.').pop()?.toLowerCase()
     
     if (fileType === 'csv' || fileType === 'xlsx' || fileType === 'xls') {
-      // For CSV files, we can do a quick preview check
-      if (fileType === 'csv') {
-        try {
-          const text = await file.text()
-          const lines = text.split('\n')
-          const headers = lines[0].split(',')
-          
-          // Check number of columns
-          if (headers.length !== 3) {
-            setErrorMessage('File must contain exactly 3 columns: First Name, Last Name, and University')
-            setFile(null)
-            return
-          }
-          
-          // Check first few rows for data consistency
-          const previewRows = lines.slice(1, 4)
-          for (let i = 0; i < previewRows.length; i++) {
-            const cells = previewRows[i].split(',')
-            if (cells.length !== 3 || cells.some(cell => !cell.trim())) {
-              setErrorMessage(`Invalid data format in row ${i + 2}. Each row must have 3 non-empty values`)
-              setFile(null)
-              return
-            }
-          }
-        } catch (error) {
-          setErrorMessage('Error reading file. Please ensure it is a valid CSV file')
-          setFile(null)
-          return
-        }
-      }
-      
+      // Only validate file type, no column checking
       setFile(file)
       setErrorMessage(null)
     } else {
       setFile(null)
       setErrorMessage('Please upload a CSV or Excel file (xlsx/xls)')
     }
-  }
+  } 
 
   const handleClick = () => {
     fileInputRef.current?.click()
