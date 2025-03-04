@@ -204,11 +204,17 @@ export default function UploadDataPage() {
       // 2. Upload file using presigned URL
       const uploadResponse = await fetch(signedURL, {
         method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
         body: file
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file')
+        console.error('Upload failed with status:', uploadResponse.status)
+        const errorText = await uploadResponse.text()
+        console.error('Error details:', errorText)
+        throw new Error(`Failed to upload file: ${uploadResponse.status}`)
       }
 
       // 3. Create entry in uploads table

@@ -14,26 +14,49 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+// Handle OPTIONS request for CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',  // Allow requests from any origin
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',  // Allow these HTTP methods
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',  // Allow these headers
+    },
+  })
+}
+
 export async function POST(request: Request) {
   try {
     const { fileName, uploadId, userEmail, schoolName } = await request.json()
     
-    // 1. Verify the user is authenticated
-    // 2. Verify they belong to the claimed school
-    // 3. Generate a temporary, single-use URL that expires
-
-    const { data } = await supabase
+    // Generate signed URL with options
+    const { data, error } = await supabase
       .storage
       .from('student_data_uploads')
       .createSignedUploadUrl(`${uploadId}/${fileName}`)
-    
-    // The signed URL:
-    // - Only works for a short time (typically 1 hour)
-    // - Only works for the specific file path
-    // - Contains a cryptographic signature that can't be forged
 
-    return NextResponse.json(data)
+    if (error) throw error
+
+    // Return with CORS headers
+    return new NextResponse(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    console.error('Error generating signed URL:', error)
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to generate upload URL' }), 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      }
+    )
   }
 } 
