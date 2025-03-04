@@ -22,33 +22,32 @@ export default function UploadDataPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [schoolName, setSchoolName] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Fetch recent uploads when component mounts
-    const fetchRecentUploads = async () => {
-      try {
-        const userEmail = await getUserEmail()
-        
-        if (!userEmail) return
+  const fetchRecentUploads = async () => {
+    try {
+      const userEmail = await getUserEmail()
+      
+      if (!userEmail) return
 
-        const { data, error } = await supabase
-          .from('uploaded_data_progress_tracker')
-          .select('*')
-          .eq('uploaded_by', userEmail)
-          .order('created_at', { ascending: false })
-          .limit(5)
-        
-        if (error) throw error
-        
-        if (data) {
-          setRecentUploads(data)
-        }
-      } catch (error) {
-        console.error('Error fetching recent uploads:', error)
+      const { data, error } = await supabase
+        .from('uploaded_data_progress_tracker')
+        .select('*')
+        .eq('uploaded_by', userEmail)
+        .order('created_at', { ascending: false })
+        .limit(5)
+      
+      if (error) throw error
+      
+      if (data) {
+        setRecentUploads(data)
       }
+    } catch (error) {
+      console.error('Error fetching recent uploads:', error)
     }
+  }
 
+  useEffect(() => {
     fetchRecentUploads()
-  }, [uploadStatus]) // Refetch when upload status changes
+  }, [uploadStatus])
 
   // Add this useEffect to poll for progress updates
 // Update your polling effect (around line 54-96)
@@ -292,6 +291,35 @@ useEffect(() => {
       }
     }
   }
+
+  const handleDeleteUpload = async (uploadId: string) => {
+    if (confirm('Are you sure you want to delete this upload? This cannot be undone.')) {
+      try {
+        // Delete from uploaded_data_progress_tracker
+        const { error } = await supabase
+          .from('uploaded_data_progress_tracker')
+          .delete()
+          .eq('id', uploadId);
+          
+        if (error) throw error;
+        
+        // Also delete the associated file from storage
+        const { error: storageError } = await supabase
+          .storage
+          .from('student_data_uploads')
+          .remove([`${uploadId}`]); // Delete the whole folder
+        
+        if (storageError) console.error('Error deleting file:', storageError);
+        
+        // Refresh the list
+        fetchRecentUploads();
+        
+      } catch (error) {
+        console.error('Error deleting upload:', error);
+        alert('Failed to delete upload. Please try again.');
+      }
+    }
+  };
  
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -497,16 +525,21 @@ useEffect(() => {
                             {upload.status.charAt(0).toUpperCase() + upload.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                upload.status === 'error' ? 'bg-red-500' : 'bg-emerald-500'
-                              }`}
-                              style={{ width: `${upload.progress}%` }}
-                            ></div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteUpload(upload.id)
+                              }}
+                              className="text-red-600 hover:text-red-900"
+                              aria-label="Delete upload"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
                           </div>
-                          <span className="text-xs mt-1">{upload.progress}%</span>
                         </td>
                       </tr>
                     ))
