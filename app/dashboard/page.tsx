@@ -834,12 +834,7 @@ export default function DashboardPage() {
             )}
 
             {/* Search Results Section - Show below the analysis */}
-            {isSearching ? (
-              <div className="text-center p-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
-                <p>Searching alumni database...</p>
-              </div>
-            ) : searchResults.length > 0 ? (
+            {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
               <div className="w-full">
                 <h2 className="text-xl font-semibold mb-4 text-gray-700">
                   Found {searchResults.length} alumni matching your search
@@ -911,11 +906,7 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
-            ) : searchQuery.trim() !== "" ? (
-              <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm">
-                <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
-              </div>
-            ) : null}
+            )}
           </div>
         </div>
       </main>
