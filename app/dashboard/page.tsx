@@ -647,12 +647,18 @@ export default function DashboardPage() {
 
   const fetchProfilePhotos = async (results: SearchResult[]) => {
     try {
+      console.log(`[DEBUG ${new Date().toISOString()}] fetchProfilePhotos called with ${results.length} results`);
+      
       const linkedinUrls = results.map(result => result.linkedin_url);
-      if (linkedinUrls.length === 0) return;
+      if (linkedinUrls.length === 0) {
+        console.log(`[DEBUG ${new Date().toISOString()}] No LinkedIn URLs to fetch photos for`);
+        return;
+      }
       
-      console.log('[Client] Fetching profile photos for LinkedIn URLs:', linkedinUrls);
+      console.log(`[DEBUG ${new Date().toISOString()}] Fetching profile photos for LinkedIn URLs:`, linkedinUrls);
       
-      const tableName = formattedSchoolName.toLowerCase().replace(/ /g, '_');
+      const tableName = formattedSchoolName?.toLowerCase().replace(/ /g, '_') || 'lawrenceville';
+      console.log(`[DEBUG ${new Date().toISOString()}] Using table name: ${tableName}`);
       
       // Query the main school table using linkedin_url as the common identifier
       const { data, error } = await supabase
@@ -661,25 +667,32 @@ export default function DashboardPage() {
         .in('linkedin_url', linkedinUrls);
         
       if (error) {
-        console.error('[Client] Error fetching profile photos:', error);
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error fetching profile photos:`, error);
         return;
       }
       
-      console.log('[Client] Profile photo data:', data);
+      console.log(`[DEBUG ${new Date().toISOString()}] Profile photo data:`, data);
+      
+      // Create a copy of results to modify
+      const updatedResults = [...results];
       
       // Map profile photos to search results using linkedin_url as the key
-      results.forEach(result => {
-        const matchingProfile = data.find((profile: any) => 
+      updatedResults.forEach(result => {
+        const matchingProfile = data?.find((profile: any) => 
           profile.linkedin_url === result.linkedin_url
         );
         if (matchingProfile && matchingProfile.profile_photo_url) {
           result.profile_url = matchingProfile.profile_photo_url;
+          console.log(`[DEBUG ${new Date().toISOString()}] Added photo for ${result.name}:`, matchingProfile.profile_photo_url);
+        } else {
+          console.log(`[DEBUG ${new Date().toISOString()}] No photo found for ${result.name}`);
         }
       });
       
-      setSearchResults([...results]);
+      console.log(`[DEBUG ${new Date().toISOString()}] Setting updated results with photos:`, updatedResults);
+      setSearchResults(updatedResults);
     } catch (error) {
-      console.error('[Client] Error fetching profile photos:', error);
+      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in fetchProfilePhotos:`, error);
     }
   };
 
@@ -804,28 +817,24 @@ export default function DashboardPage() {
                 Found {searchResults.length} alumni matching your search
               </h2>
               <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
-                {searchResults.map((result) => {
-                  // Add debug statements for title extraction
-                  console.log(`[Debug] Result for ${result.name}:`, result);
-                  console.log(`[Debug] all_titles:`, result.all_titles);
+                {searchResults.map((result, index) => {
+                  console.log(`[DEBUG RENDER ${new Date().toISOString()}] Rendering card ${index} for ${result.name}`);
                   
                   // Extract current title from all_titles (assuming it's the first entry)
                   const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
                     ? result.all_titles[0] 
-                    : result.current_title || ""; // Fallback to current_title if it exists, otherwise empty string
-                  
-                  console.log(`[Debug] Extracted current title for ${result.name}:`, currentTitle);
+                    : result.current_title || ""; // Fallback to current_title if it exists
                   
                   return (
                     <a
-                      key={result.id}
+                      key={result.id || index}
                       href={result.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
                     >
                       <div className="flex items-center">
-                        {/* Profile Image Circle */}
+                        {/* Profile Image */}
                         <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
                           {result.profile_url ? (
                             <img 
@@ -835,7 +844,7 @@ export default function DashboardPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                              {result.name.split(' ').map(name => name[0]).join('')}
+                              {result.name?.split(' ').map(name => name[0]).join('') || '?'}
                             </div>
                           )}
                         </div>
