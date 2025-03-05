@@ -132,11 +132,11 @@ export default function Sidebar() {
       <div className="p-6 flex flex-col h-full w-full">
         <div
           className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
+          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0)" }}
         >
           <button 
             onClick={() => window.location.reload()} 
-            className="w-8 h-8 flex items-center justify-center p-0 m-0 bg-transparent border-0 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center p-0 mx-3 bg-transparent border-0 cursor-pointer"
             aria-label="Refresh page"
           >
             <Image
