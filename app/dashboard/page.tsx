@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
@@ -157,6 +157,19 @@ export default function DashboardPage() {
   const [totalAlumniCount, setTotalAlumniCount] = useState(0);
   const [isLoadingCount, setIsLoadingCount] = useState(false);
 
+  // Add these new states to your component
+  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'complete'>('idle');
+  const [displayedText, setDisplayedText] = useState({
+    analyzing: '',
+    searching: '',
+    profiling: '',
+    filters: '',
+    displaying: ''
+  });
+  const [expandedQueries, setExpandedQueries] = useState<string[]>([]);
+  const [extractedFilters, setExtractedFilters] = useState<{[key: string]: string[]}>({});
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       console.log("Dashboard: Checking auth status...")
@@ -262,14 +275,68 @@ export default function DashboardPage() {
     }
   }, [formattedSchoolName]);
 
-  
+  // Add this helper function to simulate typewriter effect
+  const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
+    return new Promise((resolve) => {
+      let i = 0;
+      const typing = setInterval(() => {
+        if (i <= text.length) {
+          setter(text.substring(0, i));
+          i++;
+        } else {
+          clearInterval(typing);
+          resolve();
+        }
+      }, speed);
+    });
+  };
+
+  // Update your search functions with the AI animation
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[Client] Search initiated with query:', searchQuery);
+    if (!searchQuery.trim()) return;
     
+    setSearchResults([]);
     setIsSearching(true);
+    setSearchPhase('analyzing');
+    
+    // Reset displayed text
+    setDisplayedText({
+      analyzing: '',
+      searching: '',
+      profiling: '',
+      filters: '',
+      displaying: ''
+    });
+    
+    // Start the AI animation sequence
     try {
-      console.log('[Client] About to send request to /api/search');
+      // Phase 1: Analyzing query
+      await typewriterEffect('Analyzing your search query...', 
+        (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+      );
+      
+      // Phase 2: Searching database
+      setSearchPhase('searching');
+      await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} alumni profiles`, 
+        (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
+      );
+      
+      // Phase 3: Generate expanded queries using the original query
+      setSearchPhase('profiling');
+      await generateExpandedQueries(searchQuery);
+      
+      // Phase 4: Extract metadata filters
+      setSearchPhase('filtering');
+      await extractMetadataFilters(searchQuery);
+      
+      // Phase 5: Display results
+      setSearchPhase('complete');
+      await typewriterEffect(`Displaying top ${Math.min(10, totalAlumniCount)} personalized results...`, 
+        (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+      );
+      
+      // Now actually perform the search
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
@@ -278,121 +345,165 @@ export default function DashboardPage() {
         body: JSON.stringify({ query: searchQuery, top_k: 10 }),
       });
       
-      console.log('[Client] Response received, status:', response.status);
-      
       if (!response.ok) {
-        console.error('[Client] Error response from server');
         const errorData = await response.json();
         console.error('[Client] Error details:', errorData);
         throw new Error('Search failed');
       }
       
-      console.log('[Client] Parsing response JSON');
       const data = await response.json();
-      console.log('[Client] Search results:', data);
-      
-      // Process search results
       const results = data.results;
-      
-      // Fetch profile photos for results
       await fetchProfilePhotos(results);
-      
-      return results;
-    } catch (error) {
-      console.error('[Client] Search error:', error);
-      throw error;
-    } finally {
-      setIsSearching(false);
-    }
-  };
-  
-  // Add this new function to handle tag clicks
-  const handleTagClick = async (query: string) => {
-    setSearchQuery(query); // Set the search input to the tag text
-    
-    console.log('[Client] Search initiated with tag:', query);
-    setIsSearching(true);
-    
-    try {
-      console.log('[Client] About to send request to /api/search');
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query, top_k: 10 }),
-      });
-      
-      console.log('[Client] Response received, status:', response.status);
-      
-      if (!response.ok) {
-        console.error('[Client] Error response from server');
-        const errorData = await response.json();
-        console.error('[Client] Error details:', errorData);
-        throw new Error('Search failed');
-      }
-      
-      console.log('[Client] Parsing response JSON');
-      const data = await response.json();
-      console.log('[Client] Search results:', data);
-      
-      // Process search results
-      const results = data.results;
-      
-      // Fetch profile photos for results
-      await fetchProfilePhotos(results);
-      
       setSearchResults(results);
-      return results;
     } catch (error) {
       console.error('[Client] Search error:', error);
-      throw error;
     } finally {
       setIsSearching(false);
     }
   };
-  
 
+  // Similar update for handleTagClick
+  const handleTagClick = async (query: string) => {
+    setSearchQuery(query);
+    // Then call handleSearch programmatically
+    const event = { preventDefault: () => {} } as React.FormEvent;
+    handleSearch(event);
+  };
 
-const fetchProfilePhotos = async (results: SearchResult[]) => {
-  try {
-    const linkedinUrls = results.map(result => result.linkedin_url);
-    if (linkedinUrls.length === 0) return;
+  // Add these helper functions for generating the expanded queries and filters
+  const generateExpandedQueries = async (query: string): Promise<void> => {
+    // This would ideally call an AI API, but we'll simulate it here
+    let generatedQueries: string[] = [];
     
-    console.log('[Client] Fetching profile photos for LinkedIn URLs:', linkedinUrls);
-    
-    const tableName = formattedSchoolName.toLowerCase().replace(/ /g, '_');
-    
-    // Query the main school table using linkedin_url as the common identifier
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('linkedin_url, profile_photo_url')
-      .in('linkedin_url', linkedinUrls);
-      
-    if (error) {
-      console.error('[Client] Error fetching profile photos:', error);
-      return;
+    // Simple rule-based query expansion
+    if (query.toLowerCase().includes('international') || query.toLowerCase().includes('abroad')) {
+      generatedQueries = [
+        'Alumni employed outside the country', 
+        'Graduates with international jobs', 
+        'Alumni working abroad'
+      ];
+    } else if (query.toLowerCase().includes('tech') || query.toLowerCase().includes('software')) {
+      generatedQueries = [
+        'Software engineers at top tech companies', 
+        'Alumni working in Silicon Valley', 
+        'Tech startup founders'
+      ];
+    } else if (query.toLowerCase().includes('finance') || query.toLowerCase().includes('banking')) {
+      generatedQueries = [
+        'Investment bankers on Wall Street', 
+        'Alumni in hedge funds', 
+        'Finance professionals with MBA'
+      ];
+    } else {
+      // Default expansions for any query
+      generatedQueries = [
+        `Recent graduates working in ${query}`, 
+        `Senior professionals with experience in ${query}`, 
+        `Alumni who changed careers to ${query}`
+      ];
     }
     
-    console.log('[Client] Profile photo data:', data);
+    setExpandedQueries(generatedQueries);
     
-    // Map profile photos to search results using linkedin_url as the key
-    results.forEach(result => {
-      const matchingProfile = data.find((profile: any) => 
-        profile.linkedin_url === result.linkedin_url
-      );
-      if (matchingProfile && matchingProfile.profile_photo_url) {
-        result.profile_url = matchingProfile.profile_photo_url;
+    // Animate the profiling text appearance
+    const profilingText = generatedQueries.join(' • ');
+    await typewriterEffect(profilingText, 
+      (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+    );
+  };
+
+  const extractMetadataFilters = async (query: string): Promise<void> => {
+    // Simple keyword extraction for demonstration
+    const filters: {[key: string]: string[]} = {};
+    
+    // Extract locations
+    const locationKeywords = ['international', 'abroad', 'remote', 'new york', 'san francisco', 'boston', 'chicago', 'london'];
+    const foundLocations = locationKeywords.filter(loc => query.toLowerCase().includes(loc));
+    if (foundLocations.length > 0) {
+      filters['Locations'] = foundLocations.map(l => l.charAt(0).toUpperCase() + l.slice(1));
+    }
+    
+    // Extract industries
+    const industryKeywords = ['tech', 'finance', 'healthcare', 'education', 'consulting', 'manufacturing', 'media'];
+    const foundIndustries = industryKeywords.filter(ind => query.toLowerCase().includes(ind));
+    if (foundIndustries.length > 0) {
+      filters['Industries'] = foundIndustries.map(i => i.charAt(0).toUpperCase() + i.slice(1));
+    }
+    
+    // Extract roles/titles
+    const roleKeywords = ['engineer', 'manager', 'director', 'ceo', 'founder', 'analyst', 'developer', 'designer'];
+    const foundRoles = roleKeywords.filter(role => query.toLowerCase().includes(role));
+    if (foundRoles.length > 0) {
+      filters['Roles'] = foundRoles.map(r => r.charAt(0).toUpperCase() + r.slice(1));
+    }
+    
+    setExtractedFilters(filters);
+    
+    // Create and animate the filters text
+    let filtersText = '';
+    Object.keys(filters).forEach((category, idx) => {
+      filtersText += `${category}: ${filters[category].join(', ')}`;
+      if (idx < Object.keys(filters).length - 1) {
+        filtersText += '\n';
       }
     });
     
-    setSearchResults([...results]);
-  } catch (error) {
-    console.error('[Client] Error fetching profile photos:', error);
-  }
-};
+    if (filtersText === '') {
+      filtersText = 'No specific filters detected';
+    }
+    
+    await typewriterEffect(filtersText, 
+      (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+    );
+  };
 
-  
+  // Add cleanup for timers
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
+
+  const fetchProfilePhotos = async (results: SearchResult[]) => {
+    try {
+      const linkedinUrls = results.map(result => result.linkedin_url);
+      if (linkedinUrls.length === 0) return;
+      
+      console.log('[Client] Fetching profile photos for LinkedIn URLs:', linkedinUrls);
+      
+      const tableName = formattedSchoolName.toLowerCase().replace(/ /g, '_');
+      
+      // Query the main school table using linkedin_url as the common identifier
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('linkedin_url, profile_photo_url')
+        .in('linkedin_url', linkedinUrls);
+        
+      if (error) {
+        console.error('[Client] Error fetching profile photos:', error);
+        return;
+      }
+      
+      console.log('[Client] Profile photo data:', data);
+      
+      // Map profile photos to search results using linkedin_url as the key
+      results.forEach(result => {
+        const matchingProfile = data.find((profile: any) => 
+          profile.linkedin_url === result.linkedin_url
+        );
+        if (matchingProfile && matchingProfile.profile_photo_url) {
+          result.profile_url = matchingProfile.profile_photo_url;
+        }
+      });
+      
+      setSearchResults([...results]);
+    } catch (error) {
+      console.error('[Client] Error fetching profile photos:', error);
+    }
+  };
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -480,11 +591,33 @@ const fetchProfilePhotos = async (results: SearchResult[]) => {
           </div>
 
           {/* Search Results */}
-          {isSearching ? (
-            <div className="text-center p-8">
-              <p className="text-lg text-gray-700">
-                Searching across our database. Found {totalAlumniCount} {formattedSchoolName} alumni.
-              </p>
+          {isSearching || searchPhase !== 'idle' ? (
+            <div className="w-full max-w-2xl text-left p-6 bg-gray-50 rounded-lg shadow-sm mt-8">
+              {displayedText.analyzing && (
+                <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+              )}
+              
+              {displayedText.searching && (
+                <p className="text-gray-700 mb-3">{displayedText.searching}</p>
+              )}
+              
+              {searchPhase === 'profiling' || searchPhase === 'filtering' || searchPhase === 'complete' ? (
+                <>
+                  <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
+                  <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+                </>
+              ) : null}
+              
+              {searchPhase === 'filtering' || searchPhase === 'complete' ? (
+                <>
+                  <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
+                  <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
+                </>
+              ) : null}
+              
+              {searchPhase === 'complete' && (
+                <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
+              )}
             </div>
           ) : searchResults.length > 0 ? (
             <div className="w-full max-w-4xl mt-8">
