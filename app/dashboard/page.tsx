@@ -294,13 +294,20 @@ export default function DashboardPage() {
   };
 
   // Update the handleSearch function to ensure consistency 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent, directQuery?: string) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
     
-    console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${searchQuery.trim()}"`);
+    // Use the direct query if provided (from tag click), otherwise use the state
+    const queryToUse = directQuery || searchQuery.trim();
     
-    // Cancel any previous search
+    if (!queryToUse) {
+      console.log(`[DEBUG ${new Date().toISOString()}] Empty query, search aborted`);
+      return;
+    }
+    
+    console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${queryToUse}"`);
+    
+    // Continue with the rest of the function using queryToUse
     if (searchTimerRef.current) {
       console.log(`[DEBUG ${new Date().toISOString()}] Cancelling previous search timer`);
       clearTimeout(searchTimerRef.current);
@@ -312,8 +319,8 @@ export default function DashboardPage() {
     setSearchPhase('analyzing');
     
     // Store the current query to ensure consistency 
-    const currentQuery = searchQuery.trim();
-    console.log(`[DEBUG ${new Date().toISOString()}] Stored current query: "${currentQuery}"`);
+    const currentQuery = queryToUse;
+    console.log(`[DEBUG ${new Date().toISOString()}] Using query: "${currentQuery}"`);
     
     // Reset displayed text
     setDisplayedText({
@@ -399,16 +406,26 @@ export default function DashboardPage() {
     }
   };
 
-  // Similar update for handleTagClick to use the current query
+  // Fix the handleTagClick function
   const handleTagClick = async (query: string) => {
     console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
-    setSearchQuery(query);
-    console.log(`[DEBUG ${new Date().toISOString()}] Search query state updated to: "${query}"`);
     
-    // Then call handleSearch programmatically
-    console.log(`[DEBUG ${new Date().toISOString()}] Calling handleSearch programmatically`);
-    const event = { preventDefault: () => {} } as React.FormEvent;
-    handleSearch(event);
+    // Set the query first
+    setSearchQuery(query);
+    
+    // Use setTimeout to ensure state update has completed
+    setTimeout(() => {
+      console.log(`[DEBUG ${new Date().toISOString()}] Executing search after tag click for: "${query}"`);
+      // Create a proper synthetic event
+      const fakeEvent = {
+        preventDefault: () => {},
+        target: { value: query },
+        currentTarget: { value: query }
+      } as unknown as React.FormEvent;
+      
+      // Call the search function directly with the query value, not depending on the state
+      handleSearch(fakeEvent, query);
+    }, 50);
   };
 
   // Add these helper functions for generating the expanded queries and filters
