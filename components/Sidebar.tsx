@@ -134,26 +134,19 @@ export default function Sidebar() {
           className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
         >
-          <button
-            onClick={() => router.refresh()}
-            className="flex items-center mb-8 transition-transform duration-300 ease-in-out bg-transparent border-0 cursor-pointer"
-            style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
-            aria-label="Refresh page"
+          <Image
+            src="/assets/icons8-atom-24.png"
+            alt="AlumIntel Logo"
+            width={32}
+            height={32}
+            className="transition-transform duration-300 ease-in-out shrink-0"
+          />
+          <span
+            className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
+            style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
           >
-            <Image
-              src="/assets/icons8-atom-24.png"
-              alt="AlumIntel Logo"
-              width={32}
-              height={32}
-              className="transition-transform duration-300 ease-in-out shrink-0"
-            />
-            <span
-              className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
-              style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
-            >
-              AlumIntel
-            </span>
-          </button>
+            AlumIntel
+          </span>
         </div>
 
         <div
