@@ -738,40 +738,42 @@ export default function DashboardPage() {
           </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
-            {/* Input field */}
-            <div className="relative mb-2">
+            <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Who are the alumni working in artificial intelligence at Google?"
-                className="w-full px-6 py-4 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 shadow-lg"
+                className="w-full px-6 py-4 pr-24 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 shadow-lg"
               />
-            </div>
-            
-            {/* Buttons row */}
-            <div className="flex justify-end space-x-2">
-              {/* Refresh button */}
-              <button
-                type="button" 
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
               
-              {/* Send button */}
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center"
-              >
-                <Search className="w-5 h-5 mr-1" />
-                Search
-              </button>
+              {/* Buttons inside the input field */}
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex space-x-2">
+                {/* Refresh button */}
+                <button
+                  type="button" 
+                  onClick={() => window.location.reload()}
+                  className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  aria-label="Refresh"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                
+                {/* Search/Send button */}
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                  aria-label="Search"
+                >
+                  {/* Using up arrow icon similar to the image */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </form>
 
