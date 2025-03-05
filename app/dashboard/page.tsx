@@ -174,6 +174,30 @@ export default function DashboardPage() {
   // Add a new state variable for collapsing the analysis
   const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState(false);
 
+  // Add state for randomized tags
+  const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
+  
+  // Initialize randomized tags on component mount
+  useEffect(() => {
+    // Create a random starting position in the tag list
+    const startIndex = Math.floor(Math.random() * suggestionTags.length);
+    
+    // Rotate the array to start from that position
+    const rotatedTags = [
+      ...suggestionTags.slice(startIndex),
+      ...suggestionTags.slice(0, startIndex)
+    ];
+    
+    setRandomizedTags(rotatedTags);
+    
+    // We can still use the scroll offset randomization too
+    const tagsContainer = document.querySelector('.scrolling-tags');
+    if (tagsContainer) {
+      const randomOffset = Math.random() * -20; // Smaller offset since we're already randomizing the list
+      tagsContainer.setAttribute('style', `transform: translateX(${randomOffset}%)`);
+    }
+  }, []);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       console.log("Dashboard: Checking auth status...")
@@ -784,28 +808,52 @@ export default function DashboardPage() {
               <div className="scrolling-tags">
                 {/* First copy of tags */}
                 <div className="scrolling-tags-content">
-                  {suggestionTags.map((tag, index) => (
-                    <span 
-                      key={`first-${index}`}
-                      onClick={() => handleTagClick(tag)}
-                      className="tag-item"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {randomizedTags.length > 0 ? 
+                    randomizedTags.map((tag, index) => (
+                      <span 
+                        key={`first-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                    :
+                    suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`first-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  }
                 </div>
                 
                 {/* Second copy of tags to create the infinite loop effect */}
                 <div className="scrolling-tags-content">
-                  {suggestionTags.map((tag, index) => (
-                    <span 
-                      key={`second-${index}`}
-                      onClick={() => handleTagClick(tag)}
-                      className="tag-item"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {randomizedTags.length > 0 ? 
+                    randomizedTags.map((tag, index) => (
+                      <span 
+                        key={`second-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                    :
+                    suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`second-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  }
                 </div>
               </div>
             </div>
