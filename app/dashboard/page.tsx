@@ -153,6 +153,10 @@ export default function DashboardPage() {
     userEmail: null as string | null
   })
 
+  // Add these new states near the top with your other state declarations
+  const [totalAlumniCount, setTotalAlumniCount] = useState(0);
+  const [isLoadingCount, setIsLoadingCount] = useState(false);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       console.log("Dashboard: Checking auth status...")
@@ -227,6 +231,36 @@ export default function DashboardPage() {
       fetchSchoolName()
     }
   }, [authState.isAuthenticated, router])
+
+  // Add this useEffect to fetch the total count on component mount
+  useEffect(() => {
+    const fetchTotalAlumniCount = async () => {
+      if (formattedSchoolName) {
+        setIsLoadingCount(true);
+        try {
+          const tableName = `${formattedSchoolName.toLowerCase().replace(/ /g, '_')}_vector`;
+          const { count, error } = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact', head: true });
+          
+          if (error) {
+            console.error('[Client] Error fetching alumni count:', error);
+          } else {
+            console.log('[Client] Total alumni count:', count);
+            setTotalAlumniCount(count || 0);
+          }
+        } catch (error) {
+          console.error('[Client] Error in count fetch:', error);
+        } finally {
+          setIsLoadingCount(false);
+        }
+      }
+    };
+    
+    if (formattedSchoolName) {
+      fetchTotalAlumniCount();
+    }
+  }, [formattedSchoolName]);
 
   
   const handleSearch = async (e: React.FormEvent) => {
@@ -448,8 +482,9 @@ const fetchProfilePhotos = async (results: SearchResult[]) => {
           {/* Search Results */}
           {isSearching ? (
             <div className="text-center p-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
-              <p>Searching alumni database...</p>
+              <p className="text-lg text-gray-700">
+                Searching across our database. Found {totalAlumniCount} {formattedSchoolName} alumni.
+              </p>
             </div>
           ) : searchResults.length > 0 ? (
             <div className="w-full max-w-4xl mt-8">
