@@ -132,7 +132,7 @@ export default function Sidebar() {
       <div className="p-6 flex flex-col h-full w-full">
         <div
           className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0)" }}
+          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
         >
           <button 
             onClick={() => window.location.reload()} 
