@@ -277,6 +277,7 @@ export default function DashboardPage() {
 
   // Add this helper function to simulate typewriter effect
   const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
+    console.log(`[DEBUG ${new Date().toISOString()}] Starting typewriter effect for text: "${text.substring(0, 20)}..."`);
     return new Promise((resolve) => {
       let i = 0;
       const typing = setInterval(() => {
@@ -285,6 +286,7 @@ export default function DashboardPage() {
           i++;
         } else {
           clearInterval(typing);
+          console.log(`[DEBUG ${new Date().toISOString()}] Completed typewriter effect`);
           resolve();
         }
       }, speed);
@@ -296,8 +298,11 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
+    console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${searchQuery.trim()}"`);
+    
     // Cancel any previous search
     if (searchTimerRef.current) {
+      console.log(`[DEBUG ${new Date().toISOString()}] Cancelling previous search timer`);
       clearTimeout(searchTimerRef.current);
     }
 
@@ -308,6 +313,7 @@ export default function DashboardPage() {
     
     // Store the current query to ensure consistency 
     const currentQuery = searchQuery.trim();
+    console.log(`[DEBUG ${new Date().toISOString()}] Stored current query: "${currentQuery}"`);
     
     // Reset displayed text
     setDisplayedText({
@@ -319,6 +325,7 @@ export default function DashboardPage() {
     });
     
     // IMPORTANT: Start the actual search request immediately in parallel with animations
+    console.log(`[DEBUG ${new Date().toISOString()}] Starting API search request for: "${currentQuery}"`);
     const searchPromise = fetch('/api/search', {
       method: 'POST',
       headers: {
@@ -326,56 +333,80 @@ export default function DashboardPage() {
       },
       body: JSON.stringify({ query: currentQuery, top_k: 10 }),
     }).then(response => {
+      console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
       if (!response.ok) {
         throw new Error('Search failed');
       }
       return response.json();
+    }).then(data => {
+      console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${data.results?.length || 0} results`);
+      console.log(`[DEBUG ${new Date().toISOString()}] First result:`, data.results?.[0] || 'No results');
+      return data;
     });
     
     // Start the AI animation sequence
     try {
+      console.log(`[DEBUG ${new Date().toISOString()}] Starting animation sequence for query: "${currentQuery}"`);
+      
       // Phase 1: Analyzing query
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 1: Analyzing`);
       await typewriterEffect('Analyzing your search query...', 
         (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
       );
       
       // Phase 2: Searching database
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 2: Searching`);
       setSearchPhase('searching');
       await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
         (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
       );
       
       // Phase 3: Generate expanded queries using the CURRENT query
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 3: Profiling using query: "${currentQuery}"`);
       setSearchPhase('profiling');
       await generateExpandedQueries(currentQuery);
       
       // Phase 4: Extract metadata filters using the CURRENT query
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 4: Filtering using query: "${currentQuery}"`);
       setSearchPhase('filtering');
       await extractMetadataFilters(currentQuery);
       
       // Get search results that were fetching in parallel
+      console.log(`[DEBUG ${new Date().toISOString()}] Waiting for search promise to resolve for query: "${currentQuery}"`);
       const data = await searchPromise;
       const results = data.results;
+      console.log(`[DEBUG ${new Date().toISOString()}] Search promise resolved with ${results?.length || 0} results for query: "${currentQuery}"`);
       
       // Phase 5: Display results
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 5: Displaying results`);
       setSearchPhase('complete');
       await typewriterEffect(`Displaying top ${Math.min(10, results.length)} personalized results...`, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
+      console.log(`[DEBUG ${new Date().toISOString()}] Fetching profile photos for results`);
       await fetchProfilePhotos(results);
+      
+      console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
+      console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, results);
       setSearchResults(results);
+      console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
     } catch (error) {
-      console.error('[Client] Search error:', error);
+      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Search error for query "${currentQuery}":`, error);
     } finally {
+      console.log(`[DEBUG ${new Date().toISOString()}] Setting isSearching to false`);
       setIsSearching(false);
     }
   };
 
   // Similar update for handleTagClick to use the current query
   const handleTagClick = async (query: string) => {
+    console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
     setSearchQuery(query);
+    console.log(`[DEBUG ${new Date().toISOString()}] Search query state updated to: "${query}"`);
+    
     // Then call handleSearch programmatically
+    console.log(`[DEBUG ${new Date().toISOString()}] Calling handleSearch programmatically`);
     const event = { preventDefault: () => {} } as React.FormEvent;
     handleSearch(event);
   };
