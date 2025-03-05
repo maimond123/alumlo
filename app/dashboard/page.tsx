@@ -296,6 +296,11 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
+    // Cancel any previous search
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
     // Clear previous search results and reset state
     setSearchResults([]);
     setIsSearching(true);
@@ -311,6 +316,20 @@ export default function DashboardPage() {
       profiling: '',
       filters: '',
       displaying: ''
+    });
+    
+    // IMPORTANT: Start the actual search request immediately in parallel with animations
+    const searchPromise = fetch('/api/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: currentQuery, top_k: 10 }),
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+      return response.json();
     });
     
     // Start the AI animation sequence
@@ -334,29 +353,16 @@ export default function DashboardPage() {
       setSearchPhase('filtering');
       await extractMetadataFilters(currentQuery);
       
+      // Get search results that were fetching in parallel
+      const data = await searchPromise;
+      const results = data.results;
+      
       // Phase 5: Display results
       setSearchPhase('complete');
-      await typewriterEffect(`Displaying top ${Math.min(10, totalAlumniCount)} personalized results...`, 
+      await typewriterEffect(`Displaying top ${Math.min(10, results.length)} personalized results...`, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
-      // Now actually perform the search with the CURRENT query
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: currentQuery, top_k: 10 }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('[Client] Error details:', errorData);
-        throw new Error('Search failed');
-      }
-      
-      const data = await response.json();
-      const results = data.results;
       await fetchProfilePhotos(results);
       setSearchResults(results);
     } catch (error) {
