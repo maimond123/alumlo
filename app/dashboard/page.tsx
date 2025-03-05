@@ -458,10 +458,16 @@ const fetchProfilePhotos = async (results: SearchResult[]) => {
               </h2>
               <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
                 {searchResults.map((result) => {
+                  // Add debug statements for title extraction
+                  console.log(`[Debug] Result for ${result.name}:`, result);
+                  console.log(`[Debug] all_titles:`, result.all_titles);
+                  
                   // Extract current title from all_titles (assuming it's the first entry)
                   const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
                     ? result.all_titles[0] 
                     : result.current_title || ""; // Fallback to current_title if it exists, otherwise empty string
+                  
+                  console.log(`[Debug] Extracted current title for ${result.name}:`, currentTitle);
                   
                   return (
                     <a
