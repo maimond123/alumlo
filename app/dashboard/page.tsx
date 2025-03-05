@@ -433,6 +433,9 @@ export default function DashboardPage() {
     console.log(`[DEBUG ${new Date().toISOString()}] Generating AI query expansions for: "${query}"`);
     
     try {
+      console.log(`[DEBUG ${new Date().toISOString()}] Making fetch request to /api/expand-query`);
+      console.log(`[DEBUG ${new Date().toISOString()}] Request body:`, JSON.stringify({ query }));
+      
       // Set up event source for the streaming response
       const response = await fetch('/api/expand-query', {
         method: 'POST',
@@ -442,9 +445,24 @@ export default function DashboardPage() {
         body: JSON.stringify({ query }),
       });
       
+      console.log(`[DEBUG ${new Date().toISOString()}] Received response:`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries([...response.headers.entries()]),
+        ok: response.ok
+      });
+      
       // Handle non-streaming fallback case
       if (!response.ok) {
         console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error from expand-query API:`, response.statusText);
+        try {
+          // Try to get more error details from the response body
+          const errorText = await response.text();
+          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error response body:`, errorText);
+        } catch (readError) {
+          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Could not read error response:`, readError);
+        }
+        
         const fallbackText = "Alternative search suggestions unavailable";
         await typewriterEffect(fallbackText, 
           (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
