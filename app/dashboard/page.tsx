@@ -23,6 +23,7 @@ interface SearchResult {
   years_experience: number;
   similarity: number;
   profile_url?: string;
+  all_titles?: string[];
 }
 
 const suggestionTags = [
@@ -318,6 +319,7 @@ export default function DashboardPage() {
   };
   
 
+
 const fetchProfilePhotos = async (results: SearchResult[]) => {
   try {
     const linkedinUrls = results.map(result => result.linkedin_url);
@@ -455,64 +457,71 @@ const fetchProfilePhotos = async (results: SearchResult[]) => {
                 Found {searchResults.length} alumni matching your search
               </h2>
               <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
-                {searchResults.map((result) => (
-                  <a
-                    key={result.id}
-                    href={result.linkedin_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
-                  >
-                    <div className="flex items-center">
-                      {/* Profile Image Circle */}
-                      <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                        {result.profile_url ? (
-                          <img 
-                            src={result.profile_url} 
-                            alt={`${result.name}'s profile`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                            {result.name.split(' ').map(name => name[0]).join('')}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Content */}
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                        
-                        {/* Metadata in one row */}
-                        <div className="flex flex-wrap items-center text-gray-600 mt-1">
-                          <span>{result.current_title}</span>
-                          {result.current_company && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <span>{result.current_company}</span>
-                            </>
-                          )}
-                          {result.location && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <span>{result.location}</span>
-                            </>
+                {searchResults.map((result) => {
+                  // Extract current title from all_titles (assuming it's the first entry)
+                  const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
+                    ? result.all_titles[0] 
+                    : result.current_title || ""; // Fallback to current_title if it exists, otherwise empty string
+                  
+                  return (
+                    <a
+                      key={result.id}
+                      href={result.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+                    >
+                      <div className="flex items-center">
+                        {/* Profile Image Circle */}
+                        <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
+                          {result.profile_url ? (
+                            <img 
+                              src={result.profile_url} 
+                              alt={`${result.name}'s profile`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                              {result.name.split(' ').map(name => name[0]).join('')}
+                            </div>
                           )}
                         </div>
                         
-                        {/* Industry (Optional - you can remove if not needed) */}
-                        <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
-                        
-                        {/* Match percentage */}
-                        <div className="mt-2">
-                          <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                            Match: {(result.similarity * 100).toFixed(1)}%
+                        {/* Content */}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                          
+                          {/* Metadata in one row */}
+                          <div className="flex flex-wrap items-center text-gray-600 mt-1">
+                            <span>{currentTitle}</span>
+                            {result.current_company && (
+                              <>
+                                <span className="mx-1">•</span>
+                                <span>{result.current_company}</span>
+                              </>
+                            )}
+                            {result.location && (
+                              <>
+                                <span className="mx-1">•</span>
+                                <span>{result.location}</span>
+                              </>
+                            )}
+                          </div>
+                          
+                          {/* Industry (Optional - you can remove if not needed) */}
+                          <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
+                          
+                          {/* Match percentage */}
+                          <div className="mt-2">
+                            <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
+                              Match: {(result.similarity * 100).toFixed(1)}%
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </a>
-                ))}
+                    </a>
+                  );
+                })}
               </div>
             </div>
           ) : searchQuery.trim() !== "" ? (
