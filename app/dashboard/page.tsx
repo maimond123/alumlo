@@ -170,6 +170,9 @@ export default function DashboardPage() {
   const [extractedFilters, setExtractedFilters] = useState<{[key: string]: string[]}>({});
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Add a new state variable for collapsing the analysis
+  const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState(false);
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       console.log("Dashboard: Checking auth status...")
@@ -783,115 +786,137 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Search Results */}
-          {isSearching ? (
-            <div className="w-full max-w-2xl text-left p-6 bg-gray-50 rounded-lg shadow-sm mt-8">
-              {displayedText.analyzing && (
-                <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
-              )}
-              
-              {displayedText.searching && (
-                <p className="text-gray-700 mb-3">{displayedText.searching}</p>
-              )}
-              
-              {searchPhase === 'profiling' || searchPhase === 'filtering' || searchPhase === 'complete' ? (
-                <>
-                  <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
-                  <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
-                </>
-              ) : null}
-              
-              {searchPhase === 'filtering' || searchPhase === 'complete' ? (
-                <>
-                  <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
-                  <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
-                </>
-              ) : null}
-              
-              {searchPhase === 'complete' && (
-                <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
-              )}
-            </div>
-          ) : searchResults.length > 0 ? (
-            <div className="w-full max-w-4xl mt-8">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">
-                Found {searchResults.length} alumni matching your search
-              </h2>
-              <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
-                {searchResults.map((result, index) => {
-                  console.log(`[DEBUG RENDER ${new Date().toISOString()}] Rendering card ${index} for ${result.name}`);
+          {/* Analysis and Search Results */}
+          <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
+            {/* Analysis Section - Only show if there's content to display */}
+            {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
+              <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
+                {/* Collapse/Expand Button */}
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-semibold text-gray-700">Search Analysis</h2>
+                  <button 
+                    onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
+                    className="text-gray-500 hover:text-emerald-600 transition-colors"
+                  >
+                    {isAnalysisCollapsed ? 'Expand ▼' : 'Collapse ▲'}
+                  </button>
+                </div>
+                
+                {/* Collapsible Content */}
+                <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
+                  {displayedText.analyzing && (
+                    <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+                  )}
                   
-                  // Extract current title from all_titles (assuming it's the first entry)
-                  const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
-                    ? result.all_titles[0] 
-                    : result.current_title || ""; // Fallback to current_title if it exists
+                  {displayedText.searching && (
+                    <p className="text-gray-700 mb-3">{displayedText.searching}</p>
+                  )}
                   
-                  return (
-                    <a
-                      key={result.id || index}
-                      href={result.linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex items-center">
-                        {/* Profile Image */}
-                        <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                          {result.profile_url ? (
-                            <img 
-                              src={result.profile_url} 
-                              alt={`${result.name}'s profile`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                              {result.name?.split(' ').map(name => name[0]).join('') || '?'}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                          
-                          {/* Metadata in one row */}
-                          <div className="flex flex-wrap items-center text-gray-600 mt-1">
-                            <span>{currentTitle}</span>
-                            {result.current_company && (
-                              <>
-                                <span className="mx-1">•</span>
-                                <span>{result.current_company}</span>
-                              </>
-                            )}
-                            {result.location && (
-                              <>
-                                <span className="mx-1">•</span>
-                                <span>{result.location}</span>
-                              </>
-                            )}
-                          </div>
-                          
-                          {/* Industry (Optional - you can remove if not needed) */}
-                          <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
-                          
-                          {/* Match percentage */}
-                          <div className="mt-2">
-                            <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                              Match: {(result.similarity * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  );
-                })}
+                  {displayedText.profiling && (
+                    <>
+                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
+                      <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+                    </>
+                  )}
+                  
+                  {displayedText.filters && (
+                    <>
+                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
+                      <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
+                    </>
+                  )}
+                  
+                  {displayedText.displaying && (
+                    <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ) : searchQuery.trim() !== "" ? (
-            <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm mt-8">
-              <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
-            </div>
-          ) : null}
+            )}
+
+            {/* Search Results Section - Show below the analysis */}
+            {isSearching ? (
+              <div className="text-center p-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
+                <p>Searching alumni database...</p>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="w-full">
+                <h2 className="text-xl font-semibold mb-4 text-gray-700">
+                  Found {searchResults.length} alumni matching your search
+                </h2>
+                <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
+                  {searchResults.map((result, index) => {
+                    const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
+                      ? result.all_titles[0] 
+                      : result.current_title || "";
+                    
+                    return (
+                      <a
+                        key={result.id || index}
+                        href={result.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+                      >
+                        <div className="flex items-center">
+                          {/* Profile Image */}
+                          <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
+                            {result.profile_url ? (
+                              <img 
+                                src={result.profile_url} 
+                                alt={`${result.name}'s profile`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                                {result.name?.split(' ').map(name => name[0]).join('') || '?'}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                            
+                            {/* Metadata in one row */}
+                            <div className="flex flex-wrap items-center text-gray-600 mt-1">
+                              <span>{currentTitle}</span>
+                              {result.current_company && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>{result.current_company}</span>
+                                </>
+                              )}
+                              {result.location && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>{result.location}</span>
+                                </>
+                              )}
+                            </div>
+                            
+                            {/* Industry */}
+                            <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
+                            
+                            {/* Match percentage */}
+                            <div className="mt-2">
+                              <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
+                                Match: {(result.similarity * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : searchQuery.trim() !== "" ? (
+              <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm">
+                <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
+              </div>
+            ) : null}
+          </div>
         </div>
       </main>
     </div>
