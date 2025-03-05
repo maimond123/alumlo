@@ -96,13 +96,13 @@ const tagScrollAnimation = `
   
   .scrolling-tags-content {
     display: inline-flex;
-    animation: scroll 30s linear infinite;
+    animation: scroll 110s linear infinite;
   }
   
   .tag-item {
     display: inline-block;
-    background-color: #f3f4f6;
-    color: #4b5563;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: rgb(4, 120, 87);
     padding: 0.6rem 1.2rem;
     margin: 0 0.5rem;
     border-radius: 9999px;
@@ -110,11 +110,10 @@ const tagScrollAnimation = `
     transition: all 0.2s;
     font-size: 1rem;
     white-space: nowrap;
-    border: 1px solid #e5e7eb;
   }
   
   .tag-item:hover {
-    background-color: #e5e7eb;
+    background-color: rgba(16, 185, 129, 0.2);
     transform: translateY(-2px);
   }
   
