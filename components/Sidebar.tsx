@@ -134,9 +134,9 @@ export default function Sidebar() {
           className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
         >
-          <button
-            onClick={() => router.refresh()}
-            className="bg-transparent border-0 p-0 cursor-pointer flex items-center justify-center"
+          <button 
+            onClick={() => window.location.reload()} 
+            className="w-8 h-8 flex items-center justify-center p-0 m-0 bg-transparent border-0 cursor-pointer"
             aria-label="Refresh page"
           >
             <Image
@@ -144,9 +144,10 @@ export default function Sidebar() {
               alt="AlumIntel Logo"
               width={32}
               height={32}
-              className="transition-transform duration-300 ease-in-out shrink-0"
+              className="transition-transform duration-300 ease-in-out"
             />
           </button>
+          
           <span
             className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
             style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
