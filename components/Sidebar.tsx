@@ -132,11 +132,12 @@ export default function Sidebar() {
       <div className="p-6 flex flex-col h-full w-full">
         <div
           className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
+          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
         >
-          <button 
-            onClick={() => window.location.reload()} 
-            className="w-8 h-8 flex items-center justify-center p-0 ml-1 mr-4 bg-transparent border-0 cursor-pointer"
+          <button
+            onClick={() => router.refresh()}
+            className="flex items-center mb-8 transition-transform duration-300 ease-in-out bg-transparent border-0 cursor-pointer"
+            style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
             aria-label="Refresh page"
           >
             <Image
@@ -144,16 +145,15 @@ export default function Sidebar() {
               alt="AlumIntel Logo"
               width={32}
               height={32}
-              className="transition-transform duration-300 ease-in-out"
+              className="transition-transform duration-300 ease-in-out shrink-0"
             />
+            <span
+              className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
+              style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
+            >
+              AlumIntel
+            </span>
           </button>
-          
-          <span
-            className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
-            style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
-          >
-            AlumIntel
-          </span>
         </div>
 
         <div
