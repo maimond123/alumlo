@@ -744,16 +744,16 @@ export default function DashboardPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Who are the alumni working in artificial intelligence at Google?"
-                className="w-full px-6 py-4 pr-24 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 shadow-lg"
+                className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
               />
               
-              {/* Buttons inside the input field */}
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex space-x-2">
-                {/* Refresh button */}
+              {/* Buttons inside the input field, positioned at the bottom right */}
+              <div className="absolute bottom-3 right-4 flex space-x-2">
+                {/* Refresh button - matching theme from image */}
                 <button
                   type="button" 
                   onClick={() => window.location.reload()}
-                  className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                   aria-label="Refresh"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -761,14 +761,13 @@ export default function DashboardPage() {
                   </svg>
                 </button>
                 
-                {/* Search/Send button */}
+                {/* Search/Send button - matching theme from image */}
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="w-10 h-10 flex items-center justify-center bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                   aria-label="Search"
                 >
-                  {/* Using up arrow icon similar to the image */}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                   </svg>
