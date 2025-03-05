@@ -727,11 +727,11 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className={`absolute inset-0 flex flex-col items-center px-4 ${
+      <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
+        <div className={`min-h-screen flex flex-col items-center px-4 ${
           (searchPhase === 'idle' && !displayedText.analyzing && !displayedText.searching && !displayedText.profiling && 
            !displayedText.filters && searchResults.length === 0) 
-            ? 'justify-center' : 'pt-24'
+             ? 'justify-center' : 'pt-24'
         }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
             Explore {formattedSchoolName} Alumni Data
@@ -843,7 +843,7 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold mb-4 text-gray-700">
                   Found {searchResults.length} alumni matching your search
                 </h2>
-                <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
+                <div className="grid gap-4">
                   {searchResults.map((result, index) => {
                     const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
                       ? result.all_titles[0] 

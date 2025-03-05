@@ -136,7 +136,7 @@ export default function Sidebar() {
         >
           <button 
             onClick={() => window.location.reload()} 
-            className="w-8 h-8 flex items-center justify-center p-0 mx-3 bg-transparent border-0 cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer mx-auto"
             aria-label="Refresh page"
           >
             <Image
