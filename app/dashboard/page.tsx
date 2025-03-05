@@ -697,13 +697,6 @@ export default function DashboardPage() {
           {/* Content that appears only after searching */}
           {hasSearched && (
             <div className="w-full max-w-4xl flex flex-col gap-4">
-              {/* Keep loading state logic but hide the visual elements */}
-              {isSearching && (
-                <div className="hidden text-center p-8 bg-white/80 rounded-lg shadow-sm">
-                  <p className="text-lg text-gray-700">Searching across our database of {totalAlumniCount} {formattedSchoolName} alumni profiles...</p>
-                </div>
-              )}
-              
               {/* Analysis Section - Only show if there's content to display */}
               {!isSearching && (displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
                 <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
