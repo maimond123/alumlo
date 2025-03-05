@@ -291,14 +291,18 @@ export default function DashboardPage() {
     });
   };
 
-  // Update your search functions with the AI animation
+  // Update the handleSearch function to ensure consistency 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     
+    // Clear previous search results and reset state
     setSearchResults([]);
     setIsSearching(true);
     setSearchPhase('analyzing');
+    
+    // Store the current query to ensure consistency 
+    const currentQuery = searchQuery.trim();
     
     // Reset displayed text
     setDisplayedText({
@@ -322,13 +326,13 @@ export default function DashboardPage() {
         (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
       );
       
-      // Phase 3: Generate expanded queries using the original query
+      // Phase 3: Generate expanded queries using the CURRENT query
       setSearchPhase('profiling');
-      await generateExpandedQueries(searchQuery);
+      await generateExpandedQueries(currentQuery);
       
-      // Phase 4: Extract metadata filters
+      // Phase 4: Extract metadata filters using the CURRENT query
       setSearchPhase('filtering');
-      await extractMetadataFilters(searchQuery);
+      await extractMetadataFilters(currentQuery);
       
       // Phase 5: Display results
       setSearchPhase('complete');
@@ -336,13 +340,13 @@ export default function DashboardPage() {
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
-      // Now actually perform the search
+      // Now actually perform the search with the CURRENT query
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: searchQuery, top_k: 10 }),
+        body: JSON.stringify({ query: currentQuery, top_k: 10 }),
       });
       
       if (!response.ok) {
@@ -362,7 +366,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Similar update for handleTagClick
+  // Similar update for handleTagClick to use the current query
   const handleTagClick = async (query: string) => {
     setSearchQuery(query);
     // Then call handleSearch programmatically
