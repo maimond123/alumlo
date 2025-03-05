@@ -79,59 +79,60 @@ const suggestionTags = [
   "DevOps Engineers at unicorn startups"
 ]
 
-// Update the CSS animation for a better infinite scroll effect
+
+// With this simpler approach - no import needed
 const tagScrollAnimation = `
-@keyframes scrollTags {
-  0% {
-    transform: translateX(0);
+  .scrolling-tags-container {
+    width: 100%;
+    overflow: hidden;
+    margin: 1rem 0;
   }
-  100% {
-    transform: translateX(-50%);
+  
+  .scrolling-tags {
+    display: flex;
+    white-space: nowrap;
+    transform: translateX(-${Math.floor(Math.random() * 100)}%);
   }
-}
-
-.scrolling-tags-container {
-  width: 100%;
-  max-width: 2xl;
-  overflow: hidden;
-  position: relative;
-  margin-top: 0.5rem;
-}
-
-.scrolling-tags {
-  display: inline-flex;
-  white-space: nowrap;
-  animation: scrollTags 110s linear infinite; /* Slowed down from 30s to 60s */
-  padding-right: 2rem;
-}
-
-.scrolling-tags-content {
-  display: inline-flex;
-  padding-right: 2rem;
-}
-
-.scrolling-tags-content:last-child {
-  padding-right: 0;
-}
-
-.tag-item {
-  display: inline-block;
-  background-color: rgba(16, 185, 129, 0.1);
-  color: rgb(4, 120, 87);
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.tag-item:hover {
-  background-color: rgba(16, 185, 129, 0.2);
-}
+  
+  .scrolling-tags-content {
+    display: inline-flex;
+    animation: scroll 30s linear infinite;
+  }
+  
+  .tag-item {
+    display: inline-block;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 0.6rem 1.2rem;
+    margin: 0 0.5rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    white-space: nowrap;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .tag-item:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-2px);
+  }
+  
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
 `;
+
+// Add useEffect to randomize starting position on component mount
+useEffect(() => {
+  // For each tags container, apply a random starting position
+  const tagsContainer = document.querySelector('.scrolling-tags');
+  if (tagsContainer) {
+    const randomOffset = Math.random() * -100;
+    tagsContainer.setAttribute('style', `transform: translateX(${randomOffset}%)`);
+  }
+}, []);
 
 export default function DashboardPage() {
   const router = useRouter()
