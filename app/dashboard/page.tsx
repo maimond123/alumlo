@@ -403,6 +403,7 @@ export default function DashboardPage() {
     } finally {
       console.log(`[DEBUG ${new Date().toISOString()}] Setting isSearching to false`);
       setIsSearching(false);
+      console.log(`[DEBUG ${new Date().toISOString()}] Search complete, isSearching set to false`);
     }
   };
 
@@ -783,7 +784,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Search Results */}
-          {isSearching || searchPhase !== 'idle' ? (
+          {isSearching ? (
             <div className="w-full max-w-2xl text-left p-6 bg-gray-50 rounded-lg shadow-sm mt-8">
               {displayedText.analyzing && (
                 <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
