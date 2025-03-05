@@ -79,8 +79,8 @@ const suggestionTags = [
   "DevOps Engineers at unicorn startups"
 ]
 
-
-// With this simpler approach - no import needed
+// Remove the module-level useEffect
+// This is causing the error - hooks can only be used inside components
 const tagScrollAnimation = `
   .scrolling-tags-container {
     width: 100%;
@@ -124,15 +124,14 @@ const tagScrollAnimation = `
   }
 `;
 
-// Add useEffect to randomize starting position on component mount
-useEffect(() => {
-  // For each tags container, apply a random starting position
-  const tagsContainer = document.querySelector('.scrolling-tags');
-  if (tagsContainer) {
-    const randomOffset = Math.random() * -100;
-    tagsContainer.setAttribute('style', `transform: translateX(${randomOffset}%)`);
-  }
-}, []);
+// DELETE THIS MODULE-LEVEL HOOK - it's causing the error
+// useEffect(() => {
+//   const tagsContainer = document.querySelector('.scrolling-tags');
+//   if (tagsContainer) {
+//     const randomOffset = Math.random() * -100;
+//     tagsContainer.setAttribute('style', `transform: translateX(${randomOffset}%)`);
+//   }
+// }, []);
 
 export default function DashboardPage() {
   const router = useRouter()
