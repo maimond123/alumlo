@@ -843,17 +843,47 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Search Results Section - Only show after search is complete (no loading animation) */}
-            {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
-              <div className="w-full">
+            {/* Search Results */}
+            {isSearching ? (
+              <div className="w-full max-w-2xl text-left p-6 bg-gray-50 rounded-lg shadow-sm mt-8">
+                {displayedText.analyzing && (
+                  <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+                )}
+                
+                {displayedText.searching && (
+                  <p className="text-gray-700 mb-3">{displayedText.searching}</p>
+                )}
+                
+                {searchPhase === 'profiling' || searchPhase === 'filtering' || searchPhase === 'complete' ? (
+                  <>
+                    <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
+                    <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+                  </>
+                ) : null}
+                
+                {searchPhase === 'filtering' || searchPhase === 'complete' ? (
+                  <>
+                    <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
+                    <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
+                  </>
+                ) : null}
+                
+                {searchPhase === 'complete' && (
+                  <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
+                )}
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="w-full max-w-4xl mt-8">
                 <h2 className="text-xl font-semibold mb-4 text-gray-700">
                   Found {searchResults.length} alumni matching your search
                 </h2>
                 <div className="grid gap-4 overflow-y-auto max-h-[60vh]">
+                  
                   {searchResults.map((result, index) => {
+                    // Extract current title from all_titles (assuming it's the first entry)
                     const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
                       ? result.all_titles[0] 
-                      : result.current_title || "";
+                      : result.current_title || ""; // Fallback to current_title if it exists
                     
                     return (
                       <a
@@ -916,14 +946,11 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
-            )}
-            
-            {/* No results message */}
-            {!isSearching && searchPhase === 'complete' && searchResults.length === 0 && searchQuery.trim() !== "" && (
-              <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm">
+            ) : searchQuery.trim() !== "" ? (
+              <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm mt-8">
                 <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </main>
