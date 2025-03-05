@@ -258,7 +258,10 @@ export default function DashboardPage() {
       
       // Process search results
       const results = data.results;
-      setSearchResults(results);
+      
+      // Fetch profile photos for results
+      await fetchProfilePhotos(results);
+      
       return results;
     } catch (error) {
       console.error('[Client] Search error:', error);
@@ -300,6 +303,10 @@ export default function DashboardPage() {
       
       // Process search results
       const results = data.results;
+      
+      // Fetch profile photos for results
+      await fetchProfilePhotos(results);
+      
       setSearchResults(results);
       return results;
     } catch (error) {
@@ -309,6 +316,46 @@ export default function DashboardPage() {
       setIsSearching(false);
     }
   };
+  
+
+const fetchProfilePhotos = async (results: SearchResult[]) => {
+  try {
+    const linkedinUrls = results.map(result => result.linkedin_url);
+    if (linkedinUrls.length === 0) return;
+    
+    console.log('[Client] Fetching profile photos for LinkedIn URLs:', linkedinUrls);
+    
+    const tableName = formattedSchoolName.toLowerCase().replace(/ /g, '_');
+    
+    // Query the main school table using linkedin_url as the common identifier
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('linkedin_url, profile_photo_url')
+      .in('linkedin_url', linkedinUrls);
+      
+    if (error) {
+      console.error('[Client] Error fetching profile photos:', error);
+      return;
+    }
+    
+    console.log('[Client] Profile photo data:', data);
+    
+    // Map profile photos to search results using linkedin_url as the key
+    results.forEach(result => {
+      const matchingProfile = data.find((profile: any) => 
+        profile.linkedin_url === result.linkedin_url
+      );
+      if (matchingProfile && matchingProfile.profile_photo_url) {
+        result.profile_url = matchingProfile.profile_photo_url;
+      }
+    });
+    
+    setSearchResults([...results]);
+  } catch (error) {
+    console.error('[Client] Error fetching profile photos:', error);
+  }
+};
+
   
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
