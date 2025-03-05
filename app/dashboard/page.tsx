@@ -728,7 +728,11 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className="absolute inset-0 flex flex-col items-center px-4 pt-24">
+        <div className={`absolute inset-0 flex flex-col items-center px-4 ${
+          (searchPhase === 'idle' && !displayedText.analyzing && !displayedText.searching && !displayedText.profiling && 
+           !displayedText.filters && searchResults.length === 0) 
+            ? 'justify-center' : 'pt-24'
+        }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
             Explore {formattedSchoolName} Alumni Data
           </h1>
