@@ -428,91 +428,194 @@ export default function DashboardPage() {
     }, 50);
   };
 
-  // Add these helper functions for generating the expanded queries and filters
+  // Replace the existing generateExpandedQueries function with this AI-powered version
   const generateExpandedQueries = async (query: string): Promise<void> => {
-    // This would ideally call an AI API, but we'll simulate it here
-    let generatedQueries: string[] = [];
+    console.log(`[DEBUG ${new Date().toISOString()}] Generating AI query expansions for: "${query}"`);
     
-    // Simple rule-based query expansion
-    if (query.toLowerCase().includes('international') || query.toLowerCase().includes('abroad')) {
-      generatedQueries = [
-        'Alumni employed outside the country', 
-        'Graduates with international jobs', 
-        'Alumni working abroad'
-      ];
-    } else if (query.toLowerCase().includes('tech') || query.toLowerCase().includes('software')) {
-      generatedQueries = [
-        'Software engineers at top tech companies', 
-        'Alumni working in Silicon Valley', 
-        'Tech startup founders'
-      ];
-    } else if (query.toLowerCase().includes('finance') || query.toLowerCase().includes('banking')) {
-      generatedQueries = [
-        'Investment bankers on Wall Street', 
-        'Alumni in hedge funds', 
-        'Finance professionals with MBA'
-      ];
-    } else {
-      // Default expansions for any query
-      generatedQueries = [
-        `Recent graduates working in ${query}`, 
-        `Senior professionals with experience in ${query}`, 
-        `Alumni who changed careers to ${query}`
-      ];
+    try {
+      // Set up event source for the streaming response
+      const response = await fetch('/api/expand-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+      
+      // Handle non-streaming fallback case
+      if (!response.ok) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error from expand-query API:`, response.statusText);
+        const fallbackText = "Alternative search suggestions unavailable";
+        await typewriterEffect(fallbackText, 
+          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+        );
+        return;
+      }
+      
+      // Set up streaming with text accumulation
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is null');
+      }
+      
+      let accumulatedText = '';
+      let currentDisplayText = '';
+      
+      const processStream = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log(`[DEBUG ${new Date().toISOString()}] Stream complete, final text: "${accumulatedText}"`);
+            break;
+          }
+          
+          // Decode and parse the chunk
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsedData = JSON.parse(line.substring(6));
+                if (parsedData.content) {
+                  accumulatedText += parsedData.content;
+                  
+                  // Update the display with typewriter-like effect
+                  const newPortion = parsedData.content;
+                  currentDisplayText += newPortion;
+                  
+                  setDisplayedText(prev => ({ 
+                    ...prev, 
+                    profiling: currentDisplayText 
+                  }));
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e);
+              }
+            }
+          }
+        }
+      };
+      
+      await processStream();
+      
+      // Extract the expanded queries from the accumulated text
+      // The format should be query1 • query2 • query3
+      const expandedQueriesArray = accumulatedText.split('•').map(q => q.trim()).filter(q => q);
+      setExpandedQueries(expandedQueriesArray);
+      
+    } catch (error) {
+      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
+      
+      // Fallback in case of error
+      const fallbackText = "Error generating alternative search suggestions";
+      await typewriterEffect(fallbackText, 
+        (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+      );
     }
-    
-    setExpandedQueries(generatedQueries);
-    
-    // Animate the profiling text appearance
-    const profilingText = generatedQueries.join(' • ');
-    await typewriterEffect(profilingText, 
-      (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-    );
   };
 
+  // Replace the existing extractMetadataFilters function with this AI-powered version
   const extractMetadataFilters = async (query: string): Promise<void> => {
-    // Simple keyword extraction for demonstration
-    const filters: {[key: string]: string[]} = {};
+    console.log(`[DEBUG ${new Date().toISOString()}] Extracting metadata filters for: "${query}"`);
     
-    // Extract locations
-    const locationKeywords = ['international', 'abroad', 'remote', 'new york', 'san francisco', 'boston', 'chicago', 'london'];
-    const foundLocations = locationKeywords.filter(loc => query.toLowerCase().includes(loc));
-    if (foundLocations.length > 0) {
-      filters['Locations'] = foundLocations.map(l => l.charAt(0).toUpperCase() + l.slice(1));
-    }
-    
-    // Extract industries
-    const industryKeywords = ['tech', 'finance', 'healthcare', 'education', 'consulting', 'manufacturing', 'media'];
-    const foundIndustries = industryKeywords.filter(ind => query.toLowerCase().includes(ind));
-    if (foundIndustries.length > 0) {
-      filters['Industries'] = foundIndustries.map(i => i.charAt(0).toUpperCase() + i.slice(1));
-    }
-    
-    // Extract roles/titles
-    const roleKeywords = ['engineer', 'manager', 'director', 'ceo', 'founder', 'analyst', 'developer', 'designer'];
-    const foundRoles = roleKeywords.filter(role => query.toLowerCase().includes(role));
-    if (foundRoles.length > 0) {
-      filters['Roles'] = foundRoles.map(r => r.charAt(0).toUpperCase() + r.slice(1));
-    }
-    
-    setExtractedFilters(filters);
-    
-    // Create and animate the filters text
-    let filtersText = '';
-    Object.keys(filters).forEach((category, idx) => {
-      filtersText += `${category}: ${filters[category].join(', ')}`;
-      if (idx < Object.keys(filters).length - 1) {
-        filtersText += '\n';
+    try {
+      // Set up event source for the streaming response
+      const response = await fetch('/api/extract-filters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+      
+      // Handle non-streaming fallback case
+      if (!response.ok) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error from extract-filters API:`, response.statusText);
+        const fallbackText = "No specific filters detected";
+        await typewriterEffect(fallbackText, 
+          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+        );
+        return;
       }
-    });
-    
-    if (filtersText === '') {
-      filtersText = 'No specific filters detected';
+      
+      // Set up streaming with text accumulation
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is null');
+      }
+      
+      let accumulatedText = '';
+      let currentDisplayText = '';
+      
+      const processStream = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log(`[DEBUG ${new Date().toISOString()}] Stream complete, final filters: "${accumulatedText}"`);
+            break;
+          }
+          
+          // Decode and parse the chunk
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsedData = JSON.parse(line.substring(6));
+                if (parsedData.content) {
+                  accumulatedText += parsedData.content;
+                  
+                  // Update the display with typewriter-like effect
+                  const newPortion = parsedData.content;
+                  currentDisplayText += newPortion;
+                  
+                  setDisplayedText(prev => ({ 
+                    ...prev, 
+                    filters: currentDisplayText 
+                  }));
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e);
+              }
+            }
+          }
+        }
+      };
+      
+      await processStream();
+      
+      // Parse the accumulated text into filter categories
+      const filtersObj: {[key: string]: string[]} = {};
+      const filterLines = accumulatedText.split('\n').filter(line => line.trim() !== '');
+      
+      for (const line of filterLines) {
+        if (line === "No specific filters detected") {
+          // No filters case
+          break;
+        }
+        
+        const match = line.match(/^([^:]+):\s*(.+)$/);
+        if (match) {
+          const [_, category, valuesStr] = match;
+          filtersObj[category] = valuesStr.split(',').map(v => v.trim());
+        }
+      }
+      
+      setExtractedFilters(filtersObj);
+      
+    } catch (error) {
+      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
+      
+      // Fallback in case of error
+      const fallbackText = "No specific filters detected";
+      await typewriterEffect(fallbackText, 
+        (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+      );
     }
-    
-    await typewriterEffect(filtersText, 
-      (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-    );
   };
 
   // Add cleanup for timers
