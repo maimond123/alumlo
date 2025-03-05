@@ -727,69 +727,79 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Explore {formattedSchoolName} Alumni Data
-          </h1>
+      <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"} overflow-y-auto`}>
+        <div className="flex flex-col items-center px-4 py-8">
+          {/* Fixed header with search bar */}
+          <div className="w-full max-w-4xl flex flex-col items-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+              Explore {formattedSchoolName} Alumni Data
+            </h1>
 
-          <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Who are the alumni working in artificial intelligence at Google?"
-                className="w-full px-6 py-4 pr-12 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 shadow-lg"
-              />
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
-              >
-                <Search className="w-6 h-6" />
-              </button>
-            </div>
-          </form>
+            <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Who are the alumni working in artificial intelligence at Google?"
+                  className="w-full px-6 py-4 pr-12 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-gray-200 rounded-full focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 shadow-lg"
+                />
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors"
+                >
+                  <Search className="w-6 h-6" />
+                </button>
+              </div>
+            </form>
 
-          <style jsx>{tagScrollAnimation}</style>
-          
-          <div className="w-full max-w-2xl">
-            <div className="scrolling-tags-container">
-              <div className="scrolling-tags">
-                {/* First copy of tags */}
-                <div className="scrolling-tags-content">
-                  {suggestionTags.map((tag, index) => (
-                    <span 
-                      key={`first-${index}`}
-                      onClick={() => handleTagClick(tag)}
-                      className="tag-item"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                
-                {/* Second copy of tags to create the infinite loop effect */}
-                <div className="scrolling-tags-content">
-                  {suggestionTags.map((tag, index) => (
-                    <span 
-                      key={`second-${index}`}
-                      onClick={() => handleTagClick(tag)}
-                      className="tag-item"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            <style jsx>{tagScrollAnimation}</style>
+            
+            <div className="w-full max-w-2xl">
+              <div className="scrolling-tags-container">
+                <div className="scrolling-tags">
+                  {/* First copy of tags */}
+                  <div className="scrolling-tags-content">
+                    {suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`first-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  {/* Second copy of tags for infinite loop effect */}
+                  <div className="scrolling-tags-content">
+                    {suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`second-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Analysis and Search Results */}
-          <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
+          {/* Analysis and Search Results - Scrollable content */}
+          <div className="w-full max-w-4xl flex flex-col gap-4">
+            {/* Display loading message during search */}
+            {isSearching && (
+              <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm">
+                <p className="text-lg text-gray-700">Searching across our database of {totalAlumniCount} {formattedSchoolName} alumni profiles...</p>
+              </div>
+            )}
+            
             {/* Analysis Section - Only show if there's content to display */}
-            {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
+            {!isSearching && (displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
                 {/* Collapse/Expand Button */}
                 <div className="flex justify-between items-center mb-2">
@@ -833,13 +843,8 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Search Results Section - Show below the analysis */}
-            {isSearching ? (
-              <div className="text-center p-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-2"></div>
-                <p>Searching alumni database...</p>
-              </div>
-            ) : searchResults.length > 0 ? (
+            {/* Search Results Section - Only show after search is complete (no loading animation) */}
+            {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
               <div className="w-full">
                 <h2 className="text-xl font-semibold mb-4 text-gray-700">
                   Found {searchResults.length} alumni matching your search
@@ -911,11 +916,14 @@ export default function DashboardPage() {
                   })}
                 </div>
               </div>
-            ) : searchQuery.trim() !== "" ? (
+            )}
+            
+            {/* No results message */}
+            {!isSearching && searchPhase === 'complete' && searchResults.length === 0 && searchQuery.trim() !== "" && (
               <div className="text-center p-8 bg-white/80 rounded-lg shadow-sm">
                 <p className="text-gray-600">No alumni found matching your search. Try different keywords.</p>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </main>
