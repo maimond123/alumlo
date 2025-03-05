@@ -318,7 +318,7 @@ export default function DashboardPage() {
       
       // Phase 2: Searching database
       setSearchPhase('searching');
-      await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} alumni profiles`, 
+      await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
         (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
       );
       
