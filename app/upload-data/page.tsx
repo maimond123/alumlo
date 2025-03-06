@@ -331,19 +331,15 @@ useEffect(() => {
             <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Upload Instructions</h2>
-            <p className="text-gray-700 mb-4">
-              Please upload a CSV or Excel file containing student information with the following columns:
-            </p>
-            <ul className="list-disc pl-5 mb-6 text-gray-700">
+          <div className="mb-6 p-6 bg-white rounded-lg shadow-md border-2 border-black">
+            <h2 className="text-xl font-bold mb-4">Upload Instructions</h2>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Please upload a CSV or Excel file containing student information with the following columns:</li>
               <li>Student First Name (Column 1)</li>
               <li>Student Last Name (Column 2)</li>
               <li>College/University they are attending (Column 3)</li>
-            </ul>
-            <p className="text-gray-700">
-              Your file will be processed within 24-48 hours, and the data will be added to your system.
-            </p>
+            </ol>
+            <p>Your file will be processed within 24-48 hours, and the data will be added to your system.</p>
           </div>
 
           {uploadStatus === 'success' ? (
@@ -379,7 +375,7 @@ useEffect(() => {
                   ? 'border-emerald-500 bg-emerald-50' 
                   : errorMessage 
                     ? 'border-red-300 bg-red-50' 
-                    : 'border-gray-300 hover:border-emerald-300 hover:bg-gray-50'
+                    : 'border-black hover:border-emerald-300 hover:bg-gray-50'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}

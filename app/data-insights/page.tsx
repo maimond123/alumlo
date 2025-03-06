@@ -840,12 +840,12 @@ export default function DataInsightsPage() {
             <input
               type="text"
               placeholder="Search graph titles..."
-              className="pl-10 pr-4 py-2 bg-white border-2 border-black rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
+              className="pl-10 pr-4 py-2 bg-white border-2 border-black rounded-lg focus:outline-none focus:border-[#1c3d4c] text-black placeholder-black-800"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               aria-label="Search graph titles"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4" />
           </div>
           <YearSelector selectedYear={selectedYear} onChange={setSelectedYear} />
           <button
