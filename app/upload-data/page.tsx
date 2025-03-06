@@ -327,7 +327,7 @@ useEffect(() => {
         <div className="max-w-6xl mx-auto">
           {/* Centered Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900">Upload Student Data</h1>
+            <h1 className="text-4xl font-bold text-black">Upload Student Data</h1>
             <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
           </div>
           
