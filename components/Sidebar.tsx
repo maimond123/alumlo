@@ -217,7 +217,7 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className="flex items-center text-black/90 hover:text-black mb-8 transition-all duration-300 ease-in-out relative rounded-lg hover:shadow-md"
+      className="flex items-center text-black/90 hover:text-black mb-8 transition-all duration-300 ease-in-out relative rounded-lg active:animate-pulse"
       style={{
         transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)",
         padding: "0.5rem 1.5rem",
