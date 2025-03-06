@@ -123,7 +123,7 @@ export default function Sidebar() {
 
   return (
     <motion.div
-      className={`fixed top-0 left-0 h-full bg-black flex flex-col border-r border-gray-800 z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
+      className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
       initial={false}
       animate={{ width: isSidebarOpen ? "18rem" : "6rem" }}
       onMouseEnter={openSidebar}
@@ -142,7 +142,7 @@ export default function Sidebar() {
             className="transition-transform duration-300 ease-in-out shrink-0"
           />
           <span
-            className={`ml-3 text-white text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
+            className={`ml-3 text-black text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
             style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
           >
             AlumIntel
@@ -156,14 +156,14 @@ export default function Sidebar() {
           <div
             className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
           >
-            <span className="text-white font-semibold text-base">{getInitials()}</span>
+            <span className="text-black font-semibold text-base">{getInitials()}</span>
           </div>
           <div
             className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
             style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
           >
-            <h3 className="text-white font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
-            <span className="text-white/80 text-base whitespace-nowrap">Admin</span>
+            <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
+            <span className="text-black/80 text-base whitespace-nowrap">Admin</span>
           </div>
         </div>
 
@@ -187,7 +187,7 @@ export default function Sidebar() {
 
         <button
           onClick={handleLogout}
-          className="mt-auto flex items-center text-white/90 hover:text-white transition-transform duration-300 ease-in-out"
+          className="mt-auto flex items-center text-black/90 hover:text-black transition-transform duration-300 ease-in-out"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(1rem)" }}
         >
           <LogOut className="w-8 h-8 shrink-0" />
@@ -217,7 +217,7 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className="flex items-center text-white/90 hover:text-white mb-8 transition-transform duration-300 ease-in-out relative"
+      className="flex items-center text-black/90 hover:text-black mb-8 transition-transform duration-300 ease-in-out relative"
       style={{ transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
     >
       <Icon className="w-8 h-8 shrink-0" />
