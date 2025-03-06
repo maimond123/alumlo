@@ -209,17 +209,17 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
   };
 
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[450px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[400px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Pie
             activeIndex={activeIndex}
-            activeShape={isZoomed ? renderActiveShape : undefined}
+            activeShape={renderActiveShape}
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={isZoomed ? 170 : 45}
-            outerRadius={isZoomed ? 220 : 90}
+            innerRadius={isZoomed ? 170 : 60}
+            outerRadius={isZoomed ? 220 : 110}
             fill="#8884d8"
             dataKey="value"
             onMouseEnter={onPieEnter}
@@ -232,7 +232,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
               />
             ))}
           </Pie>
-          {isZoomed && <Tooltip content={<ChartTooltipContent />} />}
+          <Tooltip content={<ChartTooltipContent />} />
         </RechartsPieChart>
       </ResponsiveContainer>
     </ChartContainer>
