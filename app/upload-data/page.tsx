@@ -331,7 +331,7 @@ useEffect(() => {
             <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
           </div>
           
-          <div className="mb-6 p-6 bg-white rounded-lg shadow-md border-2 border-black">
+          <div className="mb-6 p-6 bg-white rounded-lg shadow-md border border-black">
             <h2 className="text-xl font-bold mb-4">Upload Instructions</h2>
             <ol className="list-decimal pl-5 space-y-2">
               <li>Please upload a CSV or Excel file containing student information with the following columns:</li>
@@ -370,7 +370,7 @@ useEffect(() => {
             </div>
           ) : (
             <div 
-              className={`border-2 border-dashed rounded-lg p-8 text-center mb-8 transition-colors ${
+              className={`border border-dashed rounded-lg p-8 text-center mb-8 transition-colors ${
                 isDragOver 
                   ? 'border-emerald-500 bg-emerald-50' 
                   : errorMessage 
@@ -443,8 +443,8 @@ useEffect(() => {
                     </div>
                   ) : (
                     <>
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium text-gray-900 mb-1">Drag and drop your file here</p>
+                      <Upload className="w-12 h-12 text-black mx-auto mb-4" />
+                      <p className="text-lg font-medium text-black mb-1">Drag and drop your file here</p>
                       <p className="text-sm text-gray-500">or click to browse from your computer</p>
                       <p className="text-xs text-gray-400 mt-2">Supported formats: CSV, Excel (xlsx, xls)</p>
                     </>
@@ -482,7 +482,7 @@ useEffect(() => {
             <h2 className="text-xl font-semibold text-black">Recent Uploads</h2>
 
             {/* Added wrapper div with fixed height and scrolling */}
-            <div className="mt-4 max-h-[400px] overflow-y-auto border-2 border-black rounded-lg">
+            <div className="mt-4 max-h-[400px] overflow-y-auto border border-black rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
