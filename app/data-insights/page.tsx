@@ -37,7 +37,7 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
       placeholder="Year"
       min="1950"
       max="2024"
-      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
+      className="w-24 px-3 py-2 bg-white border-2 border-black rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
     />
   )
 }
@@ -840,7 +840,7 @@ export default function DataInsightsPage() {
             <input
               type="text"
               placeholder="Search graph titles..."
-              className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
+              className="pl-10 pr-4 py-2 bg-white border-2 border-black rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               aria-label="Search graph titles"
@@ -850,7 +850,7 @@ export default function DataInsightsPage() {
           <YearSelector selectedYear={selectedYear} onChange={setSelectedYear} />
           <button
             onClick={() => window.location.reload()}
-            className="p-2 bg-white rounded-lg border border-gray-200 text-gray-600 hover:text-[#1c3d4c] transition-colors"
+            className="p-2 bg-black text-white rounded-lg border-2 border-black hover:bg-gray-900 transition-colors"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
