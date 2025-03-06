@@ -110,7 +110,7 @@ const tagScrollAnimation = `
     transition: all 0.2s;
     font-size: 1rem;
     white-space: nowrap;
-    border: 1px solid black;
+    border: 2px solid black;
   }
   
   .tag-item:hover {
@@ -123,15 +123,6 @@ const tagScrollAnimation = `
     100% { transform: translateX(-100%); }
   }
 `;
-
-// DELETE THIS MODULE-LEVEL HOOK - it's causing the error
-// useEffect(() => {
-//   const tagsContainer = document.querySelector('.scrolling-tags');
-//   if (tagsContainer) {
-//     const randomOffset = Math.random() * -100;
-//     tagsContainer.setAttribute('style', `transform: translateX(${randomOffset}%)`);
-//   }
-// }, []);
 
 export default function DashboardPage() {
   const router = useRouter()

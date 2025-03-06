@@ -479,10 +479,10 @@ useEffect(() => {
           
           {/* History of Uploads */}
           <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-800">Recent Uploads</h2>
+            <h2 className="text-xl font-semibold text-black">Recent Uploads</h2>
 
             {/* Added wrapper div with fixed height and scrolling */}
-            <div className="mt-4 max-h-[400px] overflow-y-auto border border-gray-200 rounded-lg">
+            <div className="mt-4 max-h-[400px] overflow-y-auto border border-black rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
