@@ -365,7 +365,7 @@ interface IndustryPieChartProps {
 }
 
 export const IndustryPieChart: React.FC<IndustryPieChartProps> = ({ data, isZoomed = false, showLegend = false }) => {
-  const chartSize = isZoomed ? 400 : 200;
+  const chartSize = isZoomed ? 400 : 250;
   
   return (
     <ResponsiveContainer width="100%" height={chartSize}>
