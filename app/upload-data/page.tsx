@@ -375,7 +375,7 @@ useEffect(() => {
                   ? 'border-emerald-500 bg-emerald-50' 
                   : errorMessage 
                     ? 'border-red-300 bg-red-50' 
-                    : 'border-black hover:border-emerald-800 hover:bg-gray-50'
+                    : 'border-black hover:border-emerald-500 hover:bg-gray-50'
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
