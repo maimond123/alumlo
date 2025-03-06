@@ -110,7 +110,6 @@ const tagScrollAnimation = `
     transition: all 0.2s;
     font-size: 1rem;
     white-space: nowrap;
-    border: 2px solid black;
   }
   
   .tag-item:hover {
