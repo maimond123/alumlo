@@ -123,7 +123,7 @@ export default function Sidebar() {
 
   return (
     <motion.div
-      className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
+      className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r-2 border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
       initial={false}
       animate={{ width: isSidebarOpen ? "18rem" : "6rem" }}
       onMouseEnter={openSidebar}

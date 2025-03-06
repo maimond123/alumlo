@@ -825,7 +825,7 @@ export default function DataInsightsPage() {
                   key={chart.id}
                   layoutId={`chart-${chart.id}`}
                   onClick={() => handleWidgetClick(chart)}
-                  className={`bg-white rounded-lg p-6 cursor-pointer border-2 border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
+                  className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
                     selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
                   }`}
                   transition={{ duration: 0.3 }}
