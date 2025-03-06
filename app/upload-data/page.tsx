@@ -370,7 +370,7 @@ useEffect(() => {
             </div>
           ) : (
             <div 
-              className={`border border-dashed rounded-lg p-8 text-center mb-8 transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-8 text-center mb-8 transition-colors group ${
                 isDragOver 
                   ? 'border-emerald-500 bg-emerald-50' 
                   : errorMessage 
@@ -443,10 +443,10 @@ useEffect(() => {
                     </div>
                   ) : (
                     <>
-                      <Upload className="w-12 h-12 text-black mx-auto mb-4" />
+                      <Upload className="w-12 h-12 text-black mx-auto mb-4 transition-colors duration-300 group-hover:text-emerald-500/50" />
                       <p className="text-lg font-medium text-black mb-1">Drag and drop your file here</p>
                       <p className="text-sm text-gray-500">or click to browse from your computer</p>
-                      <p className="text-xs text-gray-400 mt-2">Supported formats: CSV, Excel (xlsx, xls)</p>
+                      <p className="text-xs text-gray-500 mt-2">Supported formats: CSV, Excel (xlsx, xls)</p>
                     </>
                   )}
                 </div>
