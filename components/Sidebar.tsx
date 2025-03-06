@@ -217,16 +217,12 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className="flex items-center text-black/90 hover:text-black mb-8 transition-all duration-300 ease-in-out relative rounded-lg active:animate-pulse"
-      style={{
-        transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)",
-        padding: "0.5rem 1.5rem",
-        width: "100%",
-      }}
+      className="flex items-center text-black/90 hover:text-black mb-8 transition-transform duration-300 ease-in-out relative"
+      style={{ transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
     >
-      <Icon className="w-8 h-8 shrink-0 ml-1 transition-transform duration-300 ease-in-out" />
+      <Icon className="w-8 h-8 shrink-0" />
       <span
-        className="ml-3 text-lg transition-transform duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
+        className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
         style={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
       >
         {children}
