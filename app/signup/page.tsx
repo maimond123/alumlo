@@ -92,7 +92,7 @@ export default function Signup() {
     <div className="min-h-screen w-full">
       <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 to-white overflow-hidden">
         <Navigation />
-        <main className="relative min-h-screen w-full">
+        <main className="relative min-h-screen w-full mt-4">
           <div className="container mx-auto px-6 pt-32">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start">
               <div className="md:w-1/2 mb-12 md:mb-0">
