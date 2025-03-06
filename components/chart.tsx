@@ -420,6 +420,34 @@ export function AverageSalaryByIndustryBarChart({ data, isZoomed = false }: Char
             angle={-45}
             textAnchor="end"
             height={isZoomed ? 100 : 80}
+            tickFormatter={(value) => {
+              // Industry name abbreviations
+              const abbreviations: Record<string, string> = {
+                "Financial Services": "Finance",
+                "Technology & Software": "Tech",
+                "Insurance": "Insurance",
+                "Construction": "Construction",
+                "Management Consulting": "Consulting",
+                "Research & Development": "R&D",
+                "Healthcare & Pharmaceuticals": "Healthcare",
+                "Food & Beverage": "Food & Bev",
+                "Consumer Goods": "Consumer",
+                "Defense & Aerospace": "Defense",
+                "Education": "Education",
+                "Real Estate": "Real Estate",
+                "Government & Public Sector": "Gov/Public",
+                "Manufacturing": "Manufact.",
+                "Media & Advertising": "Media/Ads",
+                "Media & Entertainment": "Entertainment",
+                "Environmental Services": "Environmental",
+                "Non-Profit & NGO": "Non-Profit",
+                "Fashion": "Fashion",
+                "Human Resources": "HR",
+                "Sports & Recreation": "Sports & Rec"
+              };
+              
+              return abbreviations[value] || value;
+            }}
           />
           <YAxis 
             type="number"
