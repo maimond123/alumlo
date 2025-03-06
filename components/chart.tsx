@@ -209,7 +209,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
   };
 
   return (
-    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[400px]'}`}>
+    <ChartContainer className={`${isZoomed ? 'h-[600px]' : 'h-[450px]'}`}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Pie
@@ -223,7 +223,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
             fill="#8884d8"
             dataKey="value"
             onMouseEnter={onPieEnter}
-            isAnimationActive={true} // Enable animation in both states
+            isAnimationActive={true}
           >
             {data.map((entry, index) => (
               <Cell 
@@ -347,7 +347,7 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
             dataKey="value" 
             fill="#00C49F80" 
             radius={[4, 4, 0, 0]} 
-            isAnimationActive={isZoomed} 
+            isAnimationActive={true} 
           />
         </RechartsBarChart>
       </ResponsiveContainer>
