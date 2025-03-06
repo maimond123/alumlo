@@ -855,10 +855,10 @@ export default function DashboardPage() {
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
                 {/* Collapse/Expand Button */}
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-xl font-semibold text-gray-700">Search Analysis</h2>
+                  <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
                   <button 
                     onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
-                    className="text-gray-500 hover:text-emerald-600 transition-colors"
+                    className="text-black hover:text-emerald-600 transition-colors"
                   >
                     {isAnalysisCollapsed ? 'Expand ▼' : 'Collapse ▲'}
                   </button>
@@ -913,7 +913,7 @@ export default function DashboardPage() {
                         href={result.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block p-4 bg-white border rounded-lg hover:shadow-lg transition-shadow"
+                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
                       >
                         <div className="flex items-center">
                           {/* Profile Image */}
