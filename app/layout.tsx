@@ -11,7 +11,7 @@ console.log('Layout: Finished importing aws-config');
 import { SidebarProvider } from '@/components/SidebarProvider'
 
 export const metadata = {
-  title: 'AlumIntel - Alumni Insights Platform',
+  title: 'AlumIntel',
   description: 'Transform your alumni engagement with AlumIntel',
   icons: {
     icon: [
