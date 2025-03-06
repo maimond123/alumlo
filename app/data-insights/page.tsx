@@ -732,14 +732,14 @@ export default function DataInsightsPage() {
 
                 {/* Chat input */}
                 <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 border border-black rounded-lg p-2">
                     <input
                       type="text"
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder="Ask a question about this data..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                      className="flex-1 px-3 py-2 border-none text-black placeholder-black-800 focus:outline-none focus:ring-2 focus:ring-forest-green-500"
                       disabled={isSending}
                     />
                     <button 
