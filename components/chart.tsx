@@ -205,9 +205,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const onPieEnter = (_: any, index: number) => {
-    if (isZoomed) {
-      setActiveIndex(index);
-    }
+    setActiveIndex(index);
   };
 
   return (
@@ -215,17 +213,17 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart>
           <Pie
-            activeIndex={isZoomed ? activeIndex : undefined}
+            activeIndex={activeIndex}
             activeShape={isZoomed ? renderActiveShape : undefined}
             data={data}
-            cx={isZoomed ? '50%' : '50%'}
-            cy={isZoomed ? '50%' : '50%'}
+            cx="50%"
+            cy="50%"
             innerRadius={isZoomed ? 170 : 45}
             outerRadius={isZoomed ? 220 : 90}
             fill="#8884d8"
             dataKey="value"
             onMouseEnter={onPieEnter}
-            isAnimationActive={isZoomed}
+            isAnimationActive={true} // Enable animation in both states
           >
             {data.map((entry, index) => (
               <Cell 
@@ -240,7 +238,6 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
     </ChartContainer>
   )
 }
-
 export function SalaryBarChart({ data, isZoomed = false }: ChartProps) {
   return (
     <ChartContainer className={`${isZoomed ? 'h-[700px]' : 'h-[500px]'}`}>
