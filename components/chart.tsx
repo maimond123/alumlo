@@ -315,6 +315,9 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
             textAnchor="end"
             height={isZoomed ? 100 : 80}
             tickFormatter={(value) => {
+              // Debug: Log the actual value being received
+              console.log("Geography tick value:", value);
+              
               // Add location abbreviations here
               const abbreviations: Record<string, string> = {
                 "New York Metropolitan Area": "NY Metro",
@@ -326,7 +329,9 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
                 // Add more abbreviations as needed
               };
               
-              return abbreviations[value] || value;
+              const abbreviated = abbreviations[value] || value;
+              console.log(`Original: "${value}" → Abbreviated: "${abbreviated}"`);
+              return abbreviated;
             }}
           />
           <YAxis 

@@ -308,6 +308,19 @@ export default function DataInsightsPage() {
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, locationError }))
       } else {
         console.log("DEBUG: Location data response:", locationData)
+        
+        // Add detailed debugging for the raw location distribution data
+        if (locationData && locationData.length > 0 && locationData[0].current_job_location_distribution) {
+          console.log("DEBUG: Raw current_job_location_distribution object:", 
+            JSON.stringify(locationData[0].current_job_location_distribution, null, 2));
+          
+          // Log each location entry individually for clarity
+          console.log("DEBUG: Location entries (name: count):");
+          Object.entries(locationData[0].current_job_location_distribution).forEach(([location, count]) => {
+            console.log(`  "${location}": ${count}`);
+          });
+        }
+        
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, locationData }))
         if (locationData && locationData.length > 0) {
           console.log("DEBUG: Processing location data...")
