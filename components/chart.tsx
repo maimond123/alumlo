@@ -19,6 +19,8 @@ interface IndustryChartProps extends ChartProps {
 
 const COLORS = ['#0088FE', '#2E7D32', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
+
+const COLORS1 = ['#FFBB2880', '#FF7F0080', '#008B8B80', '#80008080', '#0000FF80', '#228B2280']
 // const PIE_COLORS = ['#00C49F', '#FFBB28', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'] 
 
 const INDUSTRY_COLORS: Record<string, string> = {
@@ -228,7 +230,7 @@ export function PieChart({ data, isZoomed = false }: ChartProps) {
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={entry.color || entry.fill || COLORS[index % COLORS.length]} 
+                fill={entry.color || entry.fill || COLORS1[index % COLORS1.length]} 
               />
             ))}
           </Pie>
@@ -431,19 +433,26 @@ export function AverageSalaryByIndustryBarChart({ data, isZoomed = false }: Char
                 "Research & Development": "R&D",
                 "Healthcare & Pharmaceuticals": "Healthcare",
                 "Food & Beverage": "Food & Bev",
-                "Consumer Goods": "Consumer",
+                "Retail & Consumer Goods": "Retail & Consumer",
                 "Defense & Aerospace": "Defense",
                 "Education": "Education",
                 "Real Estate": "Real Estate",
                 "Government & Public Sector": "Gov/Public",
                 "Manufacturing": "Manufact.",
-                "Media & Advertising": "Media/Ads",
+                "Marketing & Advertising": "Marketing/Ads",
                 "Media & Entertainment": "Entertainment",
                 "Environmental Services": "Environmental",
                 "Non-Profit & NGO": "Non-Profit",
                 "Fashion": "Fashion",
                 "Human Resources": "HR",
-                "Sports & Recreation": "Sports & Rec"
+                "Sports & Recreation": "Sports & Rec",
+                "Legal Services": "Legal",
+                "Accounting & Tax": "Accounting",
+                "Energy & Utilities": "Energy",
+                "Transportation & Logistics": "Transport & Log",
+                "Telecommunications": "Telecom",
+                "Agriculture": "Agriculture",
+                "Hospitality & Tourism": "Hospitality"
               };
               
               return abbreviations[value] || value;
