@@ -308,17 +308,31 @@ export function GeographyBarChart({ data, isZoomed = false }: ChartProps) {
           <XAxis 
             dataKey="name" 
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
+            fontSize={isZoomed ? 12 : 10} 
             tickLine={false} 
             axisLine={true}
             angle={-45}
             textAnchor="end"
             height={isZoomed ? 100 : 80}
+            tickFormatter={(value) => {
+              // Add location abbreviations here
+              const abbreviations: Record<string, string> = {
+                "New York Metropolitan Area": "NY Metro",
+                "San Francisco Bay Area": "SF Bay Area",
+                "Los Angeles Metropolitan Area": "LA Metro",
+                "Washington, District Of Columbia": "Washington DC",
+                "Greater Boston Area": "Boston",
+                "Greater Chicago Area": "Chicago",
+                // Add more abbreviations as needed
+              };
+              
+              return abbreviations[value] || value;
+            }}
           />
           <YAxis 
             type="number"
             stroke="hsl(var(--foreground))" 
-            fontSize={isZoomed ? 12 : 9} 
+            fontSize={isZoomed ? 12 : 10} 
             tickLine={false} 
             axisLine={true}
             allowDecimals={false}
