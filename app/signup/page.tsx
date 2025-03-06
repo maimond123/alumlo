@@ -115,14 +115,14 @@ export default function Signup() {
                   Transform your alumni analytics today.
                 </motion.p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
                       <input
                         type="text"
                         name="firstName"
                         required
-                        className="w-full bg-white bg-opacity-50 border border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                        className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                         placeholder="First Name *"
                         value={formData.firstName}
                         onChange={handleChange}
@@ -134,7 +134,7 @@ export default function Signup() {
                         type="text"
                         name="lastName"
                         required
-                        className="w-full bg-white bg-opacity-50 border border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                        className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                         placeholder="Last Name *"
                         value={formData.lastName}
                         onChange={handleChange}
@@ -147,7 +147,7 @@ export default function Signup() {
                       type="email"
                       name="schoolEmail"
                       required
-                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                      className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                       placeholder="School Email (e.g., john.doe@school.edu) *"
                       value={formData.schoolEmail}
                       onChange={handleChange}
@@ -159,7 +159,7 @@ export default function Signup() {
                       type="text"
                       name="schoolName"
                       required
-                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                      className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                       placeholder="School Name *"
                       value={formData.schoolName}
                       onChange={handleChange}
@@ -170,7 +170,7 @@ export default function Signup() {
                     <input
                       type="url"
                       name="schoolWebsite"
-                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                      className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                       placeholder="School Website"
                       value={formData.schoolWebsite}
                       onChange={handleChange}
@@ -179,7 +179,7 @@ export default function Signup() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-transparent text-black border-2 border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full bg-transparent text-black border-2 border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-8"
                   >
                     {isSubmitting ? (
                       <>
