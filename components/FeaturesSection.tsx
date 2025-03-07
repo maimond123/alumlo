@@ -150,142 +150,170 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Data Collection Animation - Improved */}
-            <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg">
-              <div className="relative h-96 overflow-hidden rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
-                {/* Web representation */}
-                <div className="absolute inset-0">
-                  <div className="grid grid-cols-4 grid-rows-4 gap-2 p-4 h-full">
-                    {[...Array(16)].map((_, i) => (
+            {/* Data Collection Animation - Scrolling Data Table */}
+            <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg w-full">
+              <div className="relative h-96 overflow-hidden rounded-lg bg-white border border-black">
+                {/* Data table with scrolling effect */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="animate-dataScroll" style={{ animationDuration: '30s' }}>
+                    {/* Table header */}
+                    <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
+                      <div>Name</div>
+                      <div>Graduation</div>
+                      <div>Company</div>
+                      <div>Position</div>
+                      <div>Location</div>
+                    </div>
+                    
+                    {/* Table rows - will be scrolling */}
+                    {[...Array(20)].map((_, i) => (
                       <div 
-                        key={i} 
-                        className="bg-white rounded-md shadow-sm overflow-hidden opacity-70 hover:opacity-100 transition-opacity"
-                        style={{
-                          animationDelay: `${i * 0.2}s`,
-                          animation: i % 3 === 0 ? 'pulse 3s infinite' : 'none'
-                        }}
+                        key={i}
+                        className={`px-4 py-3 grid grid-cols-5 gap-2 text-sm border-b border-gray-200 ${
+                          i % 7 === 3 ? 'bg-emerald-50' : 'bg-white'
+                        } transition-colors duration-300 hover:bg-emerald-50`}
                       >
-                        {/* Simplified webpage content */}
-                        <div className="h-1 w-3/4 bg-emerald-200 rounded-full m-1"></div>
-                        <div className="h-1 w-1/2 bg-gray-200 rounded-full m-1"></div>
-                        <div className="h-1 w-2/3 bg-gray-200 rounded-full m-1"></div>
+                        <div className="font-medium">Alumni {i + 1}</div>
+                        <div>{2010 + (i % 12)}</div>
+                        <div>{['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Tesla'][i % 7]}</div>
+                        <div>{['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'Marketing Manager'][i % 5]}</div>
+                        <div>{['San Francisco', 'New York', 'Seattle', 'Boston', 'Austin', 'Chicago'][i % 6]}</div>
                       </div>
                     ))}
                   </div>
                 </div>
                 
-                {/* Platform logos */}
-                <div className="absolute top-4 left-4 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
-                  {/* LinkedIn logo */}
-                  <img 
-                    src="/assets/linkedin.png" 
-                    alt="LinkedIn" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                
-                <div className="absolute top-4 right-4 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
-                  {/* Facebook logo placeholder - replace with actual logo */}
-                  <div className="w-full h-full bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">f</div>
-                </div>
-                
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
-                  {/* Glassdoor logo */}
-                  <img 
-                    src="/assets/glassdoor.svg" 
-                    alt="Glassdoor" 
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                
-                {/* Scanning beam animation */}
+                {/* Profile highlights that appear periodically */}
                 <div className="absolute inset-0 pointer-events-none">
-                  <div className="h-full w-full relative">
-                    <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-emerald-500/20 to-transparent animate-scanDown"></div>
+                  {/* Profile 1 */}
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '3s' }}>
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
+                      <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
+                        <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold">
+                          JD
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-emerald-800">Jane Doe</h3>
+                        <p className="text-emerald-600 mb-2">Class of 2015</p>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>Senior Product Manager at Google</span>
+                          </div>
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>San Francisco, CA</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Data extraction animation */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative w-28 h-28">
-                    {/* Central database icon */}
-                    <div className="absolute inset-0 bg-white rounded-lg border-2 border-emerald-300 flex items-center justify-center shadow-lg z-10">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M8 8h8M8 16h5" />
-                      </svg>
+                  
+                  {/* Profile 2 */}
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '10s' }}>
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
+                      <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
+                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
+                          MS
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-emerald-800">Michael Smith</h3>
+                        <p className="text-emerald-600 mb-2">Class of 2018</p>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>Software Engineer at Microsoft</span>
+                          </div>
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>Seattle, WA</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Profile 3 */}
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '17s' }}>
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
+                      <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                          AJ
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-emerald-800">Aisha Johnson</h3>
+                        <p className="text-emerald-600 mb-2">Class of 2020</p>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>Data Scientist at Amazon</span>
+                          </div>
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>New York, NY</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Platform logos - smaller and positioned at the top */}
+                  <div className="absolute top-2 right-2 flex space-x-2">
+                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
+                      <img 
+                        src="/assets/linkedin.png" 
+                        alt="LinkedIn" 
+                        className="w-6 h-6 object-contain"
+                      />
+                    </div>
+                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
+                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">f</div>
+                    </div>
+                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
+                      <img 
+                        src="/assets/glassdoor.svg" 
+                        alt="Glassdoor" 
+                        className="w-6 h-6 object-contain"
+                      />
                     </div>
                   </div>
                 </div>
                 
-                {/* Data particles flowing to database */}
-                {[...Array(12)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="absolute w-3 h-3 bg-emerald-500 rounded-full"
-                    style={{
-                      top: `${10 + Math.random() * 80}%`,
-                      left: `${10 + Math.random() * 80}%`,
-                      opacity: 0.7,
-                      animationDelay: `${i * 0.3}s`,
-                      animation: 'moveToCenter 2s infinite'
-                    }}
-                  ></div>
-                ))}
-                
-                {/* Profile cards being extracted */}
-                <div className="absolute top-4 left-4 w-20 h-24 bg-white rounded-md shadow-md transform -rotate-6 animate-extractToCenter">
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
-                  <div className="p-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
-                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
-                  </div>
-                </div>
-                
-                <div className="absolute bottom-4 right-4 w-20 h-24 bg-white rounded-md shadow-md transform rotate-3 animate-extractToCenter" style={{animationDelay: '1s'}}>
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
-                  <div className="p-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
-                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
-                  </div>
-                </div>
-                
-                <div className="absolute top-1/2 right-8 w-20 h-24 bg-white rounded-md shadow-md transform -rotate-3 animate-extractToCenter" style={{animationDelay: '0.5s'}}>
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
-                  <div className="p-1">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
-                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
-                  </div>
-                </div>
-                
                 <style jsx>{`
-                  @keyframes scanDown {
-                    0%, 100% { transform: translateY(-100%); opacity: 0; }
-                    50% { transform: translateY(100%); opacity: 0.7; }
+                  @keyframes dataScroll {
+                    0% { transform: translateY(0); }
+                    100% { transform: translateY(-50%); }
                   }
                   
-                  @keyframes moveToCenter {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.2) translateY(-5px); }
-                    100% { transform: scale(0) translate(40vw, 32px); }
+                  @keyframes profileAppear {
+                    0%, 100% { opacity: 0; }
+                    3%, 13% { opacity: 1; }
                   }
                   
-                  @keyframes extractToCenter {
-                    0% { transform: translateY(0) rotate(var(--rotation, -6deg)); }
-                    50% { transform: translateY(-10px) rotate(var(--rotation, -6deg)); }
-                    100% { transform: scale(0.5) translate(calc(50vw - 50%), calc(50% - 32px)) rotate(0deg); }
+                  .animate-dataScroll {
+                    animation: dataScroll 30s linear infinite;
                   }
                   
-                  .animate-scanDown {
-                    animation: scanDown 3s infinite;
-                  }
-                  
-                  .animate-extractToCenter {
-                    animation: extractToCenter 4s infinite;
-                    animation-fill-mode: both;
+                  .animate-profileAppear {
+                    animation: profileAppear 30s linear infinite;
                   }
                 `}</style>
               </div>
