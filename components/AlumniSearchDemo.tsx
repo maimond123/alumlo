@@ -165,7 +165,6 @@ export default function AlumniSearchDemo() {
         (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
       );
       
-      
       // Phase 3: Profiling
       setSearchPhase('profiling');
       await typewriterEffect('Creating alumni profiles based on your search...', 
@@ -182,6 +181,13 @@ export default function AlumniSearchDemo() {
       const data = await searchPromise;
       const results = data.results || [];
       
+      // Phase 5: Display results
+      setSearchPhase('complete');
+      await typewriterEffect(`Displaying top ${Math.min(3, results.length)} personalized results...`, 
+        (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+      );
+      
+      // Make sure to set the search results
       setSearchResults(results);
     } catch (error) {
       console.error("Search error:", error);
@@ -365,7 +371,7 @@ export default function AlumniSearchDemo() {
       )}
       
       {/* Search Results */}
-      {!isSearching && (searchPhase as string) === 'complete' && searchResults.length > 0 && (
+      {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
         <div className="w-full">
           <h2 className="text-xl font-semibold mb-4 text-black">
             Found {searchResults.length} alumni matching your search
@@ -443,7 +449,7 @@ export default function AlumniSearchDemo() {
             <div className="mt-6 text-center">
               <a 
                 href="/signup" 
-                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-100 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
+                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 View More
               </a>
@@ -453,7 +459,7 @@ export default function AlumniSearchDemo() {
       )}
       
       {/* No Results Message */}
-      {!isSearching && (searchPhase as string) === 'complete' && searchResults.length === 0 && (
+      {!isSearching && searchPhase === 'complete' && searchResults.length === 0 && (
         <div className="w-full p-6 bg-gray-50 rounded-lg text-center">
           <p className="text-gray-700">No alumni found matching your search criteria.</p>
           <p className="text-gray-500 mt-2">Try broadening your search or using different keywords.</p>
