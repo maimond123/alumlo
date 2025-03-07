@@ -115,7 +115,7 @@ export default function FeaturesSection() {
       {/* Feature 2: Data Visualizations - Redesigned as 3 parts */}
       <section 
         ref={visualizationsRef}
-        className={`py-24 bg-emerald-50 transition-all duration-1000 ease-in-out border-t border-b border-black ${
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black ${
           visualizationsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
@@ -150,69 +150,118 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Data Collection Animation */}
+            {/* Data Collection Animation - Improved */}
             <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg">
-              <div className="relative h-64 overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100">
-                {/* Animated data collection visualization */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-32 h-32">
-                    {/* Central database icon */}
-                    <div className="absolute inset-0 bg-emerald-100 rounded-lg border-2 border-emerald-300 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M8 8h8M8 16h5" />
-                      </svg>
-                    </div>
-                    
-                    {/* Animated data points flowing in */}
-                    {[...Array(5)].map((_, i) => (
+              <div className="relative h-64 overflow-hidden rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+                {/* Web representation */}
+                <div className="absolute inset-0">
+                  <div className="grid grid-cols-4 grid-rows-4 gap-2 p-4 h-full">
+                    {[...Array(16)].map((_, i) => (
                       <div 
-                        key={i}
-                        className="absolute w-3 h-3 bg-emerald-500 rounded-full animate-pulse"
+                        key={i} 
+                        className="bg-white rounded-md shadow-sm overflow-hidden opacity-70 hover:opacity-100 transition-opacity"
                         style={{
-                          top: `${Math.random() * 100}%`,
-                          left: `${Math.random() * 100}%`,
-                          animationDelay: `${i * 0.5}s`,
-                          animation: 'pulse 2s infinite, moveToCenter 3s infinite'
+                          animationDelay: `${i * 0.2}s`,
+                          animation: i % 3 === 0 ? 'pulse 3s infinite' : 'none'
                         }}
-                      ></div>
+                      >
+                        {/* Simplified webpage content */}
+                        <div className="h-1 w-3/4 bg-emerald-200 rounded-full m-1"></div>
+                        <div className="h-1 w-1/2 bg-gray-200 rounded-full m-1"></div>
+                        <div className="h-1 w-2/3 bg-gray-200 rounded-full m-1"></div>
+                      </div>
                     ))}
                   </div>
                 </div>
                 
-                {/* Profile cards floating in */}
-                <div className="absolute top-4 left-4 w-16 h-20 bg-white rounded-md shadow-md transform -rotate-6 animate-float">
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
-                  <div className="p-1">
-                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                {/* Scanning beam animation */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="h-full w-full relative">
+                    <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-emerald-500/20 to-transparent animate-scanDown"></div>
                   </div>
                 </div>
                 
-                <div className="absolute bottom-4 right-4 w-16 h-20 bg-white rounded-md shadow-md transform rotate-3 animate-float" style={{animationDelay: '1s'}}>
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
-                  <div className="p-1">
-                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                {/* Data extraction animation */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="relative w-20 h-20">
+                    {/* Central database icon */}
+                    <div className="absolute inset-0 bg-white rounded-lg border-2 border-emerald-300 flex items-center justify-center shadow-lg z-10">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M8 8h8M8 16h5" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="absolute top-1/2 right-8 w-16 h-20 bg-white rounded-md shadow-md transform -rotate-3 animate-float" style={{animationDelay: '0.5s'}}>
-                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
+                {/* Data particles flowing to database */}
+                {[...Array(8)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="absolute w-2 h-2 bg-emerald-500 rounded-full"
+                    style={{
+                      top: `${10 + Math.random() * 80}%`,
+                      left: `${10 + Math.random() * 80}%`,
+                      opacity: 0.7,
+                      animationDelay: `${i * 0.3}s`,
+                      animation: 'moveToCenter 2s infinite'
+                    }}
+                  ></div>
+                ))}
+                
+                {/* Profile cards being extracted */}
+                <div className="absolute top-4 left-4 w-14 h-18 bg-white rounded-md shadow-md transform -rotate-6 animate-extractToCenter">
+                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
                   <div className="p-1">
-                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
-                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-4 right-4 w-14 h-18 bg-white rounded-md shadow-md transform rotate-3 animate-extractToCenter" style={{animationDelay: '1s'}}>
+                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
+                  <div className="p-1">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
+                  </div>
+                </div>
+                
+                <div className="absolute top-1/2 right-8 w-14 h-18 bg-white rounded-md shadow-md transform -rotate-3 animate-extractToCenter" style={{animationDelay: '0.5s'}}>
+                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
+                  <div className="p-1">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
                   </div>
                 </div>
                 
                 <style jsx>{`
-                  @keyframes moveToCenter {
-                    0%, 100% { transform: translate(0, 0); }
-                    50% { transform: translate(calc(50% - 16px), calc(50% - 16px)); }
+                  @keyframes scanDown {
+                    0%, 100% { transform: translateY(-100%); opacity: 0; }
+                    50% { transform: translateY(100%); opacity: 0.7; }
                   }
-                  @keyframes float {
-                    0%, 100% { transform: translateY(0) rotate(var(--rotation, -6deg)); }
+                  
+                  @keyframes moveToCenter {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.2) translateY(-5px); }
+                    100% { transform: scale(0) translate(40vw, 32px); }
+                  }
+                  
+                  @keyframes extractToCenter {
+                    0% { transform: translateY(0) rotate(var(--rotation, -6deg)); }
                     50% { transform: translateY(-10px) rotate(var(--rotation, -6deg)); }
+                    100% { transform: scale(0.5) translate(calc(50vw - 50%), calc(50% - 32px)) rotate(0deg); }
+                  }
+                  
+                  .animate-scanDown {
+                    animation: scanDown 3s infinite;
+                  }
+                  
+                  .animate-extractToCenter {
+                    animation: extractToCenter 4s infinite;
+                    animation-fill-mode: both;
                   }
                 `}</style>
               </div>
