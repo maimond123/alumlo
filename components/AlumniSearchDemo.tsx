@@ -1,0 +1,349 @@
+'use client'
+
+import { useState, useEffect, useRef } from "react"
+import { Search, Loader2 } from "lucide-react"
+import { supabase } from "../app/data/supabase"
+import { getUserEmail } from "../app/utils/auth"
+import { useSchool } from "../app/contexts/SchoolContext"
+
+interface SearchResult {
+  id: number;
+  name: string;
+  linkedin_url: string;
+  current_company: string;
+  current_title: string;
+  current_industry: string;
+  location: string;
+  years_experience: number;
+  similarity: number;
+  profile_url?: string;
+  all_titles?: string[];
+}
+
+const exampleQueries = [
+  "Who works at Google in AI?",
+  "Alumni in healthcare in Boston",
+  "Recent graduates working in finance",
+  "People who founded startups"
+];
+
+export default function AlumniSearchDemo() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'complete'>('idle')
+  const [displayedText, setDisplayedText] = useState({
+    analyzing: '',
+    searching: '',
+    profiling: '',
+    filters: '',
+    displaying: ''
+  })
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const { schoolName } = useSchool()
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || isSearching) return
+    
+    setIsSearching(true)
+    setSearchPhase('analyzing')
+    setSearchResults([])
+    setError(null)
+    
+    try {
+      // Get user email for authentication
+      const userEmail = await getUserEmail()
+      
+      if (!userEmail) {
+        throw new Error("User not authenticated")
+      }
+      
+      // Start the search process with real-time updates
+      setDisplayedText({
+        ...displayedText,
+        analyzing: `Analyzing query: "${searchQuery}"`
+      })
+      
+      // Make the actual API call to the search endpoint
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+          email: userEmail,
+          schoolName: schoolName
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Search failed")
+      }
+      
+      // Process the search response
+      const data = await response.json()
+      
+      // Update the search phases based on the response
+      setSearchPhase('searching')
+      setDisplayedText(prev => ({
+        ...prev,
+        analyzing: `Analyzed query: "${searchQuery}"`,
+        searching: 'Searching alumni database...'
+      }))
+      
+      // Simulate the profiling phase (this would be handled by the backend in reality)
+      setTimeout(() => {
+        setSearchPhase('profiling')
+        setDisplayedText(prev => ({
+          ...prev,
+          searching: 'Searched alumni database',
+          profiling: 'Creating alumni profiles based on your search...'
+        }))
+        
+        // Simulate the filtering phase
+        setTimeout(() => {
+          setSearchPhase('filtering')
+          setDisplayedText(prev => ({
+            ...prev,
+            profiling: 'Created alumni profiles',
+            filters: 'Applying filters: Industry, Location, Experience'
+          }))
+          
+          // Complete the search and show results
+          setTimeout(() => {
+            setSearchPhase('complete')
+            setSearchResults(data.results || [])
+            
+            setDisplayedText(prev => ({
+              ...prev,
+              filters: 'Applied filters: Industry, Location, Experience',
+              displaying: `Found ${data.results.length} alumni matching your search`
+            }))
+            
+            setIsSearching(false)
+          }, 800)
+        }, 600)
+      }, 700)
+      
+    } catch (err) {
+      console.error("Search error:", err)
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      setIsSearching(false)
+      setSearchPhase('idle')
+    }
+  }
+  
+  const handleTagClick = (tag: string) => {
+    setSearchQuery(tag)
+    handleSearch()
+  }
+  
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current)
+      }
+    }
+  }, [])
+
+  const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
+
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Search Input */}
+      <div className="relative mb-6">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Who are the alumni working in artificial intelligence at Google?"
+          className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        />
+        
+        {/* Buttons inside the input field, positioned at the bottom right */}
+        <div className="absolute bottom-3 right-4 flex space-x-2">
+          {/* Refresh button */}
+          <button
+            type="button" 
+            onClick={() => {
+              setSearchQuery('')
+              setSearchResults([])
+              setSearchPhase('idle')
+              setError(null)
+            }}
+            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+            aria-label="Clear"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* Search/Send button */}
+          <button
+            onClick={handleSearch}
+            disabled={isSearching}
+            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+            aria-label="Search"
+          >
+            {isSearching ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Example Queries */}
+      <div className="mb-8 flex flex-wrap gap-2">
+        {exampleQueries.map((query, index) => (
+          <button
+            key={index}
+            onClick={() => handleTagClick(query)}
+            className="px-4 py-2 bg-emerald-50 text-emerald-800 rounded-full text-sm border border-black hover:bg-emerald-100 transition-colors"
+          >
+            {query}
+          </button>
+        ))}
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-4">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Analysis and Search Results */}
+      {isSearchingPhase && (
+        <div className="w-full flex flex-col gap-4 mt-4">
+          {/* Analysis Section */}
+          {isSearchingPhase && (
+            <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-black mb-4">Searching...</h2>
+              
+              {displayedText.analyzing && (
+                <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+              )}
+              
+              {displayedText.searching && (
+                <p className="text-gray-700 mb-3">{displayedText.searching}</p>
+              )}
+              
+              {displayedText.profiling && (
+                <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+              )}
+              
+              {displayedText.filters && (
+                <p className="text-gray-700 mb-3">{displayedText.filters}</p>
+              )}
+              
+              <div className="w-full bg-gray-200 h-2 rounded-full mt-4">
+                <div 
+                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: searchPhase === 'analyzing' ? '25%' : 
+                           searchPhase === 'searching' ? '50%' : 
+                           searchPhase === 'profiling' ? '75%' : 
+                           '90%' 
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {/* Search Results Section */}
+          {!isSearching && (searchPhase as string) === 'complete' && searchResults.length > 0 && (
+            <div className="w-full">
+              <h2 className="text-xl font-semibold mb-4 text-gray-700">
+                Found {searchResults.length} alumni matching your search
+              </h2>
+              <div className="grid gap-4">
+                {searchResults.map((result, index) => {
+                  const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
+                    ? result.all_titles[0] 
+                    : result.current_title || "";
+                  
+                  return (
+                    <a
+                      key={result.id || index}
+                      href={result.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
+                    >
+                      <div className="flex items-center">
+                        {/* Profile Image */}
+                        <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
+                          {result.profile_url ? (
+                            <img 
+                              src={result.profile_url} 
+                              alt={`${result.name}'s profile`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                              {result.name?.split(' ').map(name => name[0]).join('') || '?'}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                          
+                          {/* Metadata in one row */}
+                          <div className="flex flex-wrap items-center text-gray-600 mt-1">
+                            <span>{currentTitle}</span>
+                            {result.current_company && (
+                              <>
+                                <span className="mx-1">•</span>
+                                <span>{result.current_company}</span>
+                              </>
+                            )}
+                            {result.location && (
+                              <>
+                                <span className="mx-1">•</span>
+                                <span>{result.location}</span>
+                              </>
+                            )}
+                          </div>
+                          
+                          {/* Industry */}
+                          <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
+                          
+                          {/* Match percentage */}
+                          <div className="mt-2">
+                            <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
+                              Match: {(result.similarity * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* No Results Found */}
+          {!isSearching && (searchPhase as string) === 'complete' && searchResults.length === 0 && (
+            <div className="w-full p-6 bg-gray-50 rounded-lg text-center">
+              <p className="text-gray-700">No alumni found matching your search criteria.</p>
+              <p className="text-gray-500 mt-2">Try adjusting your search terms or using one of the example queries.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+} 

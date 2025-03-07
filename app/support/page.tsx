@@ -50,7 +50,6 @@ export default function SupportPage() {
           </motion.div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

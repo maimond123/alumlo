@@ -3,7 +3,8 @@
 import { useRef, useEffect, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Zap, Link } from 'lucide-react'
+import AlumniSearchDemo from './AlumniSearchDemo'
 
 export default function FeaturesSection() {
   // Create separate refs for each section
@@ -66,91 +67,44 @@ export default function FeaturesSection() {
   return (
     <>
       {/* Feature 1: Search */}
-      <section 
-        ref={searchRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
-          searchInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 mb-6">
-                <Search className="w-10 h-10 text-emerald-600" />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-emerald-800 mb-6">
+              Alumni Access, Reimagined with Search
+            </h2>
+            <p className="text-xl text-emerald-700 max-w-3xl mx-auto">
+              Search your alumni network using natural language. No complex filters needed.
+            </p>
+          </div>
+          
+          {/* Working Demo */}
+          <AlumniSearchDemo />
+          
+          {/* Benefits Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+            <div className="bg-emerald-50 p-6 rounded-lg">
+              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
+                <Search className="w-6 h-6 text-emerald-600" />
               </div>
-              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[0].title}</h2>
-              <p className="text-lg text-emerald-700 mb-6">{features[0].description}</p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                  </div>
-                  <span>Find alumni by industry, company, or job title</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                  </div>
-                  <span>Discover connections between alumni</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-amber-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                  </div>
-                  <span>Ask complex questions in natural language</span>
-                </li>
-              </ul>
-              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
-                Learn more <ArrowRight className="ml-2 w-5 h-5" />
-              </button>
+              <h3 className="text-xl font-semibold mb-2">Natural Language</h3>
+              <p>Ask questions in plain English, just like you would to a colleague.</p>
             </div>
             
-            {/* Interactive Search Demo */}
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-8 shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Try a search query</h3>
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  placeholder="e.g., 'Who works at Google in AI?'"
-                  className="w-full p-4 pr-12 rounded-lg border border-amber-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <button 
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 hover:text-emerald-800"
-                  onClick={handleSearch}
-                >
-                  <Search className="w-6 h-6" />
-                </button>
+            <div className="bg-emerald-50 p-6 rounded-lg">
+              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-emerald-600" />
               </div>
-              
-              <div className="bg-white rounded-lg p-4 min-h-[200px]">
-                {isSearching ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-600"></div>
-                  </div>
-                ) : searchQuery && !isSearching ? (
-                  <div className="space-y-4">
-                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <div className="font-medium">Sarah Johnson</div>
-                      <div className="text-sm text-gray-600">AI Research Scientist at Google</div>
-                    </div>
-                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <div className="font-medium">Michael Chen</div>
-                      <div className="text-sm text-gray-600">Machine Learning Engineer at Google</div>
-                    </div>
-                    <div className="p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <div className="font-medium">Priya Patel</div>
-                      <div className="text-sm text-gray-600">AI Product Manager at Google</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 h-full flex items-center justify-center">
-                    Enter a search query to find alumni
-                  </div>
-                )}
+              <h3 className="text-xl font-semibold mb-2">Instant Results</h3>
+              <p>Get answers in milliseconds, not minutes. No more wasted time.</p>
+            </div>
+            
+            <div className="bg-emerald-50 p-6 rounded-lg">
+              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
+                <Link className="w-6 h-6 text-emerald-600" />
               </div>
+              <h3 className="text-xl font-semibold mb-2">Direct Connection</h3>
+              <p>Connect with alumni on LinkedIn with just one click.</p>
             </div>
           </div>
         </div>
