@@ -20,13 +20,6 @@ interface SearchResult {
   all_titles?: string[];
 }
 
-const exampleQueries = [
-  "Who works at Google in AI?",
-  "Alumni in healthcare in Boston",
-  "Recent graduates working in finance",
-  "People who founded startups"
-];
-
 // Add these suggestion tags similar to dashboard/page.tsx
 const suggestionTags = [
   "Working on AI at FAANG",
@@ -60,20 +53,28 @@ export default function AlumniSearchDemo() {
   const [error, setError] = useState<string | null>(null)
   
   // Add this for the scrolling animation
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
-  // Add the tag scrolling animation
+  // Number of results to display initially
+  const MAX_VISIBLE_RESULTS = 5
+  
+  // Use the same tag scrolling animation as in dashboard/page.tsx
   const tagScrollAnimation = `
     .scrolling-tags-container {
-      overflow: hidden;
       width: 100%;
-      position: relative;
+      overflow: hidden;
+      margin: 1rem 0;
     }
     
     .scrolling-tags {
       display: flex;
       white-space: nowrap;
-      animation: scrollTags 30s linear infinite;
+      transform: translateX(-${Math.floor(Math.random() * 100)}%);
+    }
+    
+    .scrolling-tags-content {
+      display: inline-flex;
+      animation: scroll 110s linear infinite;
     }
     
     .tag-item {
@@ -87,7 +88,6 @@ export default function AlumniSearchDemo() {
       transition: all 0.2s;
       font-size: 1rem;
       white-space: nowrap;
-      border: 1px solid black;
     }
     
     .tag-item:hover {
@@ -95,15 +95,18 @@ export default function AlumniSearchDemo() {
       transform: translateY(-2px);
     }
     
-    @keyframes scrollTags {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-50%);
-      }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
   `;
+
+  // Randomize tags on component mount
+  useEffect(() => {
+    // Shuffle the tags array
+    const shuffled = [...suggestionTags].sort(() => 0.5 - Math.random());
+    setRandomizedTags(shuffled);
+  }, []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
@@ -121,7 +124,7 @@ export default function AlumniSearchDemo() {
       })
       
       // Make the API call to the demo search endpoint
-      const response = await fetch('/api/demo-search', {
+      const response = await fetch('/api/search-demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,12 +208,6 @@ export default function AlumniSearchDemo() {
 
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
 
-  // Add this function to handle tag clicks
-  const handleSuggestionTagClick = (tag: string) => {
-    setSearchQuery(tag);
-    handleSearch();
-  };
-
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Add the style tag for animations */}
@@ -223,7 +220,7 @@ export default function AlumniSearchDemo() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Who are the alumni working in artificial intelligence at Google?"
-          className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border-2 border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+          className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
         
@@ -264,176 +261,217 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
 
-      {/* Scrolling Suggestion Tags */}
+      {/* Scrolling Suggestion Tags - Updated to match dashboard/page.tsx */}
       <div className="mb-10 mt-8">
         <h3 className="text-lg font-medium text-gray-700 mb-4">Try searching for:</h3>
         <div className="scrolling-tags-container">
           <div className="scrolling-tags">
             {/* First set of tags */}
-            {suggestionTags.map((tag, index) => (
-              <span 
-                key={`tag-1-${index}`} 
-                className="tag-item"
-                onClick={() => handleSuggestionTagClick(tag)}
-              >
-                {tag}
-              </span>
-            ))}
+            <div className="scrolling-tags-content">
+              {randomizedTags.length > 0 ? 
+                randomizedTags.map((tag, index) => (
+                  <span 
+                    key={`first-${index}`}
+                    onClick={() => handleTagClick(tag)}
+                    className="tag-item"
+                  >
+                    {tag}
+                  </span>
+                ))
+                :
+                suggestionTags.map((tag, index) => (
+                  <span 
+                    key={`first-${index}`}
+                    onClick={() => handleTagClick(tag)}
+                    className="tag-item"
+                  >
+                    {tag}
+                  </span>
+                ))
+              }
+            </div>
             
-            {/* Duplicate set for seamless scrolling */}
-            {suggestionTags.map((tag, index) => (
-              <span 
-                key={`tag-2-${index}`} 
-                className="tag-item"
-                onClick={() => handleSuggestionTagClick(tag)}
-              >
-                {tag}
-              </span>
-            ))}
+            {/* Second copy of tags to create the infinite loop effect */}
+            <div className="scrolling-tags-content">
+              {randomizedTags.length > 0 ? 
+                randomizedTags.map((tag, index) => (
+                  <span 
+                    key={`second-${index}`}
+                    onClick={() => handleTagClick(tag)}
+                    className="tag-item"
+                  >
+                    {tag}
+                  </span>
+                ))
+                :
+                suggestionTags.map((tag, index) => (
+                  <span 
+                    key={`second-${index}`}
+                    onClick={() => handleTagClick(tag)}
+                    className="tag-item"
+                  >
+                    {tag}
+                  </span>
+                ))
+              }
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Example Queries */}
-      <div className="mb-8 flex flex-wrap gap-2">
-        {exampleQueries.map((query, index) => (
-          <button
-            key={index}
-            onClick={() => handleTagClick(query)}
-            className="px-4 py-2 bg-emerald-50 text-emerald-800 rounded-full text-sm border border-black hover:bg-emerald-100 transition-colors"
-          >
-            {query}
-          </button>
-        ))}
-      </div>
-
       {/* Error Message */}
       {error && (
-        <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 mb-4">
-          <p>{error}</p>
+        <div className="p-4 mb-6 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600">{error}</p>
         </div>
       )}
-
-      {/* Analysis and Search Results */}
+      
+      {/* Search Status */}
       {isSearchingPhase && (
-        <div className="w-full flex flex-col gap-4 mt-4">
-          {/* Analysis Section */}
-          {isSearchingPhase && (
-            <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
-              <h2 className="text-xl font-semibold text-black mb-4">Searching...</h2>
-              
-              {displayedText.analyzing && (
-                <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
-              )}
-              
-              {displayedText.searching && (
-                <p className="text-gray-700 mb-3">{displayedText.searching}</p>
-              )}
-              
-              {displayedText.profiling && (
-                <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
-              )}
-              
-              {displayedText.filters && (
-                <p className="text-gray-700 mb-3">{displayedText.filters}</p>
-              )}
-              
-              <div className="w-full bg-gray-200 h-2 rounded-full mt-4">
-                <div 
-                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: searchPhase === 'analyzing' ? '25%' : 
-                           searchPhase === 'searching' ? '50%' : 
-                           searchPhase === 'profiling' ? '75%' : 
-                           '90%' 
-                  }}
-                ></div>
-              </div>
+        <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm mb-6">
+          <div className="flex items-center mb-4">
+            <div className="w-6 h-6 mr-3 relative">
+              <div className="absolute inset-0 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
             </div>
-          )}
-
-          {/* Search Results Section */}
-          {!isSearching && (searchPhase as string) === 'complete' && searchResults.length > 0 && (
-            <div className="w-full">
-              <h2 className="text-xl font-semibold mb-4 text-gray-700">
-                Found {searchResults.length} alumni matching your search
-              </h2>
-              <div className="grid gap-4">
-                {searchResults.map((result, index) => {
-                  const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
-                    ? result.all_titles[0] 
-                    : result.current_title || "";
-                  
-                  return (
-                    <a
-                      key={result.id || index}
-                      href={result.linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex items-center">
-                        {/* Profile Image */}
-                        <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                          {result.profile_url ? (
-                            <img 
-                              src={result.profile_url} 
-                              alt={`${result.name}'s profile`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                              {result.name?.split(' ').map(name => name[0]).join('') || '?'}
-                            </div>
-                          )}
+            <h3 className="text-lg font-medium text-gray-800">Processing your search</h3>
+          </div>
+          
+          <div className="space-y-4">
+            {displayedText.analyzing && (
+              <div className="flex items-start">
+                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                </div>
+                <p className="text-gray-700">{displayedText.analyzing}</p>
+              </div>
+            )}
+            
+            {displayedText.searching && (
+              <div className="flex items-start">
+                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                </div>
+                <p className="text-gray-700">{displayedText.searching}</p>
+              </div>
+            )}
+            
+            {displayedText.profiling && (
+              <div className="flex items-start">
+                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                </div>
+                <p className="text-gray-700">{displayedText.profiling}</p>
+              </div>
+            )}
+            
+            {displayedText.filters && (
+              <div className="flex items-start">
+                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                </div>
+                <p className="text-gray-700">{displayedText.filters}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Search Results */}
+      {!isSearching && (searchPhase as string) === 'complete' && searchResults.length > 0 && (
+        <div className="w-full">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">
+            Found {searchResults.length} alumni matching your search
+          </h2>
+          <div className="grid gap-4">
+            {/* Only display the first 5 results */}
+            {searchResults.slice(0, MAX_VISIBLE_RESULTS).map((result, index) => {
+              const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
+                ? result.all_titles[0] 
+                : result.current_title || "";
+              
+              return (
+                <a
+                  key={result.id || index}
+                  href={result.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex items-center">
+                    {/* Profile Image */}
+                    <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
+                      {result.profile_url ? (
+                        <img 
+                          src={result.profile_url} 
+                          alt={`${result.name}'s profile`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                          {result.name?.split(' ').map(name => name[0]).join('') || '?'}
                         </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                          
-                          {/* Metadata in one row */}
-                          <div className="flex flex-wrap items-center text-gray-600 mt-1">
-                            <span>{currentTitle}</span>
-                            {result.current_company && (
-                              <>
-                                <span className="mx-1">•</span>
-                                <span>{result.current_company}</span>
-                              </>
-                            )}
-                            {result.location && (
-                              <>
-                                <span className="mx-1">•</span>
-                                <span>{result.location}</span>
-                              </>
-                            )}
-                          </div>
-                          
-                          {/* Industry */}
-                          <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
-                          
-                          {/* Match percentage */}
-                          <div className="mt-2">
-                            <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                              Match: {(result.similarity * 100).toFixed(1)}%
-                            </div>
-                          </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                      
+                      {/* Metadata in one row */}
+                      <div className="flex flex-wrap items-center text-gray-600 mt-1">
+                        <span>{currentTitle}</span>
+                        {result.current_company && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>{result.current_company}</span>
+                          </>
+                        )}
+                        {result.location && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>{result.location}</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Industry */}
+                      <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
+                      
+                      {/* Match percentage */}
+                      <div className="mt-2">
+                        <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
+                          Match: {(result.similarity * 100).toFixed(1)}%
                         </div>
                       </div>
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
           
-          {/* No Results Found */}
-          {!isSearching && (searchPhase as string) === 'complete' && searchResults.length === 0 && (
-            <div className="w-full p-6 bg-gray-50 rounded-lg text-center">
-              <p className="text-gray-700">No alumni found matching your search criteria.</p>
-              <p className="text-gray-500 mt-2">Try adjusting your search terms or using one of the example queries.</p>
+          {/* View More button - only show if there are more than MAX_VISIBLE_RESULTS */}
+          {searchResults.length > MAX_VISIBLE_RESULTS && (
+            <div className="mt-6 text-center">
+              <p className="text-gray-600 mb-3">
+                {searchResults.length - MAX_VISIBLE_RESULTS} more alumni match your search
+              </p>
+              <a 
+                href="/signup" 
+                className="inline-block px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                Sign Up to View More
+              </a>
             </div>
           )}
+        </div>
+      )}
+      
+      {/* No Results Message */}
+      {!isSearching && (searchPhase as string) === 'complete' && searchResults.length === 0 && (
+        <div className="w-full p-6 bg-gray-50 rounded-lg text-center">
+          <p className="text-gray-700">No alumni found matching your search criteria.</p>
+          <p className="text-gray-500 mt-2">Try broadening your search or using different keywords.</p>
         </div>
       )}
     </div>
