@@ -50,30 +50,6 @@ export default function FeaturesSection() {
     }
   }, [searchInView, typedText, fullText, isTypingComplete])
 
-  const features = [
-    {
-      id: 'search',
-      title: 'Natural Language Alumni Search',
-      description: 'Find any alumni with conversational queries like "Who works at Google in AI?" and connect directly to their LinkedIn profiles. Our advanced AI understands complex questions and delivers precise results instantly.',
-      icon: <Search className="w-12 h-12 text-black" />,
-      color: 'from-amber-50 to-amber-100'
-    },
-    {
-      id: 'visualizations',
-      title: 'AI-Powered Data Visualizations',
-      description: 'Explore interactive charts with AI-generated insights that explain trends and patterns in your alumni network. Uncover hidden connections and opportunities that traditional analytics might miss.',
-      icon: <BarChart className="w-12 h-12 text-black" />,
-      color: 'from-emerald-50 to-emerald-100'
-    },
-    {
-      id: 'reports',
-      title: 'Beautiful Downloadable Reports',
-      description: 'Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. Customize layouts, colors, and content to match your institution\'s branding.',
-      icon: <FileText className="w-12 h-12 text-black" />,
-      color: 'from-blue-50 to-blue-100'
-    }
-  ]
-
   const handleSearch = () => {
     if (searchQuery.trim()) {
       setIsSearching(true)
@@ -252,8 +228,8 @@ export default function FeaturesSection() {
               <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6">
                 <BarChart className="w-10 h-10 text-emerald-600" />
               </div>
-              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[1].title}</h2>
-              <p className="text-lg text-emerald-700 mb-6">{features[1].description}</p>
+              <h2 className="text-3xl font-bold text-emerald-800 mb-4">AI-Powered Data Visualizations</h2>
+              <p className="text-lg text-emerald-700 mb-6">Explore interactive charts with AI-generated insights that explain trends and patterns in your alumni network. Uncover hidden connections and opportunities that traditional analytics might miss.</p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
@@ -295,8 +271,8 @@ export default function FeaturesSection() {
               <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 mb-6">
                 <FileText className="w-10 h-10 text-emerald-600" />
               </div>
-              <h2 className="text-3xl font-bold text-emerald-800 mb-4">{features[2].title}</h2>
-              <p className="text-lg text-emerald-700 mb-6">{features[2].description}</p>
+              <h2 className="text-3xl font-bold text-emerald-800 mb-4">Beautiful Downloadable Reports</h2>
+              <p className="text-lg text-emerald-700 mb-6">Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. Customize layouts, colors, and content to match your institution's branding.</p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
                   <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
@@ -363,8 +339,8 @@ export default function FeaturesSection() {
                           <div className="text-xs text-emerald-600">Avg. Starting Salary</div>
                         </div>
                         <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
-                          <div className="text-2xl font-bold text-emerald-700">87%</div>
-                          <div className="text-xs text-emerald-600">Satisfaction Rate</div>
+                          <div className="text-2xl font-bold text-emerald-700">68%</div>
+                          <div className="text-xs text-emerald-600">In Target Industries</div>
                         </div>
                       </div>
                     </div>
@@ -373,34 +349,40 @@ export default function FeaturesSection() {
                   {reportPage === 1 && (
                     <div className="space-y-4">
                       <div className="text-lg font-bold text-emerald-800">Industry Breakdown</div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1/3 text-sm">Technology</div>
-                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
-                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '65%'}}></div>
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="font-medium">Technology</span>
+                        <div className="flex items-center">
+                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '42%'}}></div>
+                          </div>
+                          <span className="text-sm">42%</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1/3 text-sm">Finance</div>
-                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
-                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '45%'}}></div>
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="font-medium">Finance</span>
+                        <div className="flex items-center">
+                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '28%'}}></div>
+                          </div>
+                          <span className="text-sm">28%</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1/3 text-sm">Healthcare</div>
-                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
-                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '35%'}}></div>
+                      <div className="flex items-center justify-between py-2 border-b">
+                        <span className="font-medium">Healthcare</span>
+                        <div className="flex items-center">
+                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '15%'}}></div>
+                          </div>
+                          <span className="text-sm">15%</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1/3 text-sm">Education</div>
-                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
-                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '25%'}}></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1/3 text-sm">Other</div>
-                        <div className="w-2/3 bg-gray-100 rounded-full h-4">
-                          <div className="bg-emerald-500 h-4 rounded-full" style={{width: '15%'}}></div>
+                      <div className="flex items-center justify-between py-2">
+                        <span className="font-medium">Other</span>
+                        <div className="flex items-center">
+                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '15%'}}></div>
+                          </div>
+                          <span className="text-sm">15%</span>
                         </div>
                       </div>
                     </div>
@@ -408,54 +390,52 @@ export default function FeaturesSection() {
                   
                   {reportPage === 2 && (
                     <div className="space-y-4">
-                      <div className="text-lg font-bold text-emerald-800">Geographic Distribution</div>
-                      <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <div className="w-32 h-32 relative">
-                          <div className="absolute w-8 h-8 bg-emerald-500 rounded-full top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white text-xs">42%</div>
-                          <div className="absolute w-6 h-6 bg-emerald-500 rounded-full top-1/2 right-1/4 transform translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white text-xs">28%</div>
-                          <div className="absolute w-5 h-5 bg-emerald-500 rounded-full bottom-1/4 left-1/3 transform -translate-x-1/2 translate-y-1/2 flex items-center justify-center text-white text-xs">15%</div>
-                          <div className="absolute w-4 h-4 bg-emerald-500 rounded-full bottom-1/3 right-1/3 transform translate-x-1/2 translate-y-1/2 flex items-center justify-center text-white text-xs">8%</div>
+                      <div className="text-lg font-bold text-emerald-800">Top Employers</div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-500">1.</div>
+                          <div className="font-medium">Google</div>
+                          <div className="text-xs text-emerald-600">42 alumni</div>
                         </div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <div>West Coast: 42%</div>
-                        <div>East Coast: 28%</div>
-                        <div>Midwest: 15%</div>
-                        <div>Other: 15%</div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-500">2.</div>
+                          <div className="font-medium">Microsoft</div>
+                          <div className="text-xs text-emerald-600">38 alumni</div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-500">3.</div>
+                          <div className="font-medium">Goldman Sachs</div>
+                          <div className="text-xs text-emerald-600">29 alumni</div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-500">4.</div>
+                          <div className="font-medium">Amazon</div>
+                          <div className="text-xs text-emerald-600">27 alumni</div>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
                 
-                <div className="border-t border-gray-200 p-4 flex justify-between items-center">
+                <div className="bg-gray-50 p-4 flex justify-between items-center">
                   <button 
-                    onClick={() => setReportPage(Math.max(0, reportPage - 1))}
-                    className="text-emerald-600 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setReportPage(prev => Math.max(0, prev - 1))}
+                    className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
                     disabled={reportPage === 0}
                   >
-                    Previous
+                    <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <div className="text-sm text-gray-500">Page {reportPage + 1} of 3</div>
+                  <div className="text-sm text-gray-500">
+                    Page {reportPage + 1} of 3
+                  </div>
                   <button 
-                    onClick={() => setReportPage(Math.min(2, reportPage + 1))}
-                    className="text-emerald-600 hover:text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setReportPage(prev => Math.min(2, prev + 1))}
+                    className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
                     disabled={reportPage === 2}
                   >
-                    Next
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
-              </div>
-              
-              <div className="mt-4 flex justify-center space-x-3">
-                <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download PDF
-                </button>
-                <button className="px-4 py-2 bg-white border border-emerald-600 text-emerald-600 rounded-lg text-sm hover:bg-emerald-50 transition-colors">
-                  Customize
-                </button>
               </div>
             </div>
           </div>
