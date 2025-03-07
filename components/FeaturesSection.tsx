@@ -33,6 +33,23 @@ export default function FeaturesSection() {
   // Demo state for reports feature
   const [reportPage, setReportPage] = useState(0)
 
+  // Typewriter animation state
+  const [typedText, setTypedText] = useState('')
+  const [isTypingComplete, setIsTypingComplete] = useState(false)
+  const fullText = "Search your alumni network using natural language. No complex filters needed."
+  
+  useEffect(() => {
+    if (searchInView && typedText.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setTypedText(fullText.slice(0, typedText.length + 1))
+      }, 50)
+      
+      return () => clearTimeout(timeout)
+    } else if (typedText.length === fullText.length && !isTypingComplete) {
+      setIsTypingComplete(true)
+    }
+  }, [searchInView, typedText, fullText, isTypingComplete])
+
   const features = [
     {
       id: 'search',
@@ -67,14 +84,19 @@ export default function FeaturesSection() {
   return (
     <>
       {/* Feature 1: Search */}
-      <section className="py-24 bg-white">
+      <section 
+        ref={searchRef}
+        className="py-32 bg-white min-h-[800px] border-t border-b border-black">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-emerald-800 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
               Alumni Access, Reimagined with Search
             </h2>
-            <p className="text-xl text-emerald-700 max-w-3xl mx-auto">
-              Search your alumni network using natural language. No complex filters needed.
+            <p className="text-xl md:text-2xl text-emerald-700 max-w-3xl mx-auto h-16 flex items-center justify-center">
+              {typedText}
+              {!isTypingComplete && (
+                <span className="ml-1 inline-block w-0.5 h-6 bg-emerald-700 animate-blink"></span>
+              )}
             </p>
           </div>
           
@@ -82,7 +104,7 @@ export default function FeaturesSection() {
           <AlumniSearchDemo />
           
           {/* Benefits Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24">
             <div className="bg-emerald-50 p-6 rounded-lg">
               <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
                 <Search className="w-6 h-6 text-emerald-600" />
@@ -113,7 +135,7 @@ export default function FeaturesSection() {
       {/* Feature 2: Visualizations */}
       <section 
         ref={visualizationsRef}
-        className={`py-24 bg-emerald-50 transition-all duration-1000 ease-in-out ${
+        className={`py-24 bg-emerald-50 transition-all duration-1000 ease-in-out border-t border-b border-black ${
           visualizationsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
@@ -263,7 +285,7 @@ export default function FeaturesSection() {
       {/* Feature 3: Reports */}
       <section 
         ref={reportsRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black ${
           reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >

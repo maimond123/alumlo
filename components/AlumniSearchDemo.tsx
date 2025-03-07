@@ -27,6 +27,22 @@ const exampleQueries = [
   "People who founded startups"
 ];
 
+// Add these suggestion tags similar to dashboard/page.tsx
+const suggestionTags = [
+  "Working on AI at FAANG",
+  "People who started companies in Web3",
+  "Recent graduates in Silicon Valley",
+  "Alumni in Healthcare Tech",
+  "Engineers at SpaceX",
+  "Harvard MBA graduates in Finance",
+  "Product Managers in New York",
+  "Data Scientists at startups",
+  "Alumni working in Renewable Energy",
+  "Lawyers at top firms in Chicago",
+  "Graduates with PhDs in Computer Science",
+  "Marketing Directors in Los Angeles"
+];
+
 export default function AlumniSearchDemo() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
@@ -42,6 +58,52 @@ export default function AlumniSearchDemo() {
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null)
   const { schoolName } = useSchool()
   const [error, setError] = useState<string | null>(null)
+  
+  // Add this for the scrolling animation
+  const [scrollPosition, setScrollPosition] = useState(0);
+  
+  // Add the tag scrolling animation
+  const tagScrollAnimation = `
+    .scrolling-tags-container {
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+    
+    .scrolling-tags {
+      display: flex;
+      white-space: nowrap;
+      animation: scrollTags 30s linear infinite;
+    }
+    
+    .tag-item {
+      display: inline-block;
+      background-color: rgba(16, 185, 129, 0.1);
+      color: rgb(4, 120, 87);
+      padding: 0.6rem 1.2rem;
+      margin: 0 0.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+      white-space: nowrap;
+      border: 1px solid black;
+    }
+    
+    .tag-item:hover {
+      background-color: rgba(16, 185, 129, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    @keyframes scrollTags {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+  `;
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
@@ -152,8 +214,17 @@ export default function AlumniSearchDemo() {
 
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
 
+  // Add this function to handle tag clicks
+  const handleSuggestionTagClick = (tag: string) => {
+    setSearchQuery(tag);
+    handleSearch();
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
+      {/* Add the style tag for animations */}
+      <style jsx>{tagScrollAnimation}</style>
+      
       {/* Search Input */}
       <div className="relative mb-6">
         <input
@@ -199,6 +270,36 @@ export default function AlumniSearchDemo() {
               </svg>
             )}
           </button>
+        </div>
+      </div>
+
+      {/* Scrolling Suggestion Tags */}
+      <div className="mb-10 mt-8">
+        <h3 className="text-lg font-medium text-gray-700 mb-4">Try searching for:</h3>
+        <div className="scrolling-tags-container">
+          <div className="scrolling-tags">
+            {/* First set of tags */}
+            {suggestionTags.map((tag, index) => (
+              <span 
+                key={`tag-1-${index}`} 
+                className="tag-item"
+                onClick={() => handleSuggestionTagClick(tag)}
+              >
+                {tag}
+              </span>
+            ))}
+            
+            {/* Duplicate set for seamless scrolling */}
+            {suggestionTags.map((tag, index) => (
+              <span 
+                key={`tag-2-${index}`} 
+                className="tag-item"
+                onClick={() => handleSuggestionTagClick(tag)}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 

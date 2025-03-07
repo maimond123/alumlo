@@ -17,7 +17,16 @@ module.exports = {
         '80': '0.80',
         '105': '1.05',
         '107': '1.07',
-      }
+      },
+      animation: {
+        'blink': 'blink 1s step-start infinite',
+      },
+      keyframes: {
+        blink: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
+        },
+      },
     },
   },
   plugins: [
