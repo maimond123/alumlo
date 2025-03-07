@@ -40,9 +40,13 @@ export default function FeaturesSection() {
   
   useEffect(() => {
     if (searchInView && typedText.length < fullText.length) {
+      // Get the next character
+      const nextChar = fullText[typedText.length]
+      
       const timeout = setTimeout(() => {
+        // Add the character to the typed text
         setTypedText(fullText.slice(0, typedText.length + 1))
-      }, 50)
+      }, nextChar === '.' ? 250 : 30) // Speed up from 50ms to 25ms, pause 300ms after period
       
       return () => clearTimeout(timeout)
     } else if (typedText.length === fullText.length && !isTypingComplete) {
