@@ -56,7 +56,7 @@ export default function AlumniSearchDemo() {
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
   // Number of results to display initially
-  const MAX_VISIBLE_RESULTS = 5
+  const MAX_VISIBLE_RESULTS = 3
   
   // Use the same tag scrolling animation as in dashboard/page.tsx
   const tagScrollAnimation = `
@@ -383,7 +383,7 @@ export default function AlumniSearchDemo() {
             Found {searchResults.length} alumni matching your search
           </h2>
           <div className="grid gap-4">
-            {/* Only display the first 5 results */}
+            {/* Only display the first 3 results */}
             {searchResults.slice(0, MAX_VISIBLE_RESULTS).map((result, index) => {
               const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
                 ? result.all_titles[0] 
@@ -453,14 +453,11 @@ export default function AlumniSearchDemo() {
           {/* View More button - only show if there are more than MAX_VISIBLE_RESULTS */}
           {searchResults.length > MAX_VISIBLE_RESULTS && (
             <div className="mt-6 text-center">
-              <p className="text-gray-600 mb-3">
-                {searchResults.length - MAX_VISIBLE_RESULTS} more alumni match your search
-              </p>
               <a 
                 href="/signup" 
-                className="inline-block px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                className="inline-block px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
               >
-                Sign Up to View More
+                View More
               </a>
             </div>
           )}
