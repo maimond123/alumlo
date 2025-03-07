@@ -114,29 +114,20 @@ export default function AlumniSearchDemo() {
     setError(null)
     
     try {
-      // Get user email for authentication
-      const userEmail = await getUserEmail()
-      
-      if (!userEmail) {
-        throw new Error("User not authenticated")
-      }
-      
-      // Start the search process with real-time updates
+      // For demo purposes, use a dedicated demo endpoint
       setDisplayedText({
         ...displayedText,
         analyzing: `Analyzing query: "${searchQuery}"`
       })
       
-      // Make the actual API call to the search endpoint
-      const response = await fetch('/api/search', {
+      // Make the API call to the demo search endpoint
+      const response = await fetch('/api/demo-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: searchQuery,
-          email: userEmail,
-          schoolName: schoolName
+          query: searchQuery
         }),
       })
       
@@ -156,7 +147,7 @@ export default function AlumniSearchDemo() {
         searching: 'Searching alumni database...'
       }))
       
-      // Simulate the profiling phase (this would be handled by the backend in reality)
+      // Simulate the profiling phase
       setTimeout(() => {
         setSearchPhase('profiling')
         setDisplayedText(prev => ({

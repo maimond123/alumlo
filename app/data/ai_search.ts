@@ -231,6 +231,61 @@ export class LinkedInProfileSearchEngine {
     console.warn('addProfileToDb is deprecated - profiles should be added through the backend');
     throw new Error('Method not implemented: profiles should be added through the backend');
   }
+  
+  /**
+   * Search method specifically for demo purposes that doesn't require authentication
+   * and uses a designated public table
+   */
+  async searchDemoData(query: string, top_k: number = 10): Promise<SearchResult[]> {
+    try {
+      console.log(`Generating embedding for demo query: "${query}"`);
+      
+      // Generate embedding using OpenAI API
+      const response = await this.openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: query,
+      });
+      
+      const embeddingArray = response.data[0].embedding;
+      
+      console.log(`Generated embedding with dimension: ${embeddingArray.length}`);
+      
+      // Use the special demo/public table
+      const tableName = 'public_alumni_data'; // ← THIS IS THE TABLE NAME TO CREATE
+      
+      // Call the vector search directly on the demo table
+      const { data, error } = await this.supabase
+        .rpc('public_alumni_search', { // ← THIS IS THE RPC FUNCTION TO CREATE
+          query_embedding: embeddingArray,
+          similarity_threshold: 0.4,
+          limit_count: top_k
+        })
+        .returns<HybridSearchResult[]>();
+      
+      if (error) {
+        console.error("Error in demo vector search:", error);
+        throw new Error(`Demo vector search failed: ${error.message}`);
+      }
+      
+      console.log(`Demo search returned ${data.length} results`);
+      
+      // Format the results to match your frontend expectations
+      return data.map((item: HybridSearchResult): SearchResult => ({
+        id: Number(item.id),
+        name: item.name,
+        linkedin_url: item.linkedin_url,
+        current_company: item.current_company,
+        current_title: item.current_title,
+        current_industry: item.current_general_industry,
+        location: item.current_job_location,
+        years_experience: item.years_of_experience,
+        similarity: item.similarity
+      }));
+    } catch (error) {
+      console.error("Error in demo search:", error);
+      throw error;
+    }
+  }
 }
 
 // Legacy Profile interface for backward compatibility
