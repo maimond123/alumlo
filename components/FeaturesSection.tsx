@@ -112,7 +112,7 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Feature 2: Visualizations */}
+      {/* Feature 2: Data Visualizations - Redesigned as 3 parts */}
       <section 
         ref={visualizationsRef}
         className={`py-24 bg-emerald-50 transition-all duration-1000 ease-in-out border-t border-b border-black ${
@@ -120,37 +120,149 @@ export default function FeaturesSection() {
         }`}
       >
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Interactive Visualization Demo */}
-            <div className="bg-white rounded-xl p-8 shadow-lg order-2 lg:order-1">
-              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Interactive Charts</h3>
-              
-              <div className="flex space-x-2 mb-4">
-                <button 
-                  onClick={() => setActiveChart(0)}
-                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
-                >
-                  Industries
-                </button>
-                <button 
-                  onClick={() => setActiveChart(1)}
-                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
-                >
-                  Locations
-                </button>
-                <button 
-                  onClick={() => setActiveChart(2)}
-                  className={`px-3 py-1 rounded-full text-sm ${activeChart === 2 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'}`}
-                >
-                  Salaries
-                </button>
+          {/* Part 1: Data Collection */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+            <div className="order-2 lg:order-1">
+              <h2 className="text-5xl font-bold text-black mb-4">We Gather the Data</h2>
+              <p className="text-lg text-gray-700 mb-6">
+                Our platform automatically collects and organizes alumni information from public professional profiles, 
+                creating a comprehensive database that's always up-to-date.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Automated collection from professional networks</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Continuous updates to keep information current</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Ethical data collection respecting privacy</span>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Data Collection Animation */}
+            <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg">
+              <div className="relative h-64 overflow-hidden rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100">
+                {/* Animated data collection visualization */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative w-32 h-32">
+                    {/* Central database icon */}
+                    <div className="absolute inset-0 bg-emerald-100 rounded-lg border-2 border-emerald-300 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M8 8h8M8 16h5" />
+                      </svg>
+                    </div>
+                    
+                    {/* Animated data points flowing in */}
+                    {[...Array(5)].map((_, i) => (
+                      <div 
+                        key={i}
+                        className="absolute w-3 h-3 bg-emerald-500 rounded-full animate-pulse"
+                        style={{
+                          top: `${Math.random() * 100}%`,
+                          left: `${Math.random() * 100}%`,
+                          animationDelay: `${i * 0.5}s`,
+                          animation: 'pulse 2s infinite, moveToCenter 3s infinite'
+                        }}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Profile cards floating in */}
+                <div className="absolute top-4 left-4 w-16 h-20 bg-white rounded-md shadow-md transform -rotate-6 animate-float">
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
+                  <div className="p-1">
+                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-4 right-4 w-16 h-20 bg-white rounded-md shadow-md transform rotate-3 animate-float" style={{animationDelay: '1s'}}>
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
+                  <div className="p-1">
+                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                  </div>
+                </div>
+                
+                <div className="absolute top-1/2 right-8 w-16 h-20 bg-white rounded-md shadow-md transform -rotate-3 animate-float" style={{animationDelay: '0.5s'}}>
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
+                  <div className="p-1">
+                    <div className="w-full h-2 bg-gray-200 rounded-full mb-1"></div>
+                    <div className="w-3/4 h-2 bg-gray-200 rounded-full"></div>
+                  </div>
+                </div>
+                
+                <style jsx>{`
+                  @keyframes moveToCenter {
+                    0%, 100% { transform: translate(0, 0); }
+                    50% { transform: translate(calc(50% - 16px), calc(50% - 16px)); }
+                  }
+                  @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(var(--rotation, -6deg)); }
+                    50% { transform: translateY(-10px) rotate(var(--rotation, -6deg)); }
+                  }
+                `}</style>
               </div>
-              
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 min-h-[250px] flex items-center justify-center">
-                {activeChart === 0 && (
-                  <div className="w-full h-full flex flex-col">
-                    <div className="text-center mb-2 text-sm text-emerald-800 font-medium">Top Industries</div>
-                    <div className="flex-1 flex items-end space-x-2">
+            </div>
+          </div>
+          
+          {/* Part 2: Visualizations */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+            <div className="order-1 lg:order-2">
+              <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
+              <p className="text-lg text-gray-700 mb-6">
+                Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Interactive charts that respond to your queries</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Real-time data updates reflected instantly</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Customizable views for different stakeholders</span>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Visualization Demo - Placeholder for screen recording */}
+            <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg">
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200">
+                {/* This would be replaced with your actual video or interactive demo */}
+                <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
+                  <div className="bg-white rounded-lg p-3 mb-4 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="font-medium text-emerald-800">Alumni Industry Distribution</div>
+                      <div className="flex space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-emerald-300"></div>
+                        <div className="w-2 h-2 rounded-full bg-emerald-100"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-end space-x-2 h-32">
                       <div className="flex-1 flex flex-col items-center">
                         <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '85%'}}></div>
                         <div className="text-xs mt-1">Tech</div>
@@ -173,90 +285,137 @@ export default function FeaturesSection() {
                       </div>
                     </div>
                   </div>
-                )}
-                
-                {activeChart === 1 && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="relative w-48 h-48">
-                      <div className="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
-                      <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent" style={{transform: 'rotate(45deg)'}}></div>
-                      <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <div className="text-3xl font-bold text-emerald-700">42%</div>
-                        <div className="text-sm text-emerald-600">San Francisco</div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <div className="text-sm font-medium text-emerald-800 mb-2">Geographic Distribution</div>
+                      <div className="relative w-full h-24">
+                        <div className="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent" style={{transform: 'rotate(45deg)'}}></div>
+                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                          <div className="text-lg font-bold text-emerald-700">42%</div>
+                          <div className="text-xs text-emerald-600">SF Bay</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                {activeChart === 2 && (
-                  <div className="w-full h-full">
-                    <div className="text-center mb-2 text-sm text-emerald-800 font-medium">Salary Growth</div>
-                    <svg viewBox="0 0 100 50" className="w-full h-40">
-                      <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
-                        fill="none" 
-                        stroke="#059669" 
-                        strokeWidth="2" 
-                      />
-                      <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
-                        fill="url(#gradient)" 
-                        fillOpacity="0.2" 
-                        stroke="none" 
-                      />
-                      <defs>
-                        <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#059669" stopOpacity="0.8"/>
-                          <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div className="flex justify-between text-xs text-gray-600">
-                      <div>0 Years</div>
-                      <div>5 Years</div>
-                      <div>10 Years</div>
+                    
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
+                      <div className="text-sm font-medium text-emerald-800 mb-2">Salary Growth</div>
+                      <svg viewBox="0 0 100 50" className="w-full h-24">
+                        <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
+                          fill="none" 
+                          stroke="#059669" 
+                          strokeWidth="2" 
+                        />
+                        <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5 L100,50 L0,50" 
+                          fill="url(#gradient)" 
+                          fillOpacity="0.2" 
+                          stroke="none" 
+                        />
+                        <defs>
+                          <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#059669" stopOpacity="0.8"/>
+                            <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
                     </div>
                   </div>
-                )}
-              </div>
-              
-              <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                <div className="text-sm font-medium text-emerald-800">AI Insight:</div>
-                <div className="text-sm text-emerald-700">
-                  {activeChart === 0 && "Tech industry employment has grown 23% in the last 2 years among your alumni."}
-                  {activeChart === 1 && "42% of your alumni work in the San Francisco Bay Area, a 15% increase since 2020."}
-                  {activeChart === 2 && "Alumni salaries increase by an average of 12% per year in the first 5 years after graduation."}
                 </div>
               </div>
             </div>
-            
-            <div className="order-1 lg:order-2">
-              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6">
-                <BarChart className="w-10 h-10 text-emerald-600" />
-              </div>
-              <h2 className="text-3xl font-bold text-emerald-800 mb-4">AI-Powered Data Visualizations</h2>
-              <p className="text-lg text-emerald-700 mb-6">Explore interactive charts with AI-generated insights that explain trends and patterns in your alumni network. Uncover hidden connections and opportunities that traditional analytics might miss.</p>
+          </div>
+          
+          {/* Part 3: AI Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
+              <p className="text-lg text-gray-700 mb-6">
+                Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
+              </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Interactive charts update in real-time</span>
+                  <span>AI-powered analysis explains what the data means</span>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>AI-generated insights explain what the data means</span>
+                  <span>Natural language interface for asking questions</span>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Customize visualizations for your specific needs</span>
+                  <span>Proactive insights that highlight opportunities</span>
                 </li>
               </ul>
-              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
-                Learn more <ArrowRight className="ml-2 w-5 h-5" />
-              </button>
+            </div>
+            
+            {/* AI Insights Chatbot Demo - Placeholder for screen recording */}
+            <div className="order-1 lg:order-2 bg-white rounded-xl p-4 shadow-lg">
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200">
+                {/* This would be replaced with your actual video of chatbot functionality */}
+                <div className="w-full h-full bg-white p-4 flex flex-col">
+                  <div className="bg-emerald-50 rounded-lg p-3 mb-3 max-w-[80%]">
+                    <p className="text-sm text-emerald-800">What trends do you see in alumni career paths?</p>
+                  </div>
+                  
+                  <div className="bg-emerald-100 rounded-lg p-3 mb-3 max-w-[80%] ml-auto">
+                    <p className="text-sm text-emerald-800">Based on the data, I'm seeing three key trends:</p>
+                    <ol className="text-sm text-emerald-700 mt-2 pl-5 list-decimal">
+                      <li>42% of alumni transition to management roles within 5 years</li>
+                      <li>Tech industry employment has grown 23% in the last 2 years</li>
+                      <li>Alumni who work abroad for 2+ years see 35% higher salary growth</li>
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-emerald-50 rounded-lg p-3 mb-3 max-w-[80%]">
+                    <p className="text-sm text-emerald-800">Which companies are hiring the most alumni?</p>
+                  </div>
+                  
+                  <div className="bg-emerald-100 rounded-lg p-3 max-w-[80%] ml-auto">
+                    <p className="text-sm text-emerald-800">The top hiring companies for your alumni are:</p>
+                    <div className="mt-2 space-y-2">
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '85%'}}></div>
+                        </div>
+                        <span className="ml-2 text-xs">Google (42)</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '70%'}}></div>
+                        </div>
+                        <span className="ml-2 text-xs">Microsoft (38)</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '60%'}}></div>
+                        </div>
+                        <span className="ml-2 text-xs">Amazon (29)</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Typing indicator */}
+                  <div className="mt-auto">
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="bg-gray-100 rounded-full px-4 py-2 flex items-center">
+                        <input type="text" placeholder="Ask about your alumni data..." className="bg-transparent border-none w-full focus:outline-none text-sm" />
+                        <button className="ml-2 p-1 rounded-full bg-emerald-500 text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
