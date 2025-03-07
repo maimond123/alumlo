@@ -155,7 +155,7 @@ export default function FeaturesSection() {
               <div className="relative h-96 overflow-hidden rounded-lg bg-white border border-black">
                 {/* Data table with scrolling effect */}
                 <div className="absolute inset-0 overflow-hidden">
-                  <div className="animate-dataScroll" style={{ animationDuration: '30s' }}>
+                  <div className="animate-dataScroll" style={{ animationDuration: '15s' }}>
                     {/* Table header */}
                     <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
                       <div>Name</div>
@@ -166,7 +166,7 @@ export default function FeaturesSection() {
                     </div>
                     
                     {/* Table rows - will be scrolling */}
-                    {[...Array(20)].map((_, i) => (
+                    {[...Array(40)].map((_, i) => (
                       <div 
                         key={i}
                         className={`px-4 py-3 grid grid-cols-5 gap-2 text-sm border-b border-gray-200 ${
@@ -175,9 +175,9 @@ export default function FeaturesSection() {
                       >
                         <div className="font-medium">Alumni {i + 1}</div>
                         <div>{2010 + (i % 12)}</div>
-                        <div>{['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Tesla'][i % 7]}</div>
-                        <div>{['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'Marketing Manager'][i % 5]}</div>
-                        <div>{['San Francisco', 'New York', 'Seattle', 'Boston', 'Austin', 'Chicago'][i % 6]}</div>
+                        <div>{['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Tesla', 'Adobe', 'Salesforce', 'IBM'][i % 10]}</div>
+                        <div>{['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'Marketing Manager', 'Financial Analyst', 'HR Specialist'][i % 7]}</div>
+                        <div>{['San Francisco', 'New York', 'Seattle', 'Boston', 'Austin', 'Chicago', 'Los Angeles', 'Denver'][i % 8]}</div>
                       </div>
                     ))}
                   </div>
@@ -186,7 +186,7 @@ export default function FeaturesSection() {
                 {/* Profile highlights that appear periodically */}
                 <div className="absolute inset-0 pointer-events-none">
                   {/* Profile 1 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '3s' }}>
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear">
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -216,7 +216,7 @@ export default function FeaturesSection() {
                   </div>
                   
                   {/* Profile 2 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '10s' }}>
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '5s' }}>
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -246,7 +246,7 @@ export default function FeaturesSection() {
                   </div>
                   
                   {/* Profile 3 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '17s' }}>
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '10s' }}>
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -309,11 +309,11 @@ export default function FeaturesSection() {
                   }
                   
                   .animate-dataScroll {
-                    animation: dataScroll 30s linear infinite;
+                    animation: dataScroll 15s linear infinite;
                   }
                   
                   .animate-profileAppear {
-                    animation: profileAppear 30s linear infinite;
+                    animation: profileAppear 15s linear infinite;
                   }
                 `}</style>
               </div>
