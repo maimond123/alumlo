@@ -221,7 +221,7 @@ export default function AlumniSearchDemo() {
       <style jsx>{tagScrollAnimation}</style>
       
       {/* Search Input */}
-      <div className="relative mb-6">
+      <div className="relative mb-10">
         <input
           type="text"
           value={searchQuery}
@@ -269,8 +269,8 @@ export default function AlumniSearchDemo() {
       </div>
 
       {/* Scrolling Suggestion Tags - Updated to match dashboard/page.tsx */}
-      <div className="mb-10 mt-8">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Try searching for:</h3>
+      <div className="mb-14 mt-10">
+        <h3 className="text-lg font-medium text-gray-700 mb-6">Try searching for:</h3>
         <div className="scrolling-tags-container">
           <div className="scrolling-tags">
             {/* First set of tags */}
@@ -328,14 +328,14 @@ export default function AlumniSearchDemo() {
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 mb-6 bg-red-50 border border-red-200 rounded-lg">
+        <div className="p-4 mb-10 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600">{error}</p>
         </div>
       )}
       
       {/* Search Status */}
       {isSearching && (
-        <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm mb-6">
+        <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm mb-10">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
           </div>
@@ -372,11 +372,11 @@ export default function AlumniSearchDemo() {
       
       {/* Search Results */}
       {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
-        <div className="w-full">
-          <h2 className="text-xl font-semibold mb-4 text-black">
+        <div className="w-full mb-10">
+          <h2 className="text-xl font-semibold mb-6 text-black">
             Found {searchResults.length} alumni matching your search
           </h2>
-          <div className="grid gap-4">
+          <div className="grid gap-6">
             {/* Only display the first 3 results */}
             {searchResults.slice(0, MAX_VISIBLE_RESULTS).map((result, index) => {
               const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
@@ -446,7 +446,7 @@ export default function AlumniSearchDemo() {
           
           {/* View More button - only show if there are more than MAX_VISIBLE_RESULTS */}
           {searchResults.length > MAX_VISIBLE_RESULTS && (
-            <div className="mt-6 text-center">
+            <div className="mt-10 text-center">
               <a 
                 href="/signup" 
                 className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-100 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
@@ -460,7 +460,7 @@ export default function AlumniSearchDemo() {
       
       {/* No Results Message */}
       {!isSearching && searchPhase === 'complete' && searchResults.length === 0 && (
-        <div className="w-full p-6 bg-gray-50 rounded-lg text-center">
+        <div className="w-full p-6 bg-gray-50 rounded-lg text-center mb-10">
           <p className="text-gray-700">No alumni found matching your search criteria.</p>
           <p className="text-gray-500 mt-2">Try broadening your search or using different keywords.</p>
         </div>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -752,39 +752,51 @@ export default function DashboardPage() {
           </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
-            <div className="relative">
+            <div className="relative mb-6">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Who are the alumni working in artificial intelligence at Google?"
                 className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
               
               {/* Buttons inside the input field, positioned at the bottom right */}
               <div className="absolute bottom-3 right-4 flex space-x-2">
-                {/* Refresh button - matching theme from image */}
+                {/* Refresh button */}
                 <button
                   type="button" 
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSearchResults([])
+                    setSearchPhase('idle')
+                    setError(null)
+                    setExpandedQueries([])
+                    setExtractedFilters({})
+                  }}
                   className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                  aria-label="Refresh"
+                  aria-label="Clear"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 
-                {/* Search/Send button - matching theme from image */}
+                {/* Search/Send button */}
                 <button
-                  type="submit"
+                  onClick={(e) => handleSearch(e)}
                   disabled={isSearching}
                   className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                   aria-label="Search"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                  </svg>
+                  {isSearching ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>

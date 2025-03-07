@@ -89,24 +89,24 @@ export default function FeaturesSection() {
               <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
                 <Search className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Natural Language</h3>
-              <p>Ask questions in plain English, just like you would to a colleague.</p>
+              <h3 className="text-xl font-semibold mb-2">Boost Engagement</h3>
+              <p>Increase alumni participation by making it effortless to find relevant connections for mentorship and networking.</p>
             </div>
             
             <div className="bg-emerald-50 p-6 rounded-lg">
               <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Instant Results</h3>
-              <p>Get answers in seconds. No more wasted time.</p>
+              <h3 className="text-xl font-semibold mb-2">Improve Fundraising</h3>
+              <p>Strengthen donor relationships by connecting alumni with shared interests and career paths.</p>
             </div>
             
             <div className="bg-emerald-50 p-6 rounded-lg">
               <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
                 <Link className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Direct Connection</h3>
-              <p>Connect with alumni on LinkedIn with just one click.</p>
+              <h3 className="text-xl font-semibold mb-2">Enhance Career Services</h3>
+              <p>Provide students with valuable industry connections and mentorship opportunities to improve career outcomes.</p>
             </div>
           </div>
         </div>
