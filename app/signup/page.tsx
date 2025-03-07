@@ -122,7 +122,7 @@ export default function Signup() {
                         type="text"
                         name="firstName"
                         required
-                        className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                        className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                         placeholder="First Name *"
                         value={formData.firstName}
                         onChange={handleChange}
@@ -134,7 +134,7 @@ export default function Signup() {
                         type="text"
                         name="lastName"
                         required
-                        className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                        className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                         placeholder="Last Name *"
                         value={formData.lastName}
                         onChange={handleChange}
@@ -147,7 +147,7 @@ export default function Signup() {
                       type="email"
                       name="schoolEmail"
                       required
-                      className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                       placeholder="School Email (e.g., john.doe@school.edu) *"
                       value={formData.schoolEmail}
                       onChange={handleChange}
@@ -159,7 +159,7 @@ export default function Signup() {
                       type="text"
                       name="schoolName"
                       required
-                      className="w-full bg-white bg-opacity-50 border-2 border-black border-opacity-50 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
+                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
                       placeholder="School Name *"
                       value={formData.schoolName}
                       onChange={handleChange}
