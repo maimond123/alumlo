@@ -123,6 +123,9 @@ export default function AlumniSearchDemo() {
         analyzing: `Analyzing query: "${searchQuery}"`
       })
       
+      // Store the current query to ensure we're using the latest value
+      const currentQuery = searchQuery;
+      
       // Make the API call to the demo search endpoint
       const response = await fetch('/api/search-demo', {
         method: 'POST',
@@ -130,7 +133,7 @@ export default function AlumniSearchDemo() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query: searchQuery
+          query: currentQuery
         }),
       })
       
@@ -146,7 +149,7 @@ export default function AlumniSearchDemo() {
       setSearchPhase('searching')
       setDisplayedText(prev => ({
         ...prev,
-        analyzing: `Analyzed query: "${searchQuery}"`,
+        analyzing: `Analyzed query: "${currentQuery}"`,
         searching: 'Searching alumni database...'
       }))
       
@@ -455,7 +458,7 @@ export default function AlumniSearchDemo() {
             <div className="mt-6 text-center">
               <a 
                 href="/signup" 
-                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 View More
               </a>

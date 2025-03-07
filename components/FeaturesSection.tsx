@@ -94,7 +94,7 @@ export default function FeaturesSection() {
                 <Zap className="w-6 h-6 text-emerald-600" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Instant Results</h3>
-              <p>Get answers in milliseconds, not minutes. No more wasted time.</p>
+              <p>Get answers in seconds. No more wasted time.</p>
             </div>
             
             <div className="bg-emerald-50 p-6 rounded-lg">
