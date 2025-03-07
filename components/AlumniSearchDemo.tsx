@@ -379,7 +379,7 @@ export default function AlumniSearchDemo() {
       {/* Search Results */}
       {!isSearching && (searchPhase as string) === 'complete' && searchResults.length > 0 && (
         <div className="w-full">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
+          <h2 className="text-xl font-semibold mb-4 text-black">
             Found {searchResults.length} alumni matching your search
           </h2>
           <div className="grid gap-4">
