@@ -37,7 +37,7 @@ const suggestionTags = [
 ];
 
 // Add this helper function for typewriter effect
-const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
+const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 20): Promise<void> => {
   return new Promise((resolve) => {
     let i = 0;
     const typing = setInterval(() => {
@@ -161,15 +161,10 @@ export default function AlumniSearchDemo() {
     // Start the AI animation sequence
     try {
       // Phase 1: Analyzing query
-      await typewriterEffect('Analyzing your search query...', 
+      await typewriterEffect(`Analyzing your search query: "${currentQuery}"`, 
         (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
       );
       
-      // Phase 2: Searching database (simplified for demo)
-      setSearchPhase('searching');
-      await typewriterEffect('Searching alumni database...', 
-        (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
-      );
       
       // Phase 3: Profiling
       setSearchPhase('profiling');
@@ -186,12 +181,6 @@ export default function AlumniSearchDemo() {
       // Get search results that were fetching in parallel
       const data = await searchPromise;
       const results = data.results || [];
-      
-      // Phase 5: Display results
-      setSearchPhase('complete');
-      await typewriterEffect(`Displaying top ${Math.min(3, results.length)} personalized results...`, 
-        (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
-      );
       
       setSearchResults(results);
     } catch (error) {

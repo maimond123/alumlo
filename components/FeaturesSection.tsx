@@ -46,7 +46,7 @@ export default function FeaturesSection() {
       const timeout = setTimeout(() => {
         // Add the character to the typed text
         setTypedText(fullText.slice(0, typedText.length + 1))
-      }, nextChar === '.' ? 250 : 30) // Speed up from 50ms to 25ms, pause 300ms after period
+      }, nextChar === '.' ? 250 : 40) // Speed up from 50ms to 25ms, pause 300ms after period
       
       return () => clearTimeout(timeout)
     } else if (typedText.length === fullText.length && !isTypingComplete) {
