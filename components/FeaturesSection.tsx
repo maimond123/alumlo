@@ -68,10 +68,10 @@ export default function FeaturesSection() {
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
               Alumni Access, Reimagined with Search
             </h2>
-            <p className="text-xl md:text-2xl text-emerald-700 max-w-3xl mx-auto h-16 flex items-center justify-center">
+            <p className="text-xl md:text-2xl text-teal-700 max-w-3xl mx-auto h-16 flex items-center justify-center">
               {typedText}
               {!isTypingComplete && (
-                <span className="ml-1 inline-block w-0.5 h-6 bg-emerald-700 animate-blink"></span>
+                <span className="ml-1 inline-block w-0.5 h-6 bg-teal-700 animate-blink"></span>
               )}
             </p>
           </div>
