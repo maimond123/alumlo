@@ -274,27 +274,6 @@ export default function FeaturesSection() {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Platform logos - smaller and positioned at the top */}
-                  <div className="absolute top-2 right-2 flex space-x-2">
-                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
-                      <img 
-                        src="/assets/linkedin.png" 
-                        alt="LinkedIn" 
-                        className="w-6 h-6 object-contain"
-                      />
-                    </div>
-                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
-                      <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">f</div>
-                    </div>
-                    <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center shadow-sm">
-                      <img 
-                        src="/assets/glassdoor.svg" 
-                        alt="Glassdoor" 
-                        className="w-6 h-6 object-contain"
-                      />
-                    </div>
-                  </div>
                 </div>
                 
                 <style jsx>{`
