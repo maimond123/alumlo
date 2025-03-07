@@ -123,27 +123,27 @@ export default function FeaturesSection() {
           {/* Part 1: Data Collection */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             <div className="order-2 lg:order-1">
-              <h2 className="text-5xl font-bold text-black mb-4">We Gather the Data</h2>
-              <p className="text-lg text-gray-700 mb-6">
+              <h2 className="text-6xl font-bold text-black mb-6">We Gather the Data</h2>
+              <p className="text-xl text-gray-700 mb-8">
                 Our platform automatically collects and organizes alumni information from public professional profiles, 
                 creating a comprehensive database that's always up-to-date.
               </p>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-4 mb-10 text-lg">
                 <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <span>Automated collection from professional networks</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <span>Continuous updates to keep information current</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <span>Ethical data collection respecting privacy</span>
                 </li>
@@ -152,7 +152,7 @@ export default function FeaturesSection() {
             
             {/* Data Collection Animation - Improved */}
             <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg">
-              <div className="relative h-64 overflow-hidden rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
+              <div className="relative h-96 overflow-hidden rounded-lg bg-gradient-to-br from-gray-50 to-gray-100">
                 {/* Web representation */}
                 <div className="absolute inset-0">
                   <div className="grid grid-cols-4 grid-rows-4 gap-2 p-4 h-full">
@@ -174,19 +174,43 @@ export default function FeaturesSection() {
                   </div>
                 </div>
                 
+                {/* Platform logos */}
+                <div className="absolute top-4 left-4 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
+                  {/* LinkedIn logo */}
+                  <img 
+                    src="/assets/linkedin.png" 
+                    alt="LinkedIn" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                
+                <div className="absolute top-4 right-4 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
+                  {/* Facebook logo placeholder - replace with actual logo */}
+                  <div className="w-full h-full bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl">f</div>
+                </div>
+                
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-20 bg-white rounded-md flex items-center justify-center p-2 shadow-md">
+                  {/* Glassdoor logo */}
+                  <img 
+                    src="/assets/glassdoor.svg" 
+                    alt="Glassdoor" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                
                 {/* Scanning beam animation */}
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="h-full w-full relative">
-                    <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-emerald-500/20 to-transparent animate-scanDown"></div>
+                    <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-emerald-500/20 to-transparent animate-scanDown"></div>
                   </div>
                 </div>
                 
                 {/* Data extraction animation */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative w-20 h-20">
+                  <div className="relative w-28 h-28">
                     {/* Central database icon */}
                     <div className="absolute inset-0 bg-white rounded-lg border-2 border-emerald-300 flex items-center justify-center shadow-lg z-10">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h8M8 8h8M8 16h5" />
                       </svg>
@@ -195,10 +219,10 @@ export default function FeaturesSection() {
                 </div>
                 
                 {/* Data particles flowing to database */}
-                {[...Array(8)].map((_, i) => (
+                {[...Array(12)].map((_, i) => (
                   <div 
                     key={i}
-                    className="absolute w-2 h-2 bg-emerald-500 rounded-full"
+                    className="absolute w-3 h-3 bg-emerald-500 rounded-full"
                     style={{
                       top: `${10 + Math.random() * 80}%`,
                       left: `${10 + Math.random() * 80}%`,
@@ -210,28 +234,28 @@ export default function FeaturesSection() {
                 ))}
                 
                 {/* Profile cards being extracted */}
-                <div className="absolute top-4 left-4 w-14 h-18 bg-white rounded-md shadow-md transform -rotate-6 animate-extractToCenter">
-                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
+                <div className="absolute top-4 left-4 w-20 h-24 bg-white rounded-md shadow-md transform -rotate-6 animate-extractToCenter">
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
                   <div className="p-1">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
                     <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
                     <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
                   </div>
                 </div>
                 
-                <div className="absolute bottom-4 right-4 w-14 h-18 bg-white rounded-md shadow-md transform rotate-3 animate-extractToCenter" style={{animationDelay: '1s'}}>
-                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
+                <div className="absolute bottom-4 right-4 w-20 h-24 bg-white rounded-md shadow-md transform rotate-3 animate-extractToCenter" style={{animationDelay: '1s'}}>
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
                   <div className="p-1">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
                     <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
                     <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
                   </div>
                 </div>
                 
-                <div className="absolute top-1/2 right-8 w-14 h-18 bg-white rounded-md shadow-md transform -rotate-3 animate-extractToCenter" style={{animationDelay: '0.5s'}}>
-                  <div className="w-full h-4 bg-emerald-200 rounded-t-md"></div>
+                <div className="absolute top-1/2 right-8 w-20 h-24 bg-white rounded-md shadow-md transform -rotate-3 animate-extractToCenter" style={{animationDelay: '0.5s'}}>
+                  <div className="w-full h-6 bg-emerald-200 rounded-t-md"></div>
                   <div className="p-1">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto my-1"></div>
+                    <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto my-1"></div>
                     <div className="w-full h-1 bg-gray-200 rounded-full mb-1"></div>
                     <div className="w-3/4 h-1 bg-gray-200 rounded-full mx-auto"></div>
                   </div>
