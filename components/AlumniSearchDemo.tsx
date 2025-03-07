@@ -455,7 +455,7 @@ export default function AlumniSearchDemo() {
             <div className="mt-6 text-center">
               <a 
                 href="/signup" 
-                className="inline-block px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-gray-50 transition-colors"
               >
                 View More
               </a>
