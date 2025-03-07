@@ -179,7 +179,7 @@ export default function Signup() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-transparent text-black border-2 border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-8"
+                    className="w-full bg-transparent text-black border-1 border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-8"
                   >
                     {isSubmitting ? (
                       <>
