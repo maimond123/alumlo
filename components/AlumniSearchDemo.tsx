@@ -36,6 +36,22 @@ const suggestionTags = [
   "Marketing Directors in Los Angeles"
 ];
 
+// Add this helper function for typewriter effect
+const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
+  return new Promise((resolve) => {
+    let i = 0;
+    const typing = setInterval(() => {
+      if (i <= text.length) {
+        setter(text.substring(0, i));
+        i++;
+      } else {
+        clearInterval(typing);
+        resolve();
+      }
+    }, speed);
+  });
+};
+
 export default function AlumniSearchDemo() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
@@ -111,93 +127,86 @@ export default function AlumniSearchDemo() {
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
     
-    setIsSearching(true)
-    setSearchPhase('analyzing')
-    setSearchResults([])
-    setError(null)
+    // Store the current query to ensure consistency
+    const currentQuery = searchQuery.trim();
     
-    try {
-      // For demo purposes, use a dedicated demo endpoint
-      setDisplayedText({
-        ...displayedText,
-        analyzing: `Analyzing query: "${searchQuery}"`
-      })
-      
-      // Store the current query to ensure we're using the latest value
-      const currentQuery = searchQuery;
-      
-      // Make the API call to the demo search endpoint
-      const response = await fetch('/api/search-demo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: currentQuery
-        }),
-      })
-      
+    // Clear previous search results and reset state
+    setSearchResults([]);
+    setIsSearching(true);
+    setSearchPhase('analyzing');
+    
+    // Reset displayed text
+    setDisplayedText({
+      analyzing: '',
+      searching: '',
+      profiling: '',
+      filters: '',
+      displaying: ''
+    });
+    
+    // Start the actual search request immediately in parallel with animations
+    const searchPromise = fetch('/api/search-demo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: currentQuery }),
+    }).then(response => {
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Search failed")
+        throw new Error('Search failed');
       }
+      return response.json();
+    });
+    
+    // Start the AI animation sequence
+    try {
+      // Phase 1: Analyzing query
+      await typewriterEffect('Analyzing your search query...', 
+        (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+      );
       
-      // Process the search response
-      const data = await response.json()
+      // Phase 2: Searching database (simplified for demo)
+      setSearchPhase('searching');
+      await typewriterEffect('Searching alumni database...', 
+        (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
+      );
       
-      // Update the search phases based on the response
-      setSearchPhase('searching')
-      setDisplayedText(prev => ({
-        ...prev,
-        analyzing: `Analyzed query: "${currentQuery}"`,
-        searching: 'Searching alumni database...'
-      }))
+      // Phase 3: Profiling
+      setSearchPhase('profiling');
+      await typewriterEffect('Creating alumni profiles based on your search...', 
+        (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+      );
       
-      // Simulate the profiling phase
-      setTimeout(() => {
-        setSearchPhase('profiling')
-        setDisplayedText(prev => ({
-          ...prev,
-          searching: 'Searched alumni database',
-          profiling: 'Creating alumni profiles based on your search...'
-        }))
-        
-        // Simulate the filtering phase
-        setTimeout(() => {
-          setSearchPhase('filtering')
-          setDisplayedText(prev => ({
-            ...prev,
-            profiling: 'Created alumni profiles',
-            filters: 'Applying filters: Industry, Location, Experience'
-          }))
-          
-          // Complete the search and show results
-          setTimeout(() => {
-            setSearchPhase('complete')
-            setSearchResults(data.results || [])
-            
-            setDisplayedText(prev => ({
-              ...prev,
-              filters: 'Applied filters: Industry, Location, Experience',
-              displaying: `Found ${data.results.length} alumni matching your search`
-            }))
-            
-            setIsSearching(false)
-          }, 800)
-        }, 600)
-      }, 700)
+      // Phase 4: Filtering
+      setSearchPhase('filtering');
+      await typewriterEffect('Applying filters: Industry, Location, Experience', 
+        (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+      );
       
-    } catch (err) {
-      console.error("Search error:", err)
-      setError(err instanceof Error ? err.message : "An unknown error occurred")
-      setIsSearching(false)
-      setSearchPhase('idle')
+      // Get search results that were fetching in parallel
+      const data = await searchPromise;
+      const results = data.results || [];
+      
+      // Phase 5: Display results
+      setSearchPhase('complete');
+      await typewriterEffect(`Displaying top ${Math.min(3, results.length)} personalized results...`, 
+        (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+      );
+      
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search error:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+    } finally {
+      setIsSearching(false);
     }
-  }
+  };
   
   const handleTagClick = (tag: string) => {
     setSearchQuery(tag)
-    handleSearch()
+    // Trigger search immediately after setting the query
+    // We need to use setTimeout to ensure the searchQuery state is updated before searching
+    setTimeout(() => handleSearch(), 0)
   }
   
   // Clean up timer on unmount
@@ -330,50 +339,37 @@ export default function AlumniSearchDemo() {
       )}
       
       {/* Search Status */}
-      {isSearchingPhase && (
+      {isSearching && (
         <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm mb-6">
-          <div className="flex items-center mb-4">
-            <div className="w-6 h-6 mr-3 relative">
-              <div className="absolute inset-0 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-            </div>
-            <h3 className="text-lg font-medium text-gray-800">Processing your search</h3>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
           </div>
           
           <div className="space-y-4">
             {displayedText.analyzing && (
-              <div className="flex items-start">
-                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                </div>
-                <p className="text-gray-700">{displayedText.analyzing}</p>
-              </div>
+              <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
             )}
             
             {displayedText.searching && (
-              <div className="flex items-start">
-                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                </div>
-                <p className="text-gray-700">{displayedText.searching}</p>
-              </div>
+              <p className="text-gray-700 mb-3">{displayedText.searching}</p>
             )}
             
             {displayedText.profiling && (
-              <div className="flex items-start">
-                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                </div>
-                <p className="text-gray-700">{displayedText.profiling}</p>
-              </div>
+              <>
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
+                <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+              </>
             )}
             
             {displayedText.filters && (
-              <div className="flex items-start">
-                <div className="w-4 h-4 mt-1 mr-3 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                </div>
-                <p className="text-gray-700">{displayedText.filters}</p>
-              </div>
+              <>
+                <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
+                <p className="text-gray-700 mb-3">{displayedText.filters}</p>
+              </>
+            )}
+            
+            {displayedText.displaying && (
+              <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
             )}
           </div>
         </div>
@@ -458,7 +454,7 @@ export default function AlumniSearchDemo() {
             <div className="mt-6 text-center">
               <a 
                 href="/signup" 
-                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
+                className="inline-block px-4 py-2 bg-white text-black border border-black rounded-full hover:bg-emerald-100 hover:text-white hover:border-emerald-600 transition-all duration-200 transform hover:-translate-y-0.5"
               >
                 View More
               </a>
