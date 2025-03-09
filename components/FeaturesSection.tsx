@@ -347,8 +347,8 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Video Demo of Visualization with Lazy Loading */}
-            <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg">
+            {/* Video Demo of Visualization with Lazy Loading - Wider container */}
+            <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg w-full">
               <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative">
                 {/* Video element with ref for lazy loading */}
                 <LazyLoadedVideo />
@@ -681,7 +681,7 @@ function LazyLoadedVideo() {
         playsInline
         poster="/data-visualization-poster.png"
       >
-        <source src="/videos/data-visualization-demo.mp4" type="video/mp4" />
+        <source src="/videos/data-video.mov" type="video/quicktime" />
         Your browser does not support the video tag.
       </video>
       
