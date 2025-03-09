@@ -348,15 +348,12 @@ export default function FeaturesSection() {
             </div>
             
             {/* Visualization Demo with Static Image */}
-            <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg">
-              <div className="bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative h-[450px] w-full">
-                {/* Static image with proper containment */}
-                <img 
-                  src="/temp.png" 
-                  alt="Data visualization dashboard" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
+            <div className="order-2 lg:order-1">
+              <img 
+                src="/temp.png" 
+                alt="Data visualization dashboard" 
+                className="w-full h-auto max-h-[650px]"
+              />
             </div>
           </div>
           
