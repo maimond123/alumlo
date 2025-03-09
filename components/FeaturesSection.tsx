@@ -152,7 +152,7 @@ export default function FeaturesSection() {
             
             {/* Data Collection Animation - Improved */}
             <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg w-full">
-              <div className="relative h-96 overflow-hidden rounded-lg bg-white border border-black">
+              <div className="relative h-[450px] overflow-hidden rounded-lg bg-white border border-black">
                 {/* Data table with scrolling effect */}
                 <div className="absolute inset-0 overflow-hidden">
                   <div className="animate-dataScroll" style={{ animationDuration: '15s', animationPlayState: 'running' }}>
@@ -349,9 +349,13 @@ export default function FeaturesSection() {
             
             {/* Video Demo of Visualization with Lazy Loading */}
             <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative">
-                {/* Video element with ref for lazy loading */}
-                <LazyLoadedVideo />
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative h-[450px]">
+                {/* Static image instead of video */}
+                <img 
+                  src="/temp.png" 
+                  alt="Data visualization dashboard" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
           </div>
@@ -636,71 +640,4 @@ export default function FeaturesSection() {
       </section>
     </>
   )
-}
-
-function LazyLoadedVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
-    
-    return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isInView && videoRef.current) {
-      videoRef.current.play().catch(err => {
-        console.log('Auto-play was prevented:', err);
-      });
-    } else if (!isInView && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [isInView]);
-
-  return (
-    <>
-      <video 
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        loop 
-        muted 
-        playsInline
-        poster="/data-visualization-poster.png"
-      >
-        <source src="/videos/data-visualization-demo.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      
-      {/* Optional play/pause button overlay */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-        <button 
-          className="bg-black/50 text-white rounded-full p-4 hover:bg-black/70"
-          onClick={(e) => {
-            if (videoRef.current) {
-              videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
-            }
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </button>
-      </div>
-    </>
-  );
 }
