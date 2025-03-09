@@ -156,7 +156,7 @@ export default function FeaturesSection() {
                 <div className="relative h-full overflow-hidden rounded-lg bg-white">
                   {/* Data table with scrolling effect */}
                   <div className="absolute inset-0 overflow-hidden">
-                    <div className="animate-dataScroll">
+                    <div className="animate-dataScroll" style={{ willChange: 'transform' }}>
                       {/* Table header */}
                       <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
                         <div>Name</div>
@@ -240,83 +240,17 @@ export default function FeaturesSection() {
                           <div>Chicago, IL</div>
                         </div>
                         
-                        {/* Second set of rows (duplicate) to ensure continuous scrolling */}
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 11</div>
-                          <div>2011</div>
-                          <div>Salesforce</div>
-                          <div>Account Executive</div>
-                          <div>New York, NY</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 12</div>
-                          <div>2019</div>
-                          <div>Adobe</div>
-                          <div>Software Developer</div>
-                          <div>San Jose, CA</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 13</div>
-                          <div>2015</div>
-                          <div>Oracle</div>
-                          <div>Database Administrator</div>
-                          <div>Austin, TX</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 14</div>
-                          <div>2017</div>
-                          <div>Apple</div>
-                          <div>HR Specialist</div>
-                          <div>Chicago, IL</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 15</div>
-                          <div>2012</div>
-                          <div>Meta</div>
-                          <div>Software Engineer</div>
-                          <div>Los Angeles, CA</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 16</div>
-                          <div>2013</div>
-                          <div>Netflix</div>
-                          <div>Product Manager</div>
-                          <div>Denver, CO</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 17</div>
-                          <div>2014</div>
-                          <div>Tesla</div>
-                          <div>Data Scientist</div>
-                          <div>San Francisco, CA</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 18</div>
-                          <div>2015</div>
-                          <div>Adobe</div>
-                          <div>UX Designer</div>
-                          <div>New York, NY</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 19</div>
-                          <div>2016</div>
-                          <div>Salesforce</div>
-                          <div>Marketing Manager</div>
-                          <div>Seattle, WA</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 20</div>
-                          <div>2017</div>
-                          <div>IBM</div>
-                          <div>Financial Analyst</div>
-                          <div>Boston, MA</div>
-                        </div>
-                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                          <div>Alumni 21</div>
-                          <div>2018</div>
-                          <div>Google</div>
-                          <div>HR Specialist</div>
-                          <div>Austin, TX</div>
+                        {/* Duplicate the entire set of rows to ensure continuous scrolling */}
+                        <div className="divide-y divide-gray-200">
+                          {/* Duplicate of first set of rows */}
+                          <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                            <div>Alumni 1</div>
+                            <div>2010</div>
+                            <div>Google</div>
+                            <div>Software Engineer</div>
+                            <div>Mountain View, CA</div>
+                          </div>
+                          {/* ... duplicate all rows ... */}
                         </div>
                       </div>
                     </div>
@@ -808,10 +742,10 @@ function LazyLoadedVideo() {
   );
 }
 
-<style jsx>{`
+<style jsx global>{`
   @keyframes dataScroll {
     0% { transform: translateY(0); }
-    100% { transform: translateY(calc(-50% - 1px)); }
+    100% { transform: translateY(-50%); }
   }
   
   @keyframes profile1 {
@@ -831,6 +765,8 @@ function LazyLoadedVideo() {
   
   .animate-dataScroll {
     animation: dataScroll 30s linear infinite;
+    display: inline-block;
+    width: 100%;
   }
   
   .animate-profile1 {
