@@ -347,11 +347,14 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Video Demo of Visualization with Lazy Loading - Wider container */}
-            <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg w-full">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative">
-                {/* Video element with ref for lazy loading */}
-                <LazyLoadedVideo />
+            {/* Static Image of Visualization - Larger container */}
+            <div className="order-2 lg:order-1 w-full">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <img 
+                  src="/data-visualization-poster.png" 
+                  alt="Alumni data visualization dashboard" 
+                  className="w-full h-auto object-contain"
+                />
               </div>
             </div>
           </div>
