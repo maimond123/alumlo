@@ -121,7 +121,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-40">
             <div className="order-2 lg:order-1">
               <h2 className="text-6xl font-bold text-black mb-6">We Gather the Data</h2>
               <p className="text-xl text-gray-700 mb-8">
@@ -319,43 +319,42 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            <div className="order-1 lg:order-2">
-              <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
-              <p className="text-lg text-gray-700 mb-6">
-                Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Interactive charts that respond to your queries</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Real-time data updates reflected instantly</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Customizable views for different stakeholders</span>
-                </li>
-              </ul>
-            </div>
-            
-            {/* Static Image of Visualization - Larger container */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-40">
             <div className="order-2 lg:order-1 w-full">
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                 <img 
                   src="/data-visualization-poster.png" 
                   alt="Alumni data visualization dashboard" 
                   className="w-full h-auto object-contain"
                 />
               </div>
+            </div>
+            
+            <div className="order-1 lg:order-2">
+              <h2 className="text-6xl font-bold text-black mb-6">We Transform It Visually</h2>
+              <p className="text-xl text-gray-700 mb-8">
+                Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
+              </p>
+              <ul className="space-y-4 mb-10 text-lg">
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Interactive charts that respond to your queries</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Real-time data updates reflected instantly</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <span>Customizable views for different stakeholders</span>
+                </li>
+              </ul>
             </div>
           </div>
           
