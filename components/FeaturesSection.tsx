@@ -139,23 +139,23 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Continuous updates to keep information current</span>
+                  <span>We guarantee 90%+ coverage for each graduating class</span>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Ethical data collection respecting privacy</span>
+                  <span>Collect 30+ unique data points for each alumni profile</span>
                 </li>
               </ul>
             </div>
             
-            {/* Data Collection Animation - Scrolling Data Table */}
+            {/* Data Collection Animation - Improved */}
             <div className="order-1 lg:order-2 bg-white rounded-xl p-8 shadow-lg w-full">
               <div className="relative h-96 overflow-hidden rounded-lg bg-white border border-black">
                 {/* Data table with scrolling effect */}
                 <div className="absolute inset-0 overflow-hidden">
-                  <div className="animate-dataScroll" style={{ animationDuration: '15s' }}>
+                  <div className="animate-dataScroll" style={{ animationDuration: '15s', animationPlayState: 'running' }}>
                     {/* Table header */}
                     <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
                       <div>Name</div>
@@ -186,7 +186,7 @@ export default function FeaturesSection() {
                 {/* Profile highlights that appear periodically */}
                 <div className="absolute inset-0 pointer-events-none">
                   {/* Profile 1 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear">
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile1">
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -216,7 +216,7 @@ export default function FeaturesSection() {
                   </div>
                   
                   {/* Profile 2 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '5s' }}>
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile2">
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -246,7 +246,7 @@ export default function FeaturesSection() {
                   </div>
                   
                   {/* Profile 3 */}
-                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profileAppear" style={{ animationDelay: '10s' }}>
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile3">
                     <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                       <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                         <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -278,21 +278,40 @@ export default function FeaturesSection() {
                 
                 <style jsx>{`
                   @keyframes dataScroll {
-                    0% { transform: translateY(0); }
-                    100% { transform: translateY(-50%); }
+                    0%, 100% { transform: translateY(0); }
+                    16.66%, 50%, 83.33% { transform: translateY(-50%); }
+                    20%, 53.33%, 86.66% { transform: translateY(0); }
                   }
                   
-                  @keyframes profileAppear {
-                    0%, 100% { opacity: 0; }
-                    3%, 13% { opacity: 1; }
+                  @keyframes profile1 {
+                    0%, 16.66%, 33.33%, 100% { opacity: 0; }
+                    20%, 30% { opacity: 1; }
+                  }
+                  
+                  @keyframes profile2 {
+                    0%, 50%, 66.66%, 100% { opacity: 0; }
+                    53.33%, 63.33% { opacity: 1; }
+                  }
+                  
+                  @keyframes profile3 {
+                    0%, 83.33%, 100% { opacity: 0; }
+                    86.66%, 96.66% { opacity: 1; }
                   }
                   
                   .animate-dataScroll {
                     animation: dataScroll 15s linear infinite;
                   }
                   
-                  .animate-profileAppear {
-                    animation: profileAppear 15s linear infinite;
+                  .animate-profile1 {
+                    animation: profile1 15s linear infinite;
+                  }
+                  
+                  .animate-profile2 {
+                    animation: profile2 15s linear infinite;
+                  }
+                  
+                  .animate-profile3 {
+                    animation: profile3 15s linear infinite;
                   }
                 `}</style>
               </div>
