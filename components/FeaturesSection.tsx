@@ -347,80 +347,11 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Visualization Demo - Placeholder for screen recording */}
+            {/* Video Demo of Visualization with Lazy Loading */}
             <div className="order-2 lg:order-1 bg-white rounded-xl p-4 shadow-lg">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200">
-                {/* This would be replaced with your actual video or interactive demo */}
-                <div className="w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 p-4">
-                  <div className="bg-white rounded-lg p-3 mb-4 shadow-sm">
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="font-medium text-emerald-800">Alumni Industry Distribution</div>
-                      <div className="flex space-x-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                        <div className="w-2 h-2 rounded-full bg-emerald-300"></div>
-                        <div className="w-2 h-2 rounded-full bg-emerald-100"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-end space-x-2 h-32">
-                      <div className="flex-1 flex flex-col items-center">
-                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '85%'}}></div>
-                        <div className="text-xs mt-1">Tech</div>
-                      </div>
-                      <div className="flex-1 flex flex-col items-center">
-                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '65%'}}></div>
-                        <div className="text-xs mt-1">Finance</div>
-                      </div>
-                      <div className="flex-1 flex flex-col items-center">
-                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '45%'}}></div>
-                        <div className="text-xs mt-1">Health</div>
-                      </div>
-                      <div className="flex-1 flex flex-col items-center">
-                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '35%'}}></div>
-                        <div className="text-xs mt-1">Education</div>
-                      </div>
-                      <div className="flex-1 flex flex-col items-center">
-                        <div className="w-full bg-emerald-500 rounded-t-sm" style={{height: '25%'}}></div>
-                        <div className="text-xs mt-1">Retail</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white rounded-lg p-3 shadow-sm">
-                      <div className="text-sm font-medium text-emerald-800 mb-2">Geographic Distribution</div>
-                      <div className="relative w-full h-24">
-                        <div className="absolute inset-0 rounded-full border-4 border-emerald-200"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent" style={{transform: 'rotate(45deg)'}}></div>
-                        <div className="absolute inset-0 flex items-center justify-center flex-col">
-                          <div className="text-lg font-bold text-emerald-700">42%</div>
-                          <div className="text-xs text-emerald-600">SF Bay</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg p-3 shadow-sm">
-                      <div className="text-sm font-medium text-emerald-800 mb-2">Salary Growth</div>
-                      <svg viewBox="0 0 100 50" className="w-full h-24">
-                        <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5" 
-                          fill="none" 
-                          stroke="#059669" 
-                          strokeWidth="2" 
-                        />
-                        <path d="M0,50 L10,45 L20,40 L30,38 L40,30 L50,25 L60,20 L70,15 L80,10 L90,8 L100,5 L100,50 L0,50" 
-                          fill="url(#gradient)" 
-                          fillOpacity="0.2" 
-                          stroke="none" 
-                        />
-                        <defs>
-                          <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#059669" stopOpacity="0.8"/>
-                            <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200 relative">
+                {/* Video element with ref for lazy loading */}
+                <LazyLoadedVideo />
               </div>
             </div>
           </div>
@@ -705,4 +636,71 @@ export default function FeaturesSection() {
       </section>
     </>
   )
+}
+
+function LazyLoadedVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+    
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isInView && videoRef.current) {
+      videoRef.current.play().catch(err => {
+        console.log('Auto-play was prevented:', err);
+      });
+    } else if (!isInView && videoRef.current) {
+      videoRef.current.pause();
+    }
+  }, [isInView]);
+
+  return (
+    <>
+      <video 
+        ref={videoRef}
+        className="w-full h-full object-cover"
+        loop 
+        muted 
+        playsInline
+        poster="/data-visualization-poster.png"
+      >
+        <source src="/videos/data-visualization-demo.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      
+      {/* Optional play/pause button overlay */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+        <button 
+          className="bg-black/50 text-white rounded-full p-4 hover:bg-black/70"
+          onClick={(e) => {
+            if (videoRef.current) {
+              videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
+            }
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      </div>
+    </>
+  );
 }
