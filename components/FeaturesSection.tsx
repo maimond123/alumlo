@@ -353,14 +353,15 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Part 2: Visualizations - EVEN BIGGER */}
+          {/* Part 2: Visualizations - FIXED FORMATTING */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-40">
             <div className="order-2 lg:order-1 w-full -mx-4 lg:-mx-16 lg:-ml-24 lg:-mr-8">
-              <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[600px]">
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[600px] flex items-center justify-center">
                 <img 
                   src="/data-visualization-poster.png" 
                   alt="Alumni data visualization dashboard" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto max-h-full object-contain"
+                  style={{ maxWidth: '100%' }}
                 />
               </div>
             </div>
