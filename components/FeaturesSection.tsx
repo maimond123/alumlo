@@ -153,11 +153,10 @@ export default function FeaturesSection() {
             {/* Data Collection Animation - BIGGER */}
             <div className="order-1 lg:order-2 w-full -mx-4 lg:mx-0 lg:-mr-16">
               <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[500px]">
-                {/* Content remains the same but container is larger */}
-                <div className="relative h-full overflow-hidden rounded-lg bg-white border border-black">
+                <div className="relative h-full overflow-hidden rounded-lg bg-white">
                   {/* Data table with scrolling effect */}
                   <div className="absolute inset-0 overflow-hidden">
-                    <div className="animate-dataScroll" style={{ animationDuration: '30s' }}>
+                    <div className="animate-dataScroll">
                       {/* Table header */}
                       <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
                         <div>Name</div>
@@ -167,21 +166,159 @@ export default function FeaturesSection() {
                         <div>Location</div>
                       </div>
                       
-                      {/* Table rows - will be scrolling */}
-                      {[...Array(40)].map((_, i) => (
-                        <div 
-                          key={i}
-                          className={`px-4 py-3 grid grid-cols-5 gap-2 text-sm border-b border-gray-200 ${
-                            i % 7 === 3 ? 'bg-emerald-50' : 'bg-white'
-                          } transition-colors duration-300 hover:bg-emerald-50`}
-                        >
-                          <div className="font-medium">Alumni {i + 1}</div>
-                          <div>{2010 + (i % 12)}</div>
-                          <div>{['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Tesla', 'Adobe', 'Salesforce', 'IBM'][i % 10]}</div>
-                          <div>{['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'Marketing Manager', 'Financial Analyst', 'HR Specialist'][i % 7]}</div>
-                          <div>{['San Francisco', 'New York', 'Seattle', 'Boston', 'Austin', 'Chicago', 'Los Angeles', 'Denver'][i % 8]}</div>
+                      {/* Table rows - duplicated to ensure continuous scrolling */}
+                      <div className="divide-y divide-gray-200">
+                        {/* First set of rows */}
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 1</div>
+                          <div>2010</div>
+                          <div>Google</div>
+                          <div>Software Engineer</div>
+                          <div>Mountain View, CA</div>
                         </div>
-                      ))}
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 2</div>
+                          <div>2015</div>
+                          <div>Microsoft</div>
+                          <div>Product Manager</div>
+                          <div>Seattle, WA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 3</div>
+                          <div>2018</div>
+                          <div>Apple</div>
+                          <div>UX Designer</div>
+                          <div>Cupertino, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 4</div>
+                          <div>2012</div>
+                          <div>Amazon</div>
+                          <div>Data Scientist</div>
+                          <div>Seattle, WA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 5</div>
+                          <div>2019</div>
+                          <div>Facebook</div>
+                          <div>Software Engineer</div>
+                          <div>Menlo Park, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 6</div>
+                          <div>2017</div>
+                          <div>Netflix</div>
+                          <div>Content Strategist</div>
+                          <div>Los Angeles, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 7</div>
+                          <div>2014</div>
+                          <div>Twitter</div>
+                          <div>Marketing Manager</div>
+                          <div>San Francisco, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 8</div>
+                          <div>2016</div>
+                          <div>LinkedIn</div>
+                          <div>HR Specialist</div>
+                          <div>Sunnyvale, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 9</div>
+                          <div>2020</div>
+                          <div>Airbnb</div>
+                          <div>Product Designer</div>
+                          <div>San Francisco, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 10</div>
+                          <div>2013</div>
+                          <div>Uber</div>
+                          <div>Operations Manager</div>
+                          <div>Chicago, IL</div>
+                        </div>
+                        
+                        {/* Second set of rows (duplicate) to ensure continuous scrolling */}
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 11</div>
+                          <div>2011</div>
+                          <div>Salesforce</div>
+                          <div>Account Executive</div>
+                          <div>New York, NY</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 12</div>
+                          <div>2019</div>
+                          <div>Adobe</div>
+                          <div>Software Developer</div>
+                          <div>San Jose, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 13</div>
+                          <div>2015</div>
+                          <div>Oracle</div>
+                          <div>Database Administrator</div>
+                          <div>Austin, TX</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 14</div>
+                          <div>2017</div>
+                          <div>Apple</div>
+                          <div>HR Specialist</div>
+                          <div>Chicago, IL</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 15</div>
+                          <div>2012</div>
+                          <div>Meta</div>
+                          <div>Software Engineer</div>
+                          <div>Los Angeles, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 16</div>
+                          <div>2013</div>
+                          <div>Netflix</div>
+                          <div>Product Manager</div>
+                          <div>Denver, CO</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 17</div>
+                          <div>2014</div>
+                          <div>Tesla</div>
+                          <div>Data Scientist</div>
+                          <div>San Francisco, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 18</div>
+                          <div>2015</div>
+                          <div>Adobe</div>
+                          <div>UX Designer</div>
+                          <div>New York, NY</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 19</div>
+                          <div>2016</div>
+                          <div>Salesforce</div>
+                          <div>Marketing Manager</div>
+                          <div>Seattle, WA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 20</div>
+                          <div>2017</div>
+                          <div>IBM</div>
+                          <div>Financial Analyst</div>
+                          <div>Boston, MA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 21</div>
+                          <div>2018</div>
+                          <div>Google</div>
+                          <div>HR Specialist</div>
+                          <div>Austin, TX</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -191,26 +328,26 @@ export default function FeaturesSection() {
                     <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile1">
                       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                         <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                          <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold">
+                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
                             JD
                           </div>
                         </div>
                         <div>
-                          <h3 className="font-bold text-lg text-emerald-800">Jane Doe</h3>
+                          <h3 className="font-bold text-lg text-emerald-800">James Davis</h3>
                           <p className="text-emerald-600 mb-2">Class of 2015</p>
                           <div className="space-y-1 text-sm">
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                               </svg>
-                              <span>Senior Product Manager at Google</span>
+                              <span>Senior Engineer at Google</span>
                             </div>
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              <span>San Francisco, CA</span>
+                              <span>Mountain View, CA</span>
                             </div>
                           </div>
                         </div>
@@ -221,19 +358,19 @@ export default function FeaturesSection() {
                     <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile2">
                       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                         <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-                            MS
+                          <div className="w-full h-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white text-2xl font-bold">
+                            SW
                           </div>
                         </div>
                         <div>
-                          <h3 className="font-bold text-lg text-emerald-800">Michael Smith</h3>
+                          <h3 className="font-bold text-lg text-emerald-800">Sarah Wilson</h3>
                           <p className="text-emerald-600 mb-2">Class of 2018</p>
                           <div className="space-y-1 text-sm">
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                               </svg>
-                              <span>Software Engineer at Microsoft</span>
+                              <span>Product Manager at Microsoft</span>
                             </div>
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -670,3 +807,41 @@ function LazyLoadedVideo() {
     </>
   );
 }
+
+<style jsx>{`
+  @keyframes dataScroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(calc(-50% - 1px)); }
+  }
+  
+  @keyframes profile1 {
+    0%, 25%, 100% { opacity: 0; }
+    5%, 20% { opacity: 1; }
+  }
+  
+  @keyframes profile2 {
+    0%, 58.33%, 100% { opacity: 0; }
+    38.33%, 53.33% { opacity: 1; }
+  }
+  
+  @keyframes profile3 {
+    0%, 91.66%, 100% { opacity: 0; }
+    71.66%, 86.66% { opacity: 1; }
+  }
+  
+  .animate-dataScroll {
+    animation: dataScroll 30s linear infinite;
+  }
+  
+  .animate-profile1 {
+    animation: profile1 30s linear infinite;
+  }
+  
+  .animate-profile2 {
+    animation: profile2 30s linear infinite;
+  }
+  
+  .animate-profile3 {
+    animation: profile3 30s linear infinite;
+  }
+`}</style>
