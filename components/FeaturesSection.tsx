@@ -353,10 +353,10 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Part 2: Visualizations - BIGGER */}
+          {/* Part 2: Visualizations - EVEN BIGGER */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-40">
-            <div className="order-2 lg:order-1 w-full -mx-4 lg:mx-0 lg:-mr-16">
-              <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[500px]">
+            <div className="order-2 lg:order-1 w-full -mx-4 lg:-mx-16 lg:-ml-24 lg:-mr-8">
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[600px]">
                 <img 
                   src="/data-visualization-poster.png" 
                   alt="Alumni data visualization dashboard" 
