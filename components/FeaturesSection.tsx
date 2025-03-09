@@ -150,13 +150,13 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Data Collection Animation - BIGGER */}
+            {/* Data Collection Animation - FIXED SCROLLING */}
             <div className="order-1 lg:order-2 w-full -mx-4 lg:mx-0 lg:-mr-16">
               <div className="bg-white rounded-xl shadow-xl overflow-hidden h-[500px]">
                 <div className="relative h-full overflow-hidden rounded-lg bg-white">
                   {/* Data table with scrolling effect */}
                   <div className="absolute inset-0 overflow-hidden">
-                    <div className="animate-dataScroll" style={{ willChange: 'transform' }}>
+                    <div className="scrolling-content">
                       {/* Table header */}
                       <div className="sticky top-0 bg-emerald-100 border-b border-gray-300 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
                         <div>Name</div>
@@ -166,9 +166,8 @@ export default function FeaturesSection() {
                         <div>Location</div>
                       </div>
                       
-                      {/* Table rows - duplicated to ensure continuous scrolling */}
+                      {/* Table rows */}
                       <div className="divide-y divide-gray-200">
-                        {/* First set of rows */}
                         <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
                           <div>Alumni 1</div>
                           <div>2010</div>
@@ -240,17 +239,41 @@ export default function FeaturesSection() {
                           <div>Chicago, IL</div>
                         </div>
                         
-                        {/* Duplicate the entire set of rows to ensure continuous scrolling */}
-                        <div className="divide-y divide-gray-200">
-                          {/* Duplicate of first set of rows */}
-                          <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
-                            <div>Alumni 1</div>
-                            <div>2010</div>
-                            <div>Google</div>
-                            <div>Software Engineer</div>
-                            <div>Mountain View, CA</div>
-                          </div>
-                          {/* ... duplicate all rows ... */}
+                        {/* Duplicate rows for continuous scrolling */}
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 11</div>
+                          <div>2011</div>
+                          <div>Salesforce</div>
+                          <div>Account Executive</div>
+                          <div>New York, NY</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 12</div>
+                          <div>2019</div>
+                          <div>Adobe</div>
+                          <div>Software Developer</div>
+                          <div>San Jose, CA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 13</div>
+                          <div>2015</div>
+                          <div>Oracle</div>
+                          <div>Database Administrator</div>
+                          <div>Austin, TX</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 14</div>
+                          <div>2017</div>
+                          <div>IBM</div>
+                          <div>Business Analyst</div>
+                          <div>Boston, MA</div>
+                        </div>
+                        <div className="px-4 py-3 grid grid-cols-5 gap-2 text-sm hover:bg-gray-50">
+                          <div>Alumni 15</div>
+                          <div>2012</div>
+                          <div>Meta</div>
+                          <div>Software Engineer</div>
+                          <div>Los Angeles</div>
                         </div>
                       </div>
                     </div>
@@ -259,7 +282,7 @@ export default function FeaturesSection() {
                   {/* Profile highlights that appear periodically */}
                   <div className="absolute inset-0 pointer-events-none">
                     {/* Profile 1 */}
-                    <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile1">
+                    <div className="profile-card profile-1">
                       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                         <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                           <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -274,7 +297,7 @@ export default function FeaturesSection() {
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                               </svg>
-                              <span>Senior Engineer at Google</span>
+                              <span>Software Engineer at Google</span>
                             </div>
                             <div className="flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -289,7 +312,7 @@ export default function FeaturesSection() {
                     </div>
                     
                     {/* Profile 2 */}
-                    <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile2">
+                    <div className="profile-card profile-2">
                       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                         <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                           <div className="w-full h-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -319,7 +342,7 @@ export default function FeaturesSection() {
                     </div>
                     
                     {/* Profile 3 */}
-                    <div className="absolute inset-0 bg-white/90 flex items-center justify-center opacity-0 animate-profile3">
+                    <div className="profile-card profile-3">
                       <div className="bg-white rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200">
                         <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
                           <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
@@ -676,109 +699,54 @@ export default function FeaturesSection() {
   )
 }
 
-function LazyLoadedVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-    
-    if (videoRef.current) {
-      observer.observe(videoRef.current);
-    }
-    
-    return () => {
-      if (videoRef.current) {
-        observer.unobserve(videoRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isInView && videoRef.current) {
-      videoRef.current.play().catch(err => {
-        console.log('Auto-play was prevented:', err);
-      });
-    } else if (!isInView && videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [isInView]);
-
-  return (
-    <>
-      <video 
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        loop 
-        muted 
-        playsInline
-        poster="/data-visualization-poster.png"
-      >
-        <source src="/videos/data-video.mov" type="video/quicktime" />
-        Your browser does not support the video tag.
-      </video>
-      
-      {/* Optional play/pause button overlay */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-        <button 
-          className="bg-black/50 text-white rounded-full p-4 hover:bg-black/70"
-          onClick={(e) => {
-            if (videoRef.current) {
-              videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
-            }
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </button>
-      </div>
-    </>
-  );
-}
-
 <style jsx global>{`
-  @keyframes dataScroll {
+  /* Scrolling animation for data table */
+  @keyframes scroll {
     0% { transform: translateY(0); }
     100% { transform: translateY(-50%); }
   }
   
-  @keyframes profile1 {
+  .scrolling-content {
+    animation: scroll 30s linear infinite;
+    padding-bottom: 100%; /* Create enough space for scrolling */
+  }
+  
+  /* Profile card animations */
+  .profile-card {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    pointer-events: none;
+  }
+  
+  .profile-1 {
+    animation: showProfile1 30s linear infinite;
+  }
+  
+  .profile-2 {
+    animation: showProfile2 30s linear infinite;
+  }
+  
+  .profile-3 {
+    animation: showProfile3 30s linear infinite;
+  }
+  
+  @keyframes showProfile1 {
     0%, 25%, 100% { opacity: 0; }
     5%, 20% { opacity: 1; }
   }
   
-  @keyframes profile2 {
+  @keyframes showProfile2 {
     0%, 58.33%, 100% { opacity: 0; }
     38.33%, 53.33% { opacity: 1; }
   }
   
-  @keyframes profile3 {
+  @keyframes showProfile3 {
     0%, 91.66%, 100% { opacity: 0; }
     71.66%, 86.66% { opacity: 1; }
-  }
-  
-  .animate-dataScroll {
-    animation: dataScroll 30s linear infinite;
-    display: inline-block;
-    width: 100%;
-  }
-  
-  .animate-profile1 {
-    animation: profile1 30s linear infinite;
-  }
-  
-  .animate-profile2 {
-    animation: profile2 30s linear infinite;
-  }
-  
-  .animate-profile3 {
-    animation: profile3 30s linear infinite;
   }
 `}</style>
