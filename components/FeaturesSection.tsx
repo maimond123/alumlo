@@ -352,7 +352,7 @@ export default function FeaturesSection() {
               <img 
                 src="/use.png" 
                 alt="Data visualization dashboard" 
-                className="w-full h-auto max-h-[750px] shadow-lg rounded-lg"
+                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
               />
             </div>
           </div>
