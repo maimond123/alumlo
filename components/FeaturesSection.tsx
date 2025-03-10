@@ -352,7 +352,7 @@ export default function FeaturesSection() {
               <img 
                 src="/try.png" 
                 alt="Data visualization dashboard" 
-                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
+                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg border border-black"
               />
             </div>
           </div>
@@ -391,7 +391,7 @@ export default function FeaturesSection() {
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
-                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
+                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg border border-black"
               />
             </div>
           </div>
