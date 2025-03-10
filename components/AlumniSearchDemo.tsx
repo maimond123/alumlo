@@ -120,7 +120,6 @@ export default function AlumniSearchDemo() {
 
   // Search limit tracking
   const [searchCount, setSearchCount] = useState(0)
-  const [showSignupPrompt, setShowSignupPrompt] = useState(false)
   
   // Randomize tags on component mount
   useEffect(() => {
@@ -140,24 +139,20 @@ export default function AlumniSearchDemo() {
   // Update localStorage when searchCount changes
   useEffect(() => {
     localStorage.setItem('alumSearchCount', searchCount.toString())
-    
-    // Show signup prompt when search count reaches 3
-    if (searchCount >= 3) {
-      setShowSignupPrompt(true)
-    }
   }, [searchCount])
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
     
     // Check if user has reached the search limit
-    if (searchCount >= 3) {
-      setShowSignupPrompt(true)
-      return
+    if (searchCount >= 5) {
+      // Redirect to signup page when trying to search past the limit
+      window.location.href = '/signup';
+      return;
     }
     
     // Increment search count
-    setSearchCount(prevCount => prevCount + 1)
+    setSearchCount(prevCount => prevCount + 1);
     
     // Store the current query to ensure consistency
     const currentQuery = searchQuery.trim();
@@ -247,33 +242,20 @@ export default function AlumniSearchDemo() {
 
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
   
-  // Reset search count
-  const resetSearchCount = () => {
-    setSearchCount(0)
-    localStorage.setItem('alumSearchCount', '0')
-    setShowSignupPrompt(false)
-  }
-
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
       
-      {/* Search Limit Indicator */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="text-sm text-gray-500">
-          {searchCount < 3 ? (
-            <>Search limit: {searchCount}/3 free searches</>
+      {/* Search Limit Indicator - Made larger and reset button removed */}
+      <div className="mb-4">
+        <div className="text-base font-medium text-gray-700">
+          {searchCount < 5 ? (
+            <>Search limit: {searchCount}/5 free searches</>
           ) : (
-            <span className="text-emerald-600">Search limit reached</span>
+            <span className="text-emerald-600">Search limit reached. <Link href="/signup" className="underline hover:text-emerald-700">Sign up</Link> for unlimited searches.</span>
           )}
         </div>
-        <button
-          onClick={resetSearchCount}
-          className="text-xs text-gray-500 hover:text-gray-700 underline"
-        >
-          Reset
-        </button>
       </div>
       
       {/* Search Input */}
@@ -324,30 +306,21 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
 
-      {/* Sign Up Prompt Modal */}
-      {showSignupPrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-black mb-4">Search Limit Reached</h2>
-            <p className="text-gray-700 mb-6">
-              You've used all 3 free searches. Sign up now to unlock unlimited alumni searches and 
-              gain full access to our platform's powerful features.
-            </p>
-            <div className="flex flex-col space-y-3">
-              <Link 
-                href="/signup"
-                className="w-full py-3 text-center bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                Sign Up Now
-              </Link>
-              <button 
-                onClick={() => setShowSignupPrompt(false)}
-                className="w-full py-3 text-center bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Maybe Later
-              </button>
-            </div>
-          </div>
+      {/* Remove Sign Up Prompt Modal completely */}
+
+      {/* Search Limit Reached Message - Display this instead of results when limit is reached */}
+      {!isSearching && searchCount >= 5 && searchPhase === 'idle' && (
+        <div className="w-full p-6 bg-emerald-50 rounded-lg border border-emerald-200 mb-10">
+          <h3 className="text-xl font-semibold text-emerald-800 mb-3">Ready to unlock full access?</h3>
+          <p className="text-gray-700 mb-4">
+            You've used all your free searches. Sign up now to get unlimited searches and access to all alumni data.
+          </p>
+          <Link 
+            href="/signup"
+            className="inline-block px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Sign Up Now
+          </Link>
         </div>
       )}
 
