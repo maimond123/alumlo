@@ -66,7 +66,7 @@ export default function FeaturesSection() {
       {/* Feature 1: Search */}
       <section 
         ref={searchRef}
-        className="py-32 bg-white min-h-[800px]">
+        className="py-32 bg-white min-h-[800px] border-t border-b border-black border-[0.5px]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
