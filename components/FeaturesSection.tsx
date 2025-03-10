@@ -350,7 +350,7 @@ export default function FeaturesSection() {
             {/* Visualization Demo with Static Image */}
             <div className="order-2 lg:order-1">
               <img 
-                src="/use.png" 
+                src="/try.png" 
                 alt="Data visualization dashboard" 
                 className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
               />
