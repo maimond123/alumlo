@@ -386,67 +386,13 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* AI Insights Chatbot Demo - Placeholder for screen recording */}
-            <div className="order-1 lg:order-2 bg-white rounded-xl p-4 shadow-lg">
-              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-emerald-200">
-                {/* This would be replaced with your actual video of chatbot functionality */}
-                <div className="w-full h-full bg-white p-4 flex flex-col">
-                  <div className="bg-emerald-50 rounded-lg p-3 mb-3 max-w-[80%]">
-                    <p className="text-sm text-emerald-800">What trends do you see in alumni career paths?</p>
-                  </div>
-                  
-                  <div className="bg-emerald-100 rounded-lg p-3 mb-3 max-w-[80%] ml-auto">
-                    <p className="text-sm text-emerald-800">Based on the data, I'm seeing three key trends:</p>
-                    <ol className="text-sm text-emerald-700 mt-2 pl-5 list-decimal">
-                      <li>42% of alumni transition to management roles within 5 years</li>
-                      <li>Tech industry employment has grown 23% in the last 2 years</li>
-                      <li>Alumni who work abroad for 2+ years see 35% higher salary growth</li>
-                    </ol>
-                  </div>
-                  
-                  <div className="bg-emerald-50 rounded-lg p-3 mb-3 max-w-[80%]">
-                    <p className="text-sm text-emerald-800">Which companies are hiring the most alumni?</p>
-                  </div>
-                  
-                  <div className="bg-emerald-100 rounded-lg p-3 max-w-[80%] ml-auto">
-                    <p className="text-sm text-emerald-800">The top hiring companies for your alumni are:</p>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '85%'}}></div>
-                        </div>
-                        <span className="ml-2 text-xs">Google (42)</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '70%'}}></div>
-                        </div>
-                        <span className="ml-2 text-xs">Microsoft (38)</span>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-emerald-600 h-2.5 rounded-full" style={{width: '60%'}}></div>
-                        </div>
-                        <span className="ml-2 text-xs">Amazon (29)</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Typing indicator */}
-                  <div className="mt-auto">
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="bg-gray-100 rounded-full px-4 py-2 flex items-center">
-                        <input type="text" placeholder="Ask about your alumni data..." className="bg-transparent border-none w-full focus:outline-none text-sm" />
-                        <button className="ml-2 p-1 rounded-full bg-emerald-500 text-white">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* AI Insights Image */}
+            <div className="order-1 lg:order-2">
+              <img 
+                src="/2.png" 
+                alt="AI insights dashboard" 
+                className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
+              />
             </div>
           </div>
         </div>
