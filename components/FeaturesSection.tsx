@@ -401,7 +401,7 @@ export default function FeaturesSection() {
       {/* Feature 3: Reports */}
       <section 
         ref={reportsRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
           reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
