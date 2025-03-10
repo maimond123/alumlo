@@ -5,6 +5,7 @@ import { Search, Loader2 } from "lucide-react"
 import { supabase } from "../app/data/supabase"
 import { getUserEmail } from "../app/utils/auth"
 import { useSchool } from "../app/contexts/SchoolContext"
+import Link from "next/link"
 
 interface SearchResult {
   id: number;
@@ -117,6 +118,10 @@ export default function AlumniSearchDemo() {
     }
   `;
 
+  // Search limit tracking
+  const [searchCount, setSearchCount] = useState(0)
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false)
+  
   // Randomize tags on component mount
   useEffect(() => {
     // Shuffle the tags array
@@ -124,8 +129,35 @@ export default function AlumniSearchDemo() {
     setRandomizedTags(shuffled);
   }, []);
 
+  // Load the search count from localStorage on component mount
+  useEffect(() => {
+    const storedCount = localStorage.getItem('alumSearchCount')
+    if (storedCount) {
+      setSearchCount(parseInt(storedCount, 10))
+    }
+  }, [])
+
+  // Update localStorage when searchCount changes
+  useEffect(() => {
+    localStorage.setItem('alumSearchCount', searchCount.toString())
+    
+    // Show signup prompt when search count reaches 3
+    if (searchCount >= 3) {
+      setShowSignupPrompt(true)
+    }
+  }, [searchCount])
+
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
+    
+    // Check if user has reached the search limit
+    if (searchCount >= 3) {
+      setShowSignupPrompt(true)
+      return
+    }
+    
+    // Increment search count
+    setSearchCount(prevCount => prevCount + 1)
     
     // Store the current query to ensure consistency
     const currentQuery = searchQuery.trim();
@@ -214,11 +246,35 @@ export default function AlumniSearchDemo() {
   }, [])
 
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
+  
+  // Reset search count
+  const resetSearchCount = () => {
+    setSearchCount(0)
+    localStorage.setItem('alumSearchCount', '0')
+    setShowSignupPrompt(false)
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
+      
+      {/* Search Limit Indicator */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-sm text-gray-500">
+          {searchCount < 3 ? (
+            <>Search limit: {searchCount}/3 free searches</>
+          ) : (
+            <span className="text-emerald-600">Search limit reached</span>
+          )}
+        </div>
+        <button
+          onClick={resetSearchCount}
+          className="text-xs text-gray-500 hover:text-gray-700 underline"
+        >
+          Reset
+        </button>
+      </div>
       
       {/* Search Input */}
       <div className="relative mb-10">
@@ -267,6 +323,33 @@ export default function AlumniSearchDemo() {
           </button>
         </div>
       </div>
+
+      {/* Sign Up Prompt Modal */}
+      {showSignupPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-black mb-4">Search Limit Reached</h2>
+            <p className="text-gray-700 mb-6">
+              You've used all 3 free searches. Sign up now to unlock unlimited alumni searches and 
+              gain full access to our platform's powerful features.
+            </p>
+            <div className="flex flex-col space-y-3">
+              <Link 
+                href="/signup"
+                className="w-full py-3 text-center bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                Sign Up Now
+              </Link>
+              <button 
+                onClick={() => setShowSignupPrompt(false)}
+                className="w-full py-3 text-center bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Scrolling Suggestion Tags - Updated to match dashboard/page.tsx */}
       <div className="mb-14 mt-10">
