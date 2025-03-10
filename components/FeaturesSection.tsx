@@ -66,7 +66,7 @@ export default function FeaturesSection() {
       {/* Feature 1: Search */}
       <section 
         ref={searchRef}
-        className="py-32 bg-white min-h-[800px] border-t border-b border-black border-[0.5px]">
+        className="py-32 bg-white min-h-[800px]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
@@ -115,7 +115,7 @@ export default function FeaturesSection() {
       {/* Feature 2: Data Visualizations - Redesigned as 3 parts */}
       <section 
         ref={visualizationsRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
           visualizationsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
@@ -401,7 +401,7 @@ export default function FeaturesSection() {
       {/* Feature 3: Reports */}
       <section 
         ref={reportsRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
+        className={`py-24 bg-white transition-all duration-1000 ease-in-out ${
           reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
