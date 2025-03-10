@@ -389,7 +389,7 @@ export default function FeaturesSection() {
             {/* AI Insights Image */}
             <div className="order-1 lg:order-2">
               <img 
-                src="/2.png" 
+                src="/assets/2.png" 
                 alt="AI insights dashboard" 
                 className="w-full h-auto max-h-[900px] shadow-lg rounded-lg"
               />
