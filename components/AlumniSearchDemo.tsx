@@ -247,7 +247,7 @@ export default function AlumniSearchDemo() {
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
       
-      {/* Search Limit Indicator - Made larger and reset button removed */}
+      {/* Search Limit Indicator */}
       <div className="mb-4">
         <div className="text-base font-medium text-gray-700">
           {searchCount < 5 ? (
@@ -256,6 +256,13 @@ export default function AlumniSearchDemo() {
             <span className="text-emerald-600">Search limit reached. <Link href="/signup" className="underline hover:text-emerald-700">Sign up</Link> for unlimited searches.</span>
           )}
         </div>
+      </div>
+      
+      {/* Interactive Demo Indicator */}
+      <div className="text-center mb-3">
+        <span className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+          ✨ Interactive Demo - Type your query below ✨
+        </span>
       </div>
       
       {/* Search Input */}
@@ -524,3 +531,16 @@ export default function AlumniSearchDemo() {
     </div>
   )
 } 
+
+<style jsx>{`
+  @keyframes pulse-border {
+    0%, 100% { border-color: rgba(16, 185, 129, 0.4); }
+    50% { border-color: rgba(16, 185, 129, 0.8); }
+  }
+  .animate-pulse-border {
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+  .animate-bounce-slow {
+    animation: bounce 3s infinite;
+  }
+`}</style> 
