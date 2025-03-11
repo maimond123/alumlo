@@ -1,61 +1,57 @@
 'use client'
 
-import { useState } from "react";
 import { motion } from 'framer-motion'
-import { InlineWidget } from 'react-calendly'
 import Sidebar from '../../components/Sidebar'
 import Footer from '../../components/footer'
-import Navigation from "../../components/navigation";
 
-export default function Support() {
-  const [showCalendly, setShowCalendly] = useState(false);
-
+export default function SupportPage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 flex flex-col md:flex-row">
-        {/* Sidebar */}
-        <aside className="w-full md:w-1/4 bg-gray-100 p-4">
-          {/* Sidebar content */}
-        </aside>
+    <div className="flex min-h-screen bg-white">
+      <Sidebar />
+      <main className="flex-1 p-8 pt-20">
+        <div className="container mx-auto px-4 py-8 border border-black rounded-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full"
+          >
+            <header className="text-center mb-12">
+              <h1 className="text-4xl font-bold mb-3 text-black">How Can We Help?</h1>
+              <p className="text-xl text-gray-700">Our support team is here to assist you.</p>
+            </header>
 
-        {/* Main Content */}
-        <section className="flex-1 p-6">
-          <h1 className="text-3xl font-bold mb-4">How Can We Help?</h1>
-          <p className="mb-6">Our support team is here to assist you.</p>
+            <div className="flex flex-col gap-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gray-50 p-6 rounded-lg shadow-sm"
+              >
+                <h2 className="text-2xl font-semibold mb-6 text-black">Schedule a Call</h2>
+                <button
+                  onClick={() => window.open('https://calendly.com/your-calendly-link', '_blank')}
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                  Open Calendly
+                </button>
+              </motion.div>
 
-          {/* Schedule a Call Section */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Schedule a Call</h2>
-            <button
-              onClick={() => setShowCalendly(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Open Calendly
-            </button>
-          </div>
-
-          {/* Email Us Section */}
-          <div>
-            <h2 className="text-2xl font-semibold mb-2">Email Us</h2>
-            <p>For further assistance, please email us at support@example.com.</p>
-          </div>
-        </section>
-      </main>
-
-      {/* Calendly Modal */}
-      {showCalendly && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl">
-            <button onClick={() => setShowCalendly(false)} className="mb-4 text-black hover:text-gray-700">
-              Close
-            </button>
-            <InlineWidget url="https://calendly.com/your-calendly-link" />
-          </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gray-50 p-6 rounded-lg shadow-sm"
+              >
+                <h2 className="text-2xl font-semibold mb-6 text-black">Email Us</h2>
+                <p className="text-lg text-gray-700">
+                  For further assistance, please email us at <a href="mailto:david@alumintel.com" className="text-emerald-600">david@alumintel.com</a>.
+                </p>
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
-      )}
-
-      <Footer />
+      </main>
     </div>
   )
 }
