@@ -247,7 +247,7 @@ export default function AlumniSearchDemo() {
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
       
-      {/* Search Limit Indicator */}
+      {/* Search Limit Indicator - Made larger and reset button removed */}
       <div className="mb-4">
         <div className="text-base font-medium text-gray-700">
           {searchCount < 5 ? (
@@ -258,12 +258,6 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
       
-      {/* Interactive Demo Indicator */}
-      <div className="text-center mb-3">
-        <span className="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
-          ✨ Interactive Demo - Type your query below ✨
-        </span>
-      </div>
       
       {/* Search Input */}
       <div className="relative mb-10">
@@ -299,15 +293,13 @@ export default function AlumniSearchDemo() {
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+            className="w-10 h-10 flex items-center justify-center bg-black text-white rounded-lg hover:bg-emerald-600 transition-colors radiate-button"
             aria-label="Search"
           >
             {isSearching ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
+              <Search className="h-5 w-5" />
             )}
           </button>
         </div>
@@ -531,16 +523,3 @@ export default function AlumniSearchDemo() {
     </div>
   )
 } 
-
-<style jsx>{`
-  @keyframes pulse-border {
-    0%, 100% { border-color: rgba(16, 185, 129, 0.4); }
-    50% { border-color: rgba(16, 185, 129, 0.8); }
-  }
-  .animate-pulse-border {
-    animation: pulse-border 2s ease-in-out infinite;
-  }
-  .animate-bounce-slow {
-    animation: bounce 3s infinite;
-  }
-`}</style> 

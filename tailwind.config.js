@@ -20,11 +20,17 @@ module.exports = {
       },
       animation: {
         'blink': 'blink 1s step-start infinite',
+        'radiate-emerald': 'radiate-emerald 3s infinite',
       },
       keyframes: {
         blink: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0' },
+        },
+        'radiate-emerald': {
+          '0%': { backgroundColor: 'black', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)' },
+          '50%': { backgroundColor: 'rgb(16, 185, 129)', boxShadow: '0 0 0 10px rgba(16, 185, 129, 0)' },
+          '100%': { backgroundColor: 'black', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
         },
       }, 
     },
