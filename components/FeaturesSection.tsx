@@ -36,7 +36,7 @@ export default function FeaturesSection() {
   // Typewriter animation state
   const [typedText, setTypedText] = useState('')
   const [isTypingComplete, setIsTypingComplete] = useState(false)
-  const fullText = "Search your alumni network using natural language. No complex filters needed. Try Below"
+  const fullText = "Search your alumni network using natural language. No complex filters needed."
   
   useEffect(() => {
     if (searchInView && typedText.length < fullText.length) {
@@ -73,15 +73,7 @@ export default function FeaturesSection() {
               Alumni Access, Reimagined with Search
             </h2>
             <p className="text-xl md:text-2xl text-black max-w-3xl mx-auto h-16 flex items-center justify-center">
-              {/* Split the text to apply different styling */}
-              <span>
-                {typedText.substring(0, "Search your alumni network using natural language. No complex filters needed.".length)}
-              </span>
-              {typedText.length > "Search your alumni network using natural language. No complex filters needed.".length && (
-                <span className="text-emerald-600 ml-1">
-                  {typedText.substring("Search your alumni network using natural language. No complex filters needed.".length)}
-                </span>
-              )}
+              {typedText}
               {!isTypingComplete && (
                 <span className="ml-1 inline-block w-0.5 h-6 bg-emerald-700 animate-blink"></span>
               )}
