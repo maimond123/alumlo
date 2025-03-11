@@ -46,6 +46,9 @@ function ReportsContent() {
   const [recommendations, setRecommendations] = useState<string>('');
   const [isLoadingExplanations, setIsLoadingExplanations] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [option1Enabled, setOption1Enabled] = useState(false)
+  const [option2Enabled, setOption2Enabled] = useState(false)
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -885,90 +888,174 @@ function ReportsContent() {
 
           <div className="flex gap-6 h-[calc(100vh-12rem)]">
             {/* Left Column - Checkboxes and Year Selection */}
-            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Select Data Points ({selectedOptions.length}/{reportOptions.length})
-              </h2>
-              <div className="space-y-4">
-                {reportOptions.map((option) => (
-                  <div key={option.id} className="flex items-center">
-                    <button
-                      className={`w-6 h-6 rounded ${
-                        selectedOptions.includes(option.id)
-                          ? "bg-emerald-500 text-white"
-                          : "bg-white border border-gray-300 hover:border-emerald-500"
-                      } mr-3 flex items-center justify-center transition-colors`}
-                      onClick={() => toggleOption(option.id)}
-                    >
-                      {selectedOptions.includes(option.id) && <Check className="w-4 h-4" />}
-                    </button>
-                    <label
-                      htmlFor={option.id}
-                      className="text-gray-700 cursor-pointer flex-grow"
-                      onClick={() => toggleOption(option.id)}
-                    >
-                      {option.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-
-              <h2 className="text-xl font-semibold mb-4 mt-8">Select Class Years</h2>
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  value={yearInput}
-                  onChange={(e) => handleYearInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (years.includes(yearInput) && !selectedYears.includes(yearInput)) {
-                        selectYear(yearInput)
-                      }
-                    }
-                  }}
-                  placeholder="Search years..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                {suggestedYears.length > 0 && (
-                  <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-auto">
-                    {suggestedYears.map((year, index) => (
-                      <li
-                        key={index}
-                        onClick={() => selectYear(year)}
-                        className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                          year === "Select All Years"
-                            ? "font-semibold text-emerald-600 border-b border-gray-200"
-                            : year === "Clear"
-                              ? "font-semibold text-red-600 border-b border-gray-200"
-                              : year === "Select by Decade" || year === "Select by Year"
-                                ? "font-semibold text-blue-600 border-b border-gray-200"
-                                : ""
-                        }`}
-                      >
-                        {year}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="mb-4 border border-gray-200 rounded-lg p-2">
-                <div className="h-20 overflow-y-auto">
-                  <div className="grid grid-cols-5 gap-1">
-                    {selectedYears.map((year) => (
-                      <div
-                        key={year}
-                        className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md flex items-center justify-between text-sm"
-                      >
-                        <span className="truncate">{year}</span>
-                        <button
-                          onClick={() => removeYear(year)}
-                          className="ml-1 text-emerald-600 hover:text-emerald-800 flex-shrink-0"
+            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md overflow-y-auto">
+              {/* Step 1: Select Data Points */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">
+                  Step 1: Select Data Points ({selectedOptions.length}/{reportOptions.length})
+                </h2>
+                
+                {/* Dropdown for selecting data points */}
+                <div className="relative mb-4">
+                  <button 
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-left flex justify-between items-center"
+                  >
+                    <span>{selectedOptions.length > 0 ? `${selectedOptions.length} options selected` : "Select data points..."}</span>
+                    <svg className={`w-5 h-5 transition-transform ${isDropdownOpen ? "transform rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  {isDropdownOpen && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-auto">
+                      {reportOptions.map((option) => (
+                        <li 
+                          key={option.id}
+                          onClick={() => {
+                            toggleOption(option.id)
+                            // Uncomment next line if you want dropdown to stay open after selection
+                            // setIsDropdownOpen(true)
+                          }}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
                         >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ))}
+                          <div className={`w-5 h-5 rounded mr-3 flex items-center justify-center transition-colors ${
+                            selectedOptions.includes(option.id) 
+                              ? "bg-emerald-500 text-white" 
+                              : "bg-white border border-gray-300"
+                          }`}>
+                            {selectedOptions.includes(option.id) && <Check className="w-3 h-3" />}
+                          </div>
+                          <span>{option.label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                
+                {/* Selected options as tags */}
+                <div className="mb-4 border border-gray-200 rounded-lg p-2">
+                  <div className="h-20 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-1">
+                      {selectedOptions.map((optionId) => {
+                        const option = reportOptions.find(o => o.id === optionId);
+                        return (
+                          <div
+                            key={optionId}
+                            className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md flex items-center justify-between text-sm"
+                          >
+                            <span className="truncate">{option?.label || optionId}</span>
+                            <button
+                              onClick={() => toggleOption(optionId)}
+                              className="ml-1 text-emerald-600 hover:text-emerald-800 flex-shrink-0"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Step 2: Select Class Years (Keep existing year selection) */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Step 2: Select Class Years</h2>
+                <div className="relative mb-4">
+                  <input
+                    type="text"
+                    value={yearInput}
+                    onChange={(e) => handleYearInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        if (years.includes(yearInput) && !selectedYears.includes(yearInput)) {
+                          selectYear(yearInput)
+                        }
+                      }
+                    }}
+                    placeholder="Search years..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  {suggestedYears.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-auto">
+                      {suggestedYears.map((year, index) => (
+                        <li
+                          key={index}
+                          onClick={() => selectYear(year)}
+                          className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
+                            year === "Select All Years"
+                              ? "font-semibold text-emerald-600 border-b border-gray-200"
+                              : year === "Clear"
+                                ? "font-semibold text-red-600 border-b border-gray-200"
+                                : year === "Select by Decade" || year === "Select by Year"
+                                  ? "font-semibold text-blue-600 border-b border-gray-200"
+                                  : ""
+                          }`}
+                        >
+                          {year}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="mb-4 border border-gray-200 rounded-lg p-2">
+                  <div className="h-20 overflow-y-auto">
+                    <div className="grid grid-cols-5 gap-1">
+                      {selectedYears.map((year) => (
+                        <div
+                          key={year}
+                          className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-md flex items-center justify-between text-sm"
+                        >
+                          <span className="truncate">{year}</span>
+                          <button
+                            onClick={() => removeYear(year)}
+                            className="ml-1 text-emerald-600 hover:text-emerald-800 flex-shrink-0"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Step 3: Additional Options */}
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Step 3: Additional Options</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-700">Option 1</span>
+                    <button 
+                      onClick={() => setOption1Enabled(!option1Enabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        option1Enabled ? "bg-emerald-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          option1Enabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-700">Option 2</span>
+                    <button 
+                      onClick={() => setOption2Enabled(!option2Enabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        option2Enabled ? "bg-emerald-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span 
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          option2Enabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>

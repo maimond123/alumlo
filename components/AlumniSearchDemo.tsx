@@ -258,7 +258,6 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
       
-      
       {/* Search Input */}
       <div className="relative mb-10">
         <input
@@ -293,13 +292,15 @@ export default function AlumniSearchDemo() {
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="w-10 h-10 flex items-center justify-center bg-black text-white rounded-lg hover:bg-emerald-600 transition-colors radiate-button"
+            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
             aria-label="Search"
           >
             {isSearching ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Search className="h-5 w-5" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
             )}
           </button>
         </div>
