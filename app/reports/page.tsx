@@ -250,7 +250,11 @@ function ReportsContent() {
     console.log("Total pages:", totalPages);
     
     if (!generatedReport) {
-      console.log("No report generated yet, returning early");
+      console.log("No report generated yet, showing error modal");
+      setErrorMessage(
+        "Please generate a report first before downloading. Select your data points and class years, then click the 'Generate Report' button."
+      );
+      setShowErrorModal(true);
       return;
     }
 
@@ -851,6 +855,37 @@ function ReportsContent() {
     console.log('Report cleared');
   };
 
+  // Add toggle handlers for the Step 3 options
+  const toggleOption1 = () => {
+    // Check if there are at least 2 class years selected
+    if (selectedYears.length < 2) {
+      setErrorMessage(
+        "You need to select at least 2 class years to use the Cross Year Comparison feature. Please add more class years first."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+    
+    // If we have enough years, toggle the option
+    setOption1Enabled(true);
+    setOption2Enabled(false);
+  };
+
+  const toggleOption2 = () => {
+    // Check if there are at least 2 class years selected
+    if (selectedYears.length < 2) {
+      setErrorMessage(
+        "You need to select at least 2 class years to use the Year-by-Year Analysis feature. Please add more class years first."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+    
+    // If we have enough years, toggle the option
+    setOption2Enabled(true);
+    setOption1Enabled(false);
+  };
+
   const ReportContent = () => {
     return (
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
@@ -1336,10 +1371,7 @@ function ReportsContent() {
                       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
                     </div>
                     <button 
-                      onClick={() => {
-                        setOption1Enabled(true);
-                        setOption2Enabled(false);
-                      }}
+                      onClick={toggleOption1}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         option1Enabled ? "bg-emerald-500" : "bg-gray-300"
                       }`}
@@ -1359,10 +1391,7 @@ function ReportsContent() {
                       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
                     </div>
                     <button 
-                      onClick={() => {
-                        setOption2Enabled(true);
-                        setOption1Enabled(false);
-                      }}
+                      onClick={toggleOption2}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         option2Enabled ? "bg-emerald-500" : "bg-gray-300"
                       }`}
@@ -1377,8 +1406,8 @@ function ReportsContent() {
                 </div>
               </div>
 
-              {/* Add margin-top to create space between Step 3 container and buttons */}
-              <div className="flex flex-col space-y-4 mt-6">
+              {/* Add more margin-top to create additional space between Step 3 container and buttons */}
+              <div className="flex flex-col space-y-4 mt-8">
                 <button
                   onClick={handleGenerateReport}
                   className={`w-full ${
