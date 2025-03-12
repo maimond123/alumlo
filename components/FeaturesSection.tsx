@@ -404,7 +404,7 @@ export default function FeaturesSection() {
       {/* Feature 3: Reports - Redesigned Layout */}
       <section 
         ref={reportsRef}
-        className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
+        className={`pt-12 pb-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
           reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
@@ -478,8 +478,8 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Added padding at the end of the section */}
-          <div className="pb-32"></div>
+          {/* Added padding at the end of the section - slightly reduced */}
+          <div className="pb-24"></div>
         </div>
       </section>
     </>
