@@ -1101,7 +1101,7 @@ function ReportsContent() {
             <div className="w-2/3 flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Report Preview</h2>
-                <div className="flex space-x-2 items-center">
+                <div className="flex space-x-2">
                   <button
                     onClick={handleDownload}
                     className="bg-transparent text-black py-2 px-6 rounded-md border border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center"
@@ -1116,38 +1116,25 @@ function ReportsContent() {
                     <Maximize2 className="w-4 h-4 mr-2" />
                     Expand Preview
                   </button>
-                  
-                  {/* Page navigation buttons */}
-                  {generatedReport && (
-                    <>
-                      <button
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                        className="w-8 h-8 flex items-center justify-center border border-black rounded-md bg-white text-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
-                        className="w-8 h-8 flex items-center justify-center border border-black rounded-md bg-white text-black disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="bg-transparent text-black p-2 rounded-md border border-black flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300 w-10 h-10"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="bg-transparent text-black p-2 rounded-md border border-black flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300 w-10 h-10"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              
-              <div className="flex-1 backdrop-blur-md bg-slate-700/30 bg-black/20 border border-black rounded-lg overflow-auto shadow-lg relative">
-                {/* Top shadow overlay for container */}
-                <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-lg z-10"></div>
-                
-                <div className="min-h-full p-8 flex justify-center relative">
-                  {/* Shadow for the actual report page */}
-                  <div className="w-full max-w-4xl bg-white rounded-lg shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.2)]">
-                    <ReportContent />
-                  </div>
+              <div className="flex-1 backdrop-blur-md bg-slate-700/30 bg-black/5 border border-black rounded-lg overflow-auto shadow-lg">
+                <div className="min-h-full p-8 flex justify-center">
+                  <ReportContent />
                 </div>
               </div>
             </div>
@@ -1175,6 +1162,24 @@ function ReportsContent() {
               className="backdrop-blur-md bg-white/10 bg-slate-500/20 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
             >
               <ReportContent />
+              <div className="mt-4 flex justify-center space-x-4">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="bg-transparent text-black py-2 px-4 rounded-md border border-black flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous Page
+                </button>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="bg-transparent text-black py-2 px-4 rounded-md border border-black flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
+                >
+                  Next Page
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
