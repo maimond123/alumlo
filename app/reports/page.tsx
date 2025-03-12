@@ -685,12 +685,12 @@ function ReportsContent() {
                     <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
                     {isLoadingExplanations ? (
                       <div className="h-40 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
                       </div>
                     ) : (
                       <div className="prose">
                         {executiveSummary ? (
-                          <p className="text-gray-700">{executiveSummary}</p>
+                          <p className="text-black">{executiveSummary}</p>
                         ) : (
                           <p className="text-gray-500 italic">Executive summary will appear here once generated.</p>
                         )}
@@ -701,7 +701,7 @@ function ReportsContent() {
                   {/* Table of Contents */}
                   <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-4">Report Contents</h2>
-                    <ul className="list-disc pl-5 text-gray-700">
+                    <ul className="list-disc pl-5 text-black">
                       {selectedOptions.map((option, index) => (
                         <li key={option} className="mb-2">
                           {option === 'salary' ? 'Salary Distribution' :
@@ -719,7 +719,7 @@ function ReportsContent() {
                   {/* Report Methodology */}
                   <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-4">Methodology</h2>
-                    <p className="text-gray-700">
+                    <p className="text-black">
                       This report analyzes alumni data from classes {selectedYears.join(', ')}. 
                       The visualizations present key metrics related to career outcomes, 
                       industry placement, geographic distribution, and educational advancement 
@@ -867,14 +867,14 @@ function ReportsContent() {
                     <div className="mt-4">
                       {isLoadingExplanations ? (
                         <div className="h-40 flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
                         </div>
                       ) : (
                         <>
                           <h3 className="text-lg font-medium mb-2">Key Findings</h3>
                           <div className="prose mb-4">
                             {explanations[option]?.factual ? (
-                              <p className="text-gray-700">{explanations[option].factual}</p>
+                              <p className="text-black">{explanations[option].factual}</p>
                             ) : (
                               <p className="text-gray-500 italic">Analysis will appear here once generated.</p>
                             )}
@@ -883,7 +883,7 @@ function ReportsContent() {
                           <h3 className="text-lg font-medium mb-2">Strategic Implications</h3>
                           <div className="prose">
                             {explanations[option]?.strategic ? (
-                              <p className="text-gray-700">{explanations[option].strategic}</p>
+                              <p className="text-black">{explanations[option].strategic}</p>
                             ) : (
                               <p className="text-gray-500 italic">Strategic insights will appear here once generated.</p>
                             )}
@@ -901,12 +901,12 @@ function ReportsContent() {
                   <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
                   {isLoadingExplanations ? (
                     <div className="h-40 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
                     </div>
                   ) : (
                     <div className="prose">
                       {recommendations ? (
-                        <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: recommendations }}></div>
+                        <div className="text-black" dangerouslySetInnerHTML={{ __html: recommendations }}></div>
                       ) : (
                         <p className="text-gray-500 italic">Recommendations will appear here once generated.</p>
                       )}
