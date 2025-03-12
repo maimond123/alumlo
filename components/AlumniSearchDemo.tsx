@@ -300,7 +300,7 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
       
-      {/* Search Input with Blinking Cursor */}
+      {/* Search Input without Blinking Cursor */}
       <div className="relative mb-10">
         <input
           type="text"
@@ -310,10 +310,9 @@ export default function AlumniSearchDemo() {
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
         
-        {/* Custom placeholder with blinking cursor */}
+        {/* Simple placeholder without blinking cursor */}
         {!searchQuery && (
           <div className="placeholder-wrapper">
-            <span className={showCursor ? "cursor-blink" : ""}></span>
             <span>Start typing to search any query...</span>
           </div>
         )}
