@@ -123,7 +123,7 @@ export default function FeaturesSection() {
           {/* Part 1: Data Collection */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             <div className="order-2 lg:order-1">
-              <h2 className="text-6xl font-bold text-black mb-6">We Gather the Data</h2>
+              <h2 className="text-5xl font-bold text-black mb-6">We Gather the Data</h2>
               <p className="text-xl text-gray-700 mb-8">
                 Our platform automatically collects and organizes alumni information from public professional profiles, 
                 creating a comprehensive database that's always up-to-date.
@@ -398,7 +398,7 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Feature 3: Reports */}
+      {/* Feature 3: Reports - Redesigned Layout */}
       <section 
         ref={reportsRef}
         className={`py-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
@@ -406,177 +406,79 @@ export default function FeaturesSection() {
         }`}
       >
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <div className="p-3 rounded-full w-20 h-20 flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 mb-6">
-                <FileText className="w-10 h-10 text-emerald-600" />
+          {/* Centered Catchphrase */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
+              Beautiful Downloadable Reports
+            </h2>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+              Transform your alumni data into compelling visual stories that drive action
+            </p>
+          </div>
+          
+          {/* Main Content - Image on Left, Description on Right */}
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Report Image - Takes up more space */}
+            <div className="lg:w-7/12">
+              <div className="relative">
+                <div className="absolute -top-6 -left-6 w-24 h-24 bg-emerald-50 rounded-full z-0"></div>
+                <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-emerald-100 rounded-full z-0"></div>
+                <img 
+                  src="/assets/report-preview.png" 
+                  alt="Alumni Success Report" 
+                  className="rounded-xl shadow-xl border border-gray-200 relative z-10 w-full"
+                />
               </div>
-              <h2 className="text-3xl font-bold text-emerald-800 mb-4">Beautiful Downloadable Reports</h2>
-              <p className="text-lg text-emerald-700 mb-6">Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. Customize layouts, colors, and content to match your institution's branding.</p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <span>Export in PDF, PowerPoint, or Excel formats</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <span>Customize with your school's branding</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-blue-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <span>Schedule automated reports for stakeholders</span>
-                </li>
-              </ul>
-              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors">
-                Learn more <ArrowRight className="ml-2 w-5 h-5" />
-              </button>
             </div>
             
-            {/* Interactive Report Demo */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8 shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 text-emerald-800">Preview Report</h3>
+            {/* Description Content - Takes up less space */}
+            <div className="lg:w-5/12">
+              <div className="p-3 rounded-full w-16 h-16 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6">
+                <FileText className="w-8 h-8 text-emerald-600" />
+              </div>
               
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="bg-emerald-600 text-white p-4 flex justify-between items-center">
-                  <div className="font-medium">Alumni Success Report</div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => setReportPage(0)}
-                      className={`w-2 h-2 rounded-full ${reportPage === 0 ? 'bg-white' : 'bg-white/50'}`}
-                    ></button>
-                    <button 
-                      onClick={() => setReportPage(1)}
-                      className={`w-2 h-2 rounded-full ${reportPage === 1 ? 'bg-white' : 'bg-white/50'}`}
-                    ></button>
-                    <button 
-                      onClick={() => setReportPage(2)}
-                      className={`w-2 h-2 rounded-full ${reportPage === 2 ? 'bg-white' : 'bg-white/50'}`}
-                    ></button>
+              <h3 className="text-2xl font-bold text-emerald-800 mb-4">Data-Driven Decision Making</h3>
+              <p className="text-lg text-gray-700 mb-6">
+                Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. 
+                Customize layouts, colors, and content to match your institution's branding.
+              </p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Multiple Export Formats</h4>
+                    <p className="text-gray-600">Download as PDF, PowerPoint, or Excel to suit your needs</p>
                   </div>
                 </div>
                 
-                <div className="p-6 min-h-[250px]">
-                  {reportPage === 0 && (
-                    <div className="space-y-4">
-                      <div className="text-lg font-bold text-emerald-800">Executive Summary</div>
-                      <div className="h-3 bg-gray-200 rounded-full w-full"></div>
-                      <div className="h-3 bg-gray-200 rounded-full w-5/6"></div>
-                      <div className="h-3 bg-gray-200 rounded-full w-full"></div>
-                      <div className="h-3 bg-gray-200 rounded-full w-4/6"></div>
-                      <div className="mt-6 flex justify-between">
-                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
-                          <div className="text-2xl font-bold text-emerald-700">94%</div>
-                          <div className="text-xs text-emerald-600">Employment Rate</div>
-                        </div>
-                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
-                          <div className="text-2xl font-bold text-emerald-700">$78K</div>
-                          <div className="text-xs text-emerald-600">Avg. Starting Salary</div>
-                        </div>
-                        <div className="text-center p-3 bg-emerald-50 rounded-lg w-[30%]">
-                          <div className="text-2xl font-bold text-emerald-700">68%</div>
-                          <div className="text-xs text-emerald-600">In Target Industries</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {reportPage === 1 && (
-                    <div className="space-y-4">
-                      <div className="text-lg font-bold text-emerald-800">Industry Breakdown</div>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="font-medium">Technology</span>
-                        <div className="flex items-center">
-                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '42%'}}></div>
-                          </div>
-                          <span className="text-sm">42%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="font-medium">Finance</span>
-                        <div className="flex items-center">
-                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '28%'}}></div>
-                          </div>
-                          <span className="text-sm">28%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="font-medium">Healthcare</span>
-                        <div className="flex items-center">
-                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '15%'}}></div>
-                          </div>
-                          <span className="text-sm">15%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <span className="font-medium">Other</span>
-                        <div className="flex items-center">
-                          <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden mr-2">
-                            <div className="h-full bg-emerald-500 rounded-full" style={{width: '15%'}}></div>
-                          </div>
-                          <span className="text-sm">15%</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {reportPage === 2 && (
-                    <div className="space-y-4">
-                      <div className="text-lg font-bold text-emerald-800">Top Employers</div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-500">1.</div>
-                          <div className="font-medium">Google</div>
-                          <div className="text-xs text-emerald-600">42 alumni</div>
-                        </div>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-500">2.</div>
-                          <div className="font-medium">Microsoft</div>
-                          <div className="text-xs text-emerald-600">38 alumni</div>
-                        </div>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-500">3.</div>
-                          <div className="font-medium">Goldman Sachs</div>
-                          <div className="text-xs text-emerald-600">29 alumni</div>
-                        </div>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-500">4.</div>
-                          <div className="font-medium">Amazon</div>
-                          <div className="text-xs text-emerald-600">27 alumni</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <div className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Custom Branding</h4>
+                    <p className="text-gray-600">Match your institution's visual identity with customizable templates</p>
+                  </div>
                 </div>
                 
-                <div className="bg-gray-50 p-4 flex justify-between items-center">
-                  <button 
-                    onClick={() => setReportPage(prev => Math.max(0, prev - 1))}
-                    className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
-                    disabled={reportPage === 0}
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="text-sm text-gray-500">
-                    Page {reportPage + 1} of 3
+                <div className="flex items-start">
+                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <button 
-                    onClick={() => setReportPage(prev => Math.min(2, prev + 1))}
-                    className="p-2 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-50"
-                    disabled={reportPage === 2}
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+                  <div>
+                    <h4 className="font-semibold text-gray-800">Automated Delivery</h4>
+                    <p className="text-gray-600">Schedule reports to be sent to stakeholders on a regular basis</p>
+                  </div>
                 </div>
               </div>
+              
+              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors group">
+                Learn more 
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
         </div>

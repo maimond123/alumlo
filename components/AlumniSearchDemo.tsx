@@ -141,6 +141,18 @@ export default function AlumniSearchDemo() {
     localStorage.setItem('alumSearchCount', searchCount.toString())
   }, [searchCount])
 
+  // Add state for the blinking cursor effect
+  const [showCursor, setShowCursor] = useState(true);
+  
+  // Add effect for blinking cursor
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 530); // Blink every 530ms for a natural typing feel
+    
+    return () => clearInterval(cursorInterval);
+  }, []);
+
   const handleSearch = async () => {
     if (!searchQuery.trim() || isSearching) return
     
@@ -247,7 +259,37 @@ export default function AlumniSearchDemo() {
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
       
-      {/* Search Limit Indicator - Made larger and reset button removed */}
+      {/* Add style for blinking cursor */}
+      <style jsx>{`
+        .cursor-blink::before {
+          content: '|';
+          color: #000;
+          animation: blink 1.06s infinite step-end;
+          margin-right: 2px;
+        }
+        
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        
+        .search-input::placeholder {
+          color: transparent;
+        }
+        
+        .placeholder-wrapper {
+          position: absolute;
+          top: 50%;
+          left: 16px;
+          transform: translateY(-50%);
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          color: #9CA3AF; /* placeholder color */
+        }
+      `}</style>
+      
+      {/* Search Limit Indicator */}
       <div className="mb-4">
         <div className="text-base font-medium text-gray-700">
           {searchCount < 5 ? (
@@ -258,18 +300,25 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
       
-      {/* Search Input */}
+      {/* Search Input with Blinking Cursor */}
       <div className="relative mb-10">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Start typing to search any query..."
-          className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+          className="search-input w-full px-6 pt-4 pb-14 text-lg text-gray-900 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
         
-        {/* Buttons inside the input field, positioned at the bottom right */}
+        {/* Custom placeholder with blinking cursor */}
+        {!searchQuery && (
+          <div className="placeholder-wrapper">
+            <span className={showCursor ? "cursor-blink" : ""}></span>
+            <span>Start typing to search any query...</span>
+          </div>
+        )}
+        
+        {/* Buttons inside the input field */}
         <div className="absolute bottom-3 right-4 flex space-x-2">
           {/* Refresh button */}
           <button

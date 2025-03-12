@@ -2,6 +2,7 @@
 
 import { useInView } from 'react-intersection-observer'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 export default function ValueProposition() {
   const { ref, inView } = useInView({
@@ -9,20 +10,72 @@ export default function ValueProposition() {
     triggerOnce: true
   })
 
+  // State to track if animation has started
+  const [animationStarted, setAnimationStarted] = useState(false)
+  
+  // Start animation when section comes into view
+  useEffect(() => {
+    if (inView && !animationStarted) {
+      setAnimationStarted(true)
+    }
+  }, [inView, animationStarted])
+
   return (
     <section 
       ref={ref}
-      className={`py-20 bg-gradient-to-br from-emerald-50 to-teal-50 transition-opacity duration-1000 ease-in-out ${
+      className={`py-20 bg-white transition-opacity duration-1000 ease-in-out ${
         inView ? 'opacity-100' : 'opacity-0'
       }`}
     >
       <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-emerald-800 mb-16">
-          Transforming Alumni Data into Institutional Value
+        {/* Custom animation styles */}
+        <style jsx>{`
+          @keyframes unblurText {
+            0% {
+              filter: blur(12px);
+              opacity: 0;
+            }
+            100% {
+              filter: blur(0);
+              opacity: 1;
+            }
+          }
+          
+          .text-reveal {
+            display: inline-block;
+            animation: unblurText 1.5s forwards;
+            opacity: 0;
+          }
+          
+          .word-container {
+            display: inline-block;
+            overflow: hidden;
+          }
+          
+          .word-1 { animation-delay: 0.1s; }
+          .word-2 { animation-delay: 0.3s; }
+          .word-3 { animation-delay: 0.5s; }
+          .word-4 { animation-delay: 0.7s; }
+          .word-5 { animation-delay: 0.9s; }
+        `}</style>
+        
+        <h2 className="text-5xl font-bold text-center text-black mb-16">
+          {animationStarted ? (
+            <>
+              <span className="word-container"><span className="text-reveal word-1">Transparent</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-2">Alumni</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-3">Data,</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-4">Transformational</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-5">Institutional</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-5">Value</span></span>
+            </>
+          ) : (
+            <span className="opacity-0">Transparent Alumni Data, Transformational Institutional Value</span>
+          )}
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          <div className="bg-white rounded-xl shadow-md p-8 transform transition-transform hover:scale-105">
+          <div className="bg-white rounded-xl border border-black p-8 transform transition-transform hover:scale-105">
             <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -35,7 +88,7 @@ export default function ValueProposition() {
             </p>
           </div>
           
-          <div className="bg-white rounded-xl shadow-md p-8 transform transition-transform hover:scale-105">
+          <div className="bg-white rounded-xl border border-black p-8 transform transition-transform hover:scale-105">
             <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -47,7 +100,7 @@ export default function ValueProposition() {
             </p>
           </div>
           
-          <div className="bg-white rounded-xl shadow-md p-8 transform transition-transform hover:scale-105">
+          <div className="bg-white rounded-xl border border-black p-8 transform transition-transform hover:scale-105">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
