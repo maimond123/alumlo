@@ -59,18 +59,18 @@ export default function ValueProposition() {
           .word-5 { animation-delay: 0.9s; }
         `}</style>
         
-        <h2 className="text-5xl font-bold text-center text-black mb-16">
+        <h2 className="text-4xl font-bold text-center text-black mb-24">
           {animationStarted ? (
             <>
-              <span className="word-container"><span className="text-reveal word-1">Transparent</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-1">Transforming</span></span>{' '}
               <span className="word-container"><span className="text-reveal word-2">Alumni</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-3">Data,</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-4">Transformational</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-3">Data</span></span>{' '}
+              <span className="word-container"><span className="text-reveal word-4">into</span></span>{' '}
               <span className="word-container"><span className="text-reveal word-5">Institutional</span></span>{' '}
               <span className="word-container"><span className="text-reveal word-5">Value</span></span>
             </>
           ) : (
-            <span className="opacity-0">Transparent Alumni Data, Transformational Institutional Value</span>
+            <span className="opacity-0">Transforming Alumni Data into Institutional Value</span>
           )}
         </h2>
         
@@ -115,8 +115,8 @@ export default function ValueProposition() {
         
         <div className="mt-16 text-center">
           <Link href="/signup">
-            <button className="bg-emerald-600 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-emerald-700 transition-colors">
-              Start Today
+            <button className="bg-teal-500 text-white px-10 py-4 text-xl rounded-full hover:bg-teal-600 transition-colors">
+              Get Started
             </button>
           </Link>
         </div>

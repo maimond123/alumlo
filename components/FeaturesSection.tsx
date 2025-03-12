@@ -420,15 +420,11 @@ export default function FeaturesSection() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Report Image - Takes up more space */}
             <div className="lg:w-7/12">
-              <div className="relative">
-                <div className="absolute -top-6 -left-6 w-24 h-24 bg-emerald-50 rounded-full z-0"></div>
-                <div className="absolute -bottom-6 -right-6 w-16 h-16 bg-emerald-100 rounded-full z-0"></div>
-                <img 
-                  src="/assets/report-preview.png" 
-                  alt="Alumni Success Report" 
-                  className="rounded-xl shadow-xl border border-gray-200 relative z-10 w-full"
-                />
-              </div>
+              <img 
+                src="/assets/report_demo.png" 
+                alt="Alumni Success Report" 
+                className="rounded-xl shadow-xl border border-gray-200 w-full"
+              />
             </div>
             
             {/* Description Content - Takes up less space */}
