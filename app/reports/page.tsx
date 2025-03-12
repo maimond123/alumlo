@@ -13,6 +13,7 @@ import { supabase } from '../data/supabase'
 import { useRouter } from 'next/navigation'
 import { getUserEmail } from '../utils/auth'
 
+
 export default function ReportsPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -154,17 +155,67 @@ function ReportsContent() {
   }
 
   const handleDownload = async () => {
-    if (reportRef.current === null) {
-      return
+    if (!generatedReport) {
+      return;
     }
 
     try {
-      const dataUrl = await htmlToImage.toPng(reportRef.current, { quality: 0.95 })
-      saveAs(dataUrl, "alumni-success-metrics-report.png")
+      // Store the current page
+      const originalPage = currentPage;
+      
+      // Create a temporary container to hold all pages
+      const fullReportContainer = document.createElement('div');
+      fullReportContainer.style.width = '8.5in';
+      fullReportContainer.style.backgroundColor = 'white';
+      
+      // For each page, render it and capture it
+      const pageImages = [];
+      
+      for (let page = 1; page <= totalPages; page++) {
+        // Set current page to render the correct content
+        setCurrentPage(page);
+        
+        // Wait for the page to render
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (reportRef.current) {
+          // Capture the current page
+          const dataUrl = await htmlToImage.toPng(reportRef.current, { quality: 0.95 });
+          pageImages.push(dataUrl);
+        }
+      }
+      
+      // Restore original page
+      setCurrentPage(originalPage);
+      
+      // If we have multiple pages, combine them into a PDF
+      if (pageImages.length > 1) {
+        // Use jsPDF to create a PDF with all pages
+        const { jsPDF } = await import('jspdf');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'in',
+          format: [8.5, 11]
+        });
+        
+        // Add each image as a page
+        for (let i = 0; i < pageImages.length; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          pdf.addImage(pageImages[i], 'PNG', 0, 0, 8.5, 11);
+        }
+        
+        // Save the PDF
+        pdf.save("alumni-success-metrics-report.pdf");
+      } else {
+        // If only one page, save as PNG
+        saveAs(pageImages[0], "alumni-success-metrics-report.png");
+      }
     } catch (error) {
-      console.error("Error generating report image:", error)
+      console.error("Error generating report:", error);
     }
-  }
+  };
 
   useEffect(() => {
     if (selectedOptions.includes('salary') && selectedYears.length > 0 && schoolName) {
