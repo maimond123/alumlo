@@ -1026,8 +1026,12 @@ function ReportsContent() {
               <div className="mb-6 border border-black p-4 rounded-lg">
                 <h2 className="text-xl font-semibold mb-4">Step 3: Select Format</h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Option 1</span>
+                  <div className="flex items-center justify-between group relative">
+                    <span className="text-gray-700">Cross Year Comparison</span>
+                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black text-white text-xs rounded p-2 -top-20 left-0 right-0 mx-auto w-64 z-10 shadow-lg">
+                      Compare individual metrics across multiple class years to identify trends, progress, and areas for improvement over time.
+                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
+                    </div>
                     <button 
                       onClick={() => setOption1Enabled(!option1Enabled)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -1042,8 +1046,12 @@ function ReportsContent() {
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-700">Option 2</span>
+                  <div className="flex items-center justify-between group relative">
+                    <span className="text-gray-700">Year-by-Year Analysis</span>
+                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black text-white text-xs rounded p-2 -top-20 left-0 right-0 mx-auto w-64 z-10 shadow-lg">
+                      View comprehensive data for a single class year at a time, allowing for in-depth understanding of each cohort's complete performance profile.
+                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
+                    </div>
                     <button 
                       onClick={() => setOption2Enabled(!option2Enabled)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
