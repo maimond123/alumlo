@@ -1118,7 +1118,7 @@ function ReportsContent() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 backdrop-blur-md bg-white/20 bg-slate-200/10 border border-black rounded-lg overflow-auto shadow-lg">
+              <div className="flex-1 backdrop-blur-md bg-white/10 bg-slate-500/20 border border-black rounded-lg overflow-auto shadow-lg">
                 <div className="min-h-full p-8 flex justify-center">
                   <ReportContent />
                 </div>
@@ -1145,7 +1145,7 @@ function ReportsContent() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="backdrop-blur-md bg-white/20 bg-slate-200/10 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
+              className="backdrop-blur-md bg-white/10 bg-slate-500/20 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
             >
               <ReportContent />
               <div className="mt-4 flex justify-center space-x-4">
