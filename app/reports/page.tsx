@@ -55,6 +55,18 @@ function ReportsContent() {
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({
+    reportGeneration: false,
+    salaryData: false,
+    industryData: false,
+    locationData: false,
+    graduateSchoolData: false,
+    industrySalaryData: false,
+    explanations: false,
+    executiveSummary: false,
+    recommendations: false
+  });
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -154,21 +166,43 @@ function ReportsContent() {
       return;
     }
     
-    console.log('Starting report generation with:', { selectedOptions, selectedYears })
-    setIsLoading(true)
+    console.log('Starting report generation with:', { selectedOptions, selectedYears });
+    
+    // Set overall generation state to true
+    setIsGeneratingReport(true);
+    
+    // Set individual loading states based on selected options
+    setLoadingStates(prev => ({
+      ...prev,
+      reportGeneration: true,
+      salaryData: selectedOptions.includes('salary'),
+      industryData: selectedOptions.includes('industry'),
+      locationData: selectedOptions.includes('location'),
+      graduateSchoolData: selectedOptions.includes('graduate_school'),
+      industrySalaryData: selectedOptions.includes('salary_by_industry'),
+      explanations: true,
+      executiveSummary: true,
+      recommendations: true
+    }));
+    
     try {
       // Create a new report object with the current selections
       setGeneratedReport({
         options: [...selectedOptions],
         years: [...selectedYears]
-      })
-      console.log('Report generated successfully:', { selectedOptions, selectedYears })
+      });
+      
+      // Mark report generation as complete
+      setLoadingStates(prev => ({
+        ...prev,
+        reportGeneration: false
+      }));
+      
+      console.log('Report generated successfully:', { selectedOptions, selectedYears });
     } catch (error) {
-      console.error('Error generating report:', error)
-    } finally {
-      setIsLoading(false)
+      console.error('Error generating report:', error);
     }
-  }
+  };
 
   const handleDownload = async () => {
     console.log("Download button clicked");
@@ -260,8 +294,10 @@ function ReportsContent() {
   };
 
   useEffect(() => {
-    if (selectedOptions.includes('salary') && selectedYears.length > 0 && schoolName) {
+    if (selectedOptions.includes('salary') && selectedYears.length > 0 && schoolName && isGeneratingReport) {
       const fetchSalaryData = async () => {
+        setLoadingStates(prev => ({ ...prev, salaryData: true }));
+        
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
           .select('current_salary_distribution, class_year')
@@ -270,22 +306,25 @@ function ReportsContent() {
 
         if (error) {
           console.error('Error fetching salary data:', error);
-          return;
         }
 
         console.log('Salary data fetched:', data);
         if (data) {
           setSalaryData(data);
         }
+        
+        setLoadingStates(prev => ({ ...prev, salaryData: false }));
       };
 
       fetchSalaryData();
     }
-  }, [selectedOptions, selectedYears, schoolName]);
+  }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   useEffect(() => {
-    if (selectedOptions.includes('industry') && selectedYears.length > 0 && schoolName) {
+    if (selectedOptions.includes('industry') && selectedYears.length > 0 && schoolName && isGeneratingReport) {
       const fetchIndustryData = async () => {
+        setLoadingStates(prev => ({ ...prev, industryData: true }));
+        
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
           .select('current_industry_distribution, class_year')
@@ -294,21 +333,24 @@ function ReportsContent() {
 
         if (error) {
           console.error('Error fetching industry data:', error);
-          return;
         }
 
         if (data) {
           setIndustryData(data);
         }
+        
+        setLoadingStates(prev => ({ ...prev, industryData: false }));
       };
 
       fetchIndustryData();
     }
-  }, [selectedOptions, selectedYears, schoolName]);
+  }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   useEffect(() => {
-    if (selectedOptions.includes('location') && selectedYears.length > 0 && schoolName) {
+    if (selectedOptions.includes('location') && selectedYears.length > 0 && schoolName && isGeneratingReport) {
       const fetchLocationData = async () => {
+        setLoadingStates(prev => ({ ...prev, locationData: true }));
+        
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
           .select('current_job_location_distribution, class_year')
@@ -317,7 +359,6 @@ function ReportsContent() {
 
         if (error) {
           console.error('Error fetching location data:', error);
-          return;
         }
 
         if (data) {
@@ -340,15 +381,19 @@ function ReportsContent() {
 
           setLocationData(chartData);
         }
+        
+        setLoadingStates(prev => ({ ...prev, locationData: false }));
       };
 
       fetchLocationData();
     }
-  }, [selectedOptions, selectedYears, schoolName]);
+  }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   useEffect(() => {
-    if (selectedOptions.includes('salary_by_industry') && selectedYears.length > 0 && schoolName) {
+    if (selectedOptions.includes('salary_by_industry') && selectedYears.length > 0 && schoolName && isGeneratingReport) {
       const fetchIndustrySalaryData = async () => {
+        setLoadingStates(prev => ({ ...prev, industrySalaryData: true }));
+        
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
           .select('average_salary_by_industry_distribution, class_year')
@@ -357,7 +402,6 @@ function ReportsContent() {
 
         if (error) {
           console.error('Error fetching industry salary data:', error);
-          return;
         }
 
         if (data && data.length > 0) {
@@ -383,15 +427,19 @@ function ReportsContent() {
 
           setIndustrySalaryData(chartData);
         }
+        
+        setLoadingStates(prev => ({ ...prev, industrySalaryData: false }));
       };
 
       fetchIndustrySalaryData();
     }
-  }, [selectedOptions, selectedYears, schoolName]);
+  }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   useEffect(() => {
-    if (selectedOptions.includes('graduate_school') && selectedYears.length > 0 && schoolName) {
+    if (selectedOptions.includes('graduate_school') && selectedYears.length > 0 && schoolName && isGeneratingReport) {
       const fetchGraduateSchoolData = async () => {
+        setLoadingStates(prev => ({ ...prev, graduateSchoolData: true }));
+        
         const { data, error } = await supabase
           .from(schoolName + '_distribution')
           .select('graduate_school_distribution, class_year')
@@ -400,22 +448,28 @@ function ReportsContent() {
 
         if (error) {
           console.error('Error fetching graduate school data:', error);
-          return;
         }
 
         if (data) {
           setGraduateSchoolData(data);
         }
+        
+        setLoadingStates(prev => ({ ...prev, graduateSchoolData: false }));
       };
 
       fetchGraduateSchoolData();
     }
-  }, [selectedOptions, selectedYears, schoolName]);
+  }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   const generateExplanations = async () => {
     if (!generatedReport) return;
     
-    setIsLoadingExplanations(true);
+    setLoadingStates(prev => ({ 
+      ...prev, 
+      explanations: true,
+      executiveSummary: true,
+      recommendations: true 
+    }));
     
     // Calculate how many pages we'll need (1 for intro, 1 for each visualization)
     const visualizationCount = selectedOptions.length;
@@ -677,7 +731,14 @@ function ReportsContent() {
       console.error('Error generating summary or recommendations:', error);
     }
     
-    setIsLoadingExplanations(false);
+    setLoadingStates(prev => ({ ...prev, explanations: false }));
+    
+    setLoadingStates(prev => ({ ...prev, executiveSummary: false }));
+    
+    setLoadingStates(prev => ({ ...prev, recommendations: false }));
+    
+    // Check if all processes are complete
+    checkAllProcessesComplete();
   };
 
   useEffect(() => {
@@ -702,6 +763,20 @@ function ReportsContent() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Add a function to check if all processes are complete
+  const checkAllProcessesComplete = () => {
+    const allComplete = !Object.values(loadingStates).some(state => state === true);
+    if (allComplete) {
+      setIsGeneratingReport(false);
+      setIsLoading(false);
+    }
+  };
+
+  // Add an effect to check completion whenever loading states change
+  useEffect(() => {
+    checkAllProcessesComplete();
+  }, [loadingStates]);
 
   const ReportContent = () => {
     return (
@@ -975,6 +1050,68 @@ function ReportsContent() {
     }
   };
 
+  // Add a cool loading animation component
+  const LoadingAnimation = () => {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+          <div className="flex flex-col items-center">
+            <div className="relative w-32 h-32 mb-6">
+              {/* Document assembly animation */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-24 bg-white border-2 border-black rounded-sm relative overflow-hidden">
+                  {/* Animated lines representing text */}
+                  <div className="h-2 w-16 bg-gray-300 rounded absolute top-4 left-2 animate-pulse"></div>
+                  <div className="h-2 w-12 bg-gray-300 rounded absolute top-8 left-2 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="h-2 w-14 bg-gray-300 rounded absolute top-12 left-2 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                  <div className="h-2 w-10 bg-gray-300 rounded absolute top-16 left-2 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                </div>
+              </div>
+              
+              {/* Circular progress indicator */}
+              <svg className="animate-spin absolute inset-0" viewBox="0 0 100 100">
+                <circle 
+                  cx="50" cy="50" r="45" 
+                  fill="none" 
+                  stroke="#10B981" 
+                  strokeWidth="8"
+                  strokeDasharray="283"
+                  strokeDashoffset="100"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            
+            <h3 className="text-xl font-bold mb-4">Generating Your Report</h3>
+            
+            <div className="w-full space-y-3">
+              {Object.entries(loadingStates).map(([key, isLoading]) => {
+                if (!isLoading) return null;
+                
+                const label = key === 'reportGeneration' ? 'Compiling report structure' :
+                             key === 'salaryData' ? 'Analyzing salary data' :
+                             key === 'industryData' ? 'Processing industry sectors' :
+                             key === 'locationData' ? 'Mapping geographic distribution' :
+                             key === 'graduateSchoolData' ? 'Evaluating graduate school trends' :
+                             key === 'industrySalaryData' ? 'Calculating industry salary metrics' :
+                             key === 'explanations' ? 'Generating data insights' :
+                             key === 'executiveSummary' ? 'Creating executive summary' :
+                             key === 'recommendations' ? 'Developing strategic recommendations' : key;
+                
+                return (
+                  <div key={key} className="flex items-center">
+                    <div className="w-4 h-4 rounded-full bg-emerald-500 mr-3 animate-pulse"></div>
+                    <span className="text-gray-700">{label}...</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
       <div className="p-8">
@@ -1115,7 +1252,9 @@ function ReportsContent() {
               
               {/* Step 3: Additional Options */}
               <div className="mb-6 border border-black p-4 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Step 3: Select Format</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Step 3: Select Format <span className="text-sm font-normal">(if at least 2 class years are selected)</span>
+                </h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between group relative">
                     <span className="text-gray-700">Cross Year Comparison</span>
@@ -1329,6 +1468,9 @@ function ReportsContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Add the loading animation when generating report */}
+      {isGeneratingReport && <LoadingAnimation />}
     </main>
   )
 }
