@@ -50,6 +50,8 @@ function ReportsContent() {
   const [option1Enabled, setOption1Enabled] = useState(false)
   const [option2Enabled, setOption2Enabled] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -121,8 +123,10 @@ function ReportsContent() {
         isDecadeView ? "Select by Year" : "Select by Decade",
         ...suggestions,
       ])
+      setYearDropdownOpen(true);
     } else {
       setSuggestedYears(["Select All Years", "Clear", isDecadeView ? "Select by Year" : "Select by Decade"])
+      setYearDropdownOpen(true);
     }
   }
 
@@ -606,11 +610,14 @@ function ReportsContent() {
     }
   }, [generatedReport]);
 
-  // Add this useEffect to handle clicking outside the dropdown
+  // Update the useEffect to handle clicking outside both dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target as Node)) {
+        setSuggestedYears([]);
       }
     }
     
@@ -973,10 +980,10 @@ function ReportsContent() {
                 </div>
               </div>
               
-              {/* Step 2: Select Class Years (Keep existing year selection) */}
+              {/* Step 2: Select Class Years */}
               <div className="mb-16">
                 <h2 className="text-xl font-semibold mb-4">Step 2: Select Class Years</h2>
-                <div className="relative mb-4">
+                <div className="relative mb-4" ref={yearDropdownRef}>
                   <input
                     type="text"
                     value={yearInput}
@@ -990,6 +997,11 @@ function ReportsContent() {
                     }}
                     placeholder="Search years..."
                     className="w-full px-4 py-2 border border-black rounded-md focus:outline-none placeholder-black"
+                    onFocus={() => {
+                      if (yearInput === "") {
+                        handleYearInput("");
+                      }
+                    }}
                   />
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black" />
                   {suggestedYears.length > 0 && (
@@ -998,13 +1010,13 @@ function ReportsContent() {
                         <li
                           key={index}
                           onClick={() => selectYear(year)}
-                          className={`px-4 py-2 hover:bg-black cursor-pointer ${
+                          className={`px-4 py-2 hover:bg-gray-100 text-black cursor-pointer ${
                             year === "Select All Years"
-                              ? "font-semibold text-emerald-600 border-b border-gray-200"
+                              ? "font-semibold border-b border-gray-200"
                               : year === "Clear"
-                                ? "font-semibold text-red-600 border-b border-gray-200"
+                                ? "font-semibold border-b border-gray-200"
                                 : year === "Select by Decade" || year === "Select by Year"
-                                  ? "font-semibold text-blue-600 border-b border-gray-200"
+                                  ? "font-semibold border-b border-gray-200"
                                   : ""
                           }`}
                         >
