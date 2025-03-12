@@ -615,7 +615,7 @@ function ReportsContent() {
         <div className="p-8 pt-20">
           {!generatedReport ? (
             <div className="min-h-[calc(11in-4rem)] flex flex-col items-center justify-center text-gray-500">
-              <BarChart4 className="w-16 h-16 mb-4 text-black" />
+              <BarChart4 className="w-16 h-16 mb-4 text-gray-500" />
               <p>Select data points to preview your report</p>
             </div>
           ) : (
@@ -1063,7 +1063,7 @@ function ReportsContent() {
               <button
                 onClick={handleGenerateReport}
                 className={`w-full ${
-                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500/95 hover:scale-105 transform transition-transform duration-300"
+                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500/95 hover:scale-105 transform transition-transform duration-300"
                 } text-white py-2 px-4 rounded-md flex items-center justify-center`}
                 disabled={isLoading}
               >
