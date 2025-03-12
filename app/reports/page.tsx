@@ -890,7 +890,7 @@ function ReportsContent() {
             {/* Left Column - Checkboxes and Year Selection */}
             <div className="w-1/3 bg-white p-6 rounded-lg shadow-md overflow-y-auto border border-black">
               {/* Step 1: Select Data Points */}
-              <div className="mb-12">
+              <div className="mb-16">
                 <h2 className="text-xl font-semibold mb-4">
                   Step 1: Select Data Points ({selectedOptions.length}/{reportOptions.length})
                 </h2>
@@ -960,7 +960,7 @@ function ReportsContent() {
               </div>
               
               {/* Step 2: Select Class Years (Keep existing year selection) */}
-              <div className="mb-12">
+              <div className="mb-16">
                 <h2 className="text-xl font-semibold mb-4">Step 2: Select Class Years</h2>
                 <div className="relative mb-4">
                   <input
@@ -1023,7 +1023,7 @@ function ReportsContent() {
               </div>
               
               {/* Step 3: Additional Options */}
-              <div className="mb-12 border border-black p-4 rounded-lg">
+              <div className="mb-6 border border-black p-4 rounded-lg">
                 <h2 className="text-xl font-semibold mb-4">Step 3: Select Format</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1064,7 +1064,7 @@ function ReportsContent() {
                 onClick={handleGenerateReport}
                 className={`w-full ${
                   isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500/95 hover:scale-105 transform transition-transform duration-300"
-                } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center`}
+                } text-white py-2 px-4 rounded-md flex items-center justify-center`}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -1118,7 +1118,7 @@ function ReportsContent() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 backdrop-blur-md bg-slate-700/30 bg-black/10 border border-black rounded-lg overflow-auto shadow-lg">
+              <div className="flex-1 backdrop-blur-md bg-slate-700/30 bg-black/5 border border-black rounded-lg overflow-auto shadow-lg">
                 <div className="min-h-full p-8 flex justify-center">
                   <ReportContent />
                 </div>
