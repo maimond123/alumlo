@@ -300,7 +300,7 @@ export default function AlumniSearchDemo() {
         </div>
       </div>
       
-      {/* Search Input without Blinking Cursor */}
+      {/* Search Input with properly aligned placeholder */}
       <div className="relative mb-10">
         <input
           type="text"
@@ -308,14 +308,8 @@ export default function AlumniSearchDemo() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input w-full px-6 pt-4 pb-14 text-lg text-gray-900 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="Start typing to search any query..."
         />
-        
-        {/* Simple placeholder without blinking cursor */}
-        {!searchQuery && (
-          <div className="placeholder-wrapper">
-            <span>Start typing to search any query...</span>
-          </div>
-        )}
         
         {/* Buttons inside the input field */}
         <div className="absolute bottom-3 right-4 flex space-x-2">

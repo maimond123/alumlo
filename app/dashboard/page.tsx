@@ -675,7 +675,7 @@ export default function DashboardPage() {
       
       console.log(`[DEBUG ${new Date().toISOString()}] Fetching profile photos for LinkedIn URLs:`, linkedinUrls);
       
-      const tableName = formattedSchoolName?.toLowerCase().replace(/ /g, '_') || 'lawrenceville';
+      const tableName = formattedSchoolName?.toLowerCase().replace(/ /g, '_');
       console.log(`[DEBUG ${new Date().toISOString()}] Using table name: ${tableName}`);
       
       // Query the main school table using linkedin_url as the common identifier
