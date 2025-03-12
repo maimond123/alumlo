@@ -890,7 +890,7 @@ function ReportsContent() {
             {/* Left Column - Checkboxes and Year Selection */}
             <div className="w-1/3 bg-white p-6 rounded-lg shadow-md overflow-y-auto border border-black">
               {/* Step 1: Select Data Points */}
-              <div className="mb-8">
+              <div className="mb-12">
                 <h2 className="text-xl font-semibold mb-4">
                   Step 1: Select Data Points ({selectedOptions.length}/{reportOptions.length})
                 </h2>
@@ -960,7 +960,7 @@ function ReportsContent() {
               </div>
               
               {/* Step 2: Select Class Years (Keep existing year selection) */}
-              <div className="mb-8">
+              <div className="mb-12">
                 <h2 className="text-xl font-semibold mb-4">Step 2: Select Class Years</h2>
                 <div className="relative mb-4">
                   <input
@@ -1023,7 +1023,7 @@ function ReportsContent() {
               </div>
               
               {/* Step 3: Additional Options */}
-              <div className="mb-8 border border-black p-4 rounded-lg">
+              <div className="mb-12 border border-black p-4 rounded-lg">
                 <h2 className="text-xl font-semibold mb-4">Step 3: Select Format</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1118,11 +1118,8 @@ function ReportsContent() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 backdrop-blur-md bg-white/10 bg-slate-500/20 border border-black rounded-lg overflow-auto shadow-lg relative">
-                {/* Top shadow overlay */}
-                <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-lg z-10"></div>
-                
-                <div className="min-h-full p-8 flex justify-center relative">
+              <div className="flex-1 backdrop-blur-md bg-white/10 bg-slate-700/30 border border-black rounded-lg overflow-auto shadow-lg">
+                <div className="min-h-full p-8 flex justify-center">
                   <ReportContent />
                 </div>
               </div>
@@ -1150,9 +1147,6 @@ function ReportsContent() {
               exit={{ scale: 0.9 }}
               className="backdrop-blur-md bg-white/10 bg-slate-500/20 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
             >
-              {/* Top shadow overlay */}
-              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-lg z-10"></div>
-              
               <ReportContent />
               <div className="mt-4 flex justify-center space-x-4">
                 <button
