@@ -155,65 +155,91 @@ function ReportsContent() {
   }
 
   const handleDownload = async () => {
+    console.log("Download button clicked");
+    console.log("Generated report:", generatedReport);
+    console.log("Total pages:", totalPages);
+    
     if (!generatedReport) {
+      console.log("No report generated yet, returning early");
       return;
     }
 
     try {
+      console.log("Starting download process");
       // Store the current page
       const originalPage = currentPage;
-      
-      // Create a temporary container to hold all pages
-      const fullReportContainer = document.createElement('div');
-      fullReportContainer.style.width = '8.5in';
-      fullReportContainer.style.backgroundColor = 'white';
+      console.log("Original page:", originalPage);
       
       // For each page, render it and capture it
       const pageImages = [];
       
       for (let page = 1; page <= totalPages; page++) {
+        console.log(`Processing page ${page} of ${totalPages}`);
         // Set current page to render the correct content
         setCurrentPage(page);
         
         // Wait for the page to render
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log("Waiting for page to render");
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         if (reportRef.current) {
-          // Capture the current page
-          const dataUrl = await htmlToImage.toPng(reportRef.current, { quality: 0.95 });
-          pageImages.push(dataUrl);
+          console.log("Report ref exists, capturing page");
+          try {
+            // Capture the current page
+            const dataUrl = await htmlToImage.toPng(reportRef.current, { quality: 0.95 });
+            console.log(`Page ${page} captured successfully, data URL length:`, dataUrl.length);
+            pageImages.push(dataUrl);
+          } catch (err) {
+            console.error(`Error capturing page ${page}:`, err);
+          }
+        } else {
+          console.error("Report ref is null for page", page);
         }
       }
+      
+      console.log(`Captured ${pageImages.length} pages`);
       
       // Restore original page
       setCurrentPage(originalPage);
       
       // If we have multiple pages, combine them into a PDF
       if (pageImages.length > 1) {
-        // Use jsPDF to create a PDF with all pages
-        const { jsPDF } = await import('jspdf');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'in',
-          format: [8.5, 11]
-        });
-        
-        // Add each image as a page
-        for (let i = 0; i < pageImages.length; i++) {
-          if (i > 0) {
-            pdf.addPage();
+        console.log("Creating PDF with multiple pages");
+        try {
+          // Use jsPDF to create a PDF with all pages
+          const { jsPDF } = await import('jspdf');
+          console.log("jsPDF imported successfully");
+          
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'in',
+            format: [8.5, 11]
+          });
+          
+          // Add each image as a page
+          for (let i = 0; i < pageImages.length; i++) {
+            console.log(`Adding page ${i+1} to PDF`);
+            if (i > 0) {
+              pdf.addPage();
+            }
+            pdf.addImage(pageImages[i], 'PNG', 0, 0, 8.5, 11);
           }
-          pdf.addImage(pageImages[i], 'PNG', 0, 0, 8.5, 11);
+          
+          // Save the PDF
+          console.log("Saving PDF");
+          pdf.save("alumni-success-metrics-report.pdf");
+        } catch (err) {
+          console.error("Error creating PDF:", err);
         }
-        
-        // Save the PDF
-        pdf.save("alumni-success-metrics-report.pdf");
-      } else {
+      } else if (pageImages.length === 1) {
         // If only one page, save as PNG
+        console.log("Saving single page as PNG");
         saveAs(pageImages[0], "alumni-success-metrics-report.png");
+      } else {
+        console.error("No pages were captured");
       }
     } catch (error) {
-      console.error("Error generating report:", error);
+      console.error("Error in download process:", error);
     }
   };
 
