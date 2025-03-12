@@ -117,33 +117,16 @@ function ReportsContent() {
       const suggestions = isDecadeView
         ? decades.filter((decade) => decade.startsWith(input)).slice(0, 5)
         : years.filter((year) => year.startsWith(input)).slice(0, 5)
-      setSuggestedYears([
-        "Select All Years",
-        "Clear",
-        isDecadeView ? "Select by Year" : "Select by Decade",
-        ...suggestions,
-      ])
+      setSuggestedYears(suggestions)
       setYearDropdownOpen(true);
     } else {
-      setSuggestedYears(["Select All Years", "Clear", isDecadeView ? "Select by Year" : "Select by Decade"])
+      setSuggestedYears([])
       setYearDropdownOpen(true);
     }
   }
 
   const selectYear = (year: string) => {
-    if (year === "Select All Years") {
-      selectAllYears()
-    } else if (year === "Clear") {
-      setSelectedYears([])
-    } else if (year === "Select by Decade" || year === "Select by Year") {
-      setIsDecadeView(!isDecadeView)
-      setYearInput("")
-      handleYearInput("")
-    } else if (isDecadeView) {
-      const decadeStart = Number.parseInt(year)
-      const decadeYears = Array.from({ length: 10 }, (_, i) => (decadeStart + i).toString())
-      setSelectedYears((prev) => [...new Set([...prev, ...decadeYears])])
-    } else if (!selectedYears.includes(year)) {
+    if (!selectedYears.includes(year)) {
       setSelectedYears((prev) => [...prev, year])
     }
     setYearInput("")
@@ -1010,15 +993,7 @@ function ReportsContent() {
                         <li
                           key={index}
                           onClick={() => selectYear(year)}
-                          className={`px-4 py-2 hover:bg-gray-100 text-black cursor-pointer ${
-                            year === "Select All Years"
-                              ? "font-semibold border-b border-gray-200"
-                              : year === "Clear"
-                                ? "font-semibold border-b border-gray-200"
-                                : year === "Select by Decade" || year === "Select by Year"
-                                  ? "font-semibold border-b border-gray-200"
-                                  : ""
-                          }`}
+                          className="px-4 py-2 hover:bg-gray-100 text-black cursor-pointer"
                         >
                           {year}
                         </li>
