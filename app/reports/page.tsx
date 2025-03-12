@@ -67,6 +67,8 @@ function ReportsContent() {
     executiveSummary: false,
     recommendations: false
   });
+  const [initialSelectedOptions, setInitialSelectedOptions] = useState<string[]>([])
+  const [initialSelectedYears, setInitialSelectedYears] = useState<string[]>([])
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -117,7 +119,25 @@ function ReportsContent() {
   const decades = Array.from({ length: 8 }, (_, i) => `${2020 - i * 10}s`)
 
   const toggleOption = (id: string) => {
-    setSelectedOptions((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
+    if (generatedReport) {
+      const newSelectedOptions = selectedOptions.includes(id) 
+        ? selectedOptions.filter(item => item !== id) 
+        : [...selectedOptions, id];
+      
+      const wouldChange = JSON.stringify(newSelectedOptions.sort()) !== JSON.stringify(initialSelectedOptions.sort());
+      
+      if (wouldChange) {
+        setErrorMessage(
+          "Changing data points will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
+        );
+        setShowErrorModal(true);
+        return;
+      }
+    }
+    
+    setSelectedOptions(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
   }
 
   const selectAllYears = () => {
@@ -141,14 +161,30 @@ function ReportsContent() {
   }
 
   const selectYear = (year: string) => {
+    if (generatedReport && !selectedYears.includes(year)) {
+      setErrorMessage(
+        "Changing class years will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+    
     if (!selectedYears.includes(year)) {
-      setSelectedYears((prev) => [...prev, year])
+      setSelectedYears(prev => [...prev, year])
     }
     setYearInput("")
     setSuggestedYears([])
   }
 
   const removeYear = (year: string) => {
+    if (generatedReport) {
+      setErrorMessage(
+        "Changing class years will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+    
     setSelectedYears((prev) => prev.filter((y) => y !== year))
   }
 
@@ -167,6 +203,10 @@ function ReportsContent() {
     }
     
     console.log('Starting report generation with:', { selectedOptions, selectedYears });
+    
+    // Save initial selections
+    setInitialSelectedOptions([...selectedOptions]);
+    setInitialSelectedYears([...selectedYears]);
     
     // Set overall generation state to true
     setIsGeneratingReport(true);
@@ -1337,10 +1377,11 @@ function ReportsContent() {
                 </div>
               </div>
 
-              <div className="flex space-x-4">
+              {/* Add margin-top to create space between Step 3 container and buttons */}
+              <div className="flex flex-col space-y-4 mt-6">
                 <button
                   onClick={handleGenerateReport}
-                  className={`flex-1 ${
+                  className={`w-full ${
                     isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500/95 hover:scale-105 transform transition-transform duration-300"
                   } text-white py-2 px-4 rounded-md flex items-center justify-center`}
                   disabled={isLoading}
@@ -1376,7 +1417,7 @@ function ReportsContent() {
                 
                 <button
                   onClick={handleClearReport}
-                  className="flex-1 bg-transparent text-black py-2 px-4 rounded-md border border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center justify-center"
+                  className="w-full bg-transparent text-black py-2 px-4 rounded-md border border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center justify-center"
                   disabled={isLoading || !generatedReport}
                 >
                   Clear Report
