@@ -1024,7 +1024,7 @@ function ReportsContent() {
               
               {/* Step 3: Additional Options */}
               <div className="mb-8 border border-black p-4 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Step 3: Additional Options</h2>
+                <h2 className="text-xl font-semibold mb-4">Step 3: Select Format</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700">Option 1</span>
@@ -1064,7 +1064,7 @@ function ReportsContent() {
                 onClick={handleGenerateReport}
                 className={`w-full ${
                   isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500/95 hover:scale-105 transform transition-transform duration-300"
-                } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center border border-black`}
+                } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center`}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -1118,7 +1118,7 @@ function ReportsContent() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 backdrop-blur-md bg-white/30 border border-black rounded-lg overflow-auto shadow-lg">
+              <div className="flex-1 backdrop-blur-md bg-white/20 bg-slate-200/10 border border-black rounded-lg overflow-auto shadow-lg">
                 <div className="min-h-full p-8 flex justify-center">
                   <ReportContent />
                 </div>
@@ -1145,14 +1145,14 @@ function ReportsContent() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="bg-gray-700 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black"
+              className="backdrop-blur-md bg-white/20 bg-slate-200/10 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
             >
               <ReportContent />
               <div className="mt-4 flex justify-center space-x-4">
                 <button
                   onClick={handlePreviousPage}
                   disabled={currentPage === 1}
-                  className="bg-transparent text-white py-2 px-4 rounded-md border border-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-gray-800 transition-colors duration-300"
+                  className="bg-transparent text-black py-2 px-4 rounded-md border border-black flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   Previous Page
@@ -1160,7 +1160,7 @@ function ReportsContent() {
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className="bg-transparent text-white py-2 px-4 rounded-md border border-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-gray-800 transition-colors duration-300"
+                  className="bg-transparent text-black py-2 px-4 rounded-md border border-black flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:text-white transition-colors duration-300"
                 >
                   Next Page
                   <ChevronRight className="w-4 h-4 ml-2" />
