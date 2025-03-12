@@ -157,9 +157,11 @@ export class LinkedInProfileSearchEngine {
         const storedSchoolName = typeof window !== 'undefined' ? 
           localStorage.getItem('schoolName') : null;
         
-        tableName = storedSchoolName ? 
-          `${storedSchoolName}_vector` : 
-          'lawrenceville_vector'; // Fallback to default
+        if (!storedSchoolName) {
+          throw new Error('School name is required but not provided');
+        }
+        
+        tableName = `${storedSchoolName}_vector`;
       }
       
       console.log(`Fetching profile from table: ${tableName}`);

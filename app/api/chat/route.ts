@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { getChartById } from '../../data/chartData'
+import { callOpenAI } from '@/app/utils/openai'
 
 // Define an interface for the chart data structure
 interface ChartItem {
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
       ).join('\n');
     }
 
-    const response = await openai.chat.completions.create({
+    const response = await callOpenAI('chat/completions', {
       model: 'gpt-4o-mini',
       stream: true,
       messages: [

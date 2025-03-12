@@ -1,4 +1,6 @@
 import OpenAI from 'openai'
+import { callOpenAI } from '@/app/utils/openai'
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || ''
@@ -8,7 +10,7 @@ export async function POST(req: Request) {
   const { query } = await req.json()
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await callOpenAI('chat/completions', {
       model: 'gpt-4o-mini',
       stream: true,
       messages: [

@@ -410,7 +410,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Centered Catchphrase */}
-          <div className="text-center mb-16 pt-8">
+          <div className="text-center mb-16 pt-10">
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
               Beautiful Downloadable Reports
             </h2>
@@ -423,7 +423,7 @@ export default function FeaturesSection() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Report Image - Takes up more space */}
             <div className="lg:w-7/12">
-              <div className="h-[525px] overflow-hidden">
+              <div className="h-[535px] overflow-hidden">
                 <img 
                   src="/report_demo.png" 
                   alt="Alumni Success Report" 
@@ -478,8 +478,8 @@ export default function FeaturesSection() {
             </div>
           </div>
           
-          {/* Added padding at the end of the section - slightly reduced */}
-          <div className="pb-24"></div>
+          {/* Added padding at the end of the section - reduced further */}
+          <div className="pb-20"></div>
         </div>
       </section>
     </>
