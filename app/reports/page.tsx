@@ -1118,9 +1118,15 @@ function ReportsContent() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 backdrop-blur-md bg-white/10 bg-slate-700/30 border border-black rounded-lg overflow-auto shadow-lg">
-                <div className="min-h-full p-8 flex justify-center">
-                  <ReportContent />
+              <div className="flex-1 backdrop-blur-md bg-slate-700/30 bg-black/20 border border-black rounded-lg overflow-auto shadow-lg relative">
+                {/* Top shadow overlay for container */}
+                <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-lg z-10"></div>
+                
+                <div className="min-h-full p-8 flex justify-center relative">
+                  {/* Shadow for the actual report page */}
+                  <div className="w-full max-w-4xl bg-white rounded-lg shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.2)]">
+                    <ReportContent />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1145,9 +1151,16 @@ function ReportsContent() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="backdrop-blur-md bg-white/10 bg-slate-500/20 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
+              className="backdrop-blur-md bg-slate-700/30 bg-black/20 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black shadow-lg"
             >
-              <ReportContent />
+              {/* Top shadow overlay */}
+              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-lg z-10"></div>
+              
+              {/* Shadow for the actual report page */}
+              <div className="bg-white rounded-lg shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.2)]">
+                <ReportContent />
+              </div>
+              
               <div className="mt-4 flex justify-center space-x-4">
                 <button
                   onClick={handlePreviousPage}
