@@ -421,7 +421,7 @@ export default function FeaturesSection() {
             {/* Report Image - Takes up more space */}
             <div className="lg:w-7/12">
               <img 
-                src="/assets/report_demo.png" 
+                src="/report_demo.png" 
                 alt="Alumni Success Report" 
                 className="rounded-xl shadow-xl border border-gray-200 w-full"
               />
@@ -470,11 +470,6 @@ export default function FeaturesSection() {
                   </div>
                 </div>
               </div>
-              
-              <button className="flex items-center text-emerald-600 font-semibold hover:text-emerald-800 transition-colors group">
-                Learn more 
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
             </div>
           </div>
         </div>
