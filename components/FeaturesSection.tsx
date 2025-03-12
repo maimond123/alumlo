@@ -395,6 +395,9 @@ export default function FeaturesSection() {
               />
             </div>
           </div>
+          
+          {/* Added padding at the end of the section */}
+          <div className="pb-20"></div>
         </div>
       </section>
 
@@ -420,11 +423,13 @@ export default function FeaturesSection() {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Report Image - Takes up more space */}
             <div className="lg:w-7/12">
-              <img 
-                src="/report_demo.png" 
-                alt="Alumni Success Report" 
-                className="rounded-xl shadow-xl border border-gray-200 w-full"
-              />
+              <div className="h-[600px] overflow-hidden">
+                <img 
+                  src="/report_demo.png" 
+                  alt="Alumni Success Report" 
+                  className="rounded-xl shadow-xl border border-black w-full h-full object-cover"
+                />
+              </div>
             </div>
             
             {/* Description Content - Takes up less space */}
@@ -472,7 +477,9 @@ export default function FeaturesSection() {
               </div>
             </div>
           </div>
-          <div className="pb-20"></div>
+          
+          {/* Added padding at the end of the section */}
+          <div className="pb-32"></div>
         </div>
       </section>
     </>
