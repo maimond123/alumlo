@@ -53,6 +53,8 @@ function ReportsContent() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const yearDropdownRef = useRef<HTMLDivElement>(null);
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchSchoolName = async () => {
@@ -139,12 +141,26 @@ function ReportsContent() {
   }
 
   const handleGenerateReport = async () => {
+    // Check if both selections are empty
+    if (selectedOptions.length === 0 || selectedYears.length === 0) {
+      setErrorMessage(
+        selectedOptions.length === 0 && selectedYears.length === 0
+          ? "Please select at least one data point and one class year before generating a report."
+          : selectedOptions.length === 0
+          ? "Please select at least one data point before generating a report."
+          : "Please select at least one class year before generating a report."
+      );
+      setShowErrorModal(true);
+      return;
+    }
+    
     console.log('Starting report generation with:', { selectedOptions, selectedYears })
     setIsLoading(true)
     try {
+      // Create a new report object with the current selections
       setGeneratedReport({
-        options: selectedOptions,
-        years: selectedYears
+        options: [...selectedOptions],
+        years: [...selectedYears]
       })
       console.log('Report generated successfully:', { selectedOptions, selectedYears })
     } catch (error) {
@@ -943,9 +959,6 @@ function ReportsContent() {
             </>
           )}
         </div>
-        <div className="absolute bottom-4 right-4 text-gray-500">
-          Page {currentPage} of {totalPages}
-        </div>
       </div>
     );
   };
@@ -1270,6 +1283,46 @@ function ReportsContent() {
                 >
                   Next Page
                   <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Modal */}
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-red-600">Error</h3>
+                <button 
+                  onClick={() => setShowErrorModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-gray-700 mb-6">{errorMessage}</p>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowErrorModal(false)}
+                  className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>
