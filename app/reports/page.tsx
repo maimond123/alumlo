@@ -888,7 +888,7 @@ function ReportsContent() {
 
           <div className="flex gap-6 h-[calc(100vh-12rem)]">
             {/* Left Column - Checkboxes and Year Selection */}
-            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md overflow-y-auto border border-black">
+            <div className="w-1/3 bg-white p-6 rounded-lg shadow-md overflow-y-auto">
               {/* Step 1: Select Data Points */}
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">
@@ -899,7 +899,7 @@ function ReportsContent() {
                 <div className="relative mb-4">
                   <button 
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-left flex justify-between items-center"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-left flex justify-between items-center"
                   >
                     <span>{selectedOptions.length > 0 ? `${selectedOptions.length} options selected` : "Select data points..."}</span>
                     <svg className={`w-5 h-5 transition-transform ${isDropdownOpen ? "transform rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -908,7 +908,7 @@ function ReportsContent() {
                   </button>
                   
                   {isDropdownOpen && (
-                    <ul className="absolute z-10 w-full bg-white border border-black rounded-md mt-1 max-h-60 overflow-auto">
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-auto">
                       {reportOptions.map((option) => (
                         <li 
                           key={option.id}
@@ -934,7 +934,7 @@ function ReportsContent() {
                 </div>
                 
                 {/* Selected options as tags */}
-                <div className="mb-4 border border-black rounded-lg p-2">
+                <div className="mb-4 border border-gray-200 rounded-lg p-2">
                   <div className="h-20 overflow-y-auto">
                     <div className="grid grid-cols-2 gap-1">
                       {selectedOptions.map((optionId) => {
@@ -977,9 +977,9 @@ function ReportsContent() {
                     placeholder="Search years..."
                     className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black" />
                   {suggestedYears.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-black rounded-md mt-1 max-h-40 overflow-auto">
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-40 overflow-auto">
                       {suggestedYears.map((year, index) => (
                         <li
                           key={index}
@@ -1000,7 +1000,7 @@ function ReportsContent() {
                     </ul>
                   )}
                 </div>
-                <div className="mb-4 border border-black rounded-lg p-2">
+                <div className="mb-4 border border-gray-200 rounded-lg p-2">
                   <div className="h-20 overflow-y-auto">
                     <div className="grid grid-cols-5 gap-1">
                       {selectedYears.map((year) => (
@@ -1063,7 +1063,7 @@ function ReportsContent() {
               <button
                 onClick={handleGenerateReport}
                 className={`w-full ${
-                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-500/95 hover:scale-105 transform transition-transform duration-300"
+                  isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-teal-500/95 hover:scale-105 transform transition-transform duration-300"
                 } text-white py-2 px-4 rounded-md mt-6 flex items-center justify-center`}
                 disabled={isLoading}
               >
@@ -1104,21 +1104,21 @@ function ReportsContent() {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleDownload}
-                    className="bg-transparent text-black py-2 px-6 rounded-full border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center"
+                    className="bg-transparent text-black py-2 px-6 rounded-md border border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Report
                   </button>
                   <button
                     onClick={() => setIsExpanded(true)}
-                    className="bg-transparent text-black py-2 px-6 rounded-full border-2 border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center"
+                    className="bg-transparent text-black py-2 px-6 rounded-md border border-black hover:bg-black hover:text-white transition-colors duration-300 flex items-center"
                   >
                     <Maximize2 className="w-4 h-4 mr-2" />
                     Expand Preview
                   </button>
                 </div>
               </div>
-              <div className="flex-1 bg-gray-700 rounded-lg overflow-auto border border-black">
+              <div className="flex-1 backdrop-blur-md bg-white/30 border border-white/20 rounded-lg overflow-auto shadow-lg">
                 <div className="min-h-full p-8 flex justify-center">
                   <ReportContent />
                 </div>
@@ -1145,14 +1145,14 @@ function ReportsContent() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="bg-gray-700 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg border border-black"
+              className="bg-gray-700 p-8 max-w-4xl w-full max-h-[90vh] overflow-auto relative rounded-lg"
             >
               <ReportContent />
               <div className="mt-4 flex justify-center space-x-4">
                 <button
                   onClick={handlePreviousPage}
                   disabled={currentPage === 1}
-                  className="bg-transparent text-white py-2 px-4 rounded-full border-2 border-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-gray-800 transition-colors duration-300"
+                  className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   Previous Page
@@ -1160,7 +1160,7 @@ function ReportsContent() {
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className="bg-transparent text-white py-2 px-4 rounded-full border-2 border-white flex items-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-gray-800 transition-colors duration-300"
+                  className="bg-black text-white py-2 px-4 rounded-md hover:bg-black/90 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next Page
                   <ChevronRight className="w-4 h-4 ml-2" />
