@@ -1,53 +1,81 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    // Default to chat/completions if no endpoint is specified
-    const { endpoint = 'chat/completions', query, ...otherData } = body;
-
-    console.log('Received request for endpoint:', endpoint);
-    console.log('Request data:', { query, ...otherData });
-
-    let requestData;
-    let response;
+    const { query } = await req.json();
     
-    // If there's a query but no messages, format it for the chat API
-    if (query && !otherData.messages) {
-      requestData = {
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: query }],
-        ...otherData
-      };
-    } else {
-      requestData = otherData;
-    }
+    console.log('Received query:', query);
     
-    switch (endpoint) {
-      case 'chat/completions':
-        response = await openai.chat.completions.create(requestData);
-        break;
-      case 'completions':
-        response = await openai.completions.create(requestData);
-        break;
-      case 'embeddings':
-        response = await openai.embeddings.create(requestData);
-        break;
-      default:
-        console.error('Invalid endpoint:', endpoint);
-        return NextResponse.json({ error: 'Invalid endpoint' }, { status: 400 });
+    if (!query) {
+      return new Response(JSON.stringify({ error: 'Query is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    return NextResponse.json(response);
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: `You are an AI assistant helping students explore alumni data. 
+          
+Your task is to generate 3 expanded search queries based on the original query. These should be 
+variations or refinements that could help the user discover additional relevant alumni profiles.
+
+For example:
+- If the query is "AI researchers", you might suggest "Machine learning engineers at tech companies", "PhD graduates in artificial intelligence", "Alumni working on NLP at research labs"
+- If the query is "Finance in NYC", suggest "Investment bankers at top Wall Street firms", "Alumni in private equity in Manhattan", "FinTech startup founders in New York"
+
+Keep each suggestion concise (under 10 words if possible) and highly relevant to the original query.
+Just provide the 3 expansions separated by "•" characters, with no numbering, introduction, or additional text.`,
+        },
+        {
+          role: 'user',
+          content: query
+        },
+      ],
+    });
+
+    // Create a new stream
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of response) {
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+              // Send the content chunk
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`));
+            }
+          }
+        } catch (error) {
+          console.error('Stream error:', error);
+          controller.error(error);
+        }
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
   } catch (error: any) {
-    console.error('Error calling OpenAI:', error);
-    return NextResponse.json({ 
+    console.error('Expansion error:', error);
+    return new Response(JSON.stringify({ 
       error: error.message || 'An error occurred while processing your request' 
-    }, { status: 500 });
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
