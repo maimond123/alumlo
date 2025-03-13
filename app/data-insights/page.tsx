@@ -653,15 +653,7 @@ export default function DataInsightsPage() {
             onClick={(e) => e.stopPropagation()}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            {/* Add a visible close button at the top-right */}
-            <button
-              onClick={() => setSelectedChart(null)}
-              className="absolute top-4 right-4 z-50 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18M6 6l12 12"></path>
-              </svg>
-            </button>
+            {/* X button has been removed */}
 
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
@@ -710,10 +702,12 @@ export default function DataInsightsPage() {
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
-                {/* Toggle button for chat expansion */}
+                {/* Toggle button for chat expansion - positioned INSIDE the panel when expanded */}
                 <button 
                   onClick={() => setIsChatExpanded(!isChatExpanded)} 
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50 transition-transform duration-300 hover:scale-110"
+                  className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50 transition-transform duration-300 hover:scale-110 ${
+                    isChatExpanded ? "left-4" : "-left-4"
+                  }`}
                 >
                   {isChatExpanded ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
