@@ -70,6 +70,7 @@ export default function DataInsightsPage() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter()
+  const [isChatExpanded, setIsChatExpanded] = useState(false);
 
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
@@ -669,7 +670,7 @@ export default function DataInsightsPage() {
           >
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
-              <div className="flex-1 p-8 flex flex-col overflow-hidden">
+              <div className={`transition-all duration-300 ${isChatExpanded ? "w-1/3" : "flex-1"} p-8 flex flex-col overflow-hidden`}>
                 <div className="flex justify-between items-center mb-6">
                   <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
                     {selectedChart.title}
@@ -701,8 +702,24 @@ export default function DataInsightsPage() {
 
               {/* Chat sidebar */}
               <motion.div
-                className="w-1/3 border-l border-gray-200 flex flex-col bg-gray-50"
+                className={`transition-all duration-300 ${isChatExpanded ? "w-2/3" : "w-1/3"} border-l border-gray-200 flex flex-col bg-gray-50 relative`}
               >
+                {/* Toggle button for chat expansion */}
+                <button 
+                  onClick={() => setIsChatExpanded(!isChatExpanded)} 
+                  className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50"
+                >
+                  {isChatExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m15 18-6-6 6-6"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                  )}
+                </button>
+
                 <div className="p-4 border-b border-gray-200 bg-white">
                   <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
                   <p className="text-sm text-gray-500">Ask questions about this data</p>

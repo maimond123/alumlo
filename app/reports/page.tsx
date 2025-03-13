@@ -181,7 +181,7 @@ function ReportsContent() {
   }
 
   const handleGenerateReport = async () => {
-    // Check if both selections are empty
+    // Check if selections are empty
     if (selectedOptions.length === 0 || selectedYears.length === 0) {
       setErrorMessage(
         selectedOptions.length === 0 && selectedYears.length === 0
@@ -230,8 +230,14 @@ function ReportsContent() {
       console.log('[DEBUG] Setting generated report state');
       setGeneratedReport(newReport);
       
+      // Wait for data to be fetched before generating explanations
+      console.log('[DEBUG] Waiting for data to be fetched');
+      
+      // Wait a short time for the data fetching useEffects to run
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       console.log('[DEBUG] Calling generateExplanations directly');
-      // Immediately call generateExplanations instead of waiting for the useEffect
+      // Call generateExplanations after data has been fetched
       await generateExplanations(newReport);
       
       // Mark report generation as complete
