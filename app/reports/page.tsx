@@ -886,6 +886,35 @@ function ReportsContent() {
     setOption1Enabled(false);
   };
 
+  const renderChart = (chartType: string) => {
+    if (loadingStates[chartType === 'salary' ? 'salaryData' : 
+                      chartType === 'industry' ? 'industryData' : 
+                      chartType === 'location' ? 'locationData' : 
+                      chartType === 'graduate_school' ? 'graduateSchoolData' : 
+                      chartType === 'salary_by_industry' ? 'industrySalaryData' : 'reportGeneration']) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+        </div>
+      );
+    }
+
+    switch (chartType) {
+      case 'salary':
+        return salaryData ? <SalaryBarChart data={Object.entries(salaryData[0]?.current_salary_distribution || {}).map(([name, value]) => ({ name, value: Number(value) }))} /> : null;
+      case 'industry':
+        return industryData ? <IndustryPieChart data={Object.entries(industryData[0]?.current_industry_distribution || {}).map(([name, value]) => ({ name, value: Number(value) }))} /> : null;
+      case 'location':
+        return locationData.length > 0 ? <GeographyBarChart data={locationData} /> : null;
+      case 'graduate_school':
+        return graduateSchoolData ? <PieChart data={Object.entries(graduateSchoolData[0]?.graduate_school_distribution || {}).map(([name, value]) => ({ name, value: Number(value) }))} /> : null;
+      case 'salary_by_industry':
+        return industrySalaryData.length > 0 ? <AverageSalaryByIndustryBarChart data={industrySalaryData} /> : null;
+      default:
+        return null;
+    }
+  };
+
   const ReportContent = () => {
     return (
       <div ref={reportRef} className="w-[8.5in] min-h-[11in] bg-white shadow-2xl relative">
@@ -901,235 +930,90 @@ function ReportsContent() {
             </div>
           ) : (
             <>
+              {/* Report Title */}
+              <h1 className="text-2xl font-bold text-center mb-6">
+                Alumni Success Metrics Report
+              </h1>
+              
               {currentPage === 1 && (
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-6">Alumni Success Metrics Report</h1>
-                  
-                  {/* Executive Summary */}
+                <>
+                  {/* Executive Summary on first page */}
                   <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Executive Summary</h2>
-                    {isLoadingExplanations ? (
-                      <div className="h-40 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
-                      </div>
-                    ) : (
-                      <div className="prose">
-                        {executiveSummary ? (
-                          <p className="text-black">{executiveSummary}</p>
-                        ) : (
-                          <p className="text-gray-500 italic">Executive summary will appear here once generated.</p>
-                        )}
-                      </div>
-                    )}
+                    <h2 className="text-xl font-semibold mb-3">Executive Summary</h2>
+                    <div className="text-sm text-gray-700">
+                      {loadingStates.executiveSummary ? (
+                        <div className="flex items-center justify-center h-24">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                        </div>
+                      ) : (
+                        <p>{executiveSummary}</p>
+                      )}
+                    </div>
                   </div>
-                  
-                  {/* Table of Contents */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Report Contents</h2>
-                    <ul className="list-disc pl-5 text-black">
-                      {selectedOptions.map((option, index) => (
-                        <li key={option} className="mb-2">
-                          {option === 'salary' ? 'Salary Distribution' :
-                           option === 'industry' ? 'Industry Distribution' :
-                           option === 'location' ? 'Geographic Distribution' :
-                           option === 'graduate_school' ? 'Graduate School Distribution' :
-                           option === 'salary_by_industry' ? 'Average Salary by Industry' : option}
-                          {` (Page ${index + 2})`}
-                        </li>
-                      ))}
-                      <li className="mb-2">Recommendations {`(Page ${selectedOptions.length + 2})`}</li>
-                    </ul>
-                  </div>
-                  
-                  {/* Report Methodology */}
-                  <div className="mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Methodology</h2>
-                    <p className="text-black">
-                      This report analyzes alumni data from classes {selectedYears.join(', ')}. 
-                      The visualizations present key metrics related to career outcomes, 
-                      industry placement, geographic distribution, and educational advancement 
-                      of our alumni. Data was collected through the AlumIntel platform.
-                    </p>
-                  </div>
-                </div>
+                </>
               )}
               
-              {/* Visualization Pages - One per page */}
-              {selectedOptions.map((option, index) => {
-                if (currentPage !== index + 2) return null;
-                
-                let visualizationContent;
-                switch(option) {
-                  case 'salary':
-                    visualizationContent = (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Salary Distribution</h2>
-                        {selectedYears.map(year => {
-                          const yearData = salaryData?.find((item: { class_year: number | string }) => 
-                            item.class_year.toString() === year.toString()
-                          );
-                          
-                          if (!yearData?.current_salary_distribution) return null;
-                          
-                          const chartData = Object.entries(yearData.current_salary_distribution)
-                            .map(([range, count]) => ({
-                              name: range, 
-                              value: typeof count === 'number' ? count : Number(count),
-                              fill: '#4A90E2'
-                            }))
-                            .sort((a, b) => {
-                              const aValue = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
-                              const bValue = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
-                              return aValue - bValue;
-                            });
-                          
-                          return (
-                            <div key={year} className="mb-6">
-                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
-                              <div className="h-64 mb-4">
-                                <div className="text-center text-sm text-gray-600 mb-2">Number of Alumni</div>
-                                <SalaryBarChart data={chartData} />
-                                <div className="text-center text-sm text-gray-600 mt-2">Salary Ranges ($)</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    );
-                    break;
+              {currentPage > 1 && currentPage < totalPages && (
+                <>
+                  {/* Chart Section - Fixed height container */}
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-4">
+                      {selectedOptions[currentPage - 2] === 'salary' && 'Salary Distribution'}
+                      {selectedOptions[currentPage - 2] === 'industry' && 'Industry Distribution'}
+                      {selectedOptions[currentPage - 2] === 'location' && 'Geographic Distribution'}
+                      {selectedOptions[currentPage - 2] === 'graduate_school' && 'Graduate School Distribution'}
+                      {selectedOptions[currentPage - 2] === 'salary_by_industry' && 'Average Salary by Industry'}
+                    </h2>
                     
-                  case 'industry':
-                    visualizationContent = (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Industry Distribution</h2>
-                        {selectedYears.map(year => {
-                          const yearData = industryData?.find((item: { class_year: number | string }) => 
-                            item.class_year.toString() === year.toString()
-                          );
-                          
-                          if (!yearData?.current_industry_distribution) return null;
-                          
-                          const chartData = Object.entries(yearData.current_industry_distribution)
-                            .map(([industry, value]) => ({
-                              name: industry,
-                              value: typeof value === 'number' ? value : Number(value)
-                            }));
-                          
-                          return (
-                            <div key={year} className="mb-6">
-                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
-                              <div className="h-64 mb-4">
-                                <IndustryPieChart data={chartData} isZoomed={true} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    );
-                    break;
+                    {/* Fixed height chart container */}
+                    <div className="h-[350px] w-full mb-6">
+                      {renderChart(selectedOptions[currentPage - 2])}
+                    </div>
                     
-                  case 'location':
-                    visualizationContent = (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Geographic Distribution</h2>
-                        <div className="h-64 mb-6">
-                          <GeographyBarChart data={locationData} isZoomed={true} />
-                        </div>
-                      </>
-                    );
-                    break;
-                    
-                  case 'graduate_school':
-                    visualizationContent = (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Graduate School Distribution</h2>
-                        {selectedYears.map(year => {
-                          const yearData = graduateSchoolData?.find((item: { class_year: number | string }) => 
-                            item.class_year.toString() === year.toString()
-                          );
-                          
-                          if (!yearData?.graduate_school_distribution) return null;
-                          
-                          const chartData = Object.entries(yearData.graduate_school_distribution)
-                            .map(([school, value]) => ({
-                              name: school,
-                              value: typeof value === 'number' ? value : Number(value)
-                            }));
-                          
-                          return (
-                            <div key={year} className="mb-6">
-                              <h3 className="text-lg font-medium mb-2">Class of {year}</h3>
-                              <div className="h-64 mb-4">
-                                <PieChart data={chartData} isZoomed={true} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </>
-                    );
-                    break;
-                    
-                  case 'salary_by_industry':
-                    visualizationContent = (
-                      <>
-                        <h2 className="text-xl font-semibold mb-4">Average Salary by Industry</h2>
-                        <div className="h-64 mb-6">
-                          <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={true} />
-                        </div>
-                      </>
-                    );
-                    break;
-                    
-                  default:
-                    visualizationContent = null;
-                }
-                
-                return (
-                  <div key={option} className="mb-6">
-                    {visualizationContent}
-                    
-                    {/* Data Explanations */}
-                    <div className="mt-4">
-                      <h3 className="text-lg font-medium mb-2">Key Findings</h3>
-                      <div className="prose mb-4">
-                        {explanations[option]?.factual ? (
-                          <p className="text-black">{explanations[option].factual}</p>
+                    {/* Analysis Section - Always below the chart */}
+                    <div className="mt-8">
+                      <h3 className="text-lg font-semibold mb-2">Key Findings</h3>
+                      <div className="text-sm text-gray-700 mb-4">
+                        {loadingStates.explanations ? (
+                          <div className="flex items-center justify-center h-16">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                          </div>
                         ) : (
-                          <p className="text-gray-500 italic">Analysis will appear here once generated.</p>
+                          <p>{explanations[selectedOptions[currentPage - 2]]?.factual || 'Analysis will appear here once generated.'}</p>
                         )}
                       </div>
                       
-                      <h3 className="text-lg font-medium mb-2">Strategic Implications</h3>
-                      <div className="prose">
-                        {explanations[option]?.strategic ? (
-                          <p className="text-black">{explanations[option].strategic}</p>
+                      <h3 className="text-lg font-semibold mb-2">Strategic Implications</h3>
+                      <div className="text-sm text-gray-700">
+                        {loadingStates.explanations ? (
+                          <div className="flex items-center justify-center h-16">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                          </div>
                         ) : (
-                          <p className="text-gray-500 italic">Strategic insights will appear here once generated.</p>
+                          <p>{explanations[selectedOptions[currentPage - 2]]?.strategic || 'Strategic insights will appear here once generated.'}</p>
                         )}
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                </>
+              )}
               
-              {/* Recommendations Page */}
-              {currentPage === selectedOptions.length + 2 && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Recommendations</h2>
-                  {isLoadingExplanations ? (
-                    <div className="h-40 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
-                    </div>
-                  ) : (
-                    <div className="prose">
-                      {recommendations ? (
-                        <div className="text-black" dangerouslySetInnerHTML={{ __html: recommendations }}></div>
+              {currentPage === totalPages && (
+                <>
+                  {/* Recommendations on last page */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-3">Recommendations</h2>
+                    <div className="text-sm text-gray-700">
+                      {loadingStates.recommendations ? (
+                        <div className="flex items-center justify-center h-24">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800"></div>
+                        </div>
                       ) : (
-                        <p className="text-gray-500 italic">Recommendations will appear here once generated.</p>
+                        <p>{recommendations}</p>
                       )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
             </>
           )}
