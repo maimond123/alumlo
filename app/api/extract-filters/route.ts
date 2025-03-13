@@ -1,16 +1,24 @@
-import OpenAI from 'openai'
-import { callOpenAI } from '@/app/utils/openai'
-
+import { NextRequest } from 'next/server';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
-})
+  apiKey: process.env.OPENAI_API_KEY || '',
+});
 
-export async function POST(req: Request) {
-  const { query } = await req.json()
-
+export async function POST(req: NextRequest) {
   try {
-    const response = await callOpenAI('chat/completions', {
+    const { query } = await req.json();
+    
+    console.log('Extracting filters for query:', query);
+    
+    if (!query) {
+      return new Response(JSON.stringify({ error: 'Query is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       stream: true,
       messages: [
@@ -44,26 +52,26 @@ If no filters can be confidently extracted, output "No specific filters detected
           content: query
         },
       ],
-    })
+    });
 
     // Create a new stream
     const stream = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of response) {
-            const content = chunk.choices[0]?.delta?.content || ''
+            const content = chunk.choices[0]?.delta?.content || '';
             if (content) {
               // Send the content chunk
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`));
             }
           }
         } catch (error) {
-          console.error('Stream error:', error)
-          controller.error(error)
+          console.error('Stream error:', error);
+          controller.error(error);
         }
-        controller.close()
+        controller.close();
       }
-    })
+    });
 
     return new Response(stream, {
       headers: {
@@ -71,12 +79,14 @@ If no filters can be confidently extracted, output "No specific filters detected
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
       },
-    })
-  } catch (error) {
-    console.error('Filter extraction error:', error)
-    return new Response(JSON.stringify({ error: 'An error occurred' }), {
+    });
+  } catch (error: any) {
+    console.error('Filter extraction error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'An error occurred while processing your request' 
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
-    })
+    });
   }
 }
