@@ -653,17 +653,24 @@ export default function DataInsightsPage() {
             onClick={(e) => e.stopPropagation()}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
-            {/* X button has been removed */}
-
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
               <motion.div 
-                className={`transition-all duration-500 ease-in-out ${isChatExpanded ? "hidden" : "flex-1"} p-8 flex flex-col overflow-hidden`}
+                className="flex flex-col overflow-hidden"
                 animate={{ 
                   width: isChatExpanded ? "0%" : "66.666667%",
-                  opacity: isChatExpanded ? 0 : 1 
+                  opacity: isChatExpanded ? 0 : 1,
+                  padding: isChatExpanded ? "0px" : "2rem"
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{
+                  display: isChatExpanded ? "none" : "flex"
+                }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 30,
+                  opacity: { duration: 0.2 }
+                }}
               >
                 <div className="flex justify-between items-center mb-6">
                   <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
@@ -683,7 +690,6 @@ export default function DataInsightsPage() {
                   </div>
                 </div>
 
-                {/* Chart content - with vertical centering */}
                 <motion.div 
                   layoutId={`chart-content-${selectedChart.id}`} 
                   className="flex-1 flex items-center justify-center overflow-hidden"
@@ -696,16 +702,20 @@ export default function DataInsightsPage() {
 
               {/* Chat sidebar */}
               <motion.div
-                className={`border-l border-gray-200 flex flex-col bg-gray-50 relative transition-all duration-500 ease-in-out`}
+                className="border-l border-gray-200 flex flex-col bg-gray-50 relative"
                 animate={{ 
                   width: isChatExpanded ? "100%" : "33.333333%" 
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 30
+                }}
               >
-                {/* Toggle button for chat expansion - positioned INSIDE the panel when expanded */}
+                {/* Toggle button with thick black border */}
                 <button 
                   onClick={() => setIsChatExpanded(!isChatExpanded)} 
-                  className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50 transition-transform duration-300 hover:scale-110 ${
+                  className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border-2 border-black z-10 hover:bg-gray-50 transition-all duration-300 hover:scale-110 ${
                     isChatExpanded ? "left-4" : "-left-4"
                   }`}
                 >
@@ -720,7 +730,7 @@ export default function DataInsightsPage() {
                   )}
                 </button>
 
-                {/* Rest of the chat content remains the same */}
+                {/* Chat content */}
                 <div className="p-4 border-b border-gray-200 bg-white">
                   <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
                   <p className="text-sm text-gray-500">Ask questions about this data</p>
