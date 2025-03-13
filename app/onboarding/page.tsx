@@ -89,10 +89,33 @@ export default function Onboarding() {
         const { data, error } = await supabase.auth.signUp({
           email: email,
           password: password,
+          options: {
+            emailRedirectTo: window.location.origin + '/dashboard'
+          }
         });
 
         if (error) throw error;
-        setShowConfirmation(true);
+        
+        // Check if email confirmation was sent
+        if (data?.user?.identities?.length === 0) {
+          throw new Error("User already exists. Please try signing in or request a new link.");
+        }
+        
+        // Check confirmation need
+        if (data?.user?.confirmed_at) {
+          // Already confirmed, go directly to sign in
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+          
+          if (signInError) throw signInError;
+          
+          router.push('/dashboard');
+        } else {
+          // Set confirmation needed
+          setShowConfirmation(true);
+        }
       } else {
         // Step 2: Confirm signup with the code
         const { error } = await supabase.auth.verifyOtp({
@@ -167,7 +190,7 @@ export default function Onboarding() {
       >
         <div className="text-center">
           <Image
-            src="/assets/icons8-atom-48.png"
+            src="/assets/icons8-atom-96.png"
             alt="AlumIntel Logo"
             width={150}
             height={50}
