@@ -21,8 +21,6 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [confirmationCode, setConfirmationCode] = useState("")
 
   useEffect(() => {
     const token = searchParams.get("token")
@@ -82,66 +80,35 @@ export default function Onboarding() {
         throw new Error("Email not found");
       }
       
-      if (!showConfirmation) {
-        // Step 1: Sign up with Supabase
-        // Since we're not pre-creating users in our Python script anymore,
-        // this will create a new user with the provided email and password
-        const { data, error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            emailRedirectTo: window.location.origin + '/dashboard'
-          }
-        });
-
-        if (error) throw error;
-        
-        // Check if email confirmation was sent
-        if (data?.user?.identities?.length === 0) {
-          throw new Error("User already exists. Please try signing in or request a new link.");
+      // Create account with email and password, but skip email verification
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          // Skip email verification since we already verified via magic link
+          emailRedirectTo: window.location.origin + '/dashboard'
         }
-        
-        // Check confirmation need
-        if (data?.user?.confirmed_at) {
-          // Already confirmed, go directly to sign in
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
-          
-          if (signInError) throw signInError;
-          
-          router.push('/dashboard');
-        } else {
-          // Set confirmation needed
-          setShowConfirmation(true);
-        }
-      } else {
-        // Step 2: Confirm signup with the code
-        const { error } = await supabase.auth.verifyOtp({
-          email: email,
-          token: confirmationCode,
-          type: 'signup'
-        });
+      });
 
-        if (error) throw error;
+      if (error) throw error;
+      
+      // Sign in immediately after account creation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      
+      if (signInError) throw signInError;
+      
+      // Update user status in database
+      await supabase
+        .from('customer_information')
+        .update({ account_status: 'active' })
+        .eq('school_email', email);
         
-        // After verification, sign in the user
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-        
-        if (signInError) throw signInError;
-        
-        // Update user status in database
-        await supabase
-          .from('customer_information')
-          .update({ account_status: 'active' })
-          .eq('school_email', email);
-          
-        router.push('/dashboard');
-      }
+      // Redirect to dashboard
+      router.push('/dashboard');
+      
     } catch (error: any) {
       console.error("Account setup error:", error);
       setError(error.message || "An error occurred during account setup");
@@ -197,12 +164,10 @@ export default function Onboarding() {
             className="mx-auto"
           />
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            {showConfirmation ? "Confirm Your Account" : "Complete Your Account Setup"}
+            Complete Your Account Setup
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            {showConfirmation
-              ? "A verification code has been sent to your email. Please enter it below."
-              : "Create a password to access your AlumIntel dashboard."}
+            Create a password to access your AlumIntel dashboard.
           </p>
         </div>
 
@@ -220,70 +185,51 @@ export default function Onboarding() {
             />
           </div>
 
-          {!showConfirmation ? (
-            <>
-              <div className="relative">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Create Password
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-                </button>
-              </div>
+          <div className="relative">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Create Password
+            </label>
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+            </button>
+          </div>
 
-              <div className="relative">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </>
-          ) : (
-            <div>
-              <label htmlFor="confirmationCode" className="block text-sm font-medium text-gray-700">
-                Confirmation Code
-              </label>
-              <input
-                type="text"
-                id="confirmationCode"
-                value={confirmationCode}
-                onChange={(e) => setConfirmationCode(e.target.value)}
-                required
-                placeholder="Enter the code sent to your email"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-          )}
+          <div className="relative">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              Confirm Password
+            </label>
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute top-[2.1rem] right-0 pr-3 flex items-center text-sm leading-5"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400" />
+              )}
+            </button>
+          </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -296,10 +242,10 @@ export default function Onboarding() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  {showConfirmation ? "Confirming..." : "Setting up..."}
+                  Setting up...
                 </>
               ) : (
-                showConfirmation ? "Confirm Account" : "Complete Setup"
+                "Complete Setup"
               )}
             </button>
           </div>
