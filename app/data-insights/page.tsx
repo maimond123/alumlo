@@ -543,23 +543,6 @@ export default function DataInsightsPage() {
     setExpandedYear(selectedYear)
   }
 
-  const closeExpandedWidget = () => {
-    // Create a temporary div to hold the position of the chart
-    const tempDiv = document.createElement("div")
-    tempDiv.style.position = "absolute"
-    tempDiv.style.opacity = "0"
-    document.body.appendChild(tempDiv)
-
-    // Set a timeout to remove the chart after the animation completes
-    setTimeout(() => {
-      setSelectedChart(null)
-      // Remove the temporary div after a short delay
-      setTimeout(() => {
-        document.body.removeChild(tempDiv)
-      }, 100)
-    }, 10)
-  }
-
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isSending || !selectedChart) return;
     
@@ -661,16 +644,35 @@ export default function DataInsightsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-[1400px] h-[80vh] flex flex-col"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-[1400px] h-[80vh] flex flex-col relative"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
+            {/* Add a visible close button at the top-right */}
+            <button
+              onClick={() => setSelectedChart(null)}
+              className="absolute top-4 right-4 z-50 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12"></path>
+              </svg>
+            </button>
+
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
-              <div className={`transition-all duration-300 ${isChatExpanded ? "hidden" : "flex-1"} p-8 flex flex-col overflow-hidden`}>
+              <motion.div 
+                className={`transition-all duration-500 ease-in-out ${isChatExpanded ? "hidden" : "flex-1"} p-8 flex flex-col overflow-hidden`}
+                animate={{ 
+                  width: isChatExpanded ? "0%" : "66.666667%",
+                  opacity: isChatExpanded ? 0 : 1 
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
                 <div className="flex justify-between items-center mb-6">
                   <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
                     {selectedChart.title}
@@ -682,7 +684,7 @@ export default function DataInsightsPage() {
                         setSelectedYear(expandedYear)
                         fetchSchoolData()
                       }}
-                      className="px-4 py-2 bg-black text-white rounded-lg hover:scale-107 transform transition-transform duration-300"
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transform transition-transform duration-300"
                     >
                       Update Year
                     </button>
@@ -698,16 +700,20 @@ export default function DataInsightsPage() {
                     {renderChart(selectedChart)}
                   </div>
                 </motion.div>
-              </div>
+              </motion.div>
 
               {/* Chat sidebar */}
               <motion.div
-                className={`transition-all duration-300 ${isChatExpanded ? "w-full" : "w-1/3"} border-l border-gray-200 flex flex-col bg-gray-50 relative`}
+                className={`border-l border-gray-200 flex flex-col bg-gray-50 relative transition-all duration-500 ease-in-out`}
+                animate={{ 
+                  width: isChatExpanded ? "100%" : "33.333333%" 
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
                 {/* Toggle button for chat expansion */}
                 <button 
                   onClick={() => setIsChatExpanded(!isChatExpanded)} 
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50"
+                  className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-gray-200 z-10 hover:bg-gray-50 transition-transform duration-300 hover:scale-110"
                 >
                   {isChatExpanded ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -720,6 +726,7 @@ export default function DataInsightsPage() {
                   )}
                 </button>
 
+                {/* Rest of the chat content remains the same */}
                 <div className="p-4 border-b border-gray-200 bg-white">
                   <h3 className="font-semibold text-gray-800">Chat with AI Assistant</h3>
                   <p className="text-sm text-gray-500">Ask questions about this data</p>
