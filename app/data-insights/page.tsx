@@ -84,6 +84,8 @@ export default function DataInsightsPage() {
 
   useEffect(() => {
     const initializePage = async () => {
+      let progressInterval: NodeJS.Timeout | null = null;
+      
       try {
         // Check if user is authenticated
         const authenticated = await isAuthenticated()
@@ -125,6 +127,17 @@ export default function DataInsightsPage() {
         setSearchResults(schoolCharts)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, chartsSet: true, schoolCharts }))
 
+        if (fromSignin) {
+          const startTime = Date.now()
+          const duration = 2500
+
+          progressInterval = setInterval(() => {
+            // Your existing interval code...
+          }, 16)
+          
+          // Rest of your code...
+        }
+        
         if (progressInterval) clearInterval(progressInterval)
         setIsLoading(false)
       } catch (error) {
