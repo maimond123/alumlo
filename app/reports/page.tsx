@@ -120,19 +120,11 @@ function ReportsContent() {
 
   const toggleOption = (id: string) => {
     if (generatedReport) {
-      const newSelectedOptions = selectedOptions.includes(id) 
-        ? selectedOptions.filter(item => item !== id) 
-        : [...selectedOptions, id];
-      
-      const wouldChange = JSON.stringify(newSelectedOptions.sort()) !== JSON.stringify(initialSelectedOptions.sort());
-      
-      if (wouldChange) {
-        setErrorMessage(
-          "Changing data points will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
-        );
-        setShowErrorModal(true);
-        return;
-      }
+      setErrorMessage(
+        "You cannot change data points while a report is active. Please click 'Clear Report' first, then make your new selections."
+      );
+      setShowErrorModal(true);
+      return;
     }
     
     setSelectedOptions(prev => 
@@ -161,9 +153,9 @@ function ReportsContent() {
   }
 
   const selectYear = (year: string) => {
-    if (generatedReport && !selectedYears.includes(year)) {
+    if (generatedReport) {
       setErrorMessage(
-        "Changing class years will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
+        "You cannot add new class years while a report is active. Please click 'Clear Report' first, then make your new selections."
       );
       setShowErrorModal(true);
       return;
@@ -179,7 +171,7 @@ function ReportsContent() {
   const removeYear = (year: string) => {
     if (generatedReport) {
       setErrorMessage(
-        "Changing class years will not update your current report. Please click 'Generate Report' to create a new report with your updated selections."
+        "You cannot remove class years while a report is active. Please click 'Clear Report' first, then make your new selections."
       );
       setShowErrorModal(true);
       return;
@@ -1253,10 +1245,6 @@ function ReportsContent() {
                           option1Enabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
-                      <div className="absolute opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-1/2 transform -translate-x-1/2 w-80 z-10 shadow-lg pointer-events-none">
-                        Compare individual metrics across multiple class years to identify trends, progress, and areas for improvement over time.
-                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
-                      </div>
                     </button>
                   </div>
                   
@@ -1273,10 +1261,6 @@ function ReportsContent() {
                           option2Enabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
-                      <div className="absolute opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-1/2 transform -translate-x-1/2 w-80 z-10 shadow-lg pointer-events-none">
-                        View comprehensive data for a single class year at a time, allowing for in-depth understanding of each cohort's complete performance profile.
-                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
-                      </div>
                     </button>
                   </div>
                 </div>
