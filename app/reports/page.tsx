@@ -1085,36 +1085,28 @@ function ReportsContent() {
                 }
                 
                 return (
-                  <div key={option}>
+                  <div key={option} className="mb-6">
                     {visualizationContent}
                     
                     {/* Data Explanations */}
                     <div className="mt-4">
-                      {isLoadingExplanations ? (
-                        <div className="h-40 flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
-                        </div>
-                      ) : (
-                        <>
-                          <h3 className="text-lg font-medium mb-2">Key Findings</h3>
-                          <div className="prose mb-4">
-                            {explanations[option]?.factual ? (
-                              <p className="text-black">{explanations[option].factual}</p>
-                            ) : (
-                              <p className="text-gray-500 italic">Analysis will appear here once generated.</p>
-                            )}
-                          </div>
-                          
-                          <h3 className="text-lg font-medium mb-2">Strategic Implications</h3>
-                          <div className="prose">
-                            {explanations[option]?.strategic ? (
-                              <p className="text-black">{explanations[option].strategic}</p>
-                            ) : (
-                              <p className="text-gray-500 italic">Strategic insights will appear here once generated.</p>
-                            )}
-                          </div>
-                        </>
-                      )}
+                      <h3 className="text-lg font-medium mb-2">Key Findings</h3>
+                      <div className="prose mb-4">
+                        {explanations[option]?.factual ? (
+                          <p className="text-black">{explanations[option].factual}</p>
+                        ) : (
+                          <p className="text-gray-500 italic">Analysis will appear here once generated.</p>
+                        )}
+                      </div>
+                      
+                      <h3 className="text-lg font-medium mb-2">Strategic Implications</h3>
+                      <div className="prose">
+                        {explanations[option]?.strategic ? (
+                          <p className="text-black">{explanations[option].strategic}</p>
+                        ) : (
+                          <p className="text-gray-500 italic">Strategic insights will appear here once generated.</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
