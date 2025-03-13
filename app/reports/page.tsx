@@ -219,10 +219,16 @@ function ReportsContent() {
     
     try {
       // Create a new report object with the current selections
-      setGeneratedReport({
+      const newReport = {
         options: [...selectedOptions],
         years: [...selectedYears]
-      });
+      };
+      
+      // Set the generated report
+      setGeneratedReport(newReport);
+      
+      // Immediately call generateExplanations instead of waiting for the useEffect
+      await generateExplanations(newReport);
       
       // Mark report generation as complete
       setLoadingStates(prev => ({
@@ -497,8 +503,8 @@ function ReportsContent() {
     }
   }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
-  const generateExplanations = async () => {
-    if (!generatedReport) return;
+  const generateExplanations = async (report = generatedReport) => {
+    if (!report) return;
     
     setLoadingStates(prev => ({ 
       ...prev, 
@@ -508,10 +514,10 @@ function ReportsContent() {
     }));
     
     // Calculate how many pages we'll need (1 for intro, 1 for each visualization)
-    const visualizationCount = selectedOptions.length;
+    const visualizationCount = report.options.length;
     setTotalPages(visualizationCount + 2); // +1 for intro, +1 for recommendations
     
-    const explanationPromises = selectedOptions.map(async (option) => {
+    const explanationPromises = report.options.map(async (option: string) => {
       let chartData;
       let chartTitle;
       
@@ -519,7 +525,7 @@ function ReportsContent() {
         case 'salary':
           if (!salaryData) return null;
           const salaryYearData = salaryData.find((item: any) => 
-            item.class_year.toString() === selectedYears[0].toString()
+            item.class_year.toString() === report.years[0].toString()
           );
           if (!salaryYearData?.current_salary_distribution) return null;
           chartData = Object.entries(salaryYearData.current_salary_distribution)
@@ -533,7 +539,7 @@ function ReportsContent() {
         case 'industry':
           if (!industryData) return null;
           const industryYearData = industryData.find((item: any) => 
-            item.class_year.toString() === selectedYears[0].toString()
+            item.class_year.toString() === report.years[0].toString()
           );
           if (!industryYearData?.current_industry_distribution) return null;
           chartData = Object.entries(industryYearData.current_industry_distribution)
@@ -553,7 +559,7 @@ function ReportsContent() {
         case 'graduate_school':
           if (!graduateSchoolData) return null;
           const gradSchoolYearData = graduateSchoolData.find((item: any) => 
-            item.class_year.toString() === selectedYears[0].toString()
+            item.class_year.toString() === report.years[0].toString()
           );
           if (!gradSchoolYearData?.graduate_school_distribution) return null;
           chartData = Object.entries(gradSchoolYearData.graduate_school_distribution)
@@ -669,7 +675,7 @@ function ReportsContent() {
         body: JSON.stringify({
           messages: [{ 
             role: 'user', 
-            content: `Create a concise executive summary (2-3 paragraphs) for a report containing the following visualizations: ${selectedOptions.map(option => 
+            content: `Create a concise executive summary (2-3 paragraphs) for a report containing the following visualizations: ${report.options.map((option: string) => 
               option === 'salary' ? 'Salary Distribution' :
               option === 'industry' ? 'Industry Distribution' :
               option === 'location' ? 'Geographic Distribution' :
@@ -721,7 +727,7 @@ function ReportsContent() {
         body: JSON.stringify({
           messages: [{ 
             role: 'user', 
-            content: `Based on the visualizations in this report (${selectedOptions.map(option => 
+            content: `Based on the visualizations in this report (${report.options.map((option: string) => 
               option === 'salary' ? 'Salary Distribution' :
               option === 'industry' ? 'Industry Distribution' :
               option === 'location' ? 'Geographic Distribution' :
