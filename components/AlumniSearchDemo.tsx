@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Search, Loader2 } from "lucide-react"
-import { supabase } from "../app/data/supabase"
-import { getUserEmail } from "../app/utils/auth"
 import { useSchool } from "../app/contexts/SchoolContext"
 import Link from "next/link"
 
