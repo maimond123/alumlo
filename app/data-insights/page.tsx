@@ -670,7 +670,7 @@ export default function DataInsightsPage() {
           >
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
-              <div className={`transition-all duration-300 ${isChatExpanded ? "w-1/3" : "flex-1"} p-8 flex flex-col overflow-hidden`}>
+              <div className={`transition-all duration-300 ${isChatExpanded ? "hidden" : "flex-1"} p-8 flex flex-col overflow-hidden`}>
                 <div className="flex justify-between items-center mb-6">
                   <motion.h2 layoutId={`title-${selectedChart.id}`} className="text-2xl font-bold text-gray-800">
                     {selectedChart.title}
@@ -702,7 +702,7 @@ export default function DataInsightsPage() {
 
               {/* Chat sidebar */}
               <motion.div
-                className={`transition-all duration-300 ${isChatExpanded ? "w-2/3" : "w-1/3"} border-l border-gray-200 flex flex-col bg-gray-50 relative`}
+                className={`transition-all duration-300 ${isChatExpanded ? "w-full" : "w-1/3"} border-l border-gray-200 flex flex-col bg-gray-50 relative`}
               >
                 {/* Toggle button for chat expansion */}
                 <button 
@@ -711,11 +711,11 @@ export default function DataInsightsPage() {
                 >
                   {isChatExpanded ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m15 18-6-6 6-6"/>
+                      <path d="m9 18 6-6-6-6"/>
                     </svg>
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m9 18 6-6-6-6"/>
+                      <path d="m15 18-6-6 6-6"/>
                     </svg>
                   )}
                 </button>
