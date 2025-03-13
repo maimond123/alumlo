@@ -1,3 +1,4 @@
+// app/onboarding/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,9 +8,6 @@ import { Loader2, XCircle, Eye, EyeOff } from "lucide-react"
 import { supabase } from "../data/supabase"
 import Image from "next/image"
 import type React from "react"
-import { Amplify } from 'aws-amplify';
-import type { ResourcesConfig } from 'aws-amplify';
-import '../aws-config'
 
 export default function Onboarding() {
   const router = useRouter()
@@ -84,94 +82,74 @@ export default function Onboarding() {
         throw new Error("Email not found");
       }
       
-      const { signUp } = await import('aws-amplify/auth');
-      await signUp({
-        username: email,
-        password: password,
-        options: {
-          userAttributes: {
-            email: email
+      if (!showConfirmation) {
+        // Step 1: Sign up with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`
           }
-        }
-      });
+        });
 
-      setShowConfirmation(true); // Show confirmation code input
+        if (error) throw error;
+        
+        // Check if email confirmation is required
+        // Supabase might not require confirmation if we've pre-verified the email
+        if (data?.user?.identities?.length === 0 || 
+            data?.user?.identities?.[0]?.identity_data?.email_verified === false) {
+          setShowConfirmation(true);
+        } else {
+          // If email is already verified, sign in directly
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+          
+          if (signInError) throw signInError;
+          
+          // Update user status in database
+          await supabase
+            .from('customer_information')
+            .update({ account_status: 'active' })
+            .eq('school_email', email);
+            
+          router.push('/dashboard');
+        }
+      } else {
+        // Step 2: Confirm signup with the code
+        const { error } = await supabase.auth.verifyOtp({
+          email: email,
+          token: confirmationCode,
+          type: 'signup'
+        });
+
+        if (error) throw error;
+        
+        // Update user status in database
+        await supabase
+          .from('customer_information')
+          .update({ account_status: 'active' })
+          .eq('school_email', email);
+          
+        router.push('/dashboard');
+      }
     } catch (error: any) {
       console.error("Signup error:", error);
-      if (error.name === 'UsernameExistsException') {
-        setError("An account with this email already exists. Please sign in instead.");
-      } else {
-        setError(error.message || "Failed to complete signup");
-      }
+      setError(error.message || "An error occurred during signup");
     } finally {
       setIsSubmitting(false);
     }
   }
-
-  const handleConfirmation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-  
-    try {
-      if (!email) throw new Error("Email not found");
-  
-      // Step 1: Confirm the sign-up
-      const { confirmSignUp } = await import('aws-amplify/auth');
-      await confirmSignUp({
-        username: email,
-        confirmationCode: confirmationCode
-      });
-  
-      console.log("Account confirmed successfully");
-  
-      // Step 2: Update user status in Supabase
-      const { error: supabaseError } = await supabase
-        .from('customer_information')
-        .update({ 
-          account_status: 'active'
-        })
-        .eq('school_email', email);
-  
-      if (supabaseError) {
-        throw new Error('Failed to update account status');
-      }
-      
-      // Step 3: Sign in the user directly and redirect to dashboard
-      try {
-        const { signIn } = await import('aws-amplify/auth');
-        const signInResult = await signIn({
-          username: email,
-          password: password,
-        });
-        
-        // Redirect directly to dashboard regardless of sign-in result
-        // This prevents the "already signed in" error
-        router.push("/dashboard");
-        
-      } catch (signInError) {
-        // Even if sign-in fails, redirect to dashboard
-        // The dashboard will handle authentication state
-        console.error("Sign-in error (suppressed):", signInError);
-        router.push("/dashboard");
-      }
-    } catch (error: any) {
-      console.error("Confirmation error:", error);
-      // Don't show the actual error to the user
-      setError("Failed to confirm your account. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
 
   if (isVerifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-16 h-16 text-emerald-500 animate-spin" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-700">Verifying your account...</h2>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto text-emerald-600" />
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Verifying Link</h2>
+            <p className="mt-2 text-sm text-gray-600">Please wait while we verify your link...</p>
           </div>
         </div>
       </div>
@@ -180,12 +158,14 @@ export default function Onboarding() {
 
   if (!isTokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <div className="flex flex-col items-center">
-            <XCircle className="w-16 h-16 text-red-500" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-700">Token Invalid or Expired</h2>
-            <p className="mt-2 text-gray-600">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
+          <div className="text-center">
+            <XCircle className="h-12 w-12 mx-auto text-red-600" />
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Invalid Link</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              {error || "This link is invalid or has expired. Please request a new one."}
+            </p>
           </div>
         </div>
       </div>
@@ -193,19 +173,32 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow"
       >
-        <div className="flex flex-col items-center mb-6">
-          <Image src="/assets/icons8-atom-96.png" alt="AlumIntel Logo" width={64} height={64} />
-          <h2 className="mt-4 text-2xl font-semibold text-gray-700">Complete Your Account Setup</h2>
+        <div className="text-center">
+          <Image
+            src="/logos/logo.svg"
+            alt="AlumIntel Logo"
+            width={150}
+            height={50}
+            className="mx-auto"
+          />
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            {showConfirmation ? "Confirm Your Account" : "Complete Your Account Setup"}
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {showConfirmation
+              ? "A verification code has been sent to your email. Please enter it below."
+              : "Create a password to access your AlumIntel dashboard."}
+          </p>
         </div>
 
-        <form onSubmit={showConfirmation ? handleConfirmation : handleSubmit} className="space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -307,4 +300,3 @@ export default function Onboarding() {
     </div>
   )
 }
-

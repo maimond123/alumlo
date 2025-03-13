@@ -1,5 +1,4 @@
 import OpenAI from 'openai'
-import { getChartById } from '../../data/chartData'
 
 // Define an interface for the chart data structure
 interface ChartItem {
@@ -43,21 +42,11 @@ export async function POST(req: Request) {
         `${item.name}: ${item.value}${chartType === 'pie' || chartType === 'industry' ? '%' : ''}`
       ).join('\n');
     } else {
-      // Fall back to fetching from database
-      const fetchedChart = await getChartById(chartId)
-      if (!fetchedChart) {
-        return new Response(JSON.stringify({ error: 'Chart not found' }), {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
-      chart = fetchedChart as Chart;
-      
-      // Format the data for better readability
-      formattedData = chart.data.map((item: ChartItem) => 
-        `${item.name}: ${item.value}${chart.type === 'pie' ? '%' : ''}`
-      ).join('\n');
+      // Chart not found in the expected location
+      return new Response(JSON.stringify({ error: 'Chart not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
     // Use the OpenAI client directly instead of callOpenAI
