@@ -1240,12 +1240,8 @@ function ReportsContent() {
                   Step 3: Select Format <span className="text-sm font-normal">(if at least 2 class years are selected)</span>
                 </h2>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between group relative">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-700">Cross Year Comparison</span>
-                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-0 right-0 mx-auto w-80 z-10 shadow-lg">
-                      Compare individual metrics across multiple class years to identify trends, progress, and areas for improvement over time.
-                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
-                    </div>
                     <button 
                       onClick={toggleOption1}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -1257,15 +1253,15 @@ function ReportsContent() {
                           option1Enabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
+                      <div className="absolute opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-1/2 transform -translate-x-1/2 w-80 z-10 shadow-lg pointer-events-none">
+                        Compare individual metrics across multiple class years to identify trends, progress, and areas for improvement over time.
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
+                      </div>
                     </button>
                   </div>
                   
-                  <div className="flex items-center justify-between group relative">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-700">Year-by-Year Analysis</span>
-                    <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-0 right-0 mx-auto w-80 z-10 shadow-lg">
-                      View comprehensive data for a single class year at a time, allowing for in-depth understanding of each cohort's complete performance profile.
-                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
-                    </div>
                     <button 
                       onClick={toggleOption2}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -1277,6 +1273,10 @@ function ReportsContent() {
                           option2Enabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
+                      <div className="absolute opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black text-white text-base rounded p-4 -top-32 left-1/2 transform -translate-x-1/2 w-80 z-10 shadow-lg pointer-events-none">
+                        View comprehensive data for a single class year at a time, allowing for in-depth understanding of each cohort's complete performance profile.
+                        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-black"></div>
+                      </div>
                     </button>
                   </div>
                 </div>
