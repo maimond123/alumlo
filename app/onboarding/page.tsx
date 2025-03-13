@@ -23,7 +23,6 @@ export default function Onboarding() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState("")
-  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const token = searchParams.get("token")
@@ -49,22 +48,6 @@ export default function Onboarding() {
       if (data.valid) {
         setIsTokenValid(true);
         setEmail(data.email);
-        // Check if there's already a user in Supabase
-        try {
-          // First get all users (with pagination)
-          const { data: usersData } = await supabase.auth.admin.listUsers();
-          
-          // Then find the user with matching email
-          const matchingUser = usersData?.users?.find(user => 
-            user.email?.toLowerCase() === data.email.toLowerCase()
-          );
-          
-          if (matchingUser) {
-            setUserId(matchingUser.id);
-          }
-        } catch (error) {
-          console.error("Error checking for existing user:", error);
-        }
       } else {
         throw new Error(data.message);
       }
@@ -100,34 +83,22 @@ export default function Onboarding() {
       }
       
       if (!showConfirmation) {
-        // Instead of signing up, use updateUser to set/update the password
-        if (userId) {
-          // User exists, update their password via admin API
-          const { error } = await supabase.auth.admin.updateUserById(
-            userId,
-            { password: password }
-          );
-          
-          if (error) throw error;
-          
-          // For existing flow, still show confirmation screen
-          setShowConfirmation(true);
-        } else {
-          // Fallback - if somehow user doesn't exist yet
-          const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-          });
+        // Step 1: Sign up with Supabase
+        // Since we're not pre-creating users in our Python script anymore,
+        // this will create a new user with the provided email and password
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+        });
 
-          if (error) throw error;
-          setShowConfirmation(true);
-        }
+        if (error) throw error;
+        setShowConfirmation(true);
       } else {
         // Step 2: Confirm signup with the code
         const { error } = await supabase.auth.verifyOtp({
           email: email,
           token: confirmationCode,
-          type: 'email'
+          type: 'signup'
         });
 
         if (error) throw error;
