@@ -194,7 +194,7 @@ function ReportsContent() {
       return;
     }
     
-    console.log('Starting report generation with:', { selectedOptions, selectedYears });
+    console.log('[DEBUG] Starting report generation with:', { selectedOptions, selectedYears });
     
     // Save initial selections
     setInitialSelectedOptions([...selectedOptions]);
@@ -202,6 +202,7 @@ function ReportsContent() {
     
     // Set overall generation state to true
     setIsGeneratingReport(true);
+    setIsLoading(true);
     
     // Set individual loading states based on selected options
     setLoadingStates(prev => ({
@@ -218,6 +219,7 @@ function ReportsContent() {
     }));
     
     try {
+      console.log('[DEBUG] Creating new report object');
       // Create a new report object with the current selections
       const newReport = {
         options: [...selectedOptions],
@@ -225,8 +227,10 @@ function ReportsContent() {
       };
       
       // Set the generated report
+      console.log('[DEBUG] Setting generated report state');
       setGeneratedReport(newReport);
       
+      console.log('[DEBUG] Calling generateExplanations directly');
       // Immediately call generateExplanations instead of waiting for the useEffect
       await generateExplanations(newReport);
       
@@ -236,9 +240,18 @@ function ReportsContent() {
         reportGeneration: false
       }));
       
-      console.log('Report generated successfully:', { selectedOptions, selectedYears });
+      console.log('[DEBUG] Report generated successfully:', { selectedOptions, selectedYears });
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('[DEBUG] Error generating report:', error);
+      // Reset loading states on error
+      setLoadingStates(prev => ({
+        ...prev,
+        reportGeneration: false,
+        explanations: false,
+        executiveSummary: false,
+        recommendations: false
+      }));
+      setIsLoading(false);
     }
   };
 
@@ -504,8 +517,13 @@ function ReportsContent() {
   }, [selectedOptions, selectedYears, schoolName, isGeneratingReport]);
 
   const generateExplanations = async (report = generatedReport) => {
-    if (!report) return;
+    console.log('[DEBUG] generateExplanations called with report:', report);
+    if (!report) {
+      console.log('[DEBUG] No report provided, exiting generateExplanations');
+      return;
+    }
     
+    console.log('[DEBUG] Setting loading states for explanations');
     setLoadingStates(prev => ({ 
       ...prev, 
       explanations: true,
@@ -515,14 +533,18 @@ function ReportsContent() {
     
     // Calculate how many pages we'll need (1 for intro, 1 for each visualization)
     const visualizationCount = report.options.length;
+    console.log('[DEBUG] Setting total pages to:', visualizationCount + 2);
     setTotalPages(visualizationCount + 2); // +1 for intro, +1 for recommendations
     
+    console.log('[DEBUG] Creating explanation promises for options:', report.options);
     const explanationPromises = report.options.map(async (option: string) => {
       let chartData;
       let chartTitle;
       
+      console.log('[DEBUG] Processing option:', option);
       switch(option) {
         case 'salary':
+          console.log('[DEBUG] Processing salary data:', salaryData);
           if (!salaryData) return null;
           const salaryYearData = salaryData.find((item: any) => 
             item.class_year.toString() === report.years[0].toString()
@@ -580,9 +602,13 @@ function ReportsContent() {
           return null;
       }
       
-      if (!chartData) return null;
+      if (!chartData) {
+        console.log('[DEBUG] No chart data for option:', option);
+        return null;
+      }
       
       try {
+        console.log('[DEBUG] Calling AI to generate explanation for:', option);
         // Call AI to generate explanations
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -606,6 +632,7 @@ function ReportsContent() {
           }),
         });
         
+        console.log('[DEBUG] AI response status:', response.status);
         if (!response.ok) {
           throw new Error('Failed to generate explanation');
         }
@@ -615,6 +642,7 @@ function ReportsContent() {
         let result = '';
         
         if (reader) {
+          console.log('[DEBUG] Processing streaming response');
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -628,12 +656,14 @@ function ReportsContent() {
                   const data = JSON.parse(line.slice(5));
                   result += data.content || '';
                 } catch (e) {
-                  console.error('Error parsing JSON:', e);
+                  console.error('[DEBUG] Error parsing JSON:', e);
                 }
               }
             }
           }
         }
+        
+        console.log('[DEBUG] Explanation generated for:', option);
         
         // Split into factual and strategic sections
         const sections = result.split(/(?=Strategic implications)/i);
@@ -642,7 +672,7 @@ function ReportsContent() {
         
         return { option, explanation: { factual, strategic } };
       } catch (error) {
-        console.error(`Error generating explanation for ${option}:`, error);
+        console.error(`[DEBUG] Error generating explanation for ${option}:`, error);
         return { 
           option, 
           explanation: { 
@@ -654,9 +684,11 @@ function ReportsContent() {
     });
     
     // Wait for all explanations
+    console.log('[DEBUG] Waiting for all explanation promises to resolve');
     const results = await Promise.all(explanationPromises);
     
     // Update explanations state
+    console.log('[DEBUG] Updating explanations state with results');
     const explanationsMap: {[key: string]: {factual: string, strategic: string}} = {};
     results.forEach(result => {
       if (result) {
@@ -667,6 +699,7 @@ function ReportsContent() {
     
     // Generate executive summary
     try {
+      console.log('[DEBUG] Generating executive summary');
       const summaryResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -690,11 +723,13 @@ function ReportsContent() {
         }),
       });
       
+      console.log('[DEBUG] Executive summary response status:', summaryResponse.status);
       if (summaryResponse.ok) {
         const reader = summaryResponse.body?.getReader();
         let summaryResult = '';
         
         if (reader) {
+          console.log('[DEBUG] Processing executive summary streaming response');
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -708,17 +743,19 @@ function ReportsContent() {
                   const data = JSON.parse(line.slice(5));
                   summaryResult += data.content || '';
                 } catch (e) {
-                  console.error('Error parsing JSON:', e);
+                  console.error('[DEBUG] Error parsing JSON:', e);
                 }
               }
             }
           }
         }
         
+        console.log('[DEBUG] Setting executive summary state');
         setExecutiveSummary(summaryResult);
       }
       
       // Generate recommendations
+      console.log('[DEBUG] Generating recommendations');
       const recommendationsResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -742,11 +779,13 @@ function ReportsContent() {
         }),
       });
       
+      console.log('[DEBUG] Recommendations response status:', recommendationsResponse.status);
       if (recommendationsResponse.ok) {
         const reader = recommendationsResponse.body?.getReader();
         let recommendationsResult = '';
         
         if (reader) {
+          console.log('[DEBUG] Processing recommendations streaming response');
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -760,34 +799,32 @@ function ReportsContent() {
                   const data = JSON.parse(line.slice(5));
                   recommendationsResult += data.content || '';
                 } catch (e) {
-                  console.error('Error parsing JSON:', e);
+                  console.error('[DEBUG] Error parsing JSON:', e);
                 }
               }
             }
           }
         }
         
+        console.log('[DEBUG] Setting recommendations state');
         setRecommendations(recommendationsResult);
       }
     } catch (error) {
-      console.error('Error generating summary or recommendations:', error);
+      console.error('[DEBUG] Error generating summary or recommendations:', error);
     }
     
-    setLoadingStates(prev => ({ ...prev, explanations: false }));
-    
-    setLoadingStates(prev => ({ ...prev, executiveSummary: false }));
-    
-    setLoadingStates(prev => ({ ...prev, recommendations: false }));
+    console.log('[DEBUG] Setting loading states to false');
+    setLoadingStates(prev => ({ 
+      ...prev, 
+      explanations: false,
+      executiveSummary: false,
+      recommendations: false 
+    }));
     
     // Check if all processes are complete
+    console.log('[DEBUG] Checking if all processes are complete');
     checkAllProcessesComplete();
   };
-
-  useEffect(() => {
-    if (generatedReport) {
-      generateExplanations();
-    }
-  }, [generatedReport]);
 
   // Update the useEffect to handle clicking outside both dropdowns
   useEffect(() => {
