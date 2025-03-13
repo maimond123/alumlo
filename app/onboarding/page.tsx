@@ -49,10 +49,21 @@ export default function Onboarding() {
       if (data.valid) {
         setIsTokenValid(true);
         setEmail(data.email);
-        // Also check if there's already a user in Supabase
-        const { data: userData } = await supabase.auth.admin.getUserByEmail(data.email);
-        if (userData?.user) {
-          setUserId(userData.user.id);
+        // Check if there's already a user in Supabase
+        try {
+          // First get all users (with pagination)
+          const { data: usersData } = await supabase.auth.admin.listUsers();
+          
+          // Then find the user with matching email
+          const matchingUser = usersData?.users?.find(user => 
+            user.email?.toLowerCase() === data.email.toLowerCase()
+          );
+          
+          if (matchingUser) {
+            setUserId(matchingUser.id);
+          }
+        } catch (error) {
+          console.error("Error checking for existing user:", error);
         }
       } else {
         throw new Error(data.message);
