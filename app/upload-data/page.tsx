@@ -7,8 +7,6 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
 import { v4 as uuidv4 } from 'uuid'
-import { createClient } from '@supabase/supabase-js'
-
 
 export default function UploadDataPage() {
   const { isSidebarOpen } = useSidebar()
@@ -48,48 +46,47 @@ export default function UploadDataPage() {
     fetchRecentUploads()
   }, [uploadStatus])
 
-  // Add this useEffect to poll for progress updates
-// Update your polling effect (around line 54-96)
-useEffect(() => {
-  let intervalId: NodeJS.Timeout;
-  
-  if (uploadId && uploadStatus === 'uploading') {
-    const checkProgress = async () => {
-      try {
-        // Fixed query - use eq() method instead of directly in URL
-        const { data, error } = await supabase
-          .from('uploaded_data_progress_tracker')
-          .select('progress, status, created_at')
-          .eq('id', uploadId)
-          .maybeSingle();
-          
-        if (error && error.code === 'PGRST116') {
-          console.log('Record not found yet, will retry');
-          return; // Skip this polling cycle
-        }
-        
-        if (data) {
-          setUploadProgress(data.progress);
-          
-          if (data.status === 'completed') {
-            setUploadStatus('success');
-          } else if (data.status === 'error') {
-            setUploadStatus('error');
-          }
-        }
-      } catch (err) {
-        console.error('Error polling for progress:', err);
-      }
-    };
+  // Update your polling effect
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
     
-    checkProgress();
-    intervalId = setInterval(checkProgress, 30000);
-  }
-  
-  return () => {
-    if (intervalId) clearInterval(intervalId);
-  };
-}, [uploadId, uploadStatus]);
+    if (uploadId && uploadStatus === 'uploading') {
+      const checkProgress = async () => {
+        try {
+          // Fixed query - use eq() method instead of directly in URL
+          const { data, error } = await supabase
+            .from('uploaded_data_progress_tracker')
+            .select('progress, status, created_at')
+            .eq('id', uploadId)
+            .maybeSingle();
+            
+          if (error && error.code === 'PGRST116') {
+            console.log('Record not found yet, will retry');
+            return; // Skip this polling cycle
+          }
+          
+          if (data) {
+            setUploadProgress(data.progress);
+            
+            if (data.status === 'completed') {
+              setUploadStatus('success');
+            } else if (data.status === 'error') {
+              setUploadStatus('error');
+            }
+          }
+        } catch (err) {
+          console.error('Error polling for progress:', err);
+        }
+      };
+      
+      checkProgress();
+      intervalId = setInterval(checkProgress, 30000);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [uploadId, uploadStatus]);
 
 
   useEffect(() => {
@@ -98,7 +95,7 @@ useEffect(() => {
         const userEmail = await getUserEmail()
 
         if (!userEmail) {
-          console.error('No email found in user data:', userEmail)
+          console.error('No email found in user data')
           throw new Error('No user email found')
         }
 
@@ -262,7 +259,7 @@ useEffect(() => {
         .from('uploaded_data_progress_tracker')
         .update({ 
           status: 'processing',
-          message: 'File is '
+          message: 'File is being processed'
         })
         .eq('id', newUploadId)
       
