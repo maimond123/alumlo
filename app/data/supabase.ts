@@ -9,6 +9,6 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: false // Since we're using Cognito, not Supabase Auth
+    persistSession: true // Change to true since we're using Supabase Auth now
   }
 })

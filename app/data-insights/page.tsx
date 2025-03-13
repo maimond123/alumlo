@@ -9,9 +9,9 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import NetworkVisualization from "../../components/network-visualization-1"
 import Image from "next/image"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
-import { getUserEmail } from "../utils/auth"
+import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 import { AverageSalaryByIndustryBarChart } from "../../components/chart"
 import { IndustryStackedBarChart } from "../../components/chart"
@@ -69,6 +69,7 @@ export default function DataInsightsPage() {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
 
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
@@ -84,33 +85,18 @@ export default function DataInsightsPage() {
   useEffect(() => {
     const initializePage = async () => {
       try {
-        console.log("DEBUG: Initializing page...")
-        // Only start progress animation if coming from signin
-        let progressInterval: NodeJS.Timeout | null = null
-
-        if (fromSignin) {
-          console.log("DEBUG: Coming from signin, starting progress animation")
-          const startTime = Date.now()
-          const duration = 2500
-
-          progressInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime
-            const newProgress = Math.min((elapsed / duration) * 100, 100)
-            setProgress(newProgress)
-
-            if (elapsed >= duration) {
-              if (progressInterval) clearInterval(progressInterval)
-            }
-          }, 16)
-
-          // Wait for the full duration before completing if from signin
-          await new Promise((resolve) => setTimeout(resolve, duration))
+        // Check if user is authenticated
+        const authenticated = await isAuthenticated()
+        if (!authenticated) {
+          router.push('/signin')
+          return
         }
 
-        // Get user info
-        console.log("DEBUG: Getting user email...")
+        setDebugInfo({ authChecked: true, isAuthenticated: authenticated })
+        
+        // Get user email
         const userEmail = await getUserEmail()
-        console.log("DEBUG: User email:", userEmail)
+        setDebugInfo((prev: Record<string, any>) => ({ ...prev, userEmail }))
 
         if (userEmail) {
           console.log("DEBUG: Fetching user info from Supabase...")

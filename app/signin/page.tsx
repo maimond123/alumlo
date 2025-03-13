@@ -6,8 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react'
 import NetworkVisualization from '../../components/network-visualization-1'
 import { useRouter } from 'next/navigation'
-import { signIn } from 'aws-amplify/auth'
-import '../aws-config'  
+import { signInWithEmail } from '../utils/auth'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -25,33 +24,18 @@ export default function SignIn() {
     setError(null)
 
     try {
-      console.log('Attempting to sign in with Cognito...')
+      console.log('Attempting to sign in with Supabase...')
       
-      const signInResult = await signIn({
-        username: email,
-        password: password,
-      })
-
-      console.log('Cognito response:', signInResult)
-
-      if (signInResult.isSignedIn) {
-        console.log('Successfully signed in user')
-        console.log('Redirecting to dashboard...')
-        router.push('/dashboard')
-      } else {
-        console.warn('Sign in not completed:', signInResult.nextStep)
-        if (signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
-          setError('Please reset your password')
-        }
-      }
+      const user = await signInWithEmail(email, password);
+      console.log('Successfully signed in user')
+      console.log('Redirecting to dashboard...')
+      router.push('/dashboard')
 
     } catch (error: any) {
       console.error('Sign in error:', error)
-      if (error.name === 'NotAuthorizedException') {
+      if (error.message?.includes('Invalid login credentials')) {
         setError('Incorrect email or password')
-      } else if (error.name === 'UserNotFoundException') {
-        setError('No account found with this email')
-      } else if (error.name === 'UserNotConfirmedException') {
+      } else if (error.message?.includes('Email not confirmed')) {
         setError('Please verify your email address')
       } else {
         setError(error.message || 'Failed to sign in')

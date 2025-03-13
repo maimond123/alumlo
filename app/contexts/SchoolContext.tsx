@@ -1,8 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { getCurrentUser } from 'aws-amplify/auth'
 import { supabase } from '../data/supabase'
+import { getUserEmail } from '../utils/auth'
 import type { ReactNode } from 'react'
 
 interface SchoolContextType {
@@ -33,26 +33,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     const getSchoolInfo = async () => {
       try {
         console.log("DEBUG: SchoolContext - fetching school info")
-        // Try to get current user
-        const user = await getCurrentUser().catch(() => null)
+        // Get user email from Supabase auth
+        const userEmail = await getUserEmail()
         
-        // If no user, just set loading to false and return
-        if (!user) {
+        // If no user email, just set loading to false and return
+        if (!userEmail) {
           console.log("DEBUG: SchoolContext - no user found")
           setIsLoading(false)
           return
         }
   
-        // Get the actual email from the user object
-        const userEmail = user.signInDetails?.loginId || user.username
         console.log("DEBUG: SchoolContext - user email:", userEmail)
         
-        if (!userEmail) {
-          console.error('No email found for user:', user)
-          setIsLoading(false)
-          return
-        }
-  
         // If we have a user, get their school info
         console.log("DEBUG: SchoolContext - querying Supabase for school info")
         const { data, error } = await supabase

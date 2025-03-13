@@ -9,8 +9,7 @@ import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { useRouter } from 'next/navigation'
-import { getCurrentUser, signOut, fetchUserAttributes } from 'aws-amplify/auth'
-import '../app/aws-config'
+import { getUserEmail, signOutUser, getCurrentUser } from '../app/utils/auth'
 
 interface UserInfo {
   first_name: string;
@@ -25,7 +24,7 @@ export default function Sidebar() {
   
   const handleLogout = async () => {
     try {
-      await signOut()
+      await signOutUser()
       router.push('/')
     } catch (error) {
       console.error('Error signing out:', error)
@@ -35,43 +34,13 @@ export default function Sidebar() {
   useEffect(() => {
     const getUserInfo = async () => {
       try {
-        // Get current user and their attributes
-        const user = await getCurrentUser()
-        console.log('Full user object:', JSON.stringify(user, null, 2))
-        
-        // Try different ways to get the email
-        let userEmail = null;
-        let emailSource = '';
-        
-        // Option 1: From signInDetails
-        if (user.signInDetails?.loginId) {
-          userEmail = user.signInDetails.loginId;
-          emailSource = 'signInDetails.loginId';
-        }
-        // Option 2: From username
-        else if (user.username) {
-          userEmail = user.username;
-          emailSource = 'username';
-        }
-        // Option 3: From attributes - using fetchUserAttributes instead
-        else {
-          try {
-            const userAttributes = await fetchUserAttributes();
-            if (userAttributes.email) {
-              userEmail = userAttributes.email;
-              emailSource = 'fetchUserAttributes.email';
-            }
-          } catch (attrError) {
-            console.error('Error fetching user attributes:', attrError);
-          }
-        }
-        
-        console.log(`Email found in: ${emailSource}`);
-        console.log('Final email to use:', userEmail);
+        // Get user email from Supabase
+        const userEmail = await getUserEmail()
+        console.log('User email:', userEmail)
         
         if (!userEmail) {
-          console.error('No email found for user');
-          return;
+          console.error('No email found for user')
+          return
         }
         
         // Log the exact query we're about to make
@@ -79,36 +48,35 @@ export default function Sidebar() {
           table: 'customer_information',
           select: 'first_name, last_name, school_name',
           filter: `school_email=eq.${userEmail}`
-        });
-  
-        // Fetch user info from customer_information table using school_email
-        // Force the email to be a string by using string concatenation
-        const emailString = String(userEmail);
-        console.log('Email as explicit string:', emailString);
+        })
         
+        // Get user info from database
         const { data, error } = await supabase
           .from('customer_information')
           .select('first_name, last_name, school_name')
-          .eq('school_email', emailString)
-          .single();
-  
+          .eq('school_email', userEmail)
+          .single()
+        
         if (error) {
-          console.error('Error fetching user info:', error);
-          console.error('Full error object:', JSON.stringify(error, null, 2));
-          return;
+          console.error('Error fetching user info:', error)
+          return
         }
-  
+        
         if (data) {
-          console.log('Successfully retrieved user info:', data);
-          setUserInfo(data);
+          setUserInfo({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            school_name: data.school_name
+          })
         }
       } catch (error) {
-        console.error('Error in getUserInfo:', error);
+        console.error('Error getting user info:', error)
       }
-    };
-  
-    getUserInfo();
-  }, []);
+    }
+    
+    getUserInfo()
+  }, [])
+
   // Get initials from full name
   const getInitials = () => {
     if (!userInfo) return '??'

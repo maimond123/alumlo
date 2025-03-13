@@ -1,9 +1,11 @@
+'use client'
+
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { Amplify } from 'aws-amplify'
-import type { ResourcesConfig } from 'aws-amplify'
 import { SchoolProvider } from './contexts/SchoolContext'
 import './/aws-config';
+import { useEffect } from 'react'
+import { supabase } from './data/supabase'
 
 const inter = Inter({ subsets: ['latin'] })
 console.log('Layout: Finished importing aws-config');
@@ -33,6 +35,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  useEffect(() => {
+    // Set up Supabase auth listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log(`Auth state changed: ${event}`, session)
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
   return (
     <html lang="en">
       <body className={inter.className}>

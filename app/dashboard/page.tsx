@@ -7,9 +7,8 @@ import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import '../aws-config'  
-import { getUserEmail } from "../utils/auth"
+import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth'
 
 // Add the new interface for search results
 interface SearchResult {
@@ -138,9 +137,7 @@ export default function DashboardPage() {
 
   const [authState, setAuthState] = useState({
     isLoading: true,
-    isAuthenticated: false,
-    authError: null as unknown | null,
-    userEmail: null as string | null
+    isAuthenticated: false
   })
 
   // Add these new states near the top with your other state declarations
@@ -187,34 +184,31 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Check auth state on component mount
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      console.log("Dashboard: Checking auth status...")
+    const checkAuth = async () => {
       try {
-        const { username, userId, signInDetails } = await getCurrentUser()
-        const session = await fetchAuthSession()
-        console.log("Dashboard: User authenticated:", username)
-        console.log("Dashboard: Session:", session)
+        const authenticated = await isAuthenticated();
+        setAuthState({
+          isLoading: false,
+          isAuthenticated: authenticated
+        })
         
-        setAuthState({
-          isLoading: false,
-          isAuthenticated: true,
-          authError: null,
-          userEmail: signInDetails?.loginId || null
-        })
+        if (!authenticated) {
+          router.push('/signin')
+        }
       } catch (error) {
-        console.error("Dashboard: Auth error:", error)
+        console.error("Auth check error:", error)
         setAuthState({
           isLoading: false,
-          isAuthenticated: false,
-          authError: error,
-          userEmail: null
+          isAuthenticated: false
         })
+        router.push('/signin')
       }
     }
-
-    checkAuthStatus()
-  }, [])
+    
+    checkAuth()
+  }, [router])
 
   useEffect(() => {
     if (authState.isAuthenticated) {
@@ -250,7 +244,7 @@ export default function DashboardPage() {
         } catch (err: any) {
           console.error('Error fetching school name:', err)
           if (err.message?.includes('not authenticated')) {
-            router.push('/login')
+            router.push('/signin')
             return
           }
           setError('Failed to load school data')
@@ -719,21 +713,13 @@ export default function DashboardPage() {
   }
 
   if (!authState.isAuthenticated) {
-    return <div>Please log in to access the dashboard. Error: {authState.authError instanceof Error ? authState.authError.message : String(authState.authError)}</div>
+    return <div>Please log in to access the dashboard. Error: {error}</div>
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div>Loading...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500">Error: {error}</div>
       </div>
     )
   }
