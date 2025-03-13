@@ -6,7 +6,6 @@ import { Search, Loader2 } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
-import '../aws-config'  
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
 
