@@ -94,28 +94,8 @@ export default function Onboarding() {
 
         if (error) throw error;
         
-        // Check if email confirmation is required
-        // Supabase might not require confirmation if we've pre-verified the email
-        if (data?.user?.identities?.length === 0 || 
-            data?.user?.identities?.[0]?.identity_data?.email_verified === false) {
-          setShowConfirmation(true);
-        } else {
-          // If email is already verified, sign in directly
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-          });
-          
-          if (signInError) throw signInError;
-          
-          // Update user status in database
-          await supabase
-            .from('customer_information')
-            .update({ account_status: 'active' })
-            .eq('school_email', email);
-            
-          router.push('/dashboard');
-        }
+        // Show the confirmation code screen - keeping exactly the same UI flow
+        setShowConfirmation(true);
       } else {
         // Step 2: Confirm signup with the code
         const { error } = await supabase.auth.verifyOtp({
