@@ -23,6 +23,7 @@ export default function Onboarding() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState("")
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const token = searchParams.get("token")
@@ -48,6 +49,11 @@ export default function Onboarding() {
       if (data.valid) {
         setIsTokenValid(true);
         setEmail(data.email);
+        // Also check if there's already a user in Supabase
+        const { data: userData } = await supabase.auth.admin.getUserByEmail(data.email);
+        if (userData?.user) {
+          setUserId(userData.user.id);
+        }
       } else {
         throw new Error(data.message);
       }
@@ -83,28 +89,45 @@ export default function Onboarding() {
       }
       
       if (!showConfirmation) {
-        // Step 1: Sign up with Supabase
-        const { data, error } = await supabase.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`
-          }
-        });
+        // Instead of signing up, use updateUser to set/update the password
+        if (userId) {
+          // User exists, update their password via admin API
+          const { error } = await supabase.auth.admin.updateUserById(
+            userId,
+            { password: password }
+          );
+          
+          if (error) throw error;
+          
+          // For existing flow, still show confirmation screen
+          setShowConfirmation(true);
+        } else {
+          // Fallback - if somehow user doesn't exist yet
+          const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+          });
 
-        if (error) throw error;
-        
-        // Show the confirmation code screen - keeping exactly the same UI flow
-        setShowConfirmation(true);
+          if (error) throw error;
+          setShowConfirmation(true);
+        }
       } else {
         // Step 2: Confirm signup with the code
         const { error } = await supabase.auth.verifyOtp({
           email: email,
           token: confirmationCode,
-          type: 'signup'
+          type: 'email'
         });
 
         if (error) throw error;
+        
+        // After verification, sign in the user
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        
+        if (signInError) throw signInError;
         
         // Update user status in database
         await supabase
@@ -115,8 +138,8 @@ export default function Onboarding() {
         router.push('/dashboard');
       }
     } catch (error: any) {
-      console.error("Signup error:", error);
-      setError(error.message || "An error occurred during signup");
+      console.error("Account setup error:", error);
+      setError(error.message || "An error occurred during account setup");
     } finally {
       setIsSubmitting(false);
     }
@@ -162,7 +185,7 @@ export default function Onboarding() {
       >
         <div className="text-center">
           <Image
-            src="/logos/logo.svg"
+            src="/assets/icons8-atom-48.png"
             alt="AlumIntel Logo"
             width={150}
             height={50}
