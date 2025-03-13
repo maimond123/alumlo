@@ -272,18 +272,7 @@ export default function AlumniSearchDemo() {
         }
         
         .search-input::placeholder {
-          color: transparent;
-        }
-        
-        .placeholder-wrapper {
-          position: absolute;
-          top: 50%;
-          left: 16px;
-          transform: translateY(-50%);
-          pointer-events: none;
-          display: flex;
-          align-items: center;
-          color: #9CA3AF; /* placeholder color */
+          color: #9CA3AF; /* Set a visible color for the placeholder */
         }
       `}</style>
       

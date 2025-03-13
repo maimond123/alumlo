@@ -1,69 +1,40 @@
-import OpenAI from 'openai'
-import { callOpenAI } from '@/app/utils/openai'
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
-})
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-export async function POST(req: Request) {
-  const { query } = await req.json()
-
+export async function POST(req: NextRequest) {
   try {
-    const response = await callOpenAI('chat/completions', {
-      model: 'gpt-4o-mini',
-      stream: true,
-      messages: [
-        {
-          role: 'system',
-          content: `You are an AI assistant helping students explore alumni data. 
-          
-Your task is to generate 3 expanded search queries based on the original query. These should be 
-variations or refinements that could help the user discover additional relevant alumni profiles.
+    const body = await req.json();
+    const { endpoint, ...requestData } = body;
 
-For example:
-- If the query is "AI researchers", you might suggest "Machine learning engineers at tech companies", "PhD graduates in artificial intelligence", "Alumni working on NLP at research labs"
-- If the query is "Finance in NYC", suggest "Investment bankers at top Wall Street firms", "Alumni in private equity in Manhattan", "FinTech startup founders in New York"
+    console.log('Received request for endpoint:', endpoint);
+    console.log('Request data:', requestData);
 
-Keep each suggestion concise (under 10 words if possible) and highly relevant to the original query.
-Just provide the 3 expansions separated by "•" characters, with no numbering, introduction, or additional text.`,
-        },
-        {
-          role: 'user',
-          content: query
-        },
-      ],
-    })
+    let response;
+    
+    switch (endpoint) {
+      case 'chat/completions':
+        response = await openai.chat.completions.create(requestData);
+        break;
+      case 'completions':
+        response = await openai.completions.create(requestData);
+        break;
+      case 'embeddings':
+        response = await openai.embeddings.create(requestData);
+        break;
+      default:
+        console.error('Invalid endpoint:', endpoint);
+        return NextResponse.json({ error: 'Invalid endpoint' }, { status: 400 });
+    }
 
-    // Create a new stream
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of response) {
-            const content = chunk.choices[0]?.delta?.content || ''
-            if (content) {
-              // Send the content chunk
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
-            }
-          }
-        } catch (error) {
-          console.error('Stream error:', error)
-          controller.error(error)
-        }
-        controller.close()
-      }
-    })
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    })
-  } catch (error) {
-    console.error('Expansion error:', error)
-    return new Response(JSON.stringify({ error: 'An error occurred' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error('Error calling OpenAI:', error);
+    return NextResponse.json({ 
+      error: error.message || 'An error occurred while processing your request' 
+    }, { status: 500 });
   }
 }

@@ -43,7 +43,7 @@ export default function SupportPage() {
               >
                 <h2 className="text-2xl font-semibold mb-6 text-black">Email Us</h2>
                 <p className="text-lg text-gray-700">
-                  For further assistance, please email us at <a href="mailto:david@alumintel.com" className="text-emerald-600">david@alumintel.com</a>.
+                  For further assistance, please email us at <a href="mailto:david@alumintel.com" className="text-teal-500">david@alumintel.com</a>.
                 </p>
               </motion.div>
             </div>
