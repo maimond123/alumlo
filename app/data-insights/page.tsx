@@ -415,8 +415,6 @@ export default function DataInsightsPage() {
         }
       }
 
-      // Commenting out industry progression data fetch
-      /*
       // Fetch industry progression data
       console.log("DEBUG: Fetching industry progression data...")
       const { data: industryProgressionData, error: industryProgressionError } = await supabase
@@ -468,7 +466,6 @@ export default function DataInsightsPage() {
           console.warn("DEBUG: No industry progression data found for year:", selectedYear);
         }
       }
-      */
     } catch (error) {
       console.error("Error fetching school data:", error)
       setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: error }))
@@ -523,15 +520,12 @@ export default function DataInsightsPage() {
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading industry salary data...</div>
         )
-      // Commenting out industry progression case
-      /*
       case "industry_progression":
         return industryProgressionData && industryProgressionData.length > 0 ? (
           <IndustryStackedBarChart data={industryProgressionData} isZoomed={selectedChart?.id === chart.id} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">Loading industry progression data...</div>
         )
-      */
       default:
         return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>
     }
@@ -715,7 +709,7 @@ export default function DataInsightsPage() {
                 {/* Toggle button with thick black border */}
                 <button 
                   onClick={() => setIsChatExpanded(!isChatExpanded)} 
-                  className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border-2 border-black z-10 hover:bg-gray-50 transition-all duration-300 hover:scale-110 ${
+                  className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md border border-black z-10 hover:bg-gray-50 transition-all duration-300 hover:scale-110 ${
                     isChatExpanded ? "left-4" : "-left-4"
                   }`}
                 >
@@ -794,6 +788,19 @@ export default function DataInsightsPage() {
   useEffect(() => {
     if (selectedChart) {
       // Reset chat messages to initial state when a new chart is selected
+      setChatMessages([
+        { role: 'assistant', content: 'What would you like to know about this data?' }
+      ]);
+    }
+  }, [selectedChart]); // This effect runs whenever selectedChart changes
+
+  // Add this effect to reset chat expanded state when a chart is selected
+  useEffect(() => {
+    if (selectedChart) {
+      // Reset to visualization mode (chat collapsed) whenever a chart is selected
+      setIsChatExpanded(false);
+      
+      // Also reset chat messages as you were doing before
       setChatMessages([
         { role: 'assistant', content: 'What would you like to know about this data?' }
       ]);
