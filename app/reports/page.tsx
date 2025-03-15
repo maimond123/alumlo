@@ -19,6 +19,7 @@ export default function ReportsPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const { isSidebarOpen } = useSidebar()
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +52,7 @@ export default function ReportsPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <div className="relative flex-1">
+      <div className={`relative flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <ReportsContent />
         <ComingSoonOverlay 
           email={email}
@@ -82,27 +83,27 @@ function ComingSoonOverlay({
   handleEmailSubmit: (e: React.FormEvent) => Promise<void>; 
 }) {
   return (
-    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="absolute top-0 right-0 bottom-0 left-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40">
       <div className="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 shadow-2xl">
         <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-black mb-2">Coming Soon</h2>
+          <h2 className="text-3xl font-bold text-black mb-2">Report Builder</h2>
           <div className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium mb-4">
             Beta Feature
           </div>
           <p className="text-gray-600 mb-4">
-            Our comprehensive reporting feature is currently under development and will be available soon.
+            Building your own report with AI is currently a beta feature under development.
           </p>
           <p className="text-gray-800 font-medium">
-            We're building a powerful, customizable data reporting solution that will provide deeper insights into alumni career trajectories and outcomes.
+            While we continue to improve this feature, we offer more serious, comprehensive, and customizable report solutions for institutions that need deeper insights.
           </p>
         </div>
         
         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
-          <h3 className="font-semibold text-lg mb-2">Premium Reporting Solution</h3>
+          <h3 className="font-semibold text-lg mb-2">Premium Reporting Solutions</h3>
           <ul className="space-y-2 mb-4">
             <li className="flex items-start">
               <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-              <span>Customizable reports with advanced filtering options</span>
+              <span>Professionally designed reports with advanced filtering options</span>
             </li>
             <li className="flex items-start">
               <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
@@ -114,7 +115,7 @@ function ComingSoonOverlay({
             </li>
             <li className="flex items-start">
               <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-              <span>Strategic insights and recommendations based on your data</span>
+              <span>Strategic insights and recommendations tailored to your institution</span>
             </li>
           </ul>
         </div>
@@ -123,12 +124,12 @@ function ComingSoonOverlay({
           <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
             <Check className="h-6 w-6 text-green-500 mx-auto mb-2" />
             <p className="text-green-800 font-medium">Thank you for your interest!</p>
-            <p className="text-green-600 text-sm">We'll notify you when our premium reporting solution is available.</p>
+            <p className="text-green-600 text-sm">We'll be in touch with more information about our premium reporting solutions.</p>
           </div>
         ) : (
           <div>
             <p className="text-center mb-4 font-medium">
-              Interested in our premium reporting solution? Enter your email to be notified when it's available:
+              Interested in learning more about our premium reporting solutions? Enter your email below:
             </p>
             <form onSubmit={handleEmailSubmit} className="space-y-3">
               <div className="flex items-center">
@@ -150,7 +151,7 @@ function ComingSoonOverlay({
                     isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-800"
                   }`}
                 >
-                  {isSubmitting ? "Submitting..." : "Notify Me"}
+                  {isSubmitting ? "Submitting..." : "Learn More"}
                 </button>
               </div>
               {submitError && (
