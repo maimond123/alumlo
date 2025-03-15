@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { SchoolProvider } from './contexts/SchoolContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
+import MobileWarning from '@/components/MobileWarning'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -36,6 +37,7 @@ export default function RootLayout({
         <SupabaseAuthListener>
           <SchoolProvider>
             <SidebarProvider>
+              <MobileWarning />
               {children}
             </SidebarProvider>
           </SchoolProvider>
