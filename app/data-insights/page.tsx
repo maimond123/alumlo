@@ -509,52 +509,117 @@ export default function DataInsightsPage() {
   )
 
   const renderChart = (chart: SchoolChartData) => {
+    // Use a consistent height for all chart containers to prevent layout shifts
+    const chartContainerStyle = { 
+      width: '100%', 
+      height: '100%',
+      minHeight: '300px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    };
+    
+    // Loading placeholder with consistent dimensions
+    const loadingPlaceholder = (
+      <div style={chartContainerStyle} className="bg-gray-50 rounded-lg animate-pulse">
+        <div className="text-gray-400">Loading chart data...</div>
+      </div>
+    );
+    
     switch (chart.type) {
       case "salary":
         return salaryData && Array.isArray(salaryData) ? (
-          <SalaryBarChart data={salaryData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading salary data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <SalaryBarChart data={salaryData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       case "industry":
         return industryData ? (
-          <PieChart data={industryData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading industry data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <PieChart data={industryData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       case "location":
         return locationData && Array.isArray(locationData) && locationData.length > 0 ? (
-          <GeographyBarChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading location data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <GeographyBarChart data={locationData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       case "graduate_school":
         return graduateSchoolData ? (
-          <PieChart data={graduateSchoolData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading graduate school data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <PieChart data={graduateSchoolData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       case "industry_salary":
         return industrySalaryData && Array.isArray(industrySalaryData) && industrySalaryData.length > 0 ? (
-          <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading industry salary data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <AverageSalaryByIndustryBarChart data={industrySalaryData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       case "industry_progression":
         return industryProgressionData && industryProgressionData.length > 0 ? (
-          <IndustryStackedBarChart data={industryProgressionData} isZoomed={selectedChart?.id === chart.id} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">Loading industry progression data...</div>
-        )
+          <div style={chartContainerStyle}>
+            <IndustryStackedBarChart data={industryProgressionData} isZoomed={selectedChart?.id === chart.id} />
+          </div>
+        ) : loadingPlaceholder;
+        
       default:
-        return <div className="w-full h-full flex items-center justify-center">Unsupported chart type</div>
+        return (
+          <div style={chartContainerStyle} className="bg-gray-100 rounded-lg">
+            <div className="text-gray-500">Unsupported chart type</div>
+          </div>
+        );
     }
-  }
+  };
 
   const handleWidgetClick = (chart: SchoolChartData) => {
     console.log("DEBUG: Chart clicked:", chart)
-    setSelectedChart(chart)
+    
+    // Set expanded year to match the current selected year
     setExpandedYear(selectedYear)
+    
+    // Ensure data is loaded for this chart type before expanding
+    const isDataLoaded = (() => {
+      switch (chart.type) {
+        case "salary":
+          return salaryData && Array.isArray(salaryData);
+        case "industry":
+          return !!industryData;
+        case "location":
+          return locationData && Array.isArray(locationData) && locationData.length > 0;
+        case "graduate_school":
+          return !!graduateSchoolData;
+        case "industry_salary":
+          return industrySalaryData && Array.isArray(industrySalaryData) && industrySalaryData.length > 0;
+        case "industry_progression":
+          return industryProgressionData && industryProgressionData.length > 0;
+        default:
+          return false;
+      }
+    })();
+    
+    // If data is already loaded, expand immediately
+    // Otherwise, trigger a data fetch first
+    if (isDataLoaded) {
+      setSelectedChart(chart);
+    } else {
+      // Show a loading state
+      console.log("DEBUG: Data not loaded yet, fetching first...");
+      
+      // Set a temporary loading state if needed
+      // You could add a loading indicator here
+      
+      // Fetch data then expand
+      fetchSchoolData().then(() => {
+        setSelectedChart(chart);
+      });
+    }
   }
 
   const handleSendMessage = async () => {
@@ -652,7 +717,7 @@ export default function DataInsightsPage() {
     if (!selectedChart) return null;
 
     return (
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         <motion.div
           className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
@@ -665,7 +730,12 @@ export default function DataInsightsPage() {
             className="bg-white rounded-xl overflow-hidden w-full max-w-[1400px] h-[80vh] flex flex-col relative"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              layout: { duration: 0.4 }
+            }}
           >
             <div className="flex h-full w-full overflow-hidden">
               {/* Left side - Chart visualization */}
@@ -676,6 +746,7 @@ export default function DataInsightsPage() {
                   opacity: isChatExpanded ? 0 : 1,
                   padding: isChatExpanded ? "0px" : "2rem"
                 }}
+                initial={false}
                 style={{
                   display: isChatExpanded ? "none" : "flex"
                 }}
@@ -707,6 +778,7 @@ export default function DataInsightsPage() {
                 <motion.div 
                   layoutId={`chart-content-${selectedChart.id}`} 
                   className="flex-1 flex items-center justify-center overflow-hidden"
+                  initial={false}
                 >
                   <div className="w-full" style={{ height: "75%" }}>
                     {renderChart(selectedChart)}
@@ -720,6 +792,7 @@ export default function DataInsightsPage() {
                 animate={{ 
                   width: isChatExpanded ? "100%" : "33.333333%" 
                 }}
+                initial={false}
                 transition={{ 
                   type: "spring", 
                   stiffness: 300, 
