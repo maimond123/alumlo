@@ -162,6 +162,10 @@ export default function DashboardPage() {
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
+  // Add new state for demo mode
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [showDemoSurvey, setShowDemoSurvey] = useState(false)
+  
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -195,6 +199,15 @@ export default function DashboardPage() {
         
         if (!authenticated) {
           router.push('/signin')
+        } else {
+          // Check if this is a demo user
+          const userEmail = await getUserEmail();
+          if (userEmail === "maimondavid553@gmail.com") {
+            console.log("Demo mode activated");
+            setIsDemoMode(true);
+            setFormattedSchoolName("Your School");
+            setIsLoading(false);
+          }
         }
       } catch (error) {
         console.error("Auth check error:", error)
@@ -209,8 +222,9 @@ export default function DashboardPage() {
     checkAuth()
   }, [router])
 
+  // Only fetch school name for non-demo users
   useEffect(() => {
-    if (authState.isAuthenticated) {
+    if (authState.isAuthenticated && !isDemoMode) {
       console.log("Dashboard: User authenticated, fetching data...")
       const fetchSchoolName = async () => {
         try {
@@ -253,7 +267,7 @@ export default function DashboardPage() {
 
       fetchSchoolName()
     }
-  }, [authState.isAuthenticated, router])
+  }, [authState.isAuthenticated, router, isDemoMode])
 
   // Add this useEffect to fetch the total count on component mount
   useEffect(() => {
@@ -707,6 +721,13 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle school name click in demo mode
+  const handleSchoolNameClick = () => {
+    if (isDemoMode) {
+      setShowDemoSurvey(true);
+    }
+  }
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -733,7 +754,18 @@ export default function DashboardPage() {
              ? 'justify-center' : 'pt-24'
         }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Explore {formattedSchoolName} Alumni Data
+            Explore{" "}
+            {isDemoMode ? (
+              <span 
+                className="text-emerald-600 cursor-pointer hover:underline"
+                onClick={handleSchoolNameClick}
+              >
+                {formattedSchoolName}
+              </span>
+            ) : (
+              formattedSchoolName
+            )}
+            {" "}Alumni Data
           </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
@@ -967,6 +999,129 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* Demo Survey Modal */}
+          {isDemoMode && showDemoSurvey && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">Tell us about your school</h2>
+                  <button 
+                    onClick={() => setShowDemoSurvey(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <form className="space-y-6">
+                  <div>
+                    <label htmlFor="school-name" className="block text-sm font-medium text-gray-700 mb-1">
+                      What's your school's name?
+                    </label>
+                    <input
+                      type="text"
+                      id="school-name"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="e.g., Harvard University"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Your work email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="name@work.edu"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Which features would be most valuable to your institution?
+                    </label>
+                    <div className="space-y-2">
+                      {[
+                        "Alumni search and discovery",
+                        "Career path visualization",
+                        "Industry trends analysis",
+                        "Networking opportunities",
+                        "Fundraising insights",
+                        "Student mentorship connections"
+                      ].map((feature, index) => (
+                        <div key={index} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`feature-${index}`}
+                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor={`feature-${index}`} className="ml-2 text-gray-700">
+                            {feature}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      What would be your budget range for this solution?
+                    </label>
+                    <select className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500">
+                      <option value="">Select a range</option>
+                      <option value="1-5k">$1,000 - $5,000 per year</option>
+                      <option value="5-10k">$5,000 - $10,000 per year</option>
+                      <option value="10-25k">$10,000 - $25,000 per year</option>
+                      <option value="25k+">$25,000+ per year</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Would you like to schedule a demo with our team?
+                    </label>
+                    <div className="flex space-x-4">
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="demo-yes"
+                          name="schedule-demo"
+                          value="yes"
+                          className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                        />
+                        <label htmlFor="demo-yes" className="ml-2 text-gray-700">Yes</label>
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          id="demo-no"
+                          name="schedule-demo"
+                          value="no"
+                          className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
+                        />
+                        <label htmlFor="demo-no" className="ml-2 text-gray-700">Not at this time</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowDemoSurvey(false)}
+                      className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+                    >
+                      Submit & Continue Exploring
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
