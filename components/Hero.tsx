@@ -5,9 +5,27 @@ import ReferralCodeInput from './RefferalCodeInput'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
+  const [showExplore, setShowExplore] = useState(true)
 
   useEffect(() => {
     setIsVisible(true)
+  }, [])
+
+  const handleScroll = () => {
+    const exploreElement = document.getElementById('explore-more')
+    if (exploreElement) {
+      const rect = exploreElement.getBoundingClientRect()
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        setShowExplore(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   return (
@@ -28,6 +46,15 @@ export default function Hero() {
           <ReferralCodeInput />
         </div>
       </div>
+
+      {showExplore && (
+        <div id="explore-more" className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-center">
+          <p className="text-black text-lg mb-2">Explore More</p>
+          <svg className="w-8 h-8 text-teal-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
+          </svg>
+        </div>
+      )}
     </section>
   )
 }
