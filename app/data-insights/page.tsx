@@ -79,8 +79,8 @@ export default function DataInsightsPage() {
     { id: "location", title: "Geographic Distribution", type: "location" },
     { id: "graduate_school", title: "Graduate School Distribution", type: "graduate_school" },
     { id: "industry_salary", title: "Average Salary by Industry", type: "industry_salary" },
-    // Commenting out industry progression chart
-    // { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
+    // Add industry progression chart
+    { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
   ]
 
   useEffect(() => {
@@ -439,7 +439,7 @@ export default function DataInsightsPage() {
       console.log("DEBUG: Fetching industry progression data...")
       const { data: industryProgressionData, error: industryProgressionError } = await supabase
         .from(tableName)
-        .select("industry_progression_data, class_year")
+        .select("career_progression_distribution, class_year")
         .eq("class_year", selectedYear)
       
       if (industryProgressionError) {
@@ -448,9 +448,9 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Industry progression data response:", industryProgressionData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryProgressionData }))
-        if (industryProgressionData && industryProgressionData.length > 0 && industryProgressionData[0].industry_progression_data) {
-          console.log("DEBUG: Raw industry progression data:", industryProgressionData[0].industry_progression_data);
-          setIndustryProgressionData(industryProgressionData[0].industry_progression_data);
+        if (industryProgressionData && industryProgressionData.length > 0 && industryProgressionData[0].career_progression_distribution) {
+          console.log("DEBUG: Raw industry progression data:", industryProgressionData[0].career_progression_distribution);
+          setIndustryProgressionData(industryProgressionData[0].career_progression_distribution);
         } else {
           // Sample data if no real data is available
           const sampleData = [
