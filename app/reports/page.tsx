@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Check, Download, Maximize2, X, ChevronLeft, ChevronRight, BarChart4, Search } from "lucide-react"
+import { Check, Download, Maximize2, X, ChevronLeft, ChevronRight, BarChart4, Search, Mail } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import * as htmlToImage from "html-to-image"
@@ -15,10 +15,151 @@ import { getUserEmail } from '../utils/auth'
 
 
 export default function ReportsPage() {
+  const [email, setEmail] = useState("")
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email || !email.includes('@')) {
+      setSubmitError("Please enter a valid email address")
+      return
+    }
+    
+    setIsSubmitting(true)
+    setSubmitError("")
+    
+    try {
+      // Store the email in Supabase
+      const { error } = await supabase
+        .from('premium_report_leads')
+        .insert([{ email, created_at: new Date().toISOString() }])
+      
+      if (error) throw error
+      
+      setIsSubmitted(true)
+    } catch (error) {
+      console.error('Error submitting email:', error)
+      setSubmitError("Failed to submit your email. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <ReportsContent />
+      <div className="relative flex-1">
+        <ReportsContent />
+        <ComingSoonOverlay 
+          email={email}
+          setEmail={setEmail}
+          isSubmitted={isSubmitted}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
+          handleEmailSubmit={handleEmailSubmit}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ComingSoonOverlay({ 
+  email, 
+  setEmail, 
+  isSubmitted, 
+  isSubmitting, 
+  submitError, 
+  handleEmailSubmit 
+}: { 
+  email: string; 
+  setEmail: (email: string) => void; 
+  isSubmitted: boolean; 
+  isSubmitting: boolean; 
+  submitError: string; 
+  handleEmailSubmit: (e: React.FormEvent) => Promise<void>; 
+}) {
+  return (
+    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 shadow-2xl">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-black mb-2">Coming Soon</h2>
+          <div className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium mb-4">
+            Beta Feature
+          </div>
+          <p className="text-gray-600 mb-4">
+            Our comprehensive reporting feature is currently under development and will be available soon.
+          </p>
+          <p className="text-gray-800 font-medium">
+            We're building a powerful, customizable data reporting solution that will provide deeper insights into alumni career trajectories and outcomes.
+          </p>
+        </div>
+        
+        <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
+          <h3 className="font-semibold text-lg mb-2">Premium Reporting Solution</h3>
+          <ul className="space-y-2 mb-4">
+            <li className="flex items-start">
+              <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+              <span>Customizable reports with advanced filtering options</span>
+            </li>
+            <li className="flex items-start">
+              <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+              <span>Comparative analysis across multiple graduation years</span>
+            </li>
+            <li className="flex items-start">
+              <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+              <span>Export options for presentations and stakeholder meetings</span>
+            </li>
+            <li className="flex items-start">
+              <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+              <span>Strategic insights and recommendations based on your data</span>
+            </li>
+          </ul>
+        </div>
+        
+        {isSubmitted ? (
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
+            <Check className="h-6 w-6 text-green-500 mx-auto mb-2" />
+            <p className="text-green-800 font-medium">Thank you for your interest!</p>
+            <p className="text-green-600 text-sm">We'll notify you when our premium reporting solution is available.</p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-center mb-4 font-medium">
+              Interested in our premium reporting solution? Enter your email to be notified when it's available:
+            </p>
+            <form onSubmit={handleEmailSubmit} className="space-y-3">
+              <div className="flex items-center">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email address"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`bg-black text-white px-6 py-3 rounded-r-lg font-medium ${
+                    isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-800"
+                  }`}
+                >
+                  {isSubmitting ? "Submitting..." : "Notify Me"}
+                </button>
+              </div>
+              {submitError && (
+                <p className="text-red-500 text-sm">{submitError}</p>
+              )}
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -324,8 +324,8 @@ export default function UploadDataPage() {
         <div className="max-w-6xl mx-auto">
           {/* Centered Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-black">Upload Student Data</h1>
-            <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files</p>
+            <h1 className="text-4xl font-bold text-black">Enrich your Analytics</h1>
+            <p className="text-gray-600 text-lg mt-2">Import your student information using CSV or Excel files to enrich your analytics</p>
           </div>
           
           <div className="mb-6 p-6 bg-white rounded-lg shadow-md border border-black">
@@ -335,8 +335,9 @@ export default function UploadDataPage() {
               <li>Student First Name (Column 1)</li>
               <li>Student Last Name (Column 2)</li>
               <li>College/University they are attending (Column 3)</li>
+              <li>Graduation Year (Column 4)</li>
             </ol>
-            <p>Your file will be processed within 24-48 hours, and the data will be added to your system.</p>
+            <p>Your file will be processed within 24-48 hours, and the data will be added to your analytics and search data base.</p>
           </div>
 
           {uploadStatus === 'success' ? (
