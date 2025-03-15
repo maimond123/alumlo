@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import ReferralCodeInput from './RefferalCodeInput'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
@@ -33,12 +34,14 @@ export default function Hero() {
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <button 
-            onClick={scrollDown}
-            className="bg-teal-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-teal-600 transition-colors border-2 border-teal-500"
-          >
-            Learn More
-          </button>
+          <ReferralCodeInput />
+          <Link href="#learn-more">
+            <button 
+              className="text-teal-500 underline hover:text-teal-600 transition-colors"
+            >
+              Learn More
+            </button>
+          </Link>
         </div>
       </div>
     </section>
