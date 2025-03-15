@@ -98,11 +98,9 @@ export default function Signup() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="text-5xl md:text-7xl font-bold text-emerald-800 mb-4"
+                  className="text-5xl md:text-7xl font-bold text-emerald-800 mb-4 mt-8"
                 >
-                  Join the Alumni
-                  <br />
-                  Revolution<span className="text-teal-500">.</span>
+                  Join the Alumni Revolution<span className="text-teal-500">.</span>
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
