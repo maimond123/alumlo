@@ -8,7 +8,6 @@ import { InlineWidget } from "react-calendly"
 import NetworkVisualization from "../../components/network-visualization"
 import Footer from "../../components/footer"
 import Navigation from "../../components/navigation-signup"
-import Link from "next/link"
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
 import { normalizeSchoolName } from "../../components/schoolNameUtils"
@@ -45,13 +44,14 @@ export default function Signup() {
     try {
       // Generate normalized table name
       const normalizedTableName = normalizeSchoolName(formData.schoolName)
+      const lowerCaseSchoolName = formData.schoolName.toLowerCase()
 
       const { data, error } = await supabase.from("customer_information").insert([
         {
           first_name: formData.firstName,
           last_name: formData.lastName,
           school_email: formData.schoolEmail,
-          school_name: formData.schoolName,
+          school_name: lowerCaseSchoolName,
           school_website: formData.schoolWebsite,
           table_name: normalizedTableName, // Store the normalized name
         },

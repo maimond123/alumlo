@@ -253,7 +253,7 @@ export default function AlumniSearchDemo() {
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
   
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div id="alumni-search-demo" className="w-full max-w-4xl mx-auto">
       {/* Add the style tag for animations */}
       <style jsx>{tagScrollAnimation}</style>
       

@@ -36,7 +36,7 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
       onChange={(e) => onChange(e.target.value)}
       placeholder="Year"
       min="1950"
-      max="2024"
+      max="2025"
       className="w-24 px-3 py-2 bg-white border border-black rounded-lg focus:outline-none focus:border-[#1c3d4c] text-gray-900 placeholder-gray-400"
     />
   )
@@ -54,7 +54,7 @@ export default function DataInsightsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [progress, setProgress] = useState(0)
   const { schoolName } = useSchool()
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
+  const [selectedYear, setSelectedYear] = useState("2018")
   const [expandedYear, setExpandedYear] = useState(selectedYear)
   const [salaryData, setSalaryData] = useState<any>(null)
   const [industryData, setIndustryData] = useState<any>(null)
