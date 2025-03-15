@@ -21,7 +21,7 @@ export default function Navigation() {
         
         <div className="flex items-center space-x-4">
           <Link href="/signin">
-            <button className="text-black bg-transparent border border-black rounded-full px-8 py-2 hover:bg-black hover:text-white transition-colors">
+            <button className="text-black bg-transparent border border-black rounded-full px-8 py-3 hover:bg-black hover:text-white transition-colors">
               Sign In
             </button>
           </Link>
@@ -29,9 +29,9 @@ export default function Navigation() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-teal-500 text-white px-10 py-4 text-xl rounded-full hover:bg-teal-600 transition-colors"
+              className="bg-teal-500 text-white px-8 py-3 text-xl rounded-full hover:bg-teal-600 transition-colors"
             >
-              Get Started
+              Back
             </motion.button>
           </Link>
         </div>

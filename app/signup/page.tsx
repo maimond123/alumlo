@@ -185,7 +185,7 @@ export default function Signup() {
                   className="mt-8 text-center"
                 >
                   <p className="text-black text-lg">
-                    If you would like to request a referral code to demo, please email us at{' '}
+                    If you would like to request a referral code to demo AlumIntel, please email us at{' '}
                     <a href="mailto:david@alumintel.com" className="underline text-teal-500">
                       david@alumintel.com
                     </a>
