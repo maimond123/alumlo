@@ -173,7 +173,7 @@ export default function Signup() {
                         Submitting...
                       </>
                     ) : (
-                      "Schedule Calendly Demo"
+                      "Book a Demo"
                     )}
                   </button>
                 </form>
