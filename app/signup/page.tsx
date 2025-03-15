@@ -11,7 +11,6 @@ import Navigation from "../../components/navigation-signup"
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
 import { normalizeSchoolName } from "../../components/schoolNameUtils"
-import ReferralCodeInput from '../../components/RefferalCodeInput'
 
 export default function Signup() {
   const [showCalendly, setShowCalendly] = useState(false)
@@ -86,27 +85,6 @@ export default function Signup() {
       [e.target.name]: e.target.value,
     })
   }
-
-  const requestReferralCode = async () => {
-    try {
-      const response = await fetch('/api/sendReferralCode', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: formData.schoolEmail }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send email');
-      }
-
-      alert('Referral code request sent! Check your email for further instructions.');
-    } catch (error) {
-      console.error('Error requesting referral code:', error);
-      alert('There was an error sending your request. Please try again later.');
-    }
-  };
 
   return (
     <div className="min-h-screen w-full">
@@ -200,30 +178,8 @@ export default function Signup() {
                       "Schedule Calendly Demo"
                     )}
                   </button>
-                  
-                  <motion.div 
-                    initial={{ opacity: 0 }} 
-                    animate={{ opacity: 1 }} 
-                    transition={{ delay: 0.8 }}
-                    className="flex items-center justify-center my-4"
-                  >
-                    <div className="w-1/3 h-px bg-gray-300"></div>
-                    <p className="mx-4 text-xl font-semibold text-gray-600">Or</p>
-                    <div className="w-1/3 h-px bg-gray-300"></div>
-                  </motion.div>
-                  
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-                    <button
-                      type="button"
-                      className="w-full bg-emerald-50 text-black border border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors"
-                      onClick={requestReferralCode}
-                    >
-                      Request Referral Code to Demo
-                    </button>
-                  </motion.div>
-
-                  <ReferralCodeInput />
                 </form>
+
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -231,9 +187,9 @@ export default function Signup() {
                   className="mt-8 text-center"
                 >
                   <p className="text-black text-lg">
-                    If your school already uses AlumIntel,{" "}
-                    <a href="/signin" className="underline text-teal-500">
-                      sign-in here
+                    If you would like to request a referral code to demo, please email us at{' '}
+                    <a href="mailto:david@alumintel.com" className="underline text-teal-500">
+                      david@alumintel.com
                     </a>
                     .
                   </p>

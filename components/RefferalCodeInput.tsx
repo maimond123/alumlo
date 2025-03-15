@@ -34,8 +34,19 @@ const ReferralCodeInput = () => {
         .update({ is_used: true, used_at: new Date().toISOString() })
         .eq('id', data.id);
 
+      // Authenticate the user
+      const {error: loginError } = await supabase.auth.signInWithPassword({
+        email: 'maimondavid553@gmail.com', // Authenticate with this email
+        password: 'Tryme12!', // Replace with the actual password or use a secure method
+      });
+
+      if (loginError) {
+        setError('Login error: ' + loginError.message);
+        return;
+      }
+
       setSuccess('Successfully logged in! Redirecting to dashboard...');
-      // Redirect to the dashboard or refresh the page
+      // Redirect to the dashboard
       window.location.href = '/dashboard';
     } catch (err) {
       console.error('Error processing referral code:', err);
@@ -54,7 +65,7 @@ const ReferralCodeInput = () => {
       />
       <button 
         onClick={handleDemo}
-        className="bg-teal-500 text-white px-8 py-3 rounded-r-full text-lg font-semibold hover:bg-teal-600 transition-colors border-2 border-teal-500 w-full sm:w-auto"
+        className="bg-teal-500 text-white px-8 py-3 rounded-r-full text-lg font-semibold hover:bg-teal-600 transition-colors border-2 border-teal-500"
       >
         Demo Now
       </button>
