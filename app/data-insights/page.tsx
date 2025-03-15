@@ -79,8 +79,7 @@ export default function DataInsightsPage() {
     { id: "location", title: "Geographic Distribution", type: "location" },
     { id: "graduate_school", title: "Graduate School Distribution", type: "graduate_school" },
     { id: "industry_salary", title: "Average Salary by Industry", type: "industry_salary" },
-    // Add industry progression chart
-    { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
+    // { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
   ]
 
   useEffect(() => {
