@@ -27,25 +27,34 @@ const MobileWarning: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 bg-amber-100 border-b border-amber-300 p-4 shadow-md">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <p className="text-amber-800 font-medium">
-            <span className="font-bold">Desktop Recommended:</span> AlumIntel is optimized for desktop computers. Some features may not work correctly on mobile devices.
-          </p>
         </div>
-        <button 
-          onClick={() => setDismissed(true)}
-          className="ml-4 text-amber-600 hover:text-amber-800"
-          aria-label="Dismiss"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
+        
+        <h2 className="text-xl font-bold text-center text-gray-900 mb-3">
+          Desktop Experience Recommended
+        </h2>
+        
+        <p className="text-gray-700 mb-6 text-center">
+          AlumIntel is designed for desktop computers. Some features may not work correctly on mobile devices.
+        </p>
+        
+        <p className="text-sm text-gray-600 mb-6 text-center">
+          For the best experience, please visit us on a laptop or desktop computer.
+        </p>
+        
+        <div className="flex justify-center">
+          <button 
+            onClick={() => setDismissed(true)}
+            className="px-6 py-3 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+          >
+            I Understand, Continue Anyway
+          </button>
+        </div>
       </div>
     </div>
   );
