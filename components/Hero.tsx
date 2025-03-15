@@ -10,14 +10,12 @@ export default function Hero() {
     setIsVisible(true)
   }, [])
 
-  const scrollToSearch = () => {
-    // Find the AlumniSearchDemo element
-    const searchSection = document.getElementById('alumni-search-demo')
-    
-    // Scroll to it smoothly if it exists
-    if (searchSection) {
-      searchSection.scrollIntoView({ behavior: 'smooth' })
-    }
+  const scrollDown = () => {
+    // Scroll down by approximately one viewport height
+    window.scrollTo({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    })
   }
 
   return (
@@ -36,7 +34,7 @@ export default function Hero() {
         
         <div>
           <button 
-            onClick={scrollToSearch}
+            onClick={scrollDown}
             className="bg-teal-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-teal-600 transition-colors"
           >
             Discover Your Data
