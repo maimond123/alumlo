@@ -90,12 +90,18 @@ function ComingSoonOverlay({
           <div className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium mb-4">
             Beta Feature
           </div>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-5">
             Building your own report with AI is currently a beta feature under development.
           </p>
-          <p className="text-gray-800 font-medium">
-            While we continue to improve this feature, we offer more serious, comprehensive, and customizable report solutions for institutions that need deeper insights.
-          </p>
+          
+          <div className="bg-black/5 p-4 rounded-lg border-l-4 border-black mb-6">
+            <p className="text-black font-bold text-xl">
+              Need professional-grade reports?
+            </p>
+            <p className="text-gray-800 mt-1">
+              We offer premium, customizable reporting solutions for institutions requiring deeper insights.
+            </p>
+          </div>
         </div>
         
         <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
@@ -128,8 +134,8 @@ function ComingSoonOverlay({
           </div>
         ) : (
           <div>
-            <p className="text-center mb-4 font-medium">
-              Interested in learning more about our premium reporting solutions? Enter your email below:
+            <p className="text-center mb-4 font-semibold text-lg">
+              Interested in learning more about our premium reporting solutions?
             </p>
             <form onSubmit={handleEmailSubmit} className="space-y-3">
               <div className="flex items-center">
@@ -147,11 +153,11 @@ function ComingSoonOverlay({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`bg-black text-white px-6 py-3 rounded-r-lg font-medium ${
-                    isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-800"
+                  className={`bg-emerald-600 text-white px-6 py-3 rounded-r-lg font-medium text-base ${
+                    isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-emerald-700"
                   }`}
                 >
-                  {isSubmitting ? "Submitting..." : "Learn More"}
+                  {isSubmitting ? "Submitting..." : "Get Premium Access"}
                 </button>
               </div>
               {submitError && (
