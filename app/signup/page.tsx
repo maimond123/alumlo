@@ -211,7 +211,7 @@ export default function Signup() {
                 <button onClick={() => setShowCalendly(false)} className="mb-4 text-black hover:text-gray-700">
                   Close
                 </button>
-                <InlineWidget url="https://calendly.com/maimondavid553/alumintel-demo" />
+                <InlineWidget url="https://calendly.com/david-alumintel/alumintel-demo" />
               </div>
             </motion.div>
           )}
