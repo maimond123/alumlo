@@ -11,7 +11,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="relative min-h-[90vh] flex items-center">
+    <section className="relative min-h-[98vh] flex items-center">
       <div className={`container mx-auto px-6 relative z-10 transition-all duration-1000 ease-in-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>

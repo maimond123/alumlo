@@ -11,6 +11,7 @@ import Navigation from "../../components/navigation-signup"
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
 import { normalizeSchoolName } from "../../components/schoolNameUtils"
+import ReferralCodeInput from '../../components/RefferalCodeInput'
 
 export default function Signup() {
   const [showCalendly, setShowCalendly] = useState(false)
@@ -85,6 +86,27 @@ export default function Signup() {
       [e.target.name]: e.target.value,
     })
   }
+
+  const requestReferralCode = async () => {
+    try {
+      const response = await fetch('/api/sendReferralCode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: formData.schoolEmail }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      alert('Referral code request sent! Check your email for further instructions.');
+    } catch (error) {
+      console.error('Error requesting referral code:', error);
+      alert('There was an error sending your request. Please try again later.');
+    }
+  };
 
   return (
     <div className="min-h-screen w-full">
@@ -175,7 +197,7 @@ export default function Signup() {
                         Submitting...
                       </>
                     ) : (
-                      "Schedule Demo"
+                      "Schedule Calendly Demo"
                     )}
                   </button>
                   
@@ -194,11 +216,13 @@ export default function Signup() {
                     <button
                       type="button"
                       className="w-full bg-emerald-50 text-black border border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors"
-                      onClick={() => {/* We'll implement this later */}}
+                      onClick={requestReferralCode}
                     >
-                      Demo with Referral Code
+                      Request Referral Code to Demo
                     </button>
                   </motion.div>
+
+                  <ReferralCodeInput />
                 </form>
                 <motion.div
                   initial={{ opacity: 0 }}
