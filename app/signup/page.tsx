@@ -21,7 +21,6 @@ export default function Signup() {
     lastName: "",
     schoolEmail: "",
     schoolName: "",
-    schoolWebsite: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +51,6 @@ export default function Signup() {
           last_name: formData.lastName,
           school_email: formData.schoolEmail,
           school_name: lowerCaseSchoolName,
-          school_website: formData.schoolWebsite,
           table_name: normalizedTableName, // Store the normalized name
         },
       ])
@@ -148,7 +146,7 @@ export default function Signup() {
                       name="schoolEmail"
                       required
                       className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
-                      placeholder="School Email (e.g., john.doe@school.edu) *"
+                      placeholder="Email *"
                       value={formData.schoolEmail}
                       onChange={handleChange}
                     />
@@ -166,16 +164,6 @@ export default function Signup() {
                     />
                     {errors.schoolName && <p className="text-red-500 text-sm mt-1">{errors.schoolName}</p>}
                   </motion.div>
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }}>
-                    <input
-                      type="url"
-                      name="schoolWebsite"
-                      className="w-full bg-white bg-opacity-50 border border-black border-opacity-100 rounded-lg px-4 py-3 text-black placeholder-gray-400 focus:outline-none focus:border-golden-yellow transition-colors"
-                      placeholder="School Website"
-                      value={formData.schoolWebsite}
-                      onChange={handleChange}
-                    />
-                  </motion.div>
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -190,6 +178,27 @@ export default function Signup() {
                       "Schedule Demo"
                     )}
                   </button>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    transition={{ delay: 0.8 }}
+                    className="flex items-center justify-center my-4"
+                  >
+                    <div className="w-1/3 h-px bg-gray-300"></div>
+                    <p className="mx-4 text-xl font-semibold text-gray-600">Or</p>
+                    <div className="w-1/3 h-px bg-gray-300"></div>
+                  </motion.div>
+                  
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+                    <button
+                      type="button"
+                      className="w-full bg-emerald-50 text-black border border-black px-8 py-4 rounded-full text-xl font-semibold hover:bg-[#FFD700] transition-colors"
+                      onClick={() => {/* We'll implement this later */}}
+                    >
+                      Demo with Referral Code
+                    </button>
+                  </motion.div>
                 </form>
                 <motion.div
                   initial={{ opacity: 0 }}
