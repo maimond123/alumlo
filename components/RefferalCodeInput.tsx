@@ -34,23 +34,30 @@ const ReferralCodeInput = () => {
         return;
       }
 
-      // Check if the code is already used
-      if (data.is_used) {
-        setError('Referral code has already been used.');
+      // Check if the code has uses remaining
+      if (data.uses_remaining <= 0) {
+        setError('Referral code has reached its usage limit.');
         setShowModal(true);
         return;
       }
 
-      // Mark the referral code as used
+      // Update the referral code usage
+      const now = new Date().toISOString();
       await supabase
         .from('referral_codes')
-        .update({ is_used: true, used_at: new Date().toISOString() })
+        .update({ 
+          uses_remaining: data.uses_remaining - 1,
+          // If it's the first use, record when it was first used
+          ...(data.first_used_at ? {} : { first_used_at: now }),
+          // Always update the last used timestamp
+          last_used_at: now
+        })
         .eq('id', data.id);
 
       // Authenticate the user
       const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: 'maimondavid553@gmail.com', // Authenticate with this email
-        password: 'Tryme12!', // Replace with the actual password or use a secure method
+        email: 'maimondavid553@gmail.com',
+        password: 'your_password_here', // Replace with actual password or use a secure method
       });
 
       if (loginError) {
@@ -86,10 +93,9 @@ const ReferralCodeInput = () => {
         </button>
       </div>
       
-      {/* Error Modal */}
+      {/* Error Modal - No dark overlay */}
       {showModal && error && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowModal(false)}></div>
           <div className="bg-white p-6 rounded-lg shadow-lg z-10 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-red-500">Error</h3>
