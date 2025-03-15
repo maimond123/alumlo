@@ -34,17 +34,6 @@ const ReferralCodeInput = () => {
         .update({ is_used: true, used_at: new Date().toISOString() })
         .eq('id', data.id);
 
-      // Log in the user (assuming you have a login function)
-    //   const { user, error: loginError } = await supabase.auth.signIn({
-    //     email: 'maimondavid553@gmail.com',
-    //     password: 'your_password_here' // Replace with the actual password or use a secure method
-    //   });
-
-    //   if (loginError) {
-    //     setError('Login error: ' + loginError.message);
-    //     return;
-    //   }
-
       setSuccess('Successfully logged in! Redirecting to dashboard...');
       // Redirect to the dashboard or refresh the page
       window.location.href = '/dashboard';
@@ -61,7 +50,7 @@ const ReferralCodeInput = () => {
         value={referralCode}
         onChange={(e) => setReferralCode(e.target.value)}
         placeholder="Enter referral code"
-        className="px-4 py-3 rounded-l-full border-2 border-teal-500 border-r-0 focus:outline-none w-64"
+        className="px-4 py-3 rounded-l-full border-2 border-teal-500 border-r-0 focus:outline-none w-full sm:w-80" // Make the input wider
       />
       <button 
         onClick={handleDemo}

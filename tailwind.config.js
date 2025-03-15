@@ -21,6 +21,7 @@ module.exports = {
       animation: {
         'blink': 'blink 1s step-start infinite',
         'radiate-emerald': 'radiate-emerald 3s infinite',
+        'pulse': 'pulse 1.5s infinite',
       },
       keyframes: {
         blink: {
@@ -31,6 +32,11 @@ module.exports = {
           '0%': { backgroundColor: 'black', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.4)' },
           '50%': { backgroundColor: 'rgb(16, 185, 129)', boxShadow: '0 0 0 10px rgba(16, 185, 129, 0)' },
           '100%': { backgroundColor: 'black', boxShadow: '0 0 0 0 rgba(16, 185, 129, 0)' },
+        },
+        pulse: {
+          '0%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)' },
         },
       }, 
     },

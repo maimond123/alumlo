@@ -6,9 +6,18 @@ import ReferralCodeInput from './RefferalCodeInput'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
+  const [showArrow, setShowArrow] = useState(false)
 
   useEffect(() => {
     setIsVisible(true)
+    
+    // Show the arrow after 3 seconds
+    const timer = setTimeout(() => {
+      setShowArrow(true)
+    }, 3000)
+
+    // Cleanup timer on unmount
+    return () => clearTimeout(timer)
   }, [])
 
   const scrollDown = () => {
@@ -44,6 +53,15 @@ export default function Hero() {
           </Link>
         </div>
       </div>
+
+      {/* Pulsing Arrow */}
+      {showArrow && (
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-pulse">
+          <svg className="w-10 h-10 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0 0l-4-4m4 4l4-4" />
+          </svg>
+        </div>
+      )}
     </section>
   )
 }
