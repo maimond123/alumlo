@@ -44,17 +44,17 @@ const ReferralCodeInput = () => {
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 w-full">
       <input
         type="text"
         value={referralCode}
         onChange={(e) => setReferralCode(e.target.value)}
         placeholder="Enter referral code"
-        className="px-4 py-3 rounded-l-full border-2 border-teal-500 border-r-0 focus:outline-none w-full sm:w-80" // Make the input wider
+        className="px-4 py-3 rounded-l-full border-2 border-teal-500 border-r-0 focus:outline-none w-full sm:w-96"
       />
       <button 
         onClick={handleDemo}
-        className="bg-teal-500 text-white px-8 py-3 rounded-r-full text-lg font-semibold hover:bg-teal-600 transition-colors border-2 border-teal-500"
+        className="bg-teal-500 text-white px-8 py-3 rounded-r-full text-lg font-semibold hover:bg-teal-600 transition-colors border-2 border-teal-500 w-full sm:w-auto"
       >
         Demo Now
       </button>
