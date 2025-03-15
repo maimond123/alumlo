@@ -197,6 +197,26 @@ export default function DataInsightsPage() {
     }
   }, [schoolName, selectedYear])
 
+  // Add this effect to trigger data loading when the component mounts
+  useEffect(() => {
+    const loadInitialData = async () => {
+      // Wait a short moment to ensure all context providers are initialized
+      setTimeout(async () => {
+        if (schoolName && selectedYear) {
+          console.log("DEBUG: Initial data load triggered");
+          await fetchSchoolData();
+        } else {
+          console.log("DEBUG: Waiting for schoolName and selectedYear before initial load", {
+            schoolName,
+            selectedYear
+          });
+        }
+      }, 500);
+    };
+    
+    loadInitialData();
+  }, []); // Empty dependency array means this runs once on mount
+
   // Modify the beginning of fetchSchoolData to add more diagnostics
   const fetchSchoolData = async () => {
     console.log("DEBUG: fetchSchoolData called with:", {
