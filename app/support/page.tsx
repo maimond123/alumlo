@@ -235,7 +235,7 @@ export default function SupportPage() {
                   type="submit"
                   className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
                 >
-                  Submit & Get More Information
+                  Submit & Continue Exploring
                 </button>
               </div>
             </form>

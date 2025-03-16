@@ -74,6 +74,9 @@ export default function DataInsightsPage() {
   // Add state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [showDemoSurvey, setShowDemoSurvey] = useState(false)
+  // Add state for the one-time prompt modal
+  const [showPromptModal, setShowPromptModal] = useState(false)
+  const [promptModalShown, setPromptModalShown] = useState(false)
 
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
@@ -589,12 +592,6 @@ export default function DataInsightsPage() {
   const handleWidgetClick = (chart: SchoolChartData) => {
     console.log("DEBUG: Chart clicked:", chart)
     
-    // If in demo mode, show the demo survey instead of expanding the chart
-    if (isDemoMode) {
-      setShowDemoSurvey(true);
-      return;
-    }
-    
     // Set expanded year to match the current selected year
     setExpandedYear(selectedYear)
     
@@ -914,6 +911,18 @@ export default function DataInsightsPage() {
     }
   }, [selectedChart]); // This effect runs whenever selectedChart changes
 
+  // Add effect to show the prompt modal after a few seconds for demo users
+  useEffect(() => {
+    if (isDemoMode && !promptModalShown && !isLoading) {
+      const timer = setTimeout(() => {
+        setShowPromptModal(true);
+        setPromptModalShown(true);
+      }, 3000); // Show after 3 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isDemoMode, promptModalShown, isLoading]);
+
   if (isLoading && fromSignin) {
     return (
       <div className="min-h-screen bg-white relative overflow-hidden">
@@ -968,7 +977,7 @@ export default function DataInsightsPage() {
                   onClick={() => handleWidgetClick(chart)}
                   className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
                     selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
-                  } ${isDemoMode ? "group relative" : ""}`}
+                  }`}
                   transition={{ duration: 0.3 }}
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -978,14 +987,6 @@ export default function DataInsightsPage() {
                   </div>
                   <motion.div layoutId={`chart-content-${chart.id}`} className="flex-1 w-full relative">
                     {renderChart(chart)}
-                    {/* Demo mode "click me" overlay */}
-                    {isDemoMode && (
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
-                        <span className="px-3 py-1 bg-emerald-600 text-white rounded-full text-sm font-medium transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                          click me
-                        </span>
-                      </div>
-                    )}
                   </motion.div>
                 </motion.div>
               ))}
@@ -1163,6 +1164,37 @@ export default function DataInsightsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* One-time Prompt Modal for Demo Users */}
+      {isDemoMode && showPromptModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowPromptModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Analytics</h2>
+              <p className="text-gray-600 mb-6">
+                Click on any visualization to explore the data in detail and chat with our AI assistant about what you're seeing.
+              </p>
+              <button
+                onClick={() => setShowPromptModal(false)}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
