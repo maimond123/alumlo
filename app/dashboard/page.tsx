@@ -388,9 +388,24 @@ export default function DashboardPage() {
       // Phase 2: Searching database
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 2: Searching`);
       setSearchPhase('searching');
-      await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
-        (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
-      );
+      
+      // Custom message for demo account
+      if (isDemoMode) {
+        await typewriterEffect(`Searching across our database, `, 
+          (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
+        );
+        // After the first part is typed, add the clickable part
+        setDisplayedText(prev => ({ 
+          ...prev, 
+          searching: prev.searching + 
+            '<span class="text-emerald-600 underline cursor-pointer" onclick="document.getElementById(\'demo-trigger\').click()">want this at your school?</span>' 
+        }));
+      } else {
+        // Regular message for other users
+        await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
+          (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
+        );
+      }
       
       // Phase 3: Generate expanded queries using the CURRENT query
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 3: Profiling using query: "${currentQuery}"`);
@@ -747,6 +762,13 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
+      {/* Hidden button to trigger demo survey */}
+      <button 
+        id="demo-trigger" 
+        className="hidden" 
+        onClick={() => setShowDemoSurvey(true)}
+        aria-hidden="true"
+      />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className={`min-h-screen flex flex-col items-center px-4 ${
           (searchPhase === 'idle' && !displayedText.analyzing && !displayedText.searching && !displayedText.profiling && 
@@ -900,7 +922,10 @@ export default function DashboardPage() {
                   )}
                   
                   {displayedText.searching && (
-                    <p className="text-gray-700 mb-3">{displayedText.searching}</p>
+                    <p 
+                      className="text-gray-700 mb-3"
+                      dangerouslySetInnerHTML={{ __html: displayedText.searching }}
+                    ></p>
                   )}
                   
                   {displayedText.profiling && (
