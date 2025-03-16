@@ -398,7 +398,7 @@ export default function DashboardPage() {
         setDisplayedText(prev => ({ 
           ...prev, 
           searching: prev.searching + 
-            '<span class="text-emerald-600 underline cursor-pointer" onclick="document.getElementById(\'demo-trigger\').click()">want this at your school?</span>' 
+            '<span class="text-emerald-600 underline cursor-pointer" onclick="document.getElementById(\'demo-trigger\').click()">want this for your alumni data?</span>' 
         }));
       } else {
         // Regular message for other users

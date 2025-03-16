@@ -71,6 +71,9 @@ export default function DataInsightsPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter()
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+  // Add state for demo mode
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [showDemoSurvey, setShowDemoSurvey] = useState(false)
 
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
@@ -99,6 +102,12 @@ export default function DataInsightsPage() {
         // Get user email
         const userEmail = await getUserEmail()
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, userEmail }))
+
+        // Check if this is a demo user
+        if (userEmail === "maimondavid553@gmail.com") {
+          console.log("Demo mode activated");
+          setIsDemoMode(true);
+        }
 
         if (userEmail) {
           console.log("DEBUG: Fetching user info from Supabase...")
@@ -580,6 +589,12 @@ export default function DataInsightsPage() {
   const handleWidgetClick = (chart: SchoolChartData) => {
     console.log("DEBUG: Chart clicked:", chart)
     
+    // If in demo mode, show the demo survey instead of expanding the chart
+    if (isDemoMode) {
+      setShowDemoSurvey(true);
+      return;
+    }
+    
     // Set expanded year to match the current selected year
     setExpandedYear(selectedYear)
     
@@ -953,7 +968,7 @@ export default function DataInsightsPage() {
                   onClick={() => handleWidgetClick(chart)}
                   className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
                     selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
-                  }`}
+                  } ${isDemoMode ? "group relative" : ""}`}
                   transition={{ duration: 0.3 }}
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -961,8 +976,16 @@ export default function DataInsightsPage() {
                       {chart.title}
                     </motion.h3>
                   </div>
-                  <motion.div layoutId={`chart-content-${chart.id}`} className="flex-1 w-full">
+                  <motion.div layoutId={`chart-content-${chart.id}`} className="flex-1 w-full relative">
                     {renderChart(chart)}
+                    {/* Demo mode "click me" overlay */}
+                    {isDemoMode && (
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+                        <span className="px-3 py-1 bg-emerald-600 text-white rounded-full text-sm font-medium transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                          click me
+                        </span>
+                      </div>
+                    )}
                   </motion.div>
                 </motion.div>
               ))}
@@ -996,6 +1019,153 @@ export default function DataInsightsPage() {
         </div>
       </main>
       {selectedChart && renderExpandedWidget()}
+      
+      {/* Demo Survey Modal */}
+      {isDemoMode && showDemoSurvey && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // Close the modal when clicking the backdrop (outside the modal)
+            if (e.target === e.currentTarget) {
+              setShowDemoSurvey(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want this for your School's Alumni Data?</h2>
+              <button 
+                onClick={() => setShowDemoSurvey(false)}
+                className="text-gray-500 hover:text-gray-700 absolute right-6 top-6"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form className="space-y-6" onSubmit={async (e) => {
+              e.preventDefault();
+              
+              // Get form data
+              const formData = new FormData(e.currentTarget);
+              const schoolName = formData.get('school-name') as string;
+              const email = formData.get('email') as string;
+              const features = Array.from(formData.getAll('features')) as string[];
+              const budget = formData.get('budget') as string;
+              
+              try {
+                // Save to Supabase
+                const { error } = await supabase
+                  .from('demo_survey_responses')
+                  .insert([{ 
+                    school_name: schoolName,
+                    email: email,
+                    features: features,
+                    budget: budget,
+                    created_at: new Date().toISOString()
+                  }]);
+                  
+                if (error) throw error;
+                
+                // Show confirmation message
+                setShowDemoSurvey(false);
+                
+                // Show confirmation modal
+                alert("Thank you for your interest! We'll contact you within 24 hours with more information about how AlumIntel can work for your institution.");
+                
+              } catch (error) {
+                console.error('Error submitting survey:', error);
+                alert('There was an error submitting your information. Please try again.');
+              }
+            }}>
+              <div>
+                <label htmlFor="school-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  What's your school's name?
+                </label>
+                <input
+                  type="text"
+                  id="school-name"
+                  name="school-name"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="e.g., Harvard University"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your work email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="name@work.edu"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Which features would be most valuable to your institution?
+                </label>
+                <div className="space-y-2">
+                  {[
+                    "Alumni Search and Discovery",
+                    "Aggregate Alumni Analytics",
+                    "Customizable School Insights Report",
+                    "Student Mentorship Connections",
+                    "Fundraising Insights",
+                    "New Alumni Database",
+                    "Networking Opportunities"
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`feature-${index}`}
+                        name="features"
+                        value={feature}
+                        className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={`feature-${index}`} className="ml-2 text-gray-700">
+                        {feature}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  What would be your budget range for this solution?
+                </label>
+                <select 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  name="budget"
+                  required
+                >
+                  <option value="">Select a range</option>
+                  <option value="250-1000">$250 - $1,000 per year</option>
+                  <option value="1000-2500">$1,000 - $2,500 per year</option>
+                  <option value="2500-5000">$2,500 - $5,000 per year</option>
+                  <option value="5000+">$5,000+ per year</option>
+                </select>
+              </div>
+              
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+                >
+                  Submit & Continue Exploring
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
