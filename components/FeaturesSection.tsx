@@ -139,7 +139,7 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>We guarantee 90%+ coverage for each graduating class</span>
+                  <span>We guarantee 85%+ coverage for each requested graduating class</span>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
@@ -342,7 +342,7 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Customizable views for different stakeholders</span>
+                  <span>Customizable views created upon request</span>
                 </li>
               </ul>
             </div>
@@ -369,7 +369,7 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>AI-powered analysis explains what the data means</span>
+                  <span>AI-powered analysis explains what the data means for your specific institution</span>
                 </li>
                 <li className="flex items-start">
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
@@ -381,7 +381,7 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>Proactive insights that highlight opportunities</span>
+                  <span>School-specific insights and recommendations</span>
                 </li>
               </ul>
             </div>
@@ -412,10 +412,10 @@ export default function FeaturesSection() {
           {/* Centered Catchphrase */}
           <div className="text-center mb-16 pt-10">
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
-              Beautiful Downloadable Reports
+              Customizable Comprehensive Reports
             </h2>
             <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              Transform your alumni data into compelling visual stories that drive action
+              We transform your alumni data into compelling visual stories that drive action
             </p>
           </div>
           
@@ -434,14 +434,9 @@ export default function FeaturesSection() {
             
             {/* Description Content - Takes up less space */}
             <div className="lg:w-5/12">
-              <div className="p-3 rounded-full w-16 h-16 flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6">
-                <FileText className="w-8 h-8 text-emerald-600" />
-              </div>
-              
               <h3 className="text-2xl font-bold text-emerald-800 mb-4">Data-Driven Decision Making</h3>
               <p className="text-lg text-gray-700 mb-6">
-                Generate professional reports with just a few clicks to share with stakeholders or use in marketing materials. 
-                Customize layouts, colors, and content to match your institution's branding.
+                Receive professional customizable school reports based on our extracted data and insights. Generating your own report is currently in beta testing.
               </p>
               
               <div className="space-y-4 mb-8">
@@ -450,8 +445,8 @@ export default function FeaturesSection() {
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800">Multiple Export Formats</h4>
-                    <p className="text-gray-600">Download as PDF, PowerPoint, or Excel to suit your needs</p>
+                    <h4 className="font-semibold text-gray-800">School-Specific Analysis</h4>
+                    <p className="text-gray-600">Comprehensive reports tailored to your institution's unique alumni ecosystem and challenges</p>
                   </div>
                 </div>
                 
@@ -460,8 +455,8 @@ export default function FeaturesSection() {
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800">Custom Branding</h4>
-                    <p className="text-gray-600">Match your institution's visual identity with customizable templates</p>
+                    <h4 className="font-semibold text-gray-800">Alumni Success Metrics</h4>
+                    <p className="text-gray-600">Detailed insights into career trajectories, industry impact, and professional achievements</p>
                   </div>
                 </div>
                 
@@ -470,8 +465,8 @@ export default function FeaturesSection() {
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-800">Automated Delivery</h4>
-                    <p className="text-gray-600">Schedule reports to be sent to stakeholders on a regular basis</p>
+                    <h4 className="font-semibold text-gray-800">Custom Branding Options</h4>
+                    <p className="text-gray-600">Reports can be styled with your institution's colors, logos, and visual identity</p>
                   </div>
                 </div>
               </div>
