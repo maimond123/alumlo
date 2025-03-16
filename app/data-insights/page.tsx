@@ -88,6 +88,17 @@ export default function DataInsightsPage() {
     // { id: "industry_progression", title: "Industry Progression Over Time", type: "industry_progression" },
   ]
 
+  // Check localStorage when component mounts to see if user has already seen the modal
+  useEffect(() => {
+    // Check if running in browser environment (not during SSR)
+    if (typeof window !== 'undefined') {
+      const hasSeenModal = localStorage.getItem('hasSeenAnalyticsPrompt') === 'true';
+      if (hasSeenModal) {
+        setPromptModalShown(true);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const initializePage = async () => {
       let progressInterval: NodeJS.Timeout | null = null;
@@ -914,12 +925,20 @@ export default function DataInsightsPage() {
   // Add effect to show the prompt modal after a few seconds for demo users
   useEffect(() => {
     if (isDemoMode && !promptModalShown && !isLoading) {
-      const timer = setTimeout(() => {
-        setShowPromptModal(true);
-        setPromptModalShown(true);
-      }, 3000); // Show after 3 seconds
+      // Check if the user has already seen the modal
+      const hasSeenModal = localStorage.getItem('hasSeenAnalyticsPrompt') === 'true';
       
-      return () => clearTimeout(timer);
+      if (!hasSeenModal) {
+        const timer = setTimeout(() => {
+          setShowPromptModal(true);
+          setPromptModalShown(true);
+        }, 3000); // Show after 3 seconds
+        
+        return () => clearTimeout(timer);
+      } else {
+        // Mark as shown in component state to prevent any future checks
+        setPromptModalShown(true);
+      }
     }
   }, [isDemoMode, promptModalShown, isLoading]);
 
@@ -1172,7 +1191,11 @@ export default function DataInsightsPage() {
       {isDemoMode && showPromptModal && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowPromptModal(false)}
+          onClick={() => {
+            setShowPromptModal(false);
+            // Save to localStorage that user has seen the modal
+            localStorage.setItem('hasSeenAnalyticsPrompt', 'true');
+          }}
         >
           <div 
             className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
@@ -1189,7 +1212,11 @@ export default function DataInsightsPage() {
                 Click on any visualization to explore the data in detail and chat with our AI assistant about what you're seeing.
               </p>
               <button
-                onClick={() => setShowPromptModal(false)}
+                onClick={() => {
+                  setShowPromptModal(false);
+                  // Save to localStorage that user has seen the modal
+                  localStorage.setItem('hasSeenAnalyticsPrompt', 'true');
+                }}
                 className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
               >
                 Got it
