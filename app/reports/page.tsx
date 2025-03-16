@@ -157,7 +157,7 @@ function ComingSoonOverlay({
                     isSubmitting ? "opacity-70 cursor-not-allowed" : "hover:bg-emerald-700"
                   }`}
                 >
-                  {isSubmitting ? "Submitting..." : "Get Premium Access"}
+                  {isSubmitting ? "Submitting..." : "Learn More"}
                 </button>
               </div>
               {submitError && (
