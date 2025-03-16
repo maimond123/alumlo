@@ -8,16 +8,8 @@ export default function Footer() {
         <div className="text-black">
           &copy; {new Date().getFullYear()} AlumIntel. All rights reserved.
         </div>
-        <div className="flex space-x-6 mt-4 md:mt-0">
-          <a href="#" className="text-black hover:text-emerald-600 transition-colors">
-            Privacy Policy
-          </a>
-          <a href="#" className="text-black hover:text-emerald-600 transition-colors">
-            Terms of Service
-          </a>
-          <a href="#" className="text-black hover:text-emerald-600 transition-colors">
-            Contact
-          </a>
+        <div className="mt-4 md:mt-0">
+          <span className="text-black">Contact Us @ david@alumintel.com</span>
         </div>
       </div>
     </footer>

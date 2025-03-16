@@ -88,7 +88,7 @@ export default function ValueProposition() {
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-4">New Alumni Database</h3>
             <p className="text-lg text-gray-600">
-              Reinvigorate your outdated alumni records with our comprehensive, always up-to-date database that captures career progression, location changes, and professional achievements automatically.
+              Reinvigorate your outdated alumni database with our comprehensive, always up-to-date database that captures career progression, location changes, and professional achievements automatically.
             </p>
           </div>
           

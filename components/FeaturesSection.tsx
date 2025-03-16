@@ -434,7 +434,7 @@ export default function FeaturesSection() {
             
             {/* Description Content - Takes up less space */}
             <div className="lg:w-5/12">
-              <h3 className="text-2xl font-bold text-emerald-800 mb-4">Data-Driven Decision Making</h3>
+              <h3 className="text-2xl font-bold text-black mb-4">Data-Driven Decision Making</h3>
               <p className="text-lg text-gray-700 mb-6">
                 Receive professional customizable school reports based on our extracted data and insights. Generating your own report is currently in beta testing.
               </p>
