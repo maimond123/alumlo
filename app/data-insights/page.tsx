@@ -119,12 +119,10 @@ export default function DataInsightsPage() {
 
         // Check if this is a demo user
         if (userEmail === "maimondavid553@gmail.com") {
-          console.log("Demo mode activated");
           setIsDemoMode(true);
         }
 
         if (userEmail) {
-          console.log("DEBUG: Fetching user info from Supabase...")
           const { data, error } = await supabase
             .from("customer_information")
             .select("first_name, last_name")
@@ -132,20 +130,17 @@ export default function DataInsightsPage() {
             .single()
 
           if (error) {
-            console.error("Error fetching user info:", error)
             setDebugInfo((prev: Record<string, any>) => ({ ...prev, userInfoError: error }))
             return
           }
 
           if (data) {
-            console.log("DEBUG: User info retrieved:", data)
             setUserInfo(data)
             setDebugInfo((prev: Record<string, any>) => ({ ...prev, userInfo: data }))
           }
         }
 
         // Set the charts to our predefined school charts
-        console.log("DEBUG: Setting charts to:", schoolCharts)
         setCharts(schoolCharts)
         setSearchResults(schoolCharts)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, chartsSet: true, schoolCharts }))
@@ -164,7 +159,6 @@ export default function DataInsightsPage() {
         if (progressInterval) clearInterval(progressInterval)
         setIsLoading(false)
       } catch (error) {
-        console.error("Error initializing page:", error)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, initError: error }))
         setIsLoading(false)
       }
@@ -193,7 +187,6 @@ export default function DataInsightsPage() {
 
     // Force a data fetch when schoolName becomes available
     if (schoolName) {
-      console.log("DEBUG: schoolName is now available, triggering fetchSchoolData")
       fetchSchoolData()
     }
   }, [schoolName])

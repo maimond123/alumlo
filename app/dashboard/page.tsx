@@ -300,7 +300,6 @@ export default function DashboardPage() {
 
   // Add this helper function to simulate typewriter effect
   const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Starting typewriter effect for text: "${text.substring(0, 20)}..."`);
     return new Promise((resolve) => {
       let i = 0;
       const typing = setInterval(() => {
@@ -309,7 +308,6 @@ export default function DashboardPage() {
           i++;
         } else {
           clearInterval(typing);
-          console.log(`[DEBUG ${new Date().toISOString()}] Completed typewriter effect`);
           resolve();
         }
       }, speed);
@@ -324,7 +322,6 @@ export default function DashboardPage() {
     const queryToUse = directQuery || searchQuery.trim();
     
     if (!queryToUse) {
-      console.log(`[DEBUG ${new Date().toISOString()}] Empty query, search aborted`);
       return;
     }
     
@@ -686,18 +683,16 @@ export default function DashboardPage() {
 
   const fetchProfilePhotos = async (results: SearchResult[]) => {
     try {
-      console.log(`[DEBUG ${new Date().toISOString()}] fetchProfilePhotos called with ${results.length} results`);
       
       const linkedinUrls = results.map(result => result.linkedin_url);
       if (linkedinUrls.length === 0) {
-        console.log(`[DEBUG ${new Date().toISOString()}] No LinkedIn URLs to fetch photos for`);
         return;
       }
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Fetching profile photos for LinkedIn URLs:`, linkedinUrls);
+
       
       const tableName = formattedSchoolName?.toLowerCase().replace(/ /g, '_');
-      console.log(`[DEBUG ${new Date().toISOString()}] Using table name: ${tableName}`);
+
       
       // Query the main school table using linkedin_url as the common identifier
       const { data, error } = await supabase
@@ -709,8 +704,7 @@ export default function DashboardPage() {
         console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error fetching profile photos:`, error);
         return;
       }
-      
-      console.log(`[DEBUG ${new Date().toISOString()}] Profile photo data:`, data);
+    
       
       // Create a copy of results to modify
       const updatedResults = [...results];
@@ -722,7 +716,6 @@ export default function DashboardPage() {
         );
         if (matchingProfile && matchingProfile.profile_photo_url) {
           result.profile_url = matchingProfile.profile_photo_url;
-          console.log(`[DEBUG ${new Date().toISOString()}] Added photo for ${result.name}:`, matchingProfile.profile_photo_url);
         } else {
           console.log(`[DEBUG ${new Date().toISOString()}] No photo found for ${result.name}`);
         }
