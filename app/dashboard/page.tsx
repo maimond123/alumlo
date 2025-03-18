@@ -683,18 +683,15 @@ export default function DashboardPage() {
 
   const fetchProfilePhotos = async (results: SearchResult[]) => {
     try {
-      
       const linkedinUrls = results.map(result => result.linkedin_url);
       if (linkedinUrls.length === 0) {
         return;
       }
       
-
+      // Use the vector table directly
+      const tableName = `${formattedSchoolName?.toLowerCase().replace(/ /g, '_')}_vector`;
       
-      const tableName = formattedSchoolName?.toLowerCase().replace(/ /g, '_');
-
-      
-      // Query the main school table using linkedin_url as the common identifier
+      // Query the vector table directly using linkedin_url
       const { data, error } = await supabase
         .from(tableName)
         .select('linkedin_url, profile_photo_url')
@@ -705,7 +702,6 @@ export default function DashboardPage() {
         return;
       }
     
-      
       // Create a copy of results to modify
       const updatedResults = [...results];
       
