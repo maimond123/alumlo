@@ -50,7 +50,6 @@ export default function Onboarding() {
         throw new Error(data.message);
       }
     } catch (error) {
-      console.error("Token verification failed:", error);
       setError(error instanceof Error ? error.message : "Token verification failed");
       setIsTokenValid(false);
     } finally {
@@ -110,7 +109,6 @@ export default function Onboarding() {
       router.push('/dashboard');
       
     } catch (error: any) {
-      console.error("Account setup error:", error);
       setError(error.message || "An error occurred during account setup");
     } finally {
       setIsSubmitting(false);

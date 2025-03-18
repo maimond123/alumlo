@@ -281,13 +281,12 @@ export default function DashboardPage() {
             .select('*', { count: 'exact', head: true });
           
           if (error) {
-            console.error('[Client] Error fetching alumni count:', error);
+            // Handle error silently
           } else {
-            console.log('[Client] Total alumni count:', count);
             setTotalAlumniCount(count || 0);
           }
         } catch (error) {
-          console.error('[Client] Error in count fetch:', error);
+          // Catch error silently
         } finally {
           setIsLoadingCount(false);
         }

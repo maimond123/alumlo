@@ -20,11 +20,10 @@ export default function SupportPage() {
         
         // Check if this is a demo user
         if (userEmail === "maimondavid553@gmail.com") {
-          console.log("Demo mode activated in support page");
           setIsDemoMode(true);
         }
       } catch (error) {
-        console.error("Error checking demo account:", error)
+        // Silently handle error
       }
     }
 

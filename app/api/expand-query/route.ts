@@ -9,8 +9,6 @@ export async function POST(req: NextRequest) {
   try {
     const { query } = await req.json();
     
-    console.log('Received query:', query);
-    
     if (!query) {
       return new Response(JSON.stringify({ error: 'Query is required' }), {
         status: 400,
@@ -55,7 +53,6 @@ Just provide the 3 expansions separated by "•" characters, with no numbering, 
             }
           }
         } catch (error) {
-          console.error('Stream error:', error);
           controller.error(error);
         }
         controller.close();
@@ -70,7 +67,6 @@ Just provide the 3 expansions separated by "•" characters, with no numbering, 
       },
     });
   } catch (error: any) {
-    console.error('Expansion error:', error);
     return new Response(JSON.stringify({ 
       error: error.message || 'An error occurred while processing your request' 
     }), {

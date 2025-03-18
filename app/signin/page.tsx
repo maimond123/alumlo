@@ -18,21 +18,15 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Starting sign in process...')
     
     setIsLoading(true)
     setError(null)
 
     try {
-      console.log('Attempting to sign in with Supabase...')
-      
       const user = await signInWithEmail(email, password);
-      console.log('Successfully signed in user')
-      console.log('Redirecting to dashboard...')
       router.push('/dashboard')
 
     } catch (error: any) {
-      console.error('Sign in error:', error)
       if (error.message?.includes('Invalid login credentials')) {
         setError('Incorrect email or password')
       } else if (error.message?.includes('Email not confirmed')) {
@@ -41,7 +35,6 @@ export default function SignIn() {
         setError(error.message || 'Failed to sign in')
       }
     } finally {
-      console.log('Sign in process completed')
       setIsLoading(false)
     }
   }

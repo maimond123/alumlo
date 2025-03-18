@@ -56,22 +56,13 @@ export default function Signup() {
       ])
 
       if (error) {
-        console.error("Supabase error details:", {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        })
         throw error
       }
 
-      console.log("Successfully inserted data:", data)
       setShowCalendly(true)
     } catch (error) {
-      console.error("Error inserting data:", error)
       if (error instanceof Error) {
-        console.error("Error name:", error.name)
-        console.error("Error message:", error.message)
+        // Silently handle error
       }
       setErrors({ submit: "An error occurred. Please try again." })
     } finally {

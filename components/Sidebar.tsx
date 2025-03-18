@@ -36,19 +36,10 @@ export default function Sidebar() {
       try {
         // Get user email from Supabase
         const userEmail = await getUserEmail()
-        console.log('User email:', userEmail)
         
         if (!userEmail) {
-          console.error('No email found for user')
           return
         }
-        
-        // Log the exact query we're about to make
-        console.log('About to query Supabase with:', {
-          table: 'customer_information',
-          select: 'first_name, last_name, school_name',
-          filter: `school_email=eq.${userEmail}`
-        })
         
         // Get user info from database
         const { data, error } = await supabase
@@ -58,7 +49,6 @@ export default function Sidebar() {
           .single()
         
         if (error) {
-          console.error('Error fetching user info:', error)
           return
         }
         
@@ -70,7 +60,7 @@ export default function Sidebar() {
           })
         }
       } catch (error) {
-        console.error('Error getting user info:', error)
+        // Silently handle error
       }
     }
     

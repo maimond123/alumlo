@@ -64,7 +64,7 @@ export default function DataInsightsPage() {
   const [industryProgressionData, setIndustryProgressionData] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
-    { role: 'assistant', content: 'What would you like to know about this data?' }
+    { role: 'assistant', content: 'What would you like to know about this data? ' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
