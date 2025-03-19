@@ -250,6 +250,27 @@ export default function AlumniSearchDemo() {
 
   const isSearchingPhase = searchPhase !== 'idle' && searchPhase !== 'complete';
   
+  // Add this in your component before rendering the results
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      console.log("Search results:", searchResults);
+      searchResults.forEach((result, index) => {
+        if (result.profile_photo_url) {
+          // Try to fetch the image to see if it's accessible
+          fetch(result.profile_photo_url, { method: 'HEAD' })
+            .then(response => {
+              console.log(`Image ${index} (${result.profile_photo_url}) status:`, response.status);
+            })
+            .catch(error => {
+              console.error(`Image ${index} (${result.profile_photo_url}) error:`, error);
+            });
+        } else {
+          console.log(`Image ${index}: No URL provided`);
+        }
+      });
+    }
+  }, [searchResults]);
+
   return (
     <div id="alumni-search-demo" className="w-full max-w-4xl mx-auto">
       {/* Add the style tag for animations */}
