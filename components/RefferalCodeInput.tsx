@@ -21,61 +21,27 @@ const ReferralCodeInput = () => {
 
   const handleDemo = async () => {
     try {
-      // Check if the referral code exists
-      const { data, error } = await supabase
-        .from('referral_codes')
-        .select('*')
-        .eq('code', referralCode)
-        .single();
-
-      if (error || !data) {
-        setError('Invalid referral code');
-        setShowModal(true);
-        return;
-      }
-
-      // Check if the code has uses remaining
-      if (data.uses_remaining <= 0) {
-        setError('Referral code has reached its usage limit.');
-        setShowModal(true);
-        return;
-      }
-
-      // Update the referral code usage
-      const now = new Date().toISOString();
-      await supabase
-        .from('referral_codes')
-        .update({ 
-          uses_remaining: data.uses_remaining - 1,
-          // If it's the first use, record when it was first used
-          ...(data.first_used_at ? {} : { first_used_at: now }),
-          // Always update the last used timestamp
-          last_used_at: now
-        })
-        .eq('id', data.id);
-
-      // For testing purposes only - hardcoded credentials
-      // IMPORTANT: This is a temporary solution for debugging
-      const adminEmail = 'maimondavid553@gmail.com';
-      const adminPassword = 'Tryme12!';
-      
-      console.log('Using admin credentials:', adminEmail); // For debugging
-      
-      const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: adminEmail,
-        password: adminPassword,
+      // Call the server-side API to verify and process the referral code
+      const response = await fetch('/api/verify-referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode })
       });
-
-      if (loginError) {
-        console.error('Login error details:', loginError); // For debugging
-        setError('Login error: ' + loginError.message);
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        setError(result.error || 'An error occurred');
         setShowModal(true);
         return;
       }
-
-      console.log('Authentication successful'); // For debugging
       
-      // No success message, just redirect
+      // Set the session in the client
+      if (result.session) {
+        await supabase.auth.setSession(result.session);
+      }
+      
+      // Redirect to dashboard
       window.location.href = '/dashboard';
     } catch (err) {
       console.error('Error processing referral code:', err);
