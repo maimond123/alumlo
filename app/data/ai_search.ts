@@ -21,6 +21,7 @@ export interface SearchResult {
   current_job_location: string;
   years_experience: number;
   similarity: number;
+  profile_photo_url?: string;
 }
 
 export interface ProfileDetail {
@@ -252,6 +253,12 @@ export class LinkedInProfileSearchEngine {
         throw new Error(`Demo vector search failed: ${error.message}`);
       }
       
+      // Debug: Log the first result to check if profile_photo_url exists
+      if (data && data.length > 0) {
+        console.log("First result fields:", Object.keys(data[0]));
+        console.log("First result profile_photo_url:", data[0].profile_photo_url);
+      }
+      
       // Format the results to match your frontend expectations
       return data.map((item: any): SearchResult => ({
         id: Number(item.id),
@@ -263,7 +270,8 @@ export class LinkedInProfileSearchEngine {
         current_general_industry: item.current_general_industry,
         current_job_location: item.current_job_location,
         years_experience: item.years_of_experience || 0,
-        similarity: item.similarity
+        similarity: item.similarity,
+        profile_photo_url: item.profile_photo_url
       }));
     } catch (error) {
       throw error;
