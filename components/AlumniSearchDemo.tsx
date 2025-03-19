@@ -16,6 +16,7 @@ interface SearchResult {
   current_job_location: string;
   similarity: number;
   profile_url?: string;
+  profile_photo_url?: string;
 }
 
 // Add these suggestion tags similar to dashboard/page.tsx
@@ -476,9 +477,9 @@ export default function AlumniSearchDemo() {
                   <div className="flex items-center">
                     {/* Profile Image */}
                     <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                      {result.profile_url ? (
+                      {result.profile_photo_url ? (
                         <img 
-                          src={result.profile_url} 
+                          src={result.profile_photo_url} 
                           alt={`${result.name}'s profile`}
                           className="w-full h-full object-cover"
                         />
