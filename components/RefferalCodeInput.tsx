@@ -54,15 +54,12 @@ const ReferralCodeInput = () => {
         })
         .eq('id', data.id);
 
-      // Authenticate the user using environment variables
-      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+      // For testing purposes only - hardcoded credentials
+      // IMPORTANT: This is a temporary solution for debugging
+      const adminEmail = 'maimondavid553@gmail.com';
+      const adminPassword = 'Tryme12!';
       
-      if (!adminEmail || !adminPassword) {
-        setError('Admin credentials not configured properly.');
-        setShowModal(true);
-        return;
-      }
+      console.log('Using admin credentials:', adminEmail); // For debugging
       
       const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
         email: adminEmail,
@@ -70,11 +67,14 @@ const ReferralCodeInput = () => {
       });
 
       if (loginError) {
+        console.error('Login error details:', loginError); // For debugging
         setError('Login error: ' + loginError.message);
         setShowModal(true);
         return;
       }
 
+      console.log('Authentication successful'); // For debugging
+      
       // No success message, just redirect
       window.location.href = '/dashboard';
     } catch (err) {
