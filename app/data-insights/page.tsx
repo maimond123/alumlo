@@ -44,8 +44,16 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
 
 export default function DataInsightsPage() {
   const { isSidebarOpen } = useSidebar()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const fromSignin = searchParams.get("fromSignin") === "true"
+  
+  // Get the school name from context
+  const { schoolName: contextSchoolName, setSchoolName: setContextSchoolName } = useSchool()
+  
+  // TEMPORARY: Override school name to always be 'lawrenceville'
+  const [schoolName, setSchoolName] = useState<string>("lawrenceville")
+  
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<SchoolChartData[]>([])
   const [charts, setCharts] = useState<SchoolChartData[]>([])
@@ -53,7 +61,6 @@ export default function DataInsightsPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [progress, setProgress] = useState(0)
-  const { schoolName } = useSchool()
   const [selectedYear, setSelectedYear] = useState("2018")
   const [expandedYear, setExpandedYear] = useState(selectedYear)
   const [salaryData, setSalaryData] = useState<any>(null)
@@ -69,7 +76,6 @@ export default function DataInsightsPage() {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const router = useRouter()
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   // Add state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -177,12 +183,21 @@ export default function DataInsightsPage() {
     })
   }, [])
 
-  // Add this to track when schoolName changes
+  // Override the school name when the component mounts
+  useEffect(() => {
+    // TEMPORARY: Force school name to be 'lawrenceville'
+    setSchoolName("lawrenceville")
+    
+    console.log("DEBUG: School name temporarily set to 'lawrenceville'")
+  }, [])
+
+  // Modify the existing useEffect that depends on schoolName
   useEffect(() => {
     console.log("DEBUG: schoolName changed:", {
       schoolName,
       schoolNameType: typeof schoolName,
       timestamp: new Date().toISOString(),
+      isHardcoded: schoolName === "lawrenceville" ? "yes (temporary override)" : "no"
     })
 
     // Force a data fetch when schoolName becomes available
@@ -238,6 +253,7 @@ export default function DataInsightsPage() {
       schoolName,
       selectedYear,
       timestamp: new Date().toISOString(),
+      isHardcoded: schoolName === "lawrenceville" ? "yes (temporary override)" : "no"
     })
 
     if (!schoolName) {
