@@ -26,7 +26,6 @@ interface SearchResult {
 
 const suggestionTags = [
   "Working on AI at FAANG",
-  "People who started companies in Web3",
   "Recent graduates in Silicon Valley",
   "Alumni in Healthcare Tech",
   "Engineers at SpaceX",
@@ -38,14 +37,11 @@ const suggestionTags = [
   "Graduates with PhDs in Computer Science",
   "Marketing Directors in Los Angeles",
   "People who worked at Goldman Sachs",
-  "Software Engineers who became CTOs",
   "Alumni in Pharmaceutical Research",
   "Consultants at McKinsey",
-  "Graduates working in Singapore",
   "UX Designers at tech companies",
   "People with experience in Biotech",
   "Stanford graduates in Venture Capital",
-  "Alumni who founded EdTech startups",
   "Doctors working in telemedicine",
   "MBA graduates in Consumer Goods",
   "People working remotely in Tech",

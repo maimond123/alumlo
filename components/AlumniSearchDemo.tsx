@@ -22,7 +22,6 @@ interface SearchResult {
 // Add these suggestion tags similar to dashboard/page.tsx
 const suggestionTags = [
   "Working on AI at FAANG",
-  "People who started companies in Web3",
   "Recent graduates in Silicon Valley",
   "Alumni in Healthcare Tech",
   "Engineers at SpaceX",
@@ -31,7 +30,6 @@ const suggestionTags = [
   "Data Scientists at startups",
   "Alumni working in Renewable Energy",
   "Lawyers at top firms in Chicago",
-  "Graduates with PhDs in Computer Science",
   "Marketing Directors in Los Angeles"
 ];
 
