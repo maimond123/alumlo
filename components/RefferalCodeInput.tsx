@@ -54,10 +54,19 @@ const ReferralCodeInput = () => {
         })
         .eq('id', data.id);
 
-      // Authenticate the user
+      // Authenticate the user using environment variables
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+      
+      if (!adminEmail || !adminPassword) {
+        setError('Admin credentials not configured properly.');
+        setShowModal(true);
+        return;
+      }
+      
       const { data: authData, error: loginError } = await supabase.auth.signInWithPassword({
-        email: 'maimondavid553@gmail.com',
-        password: 'your_password_here', // Replace with actual password or use a secure method
+        email: adminEmail,
+        password: adminPassword,
       });
 
       if (loginError) {
