@@ -234,24 +234,26 @@ export class LinkedInProfileSearchEngine {
       
       const embeddingArray = response.data[0].embedding;
       
-      // Use the special demo/public table
-      const tableName = 'demo_vector';
-      
-      // Call the vector search directly on the demo table
+      // Use the hybrid_search_demo function which is specifically for the demo_vector table
       const { data, error } = await this.supabase
-        .rpc(tableName, {
+        .rpc('hybrid_search_demo', {
           query_embedding: embeddingArray,
           similarity_threshold: 0.4,
+          company_filter: null,
+          industry_filter: null,
+          title_filter: null,
+          location_filter: null,
+          school_filter: null,
+          current_industry_filter: null,
           limit_count: top_k
-        })
-        .returns<HybridSearchResult[]>();
+        });
       
       if (error) {
         throw new Error(`Demo vector search failed: ${error.message}`);
       }
       
       // Format the results to match your frontend expectations
-      return data.map((item: HybridSearchResult): SearchResult => ({
+      return data.map((item: any): SearchResult => ({
         id: Number(item.id),
         name: item.name,
         linkedin_url: item.linkedin_url,
@@ -260,7 +262,7 @@ export class LinkedInProfileSearchEngine {
         current_industry: item.current_general_industry,
         current_general_industry: item.current_general_industry,
         current_job_location: item.current_job_location,
-        years_experience: item.years_of_experience,
+        years_experience: item.years_of_experience || 0,
         similarity: item.similarity
       }));
     } catch (error) {
