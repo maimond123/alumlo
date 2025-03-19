@@ -231,7 +231,6 @@ export default function DashboardPage() {
             throw new Error('No user email found')
           }
 
-          console.log('Querying with email:', userEmail)
           const { data, error } = await supabase
             .from('customer_information')
             .select('school_name')
@@ -251,7 +250,6 @@ export default function DashboardPage() {
           setFormattedSchoolName(formatted)
           setIsLoading(false)
         } catch (err: any) {
-          console.error('Error fetching school name:', err)
           if (err.message?.includes('not authenticated')) {
             router.push('/signin')
             return
