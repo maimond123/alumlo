@@ -15,7 +15,6 @@ interface SearchResult {
   current_general_industry: string;
   current_job_location: string;
   similarity: number;
-  profile_url?: string;
   profile_photo_url?: string;
 }
 
@@ -494,9 +493,9 @@ export default function AlumniSearchDemo() {
                   className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
                 >
                   <div className="flex items-center">
-                    {/* Profile Image */}
+                    {/* Profile Image - Using the correct field name profile_photo_url */}
                     <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                      {result.profile_photo_url && result.profile_photo_url.startsWith('http') ? (
+                      {result.profile_photo_url ? (
                         <img 
                           src={result.profile_photo_url} 
                           alt={`${result.name}'s profile`}

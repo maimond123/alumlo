@@ -21,7 +21,7 @@ interface SearchResult {
   current_job_location: string;
   years_experience: number;
   similarity: number;
-  profile_url?: string;
+  profile_photo_url?: string;
 }
 
 const suggestionTags = [
@@ -54,8 +54,6 @@ const suggestionTags = [
   "Alumni in Media and Entertainment",
   "Product Designers in San Francisco",
   "People with experience in Cybersecurity",
-  "Graduates working at Microsoft",
-  "Investment Bankers in Hong Kong",
   "Alumni who became professors",
   "Software Developers in Austin",
   "People with experience in Supply Chain",
@@ -705,7 +703,7 @@ export default function DashboardPage() {
           profile.linkedin_url === result.linkedin_url
         );
         if (matchingProfile && matchingProfile.profile_photo_url) {
-          result.profile_url = matchingProfile.profile_photo_url;
+          result.profile_photo_url = matchingProfile.profile_photo_url;
         } else {
           console.log(`[DEBUG ${new Date().toISOString()}] No photo found for ${result.name}`);
         }
@@ -952,9 +950,9 @@ export default function DashboardPage() {
                         <div className="flex items-center">
                           {/* Profile Image */}
                           <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                            {result.profile_url ? (
+                            {result.profile_photo_url ? (
                               <img 
-                                src={result.profile_url} 
+                                src={result.profile_photo_url} 
                                 alt={`${result.name}'s profile`}
                                 className="w-full h-full object-cover"
                               />

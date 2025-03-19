@@ -20,6 +20,14 @@ export async function POST(request: Request) {
     // We want to specifically search the public demo table
     const results = await searchEngine.searchDemoData(query, 10);
 
+    // Log the raw data returned from the database
+    console.log("Raw database results:", results);
+    
+    // Check if profile_photo_url exists in the returned data
+    if (results && results.length > 0) {
+      console.log("First result fields:", Object.keys(results[0]));
+    }
+
     return NextResponse.json({ results });
   } catch (error: any) {
     console.error('Demo search API error:', error);
