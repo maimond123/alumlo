@@ -475,11 +475,25 @@ export default function AlumniSearchDemo() {
                   <div className="flex items-center">
                     {/* Profile Image */}
                     <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                      {result.profile_photo_url ? (
+                      {result.profile_photo_url && result.profile_photo_url.startsWith('http') ? (
                         <img 
                           src={result.profile_photo_url} 
                           alt={`${result.name}'s profile`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error("Image failed to load:", result.profile_photo_url);
+                            e.currentTarget.onerror = null;
+                            // Replace with fallback
+                            const target = e.currentTarget as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              const fallback = document.createElement('div');
+                              fallback.className = "w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl";
+                              fallback.textContent = result.name?.split(' ').map(name => name[0]).join('') || '?';
+                              parent.appendChild(fallback);
+                            }
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
