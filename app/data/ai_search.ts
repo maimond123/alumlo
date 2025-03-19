@@ -17,7 +17,8 @@ export interface SearchResult {
   current_company: string;
   current_title: string;
   current_industry: string;
-  location: string;
+  current_general_industry: string;
+  current_job_location: string;
   years_experience: number;
   similarity: number;
 }
@@ -119,13 +120,14 @@ export class LinkedInProfileSearchEngine {
       
       // Format the results to match your frontend expectations
       return data.map((item: HybridSearchResult): SearchResult => ({
-        id: Number(item.id), // Convert bigint to number
+        id: Number(item.id),
         name: item.name,
         linkedin_url: item.linkedin_url,
         current_company: item.current_company,
         current_title: item.current_title,
         current_industry: item.current_general_industry,
-        location: item.current_job_location,
+        current_general_industry: item.current_general_industry,
+        current_job_location: item.current_job_location,
         years_experience: item.years_of_experience,
         similarity: item.similarity
       }));
@@ -256,7 +258,8 @@ export class LinkedInProfileSearchEngine {
         current_company: item.current_company,
         current_title: item.current_title,
         current_industry: item.current_general_industry,
-        location: item.current_job_location,
+        current_general_industry: item.current_general_industry,
+        current_job_location: item.current_job_location,
         years_experience: item.years_of_experience,
         similarity: item.similarity
       }));

@@ -164,7 +164,7 @@ export default function SupportPage() {
                   name="school-name"
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="e.g., Harvard University"
+                  placeholder="e.g., Westfield High School"
                 />
               </div>
               
@@ -212,22 +212,6 @@ export default function SupportPage() {
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  What would be your budget range for this solution?
-                </label>
-                <select 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                  name="budget"
-                  required
-                >
-                  <option value="">Select a range</option>
-                  <option value="250-1000">$250 - $1,000 per year</option>
-                  <option value="1000-2500">$1,000 - $2,500 per year</option>
-                  <option value="2500-5000">$2,500 - $5,000 per year</option>
-                  <option value="5000+">$5,000+ per year</option>
-                </select>
-              </div>
               
               <div className="pt-4">
                 <button

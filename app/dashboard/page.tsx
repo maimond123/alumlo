@@ -17,11 +17,11 @@ interface SearchResult {
   current_company: string;
   current_title: string;
   current_industry: string;
-  location: string;
+  current_general_industry: string;
+  current_job_location: string;
   years_experience: number;
   similarity: number;
   profile_url?: string;
-  all_titles?: string[];
 }
 
 const suggestionTags = [
@@ -945,9 +945,7 @@ export default function DashboardPage() {
                 </h2>
                 <div className="grid gap-4">
                   {searchResults.map((result, index) => {
-                    const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
-                      ? result.all_titles[0] 
-                      : result.current_title || "";
+                    const currentTitle = result.current_title || "";
                     
                     return (
                       <a
@@ -986,10 +984,10 @@ export default function DashboardPage() {
                                   <span>{result.current_company}</span>
                                 </>
                               )}
-                              {result.location && (
+                              {result.current_job_location && (
                                 <>
                                   <span className="mx-1">•</span>
-                                  <span>{result.location}</span>
+                                  <span>{result.current_job_location}</span>
                                 </>
                               )}
                             </div>
@@ -997,10 +995,10 @@ export default function DashboardPage() {
                             {/* Industry */}
                             <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
                             
-                            {/* Match percentage */}
+                            {/* Match index instead of percentage */}
                             <div className="mt-2">
                               <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                                Match: {(result.similarity * 100).toFixed(1)}%
+                                Match: #{index + 1}
                               </div>
                             </div>
                           </div>
@@ -1082,7 +1080,7 @@ export default function DashboardPage() {
                       name="school-name"
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="e.g., Harvard University"
+                      placeholder="e.g., Westfield High School"
                     />
                   </div>
                   
@@ -1128,23 +1126,6 @@ export default function DashboardPage() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      What would be your budget range for this solution?
-                    </label>
-                    <select 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                      name="budget"
-                      required
-                    >
-                      <option value="">Select a range</option>
-                      <option value="250-1000">$250 - $1,000 per year</option>
-                      <option value="1000-2500">$1,000 - $2,500 per year</option>
-                      <option value="2500-5000">$2,500 - $5,000 per year</option>
-                      <option value="5000+">$5,000+ per year</option>
-                    </select>
                   </div>
                   
                   <div className="pt-4">

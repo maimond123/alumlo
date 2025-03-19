@@ -12,11 +12,10 @@ interface SearchResult {
   current_company: string;
   current_title: string;
   current_industry: string;
-  location: string;
-  years_experience: number;
+  current_general_industry: string;
+  current_job_location: string;
   similarity: number;
   profile_url?: string;
-  all_titles?: string[];
 }
 
 // Add these suggestion tags similar to dashboard/page.tsx
@@ -464,9 +463,7 @@ export default function AlumniSearchDemo() {
           <div className="grid gap-6">
             {/* Only display the first 3 results */}
             {searchResults.slice(0, MAX_VISIBLE_RESULTS).map((result, index) => {
-              const currentTitle = result.all_titles && Array.isArray(result.all_titles) && result.all_titles.length > 0 
-                ? result.all_titles[0] 
-                : result.current_title || "";
+              const currentTitle = result.current_title || "";
               
               return (
                 <a
@@ -505,10 +502,10 @@ export default function AlumniSearchDemo() {
                             <span>{result.current_company}</span>
                           </>
                         )}
-                        {result.location && (
+                        {result.current_job_location && (
                           <>
                             <span className="mx-1">•</span>
-                            <span>{result.location}</span>
+                            <span>{result.current_job_location}</span>
                           </>
                         )}
                       </div>
@@ -516,10 +513,10 @@ export default function AlumniSearchDemo() {
                       {/* Industry */}
                       <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
                       
-                      {/* Match percentage */}
+                      {/* Match index instead of percentage */}
                       <div className="mt-2">
                         <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                          Match: {(result.similarity * 100).toFixed(1)}%
+                          Match: #{index + 1}
                         </div>
                       </div>
                     </div>
