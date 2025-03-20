@@ -1,6 +1,4 @@
-'use client';
 
-import { useEffect } from 'react';
 import Navigation from '../components/navigation'
 import Hero from '../components/Hero'
 import FeaturesSection from '../components/FeaturesSection'
@@ -9,11 +7,6 @@ import Footer from '../components/footer'
 import NetworkVisualization from '../components/network-visualization'
 
 export default function Home() {
-  useEffect(() => {
-    // Set the zoom level to 90%
-    document.body.style.zoom = '90%';
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white">
       <NetworkVisualization />
