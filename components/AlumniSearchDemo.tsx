@@ -232,12 +232,16 @@ export default function AlumniSearchDemo() {
   };
   
   const handleTagClick = (tag: string) => {
-    setSearchQuery(tag)
-    // Trigger search immediately after setting the query
-    // We need to use setTimeout to ensure the searchQuery state is updated before searching
-    setTimeout(() => handleSearch(), 0)
-  }
-  
+    setSearchQuery(tag);
+  };
+
+  // Use useEffect to trigger search when searchQuery changes
+  useEffect(() => {
+    if (searchQuery.trim() && !isSearching) {
+      handleSearch();
+    }
+  }, [searchQuery]);
+
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
