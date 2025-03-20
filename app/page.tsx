@@ -10,11 +10,7 @@ export default function Home() {
     <div 
       className="min-h-screen bg-gradient-to-br from-emerald-50 to-white"
       style={{
-        transform: 'scale(0.8)',
-        transformOrigin: 'top left',
-        width: '125%',
-        height: '125%',
-        overflowX: 'hidden'
+        transform: 'scale(0.8)'
       }}
     >
       <NetworkVisualization />
