@@ -149,7 +149,7 @@ export default function AlumniSearchDemo() {
   }, []);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim() || isSearching) return
+    if (!searchQuery.trim() || isSearching) return;
     
     // Check if user has reached the search limit
     if (searchCount >= 5) {
@@ -179,12 +179,12 @@ export default function AlumniSearchDemo() {
     });
     
     // Start the actual search request immediately in parallel with animations
-    const searchPromise = fetch('/api/search-demo', {
+    const searchPromise = fetch('/api/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query: currentQuery }),
+      body: JSON.stringify({ query: currentQuery, isDemo: true }),
     }).then(response => {
       if (!response.ok) {
         throw new Error('Search failed');

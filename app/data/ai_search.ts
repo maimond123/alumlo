@@ -56,6 +56,7 @@ interface HybridSearchResult {
   current_job_location: string;
   years_of_experience: number;
   similarity: number;
+  profile_photo_url?: string;
 }
 
 export class LinkedInProfileSearchEngine {
@@ -82,7 +83,7 @@ export class LinkedInProfileSearchEngine {
     return;
   }
   
-  async search(query: string, top_k: number = 10, filters: SearchFilters = {}): Promise<SearchResult[]> {
+  async search(query: string, top_k: number = 10, filters: SearchFilters = {}, isDemo: boolean = false): Promise<SearchResult[]> {
     try {
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -101,9 +102,12 @@ export class LinkedInProfileSearchEngine {
         school 
       } = filters;
       
-      // Call the hybrid_search function with the embedding and filters
+      // Determine the RPC function to call based on whether it's a demo search
+      const rpcFunction = isDemo ? 'hybrid_search_demo' : 'hybrid_search';
+      
+      // Call the appropriate hybrid_search function with the embedding and filters
       const { data, error } = await this.supabase
-        .rpc('hybrid_search', {
+        .rpc(rpcFunction, {
           query_embedding: embeddingArray,
           similarity_threshold: 0.4,
           company_filter: company || null,
@@ -130,6 +134,7 @@ export class LinkedInProfileSearchEngine {
         current_general_industry: item.current_general_industry,
         current_job_location: item.current_job_location,
         years_experience: item.years_of_experience,
+        profile_photo_url: item.profile_photo_url,
         similarity: item.similarity
       }));
     } catch (error) {
@@ -219,63 +224,6 @@ export class LinkedInProfileSearchEngine {
    */
   async addProfileToDb(profile: any) {
     throw new Error('Method not implemented: profiles should be added through the backend');
-  }
-  
-  /**
-   * Search method specifically for demo purposes that doesn't require authentication
-   * and uses a designated public table
-   */
-  async searchDemoData(query: string, top_k: number = 10): Promise<SearchResult[]> {
-    try {
-      // Generate embedding using OpenAI API
-      const response = await this.openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: query,
-      });
-      
-      const embeddingArray = response.data[0].embedding;
-      
-      // Use the hybrid_search_demo function which is specifically for the demo_vector table
-      const { data, error } = await this.supabase
-        .rpc('hybrid_search_demo', {
-          query_embedding: embeddingArray,
-          similarity_threshold: 0.4,
-          company_filter: null,
-          industry_filter: null,
-          title_filter: null,
-          location_filter: null,
-          school_filter: null,
-          current_industry_filter: null,
-          limit_count: top_k
-        });
-      
-      if (error) {
-        throw new Error(`Demo vector search failed: ${error.message}`);
-      }
-      
-      // Debug: Log the first result to check if profile_photo_url exists
-      if (data && data.length > 0) {
-        console.log("First result fields:", Object.keys(data[0]));
-        console.log("First result profile_photo_url:", data[0].profile_photo_url);
-      }
-      
-      // Format the results to match your frontend expectations
-      return data.map((item: any): SearchResult => ({
-        id: Number(item.id),
-        name: item.name,
-        linkedin_url: item.linkedin_url,
-        current_company: item.current_company,
-        current_title: item.current_title,
-        current_industry: item.current_general_industry,
-        current_general_industry: item.current_general_industry,
-        current_job_location: item.current_job_location,
-        years_experience: item.years_of_experience || 0,
-        similarity: item.similarity,
-        profile_photo_url: item.profile_photo_url
-      }));
-    } catch (error) {
-      throw error;
-    }
   }
 }
 
