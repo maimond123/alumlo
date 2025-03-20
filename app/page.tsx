@@ -7,7 +7,16 @@ import NetworkVisualization from '../components/network-visualization'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white scale-85 origin-top">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-emerald-50 to-white"
+      style={{
+        transform: 'scale(0.8)',
+        transformOrigin: 'top left',
+        width: '125%',
+        height: '125%',
+        overflowX: 'hidden'
+      }}
+    >
       <NetworkVisualization />
       <div className="fixed w-full z-20">
         <div className="absolute inset-0 bg-soft-white/70 backdrop-blur-md"></div>

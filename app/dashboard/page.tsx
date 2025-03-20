@@ -34,7 +34,6 @@ const suggestionTags = [
   "Data Scientists at startups",
   "Alumni working in Renewable Energy",
   "Lawyers at top firms in Chicago",
-  "Graduates with PhDs in Computer Science",
   "Marketing Directors in Los Angeles",
   "People who worked at Goldman Sachs",
   "Alumni in Pharmaceutical Research",
