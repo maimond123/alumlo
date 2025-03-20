@@ -212,7 +212,6 @@ export default function SupportPage() {
                 </div>
               </div>
               
-              
               <div className="pt-4">
                 <button
                   type="submit"

@@ -418,9 +418,6 @@ export default function DashboardPage() {
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Fetching profile photos for results`);
-      await fetchProfilePhotos(results);
-      
       console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
       console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, results);
       setSearchResults(results);
@@ -672,49 +669,6 @@ export default function DashboardPage() {
       }
     };
   }, []);
-
-  const fetchProfilePhotos = async (results: SearchResult[]) => {
-    try {
-      const linkedinUrls = results.map(result => result.linkedin_url);
-      if (linkedinUrls.length === 0) {
-        return;
-      }
-      
-      // Use the vector table directly
-      const tableName = `${formattedSchoolName?.toLowerCase().replace(/ /g, '_')}_vector`;
-      
-      // Query the vector table directly using linkedin_url
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('linkedin_url, profile_photo_url')
-        .in('linkedin_url', linkedinUrls);
-        
-      if (error) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error fetching profile photos:`, error);
-        return;
-      }
-    
-      // Create a copy of results to modify
-      const updatedResults = [...results];
-      
-      // Map profile photos to search results using linkedin_url as the key
-      updatedResults.forEach(result => {
-        const matchingProfile = data?.find((profile: any) => 
-          profile.linkedin_url === result.linkedin_url
-        );
-        if (matchingProfile && matchingProfile.profile_photo_url) {
-          result.profile_photo_url = matchingProfile.profile_photo_url;
-        } else {
-          console.log(`[DEBUG ${new Date().toISOString()}] No photo found for ${result.name}`);
-        }
-      });
-      
-      console.log(`[DEBUG ${new Date().toISOString()}] Setting updated results with photos:`, updatedResults);
-      setSearchResults(updatedResults);
-    } catch (error) {
-      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in fetchProfilePhotos:`, error);
-    }
-  };
 
   // Handle school name click in demo mode
   const handleSchoolNameClick = () => {
