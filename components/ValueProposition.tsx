@@ -99,9 +99,9 @@ export default function ValueProposition() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">Customizable School Insights Report</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Marketing Insights & Competitive Analysis</h3>
             <p className="text-lg text-gray-600">
-              Receive professionally designed reports tailored to your institution's unique needs, highlighting alumni success stories and addressing school-specific challenges with actionable insights.
+              Receive professionally designed marketing insights that compare your alumni outcomes with competitor schools, highlighting your institution's unique strengths and providing actionable insights to enhance recruitment and advancement efforts.
             </p>
           </div>
           

@@ -21,7 +21,7 @@ export default function Hero() {
         </h1>
         
         <p className="text-xl text-emerald-700 mb-8 max-w-2xl">
-          Transform outdated alumni databases into actionable insights with our AI-powered search, analytics, and custom reports.
+          Transform outdated alumni databases into actionable marketing insights with our AI-powered search, analytics, and custom reports.
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">

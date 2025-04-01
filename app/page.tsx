@@ -17,8 +17,8 @@ export default function Home() {
 
       <main className="pt-16 relative z-10">
         <Hero />
-        <FeaturesSection />
         <ValueProposition />
+        <FeaturesSection />
       </main>
 
       <Footer />
