@@ -63,18 +63,7 @@ export default function ValueProposition() {
         `}</style>
         
         <h2 className="text-4xl font-bold text-center text-black mb-24">
-          {animationStarted ? (
-            <>
-              <span className="word-container"><span className="text-reveal word-1">Transforming</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-2">Alumni</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-3">Data</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-4">into</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-5">Institutional</span></span>{' '}
-              <span className="word-container"><span className="text-reveal word-5">Value</span></span>
-            </>
-          ) : (
-            <span className="opacity-0">Transforming Alumni Data into Institutional Value</span>
-          )}
+          Transforming Alumni Data into Institutional Value
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -101,7 +90,7 @@ export default function ValueProposition() {
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Marketing Insights & Competitive Analysis</h3>
             <p className="text-lg text-gray-600">
-              Receive professionally designed marketing insights that compare your alumni outcomes with competitor schools, highlighting your institution's unique strengths and providing actionable insights to enhance recruitment and advancement efforts.
+              Receive professionally designed marketing reports that compare your alumni outcomes with competitor schools, highlighting your institution's unique strengths and providing actionable insights to enhance recruitment and advancement efforts.
             </p>
           </div>
           
