@@ -998,7 +998,6 @@ export default function DashboardPage() {
                         school_name: schoolName,
                         email: email,
                         features: features,
-                        budget: budget,
                         created_at: new Date().toISOString()
                       }]);
                       
@@ -1049,6 +1048,7 @@ export default function DashboardPage() {
                     </label>
                     <div className="space-y-2">
                       {[
+                        "Marketing Insights",
                         "Alumni Search and Discovery",
                         "Aggregate Alumni Analytics",
                         "Customizable School Insights Report",

@@ -137,7 +137,6 @@ export default function SupportPage() {
                     school_name: schoolName,
                     email: email,
                     features: features,
-                    budget: budget,
                     created_at: new Date().toISOString()
                   }]);
                   

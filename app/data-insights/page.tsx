@@ -1062,7 +1062,7 @@ export default function DataInsightsPage() {
         >
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want this for your School's Alumni Data?</h2>
+              <h2 className="text-2xl font-bold text-gray-900 w-full text-center">your School's Alumni Data?</h2>
               <button 
                 onClick={() => setShowDemoSurvey(false)}
                 className="text-gray-500 hover:text-gray-700 absolute right-6 top-6"
@@ -1091,7 +1091,6 @@ export default function DataInsightsPage() {
                     school_name: schoolName,
                     email: email,
                     features: features,
-                    budget: budget,
                     created_at: new Date().toISOString()
                   }]);
                   
