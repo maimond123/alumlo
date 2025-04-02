@@ -5,6 +5,7 @@ import { SchoolProvider } from './contexts/SchoolContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
 import MobileWarning from '@/components/MobileWarning'
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,6 +43,7 @@ export default function RootLayout({
             </SidebarProvider>
           </SchoolProvider>
         </SupabaseAuthListener>
+        <Analytics />
       </body>
     </html>
   )
