@@ -1,14 +1,42 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ReferralCodeInput from './RefferalCodeInput'
+import { useRouter } from 'next/navigation'
+import { supabase } from '../app/data/supabase'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  const handleDemoAccess = async () => {
+    setIsLoading(true)
+    
+    try {
+      // Sign in as the demo account
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "maimondavid553@gmail.com",
+        password: process.env.ADMIN_PASSWORD || 'Tryme12!'
+      });
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard after successful login
+      router.push('/dashboard')
+    } catch (err) {
+      console.error('Demo login error:', err)
+      
+      // Fallback - if login fails, still redirect to dashboard
+      // The dashboard has logic to detect demo mode
+      router.push('/dashboard')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <section className="relative min-h-[91vh] flex items-center">
@@ -25,7 +53,20 @@ export default function Hero() {
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <ReferralCodeInput />
+          <button
+            onClick={handleDemoAccess}
+            disabled={isLoading}
+            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-full text-lg transition-colors duration-300 flex items-center justify-center"
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Loading...
+              </>
+            ) : (
+              "Demo Now"
+            )}
+          </button>
         </div>
       </div>
     </section>
