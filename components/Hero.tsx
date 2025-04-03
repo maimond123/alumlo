@@ -20,7 +20,7 @@ export default function Hero() {
       // Sign in as the demo account
       const { data, error } = await supabase.auth.signInWithPassword({
         email: "maimondavid553@gmail.com",
-        password: process.env.ADMIN_PASSWORD || 'Tryme12!'
+        password: "Tryme12!" // Replace with your actual demo password
       });
       
       if (error) throw error;
@@ -56,7 +56,7 @@ export default function Hero() {
           <button
             onClick={handleDemoAccess}
             disabled={isLoading}
-            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-full text-lg transition-colors duration-300 flex items-center justify-center"
+            className="bg-white text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center"
           >
             {isLoading ? (
               <>
