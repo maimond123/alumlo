@@ -898,8 +898,17 @@ export default function DashboardPage() {
                         href={result.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow"
+                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow relative"
                       >
+                        {/* LinkedIn Icon in top right corner */}
+                        <div className="absolute top-2 right-2">
+                          <img 
+                            src="/assets/linkedin_gray.png" 
+                            alt="LinkedIn" 
+                            className="w-5 h-5 opacity-60"
+                          />
+                        </div>
+                        
                         <div className="flex items-center">
                           {/* Profile Image */}
                           <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
