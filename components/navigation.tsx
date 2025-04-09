@@ -47,7 +47,7 @@ export default function Navigation() {
         </Link>
         
         <div className="flex items-center space-x-4">
-          <Link href="/signin">
+          {/* <Link href="/signin">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -55,7 +55,7 @@ export default function Navigation() {
             >
               Sign In
             </motion.button>
-          </Link>
+          </Link> */}
           <motion.button
             onClick={handleGetStarted} // Updated to call the new function
             whileHover={{ scale: 1.05 }}
