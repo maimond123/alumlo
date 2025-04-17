@@ -159,6 +159,9 @@ export default function DashboardPage() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [showDemoSurvey, setShowDemoSurvey] = useState(false)
   
+  // Add new state for feature spotlight
+  const [showFeatureSpotlight, setShowFeatureSpotlight] = useState(true)
+  
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -729,7 +732,7 @@ export default function DashboardPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Who are the alumni working in artificial intelligence at Google?"
+                placeholder="Begin typing to search through your alumni network..."
                 className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
@@ -834,6 +837,20 @@ export default function DashboardPage() {
 
           {/* Analysis and Search Results */}
           <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
+            {/* Demo sidebar guidance - only show in demo mode */}
+            {isDemoMode && searchPhase === 'idle' && (
+              <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4 flex items-center">
+                <div className="flex-shrink-0 mr-3 text-emerald-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                  </svg>
+                </div>
+                <p className="text-emerald-700">
+                  👈 <span className="font-semibold">Pro Tip:</span> Click on the sidebar to explore more features like <span className="underline font-medium">Analytics</span> and <span className="underline font-medium">Reports</span>!
+                </p>
+              </div>
+            )}
+            
             {/* Analysis Section - Only show if there's content to display */}
             {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
@@ -898,14 +915,17 @@ export default function DashboardPage() {
                         href={result.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-shadow relative"
+                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
                       >
+                        {/* Overlay indicating clickable */}
+                        <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
+                        
                         {/* LinkedIn Icon in top right corner */}
                         <div className="absolute top-2 right-2">
                           <img 
                             src="/assets/linkedin_gray.png" 
                             alt="LinkedIn" 
-                            className="w-5 h-5 opacity-60"
+                            className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
                           />
                         </div>
                         
@@ -950,9 +970,17 @@ export default function DashboardPage() {
                             <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
                             
                             {/* Match index instead of percentage */}
-                            <div className="mt-2">
+                            <div className="mt-2 flex items-center justify-between">
                               <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
                                 Match: #{index + 1}
+                              </div>
+                              
+                              {/* Add a clear LinkedIn view button */}
+                              <div className="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+                                <span>View LinkedIn</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
                               </div>
                             </div>
                           </div>
@@ -964,6 +992,62 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* Demo Feature Spotlight */}
+          {isDemoMode && showFeatureSpotlight && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-emerald-600">Welcome to the AlumIntel Demo!</h3>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Try the Search</h4>
+                      <p className="text-sm text-gray-600">Search for alumni by job titles, companies, locations, or click the suggested searches below the search box.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Explore the Sidebar</h4>
+                      <p className="text-sm text-gray-600">Click the sidebar icons to access Analytics, Reports, and more features.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Interactive Results</h4>
+                      <p className="text-sm text-gray-600">Click on search results to view LinkedIn profiles and explore alumni connections.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setShowFeatureSpotlight(false)}
+                  className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors"
+                >
+                  Got it, let's explore
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Demo Survey Modal */}
           {isDemoMode && showDemoSurvey && (
