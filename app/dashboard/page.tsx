@@ -166,6 +166,12 @@ export default function DashboardPage() {
   // Add new state for feature spotlight
   const [showFeatureSpotlight, setShowFeatureSpotlight] = useState(true)
   
+  // Add states for the first-click survey
+  const [showFirstClickSurvey, setShowFirstClickSurvey] = useState(false)
+  const [showEmailCollection, setShowEmailCollection] = useState(false)
+  const [surveyEmail, setSurveyEmail] = useState("")
+  const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
+  
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -683,6 +689,61 @@ export default function DashboardPage() {
     }
   }
 
+  // Function to handle search result click
+  const handleSearchResultClick = (url: string) => {
+    // Check if this is demo mode
+    if (isDemoMode) {
+      // Check if user has already seen the first-click survey
+      const hasSeenSurvey = localStorage.getItem('hasSeenAlumIntelSurvey') === 'true';
+      
+      if (!hasSeenSurvey) {
+        // If not seen, show the survey and store the URL to navigate to later
+        setPendingLinkedInUrl(url);
+        setShowFirstClickSurvey(true);
+        // Mark as seen for future clicks
+        localStorage.setItem('hasSeenAlumIntelSurvey', 'true');
+        return;
+      }
+    }
+    
+    // If not demo mode or already seen survey, navigate directly
+    window.open(url, '_blank');
+  };
+
+  // Function to handle survey submission
+  const handleSurveySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Save email to Supabase - updated table name
+      const { error } = await supabase
+        .from('linkedin_click_survey')
+        .insert([{ 
+          email: surveyEmail,
+          interested: true,
+          created_at: new Date().toISOString(),
+          source: 'first_click_survey'
+        }]);
+        
+      if (error) throw error;
+      
+      // Close the email collection modal
+      setShowEmailCollection(false);
+      
+      // Navigate to the pending LinkedIn URL
+      if (pendingLinkedInUrl) {
+        window.open(pendingLinkedInUrl, '_blank');
+      }
+      
+      // Clear the pending URL
+      setPendingLinkedInUrl("");
+      
+    } catch (error) {
+      console.error('Error submitting survey:', error);
+      alert('There was an error submitting your information. Please try again.');
+    }
+  };
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -929,6 +990,10 @@ export default function DashboardPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSearchResultClick(result.linkedin_url);
+                        }}
                       >
                         {/* Overlay indicating clickable */}
                         <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
@@ -1004,7 +1069,7 @@ export default function DashboardPage() {
                 </div>
                 
                 {/* Add "Want More?" button at the bottom of search results */}
-                <div className="mt-8 flex justify-center">
+                <div className="mt-8 pb-12 flex justify-center">
                   <button 
                     onClick={() => setShowWantMoreModal(true)}
                     className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
@@ -1015,6 +1080,96 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* First Click Survey Modal */}
+          {showFirstClickSurvey && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={(e) => {
+                // Close the modal when clicking the backdrop
+                if (e.target === e.currentTarget) {
+                  setShowFirstClickSurvey(false);
+                  // Navigate to LinkedIn if there's a pending URL
+                  if (pendingLinkedInUrl) {
+                    window.open(pendingLinkedInUrl, '_blank');
+                    setPendingLinkedInUrl("");
+                  }
+                }
+              }}
+            >
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using AlumIntel for your school?</h2>
+                
+                <div className="flex justify-center space-x-4 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowFirstClickSurvey(false);
+                      setShowEmailCollection(true);
+                    }}
+                    className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+                  >
+                    Yes
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setShowFirstClickSurvey(false);
+                      // Navigate to LinkedIn if there's a pending URL
+                      if (pendingLinkedInUrl) {
+                        window.open(pendingLinkedInUrl, '_blank');
+                        setPendingLinkedInUrl("");
+                      }
+                    }}
+                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Email Collection Modal */}
+          {showEmailCollection && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={(e) => {
+                // Prevent closing by clicking backdrop
+                e.stopPropagation();
+              }}
+            >
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+                <h2 className="text-xl font-bold text-center mb-4">Great! Please share your work email</h2>
+                <p className="text-gray-600 mb-4 text-center">We'll reach out with more information about AlumIntel for your institution.</p>
+                
+                <form onSubmit={handleSurveySubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="work-email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Work Email
+                    </label>
+                    <input
+                      type="email"
+                      id="work-email"
+                      value={surveyEmail}
+                      onChange={(e) => setSurveyEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="name@work.edu"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <button
+                      type="submit"
+                      className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors w-full"
+                    >
+                      Continue to LinkedIn
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Want More Modal */}
           {showWantMoreModal && (

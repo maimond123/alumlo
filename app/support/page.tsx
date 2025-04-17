@@ -34,7 +34,7 @@ export default function SupportPage() {
     <div className="flex min-h-screen bg-white">
       <Sidebar />
       <main className="flex-1 p-8 pt-20 flex items-center justify-center">
-        <div className="container max-w-3xl mx-auto px-4 py-8 border border-black rounded-lg">
+        <div className="container max-w-5xl mx-auto px-4 py-8 border border-black rounded-lg">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -51,11 +51,11 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-sm w-full max-w-2xl"
+                className="bg-gray-50 p-6 rounded-lg shadow-sm w-full max-w-4xl"
               >
                 <h2 className="text-2xl font-semibold mb-6 text-black">Schedule a Call</h2>
                 <div className="rounded-lg overflow-hidden border border-gray-200">
-                  <InlineWidget url="https://calendly.com/maimondavid553/alumintel-support" styles={{ height: '400px' }} />
+                  <InlineWidget url="https://calendly.com/maimondavid553/alumintel-support" styles={{ height: '600px' }} />
                 </div>
               </motion.div>
 
