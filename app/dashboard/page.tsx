@@ -10,6 +10,7 @@ import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import analytics from "../utils/analytics"
+import { FaLightbulb, FaTimes } from "react-icons/fa"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -175,6 +176,7 @@ export default function DashboardPage() {
   const [showEmailCollection, setShowEmailCollection] = useState(false)
   const [surveyEmail, setSurveyEmail] = useState("")
   const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
+  const [isProTipDismissed, setIsProTipDismissed] = useState(false)
   
   // Initialize randomized tags on component mount
   useEffect(() => {
@@ -789,8 +791,10 @@ export default function DashboardPage() {
     
     // Check if this is demo mode
     if (isDemoMode) {
+      // Check if we're in a browser environment
+      const isBrowser = typeof window !== 'undefined';
       // Check if user has already seen the first-click survey
-      const hasSeenSurvey = localStorage.getItem('hasSeenAlumIntelSurvey') === 'true';
+      const hasSeenSurvey = isBrowser ? localStorage.getItem('hasSeenAlumIntelSurvey') === 'true' : false;
       
       if (!hasSeenSurvey) {
         // Track first-time survey shown
@@ -801,7 +805,13 @@ export default function DashboardPage() {
         setPendingLinkedInUrl(url);
         setShowFirstClickSurvey(true);
         // Mark as seen for future clicks
-        localStorage.setItem('hasSeenAlumIntelSurvey', 'true');
+        if (isBrowser) {
+          try {
+            localStorage.setItem('hasSeenAlumIntelSurvey', 'true');
+          } catch (e) {
+            console.error('Failed to set localStorage item:', e);
+          }
+        }
         return;
       }
     }
@@ -1020,26 +1030,20 @@ export default function DashboardPage() {
           {/* Analysis and Search Results */}
           <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
             {/* Demo sidebar guidance - only show in demo mode */}
-            {isDemoMode && searchPhase === 'idle' && showProTip && (
-              <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4 flex items-center relative">
-                <div className="flex-shrink-0 mr-3 text-emerald-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                  </svg>
+            {isDemoMode && searchPhase === 'idle' && showProTip && !isProTipDismissed && (
+              <div className="bg-blue-50 p-4 rounded-lg mb-6 flex items-start justify-between">
+                <div className="flex items-center">
+                  <FaLightbulb className="text-blue-500 mr-2" />
+                  <span className="text-blue-700 font-medium">
+                    Pro Tip: Click on the sidebar to explore more features like Analytics and Reports!
+                  </span>
                 </div>
-                <p className="text-emerald-700">
-                  👈 <span className="font-semibold">Pro Tip:</span> Click on the sidebar to explore more features like <span className="underline font-medium">Analytics</span> and <span className="underline font-medium">Reports</span>!
-                </p>
-                
-                {/* Add X button to dismiss the pro tip */}
                 <button 
-                  onClick={() => setShowProTip(false)}
-                  className="absolute top-2 right-2 text-emerald-500 hover:text-emerald-700 transition-colors"
+                  onClick={() => setIsProTipDismissed(true)}
+                  className="text-gray-500 hover:text-gray-700"
                   aria-label="Dismiss tip"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                  <FaTimes />
                 </button>
               </div>
             )}

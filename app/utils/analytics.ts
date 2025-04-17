@@ -8,28 +8,41 @@ const isBrowser = typeof window !== 'undefined';
 
 // Only initialize if in browser
 if (isBrowser) {
+  // Initialize with more flexible configuration for cross-platform support
   mixpanel.init(MIXPANEL_TOKEN, {
     debug: process.env.NODE_ENV !== 'production',
     track_pageview: true,
-    persistence: 'localStorage',
+    persistence: 'localStorage', // Use localStorage for better cross-browser compatibility
     api_host: 'https://api.mixpanel.com',
     cookie_name: 'alumIntel_mp',
     secure_cookie: true,
     ip: false,
+    cross_subdomain_cookie: false, // Helps with cookie issues on some browsers
     property_blacklist: ['$current_url', '$initial_referrer', '$referrer'],
     loaded: () => {
-      // Enable session recording for 100% of users
+      // Configure session recording for all browsers
       mixpanel.set_config({ 
         'record_sessions_percent': 100,
-        'persistence': 'localStorage'
+        'persistence': 'localStorage',
+        'cross_site_cookie': false,
+        'secure_cookie': true
       });
       
-      // Ensure autotracking for enhanced session replay
       try {
-        if ('autotrack' in mixpanel) {
-          // Enable autotrack to capture DOM events automatically
-          (mixpanel as any).autotrack();
-        }
+        // Delay autotracking to ensure DOM is fully loaded
+        setTimeout(() => {
+          if ('autotrack' in mixpanel) {
+            // Enable autotrack with more cross-platform safe options
+            (mixpanel as any).autotrack({
+              persist: true,
+              cross_subdomain_cookie: false,
+              cookie_name: 'alumIntel_mp_at',
+              secure_cookie: true,
+              track_links: true,
+              track_forms: true
+            });
+          }
+        }, 1000);
       } catch (e) {
         console.error('Mixpanel autotrack setup error:', e);
       }
@@ -55,14 +68,19 @@ function generateSessionId() {
 function getOrCreateVisitorId() {
   if (!isBrowser) return '';
   
-  const storedVisitorId = localStorage.getItem('alumIntel_visitor_id');
-  if (storedVisitorId) {
-    return storedVisitorId;
+  try {
+    const storedVisitorId = localStorage.getItem('alumIntel_visitor_id');
+    if (storedVisitorId) {
+      return storedVisitorId;
+    }
+    
+    const newVisitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('alumIntel_visitor_id', newVisitorId);
+    return newVisitorId;
+  } catch (e) {
+    // Fallback if localStorage fails (private browsing mode)
+    return 'visitor_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
   }
-  
-  const newVisitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-  localStorage.setItem('alumIntel_visitor_id', newVisitorId);
-  return newVisitorId;
 }
 
 // Initialize session recording and advanced tracking
@@ -83,18 +101,31 @@ export const initSessionRecording = () => {
     mixpanel.people.set({
       '$name': `Visitor ${visitorId.substring(8, 16)}`,
       'visitor_id': visitorId,
-      'first_seen': new Date().toISOString()
+      'first_seen': new Date().toISOString(),
+      'browser': navigator.userAgent,
+      'platform': navigator.platform,
+      'os': detectOperatingSystem()
     });
     
     // Enable session recording explicitly - this is critical for replay functionality
     if (!isSessionRecordingActive) {
       try {
-        if ((mixpanel as any).session_recording) {
-          (mixpanel as any).session_recording.start();
-          isSessionRecordingActive = true;
-        }
+        // Use setTimeout to ensure Mixpanel is fully loaded before starting recording
+        setTimeout(() => {
+          if ((mixpanel as any).session_recording) {
+            (mixpanel as any).session_recording.start();
+            isSessionRecordingActive = true;
+            console.log('Session recording started successfully');
+          } else {
+            // Fallback for browsers where session_recording isn't available
+            console.log('Session recording API not available, using enhanced event tracking instead');
+            enableEnhancedTracking();
+          }
+        }, 1000);
       } catch (e) {
         console.error('Session recording start error:', e);
+        // Fallback to enhanced event tracking
+        enableEnhancedTracking();
       }
     }
     
@@ -105,6 +136,8 @@ export const initSessionRecording = () => {
       referrer: document.referrer,
       landing_page: window.location.href,
       user_agent: navigator.userAgent,
+      platform: navigator.platform,
+      os: detectOperatingSystem(),
       screen_width: window.innerWidth,
       screen_height: window.innerHeight,
       device_pixel_ratio: window.devicePixelRatio || 1
@@ -115,10 +148,58 @@ export const initSessionRecording = () => {
     
     console.log('Mixpanel session recording initialized with ID:', sessionId);
     console.log('Visitor ID:', visitorId);
+    console.log('Operating System:', detectOperatingSystem());
   } catch (error) {
     console.error('Failed to initialize session recording:', error);
   }
 };
+
+// Helper function to detect operating system more accurately
+function detectOperatingSystem() {
+  const userAgent = window.navigator.userAgent;
+  let os = "Unknown";
+  
+  if (userAgent.indexOf("Win") !== -1) os = "Windows";
+  else if (userAgent.indexOf("Mac") !== -1) os = "MacOS";
+  else if (userAgent.indexOf("Linux") !== -1) os = "Linux";
+  else if (userAgent.indexOf("Android") !== -1) os = "Android";
+  else if (userAgent.indexOf("like Mac") !== -1) os = "iOS";
+  
+  return os;
+}
+
+// Enhanced tracking as a fallback when session recording isn't available
+function enableEnhancedTracking() {
+  if (!isBrowser) return;
+  
+  // Track DOM mutations for replay-like functionality
+  if ('MutationObserver' in window) {
+    const observer = new MutationObserver((mutations) => {
+      // Only track significant mutations to avoid overwhelming Mixpanel
+      const significantMutations = mutations.filter(m => 
+        m.type === 'childList' && m.addedNodes.length > 0 ||
+        m.type === 'attributes' && ['class', 'style', 'id'].includes(m.attributeName || '')
+      );
+      
+      if (significantMutations.length > 0) {
+        mixpanel.track('DOM Mutation', {
+          session_id: sessionId,
+          visitor_id: visitorId,
+          mutations_count: significantMutations.length,
+          timestamp: new Date().toISOString(),
+          url: window.location.href
+        });
+      }
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['class', 'style', 'id']
+    });
+  }
+}
 
 // Setup global event listeners for session recording
 function setupGlobalEventListeners() {
@@ -140,7 +221,8 @@ function setupGlobalEventListeners() {
       element_class: classes || undefined,
       element_text: text || undefined,
       x_position: e.clientX,
-      y_position: e.clientY
+      y_position: e.clientY,
+      url: window.location.href
     });
   });
   
@@ -168,7 +250,8 @@ function setupGlobalEventListeners() {
         field_name: fieldName,
         has_value: !!inputElement.value,
         // Mark sensitive fields for proper handling in replay
-        is_sensitive: isSensitiveField
+        is_sensitive: isSensitiveField,
+        url: window.location.href
       });
     }
   });
@@ -178,7 +261,8 @@ function setupGlobalEventListeners() {
     mixpanel.track('Visibility Change', {
       session_id: sessionId,
       visitor_id: visitorId,
-      is_visible: !document.hidden
+      is_visible: !document.hidden,
+      url: window.location.href
     });
   });
   
@@ -187,7 +271,8 @@ function setupGlobalEventListeners() {
     mixpanel.track('Window Blur', {
       session_id: sessionId,
       visitor_id: visitorId,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      url: window.location.href
     });
   });
   
@@ -195,7 +280,8 @@ function setupGlobalEventListeners() {
     mixpanel.track('Window Focus', {
       session_id: sessionId,
       visitor_id: visitorId,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
+      url: window.location.href
     });
   });
   
@@ -212,7 +298,31 @@ function setupGlobalEventListeners() {
         x_position: e.clientX,
         y_position: e.clientY,
         viewport_width: window.innerWidth,
-        viewport_height: window.innerHeight
+        viewport_height: window.innerHeight,
+        url: window.location.href
+      });
+    }
+  });
+  
+  // Track scroll events with additional data for better replay
+  let lastScrollTime = 0;
+  window.addEventListener('scroll', () => {
+    const now = Date.now();
+    if (now - lastScrollTime > 1000) {
+      lastScrollTime = now;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      mixpanel.track('Scroll Position', {
+        session_id: sessionId,
+        visitor_id: visitorId,
+        scroll_top: scrollTop,
+        scroll_left: scrollLeft,
+        viewport_height: window.innerHeight,
+        viewport_width: window.innerWidth,
+        document_height: document.documentElement.scrollHeight,
+        document_width: document.documentElement.scrollWidth,
+        url: window.location.href
       });
     }
   });
@@ -222,7 +332,8 @@ function setupGlobalEventListeners() {
     mixpanel.track('Session End', {
       session_id: sessionId,
       visitor_id: visitorId,
-      duration_seconds: (Date.now() - parseInt(sessionId.split('_')[1])) / 1000
+      duration_seconds: (Date.now() - parseInt(sessionId.split('_')[1])) / 1000,
+      url: window.location.href
     });
     
     // Stop session recording
@@ -239,6 +350,9 @@ function setupGlobalEventListeners() {
 // Track page views
 export const trackPageView = (pageName: string, properties = {}) => {
   if (!isBrowser) return;
+  
+  // Capture a snapshot at each page view for better session replay
+  captureReplaySnapshot('page_view');
   
   mixpanel.track('Page View', {
     session_id: sessionId,
@@ -464,12 +578,26 @@ export const captureReplaySnapshot = (reason: string = 'manual_capture') => {
       session_id: sessionId,
       visitor_id: visitorId,
       reason: reason,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      os: detectOperatingSystem()
     });
     
     // Force snapshot capture if the API is available
     if ((mixpanel as any).session_recording && isSessionRecordingActive) {
-      (mixpanel as any).session_recording.snapshot();
+      try {
+        (mixpanel as any).session_recording.snapshot();
+      } catch (e) {
+        console.log('Standard snapshot API failed, trying alternative approach');
+        // Alternative approach for browsers that don't support the standard API
+        mixpanel.track('DOM Snapshot', {
+          session_id: sessionId,
+          visitor_id: visitorId,
+          html_length: document.documentElement.innerHTML.length,
+          visible_elements: document.querySelectorAll('*:not([hidden]):not([style*="display: none"])').length,
+          url: window.location.href
+        });
+      }
     }
   } catch (e) {
     console.error('Error capturing replay snapshot:', e);
