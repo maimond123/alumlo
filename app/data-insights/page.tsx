@@ -995,6 +995,15 @@ export default function DataInsightsPage() {
       <main style={{ marginLeft: isSidebarOpen ? "18rem" : "5rem" }} className="flex-1 transition-all duration-300">
         <div className="p-8 pt-20">
 
+          {/* Add clear instruction message for using the charts */}
+          <div className="mb-8 p-4 bg-emerald-50 border border-emerald-200 rounded-lg shadow-sm">
+            <h2 className="text-xl font-bold text-emerald-800 mb-2">Interactive Alumni Analytics</h2>
+            <p className="text-gray-700">
+              Click on any chart below to expand it and chat with our AI assistant about the data. 
+              Ask questions like "What trends do you see?" or "What insights can you provide about this industry data?"
+            </p>
+          </div>
+
           {/* Check if searchResults exists before mapping */}
           {searchResults && searchResults.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1005,9 +1014,17 @@ export default function DataInsightsPage() {
                   onClick={() => handleWidgetClick(chart)}
                   className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
                     selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
-                  }`}
+                  } relative`}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* Clickable indicator badge */}
+                  <div className="absolute -top-2 -right-2 bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Click to Explore & Chat
+                  </div>
+
                   <div className="flex justify-between items-start mb-4">
                     <motion.h3 layoutId={`title-${chart.id}`} className="text-lg font-medium text-gray-900">
                       {chart.title}

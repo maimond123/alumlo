@@ -8,6 +8,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -905,28 +906,41 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold mb-4 text-black">
                   Found {searchResults.length} alumni matching your search
                 </h2>
+                
+                {/* Add instruction message for clickability */}
+                <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Click on any result to view the person's LinkedIn profile</span>
+                </div>
+                
                 <div className="grid gap-4">
                   {searchResults.map((result, index) => {
                     const currentTitle = result.current_title || "";
                     
                     return (
-                      <a
+                      <motion.div
                         key={result.id || index}
-                        href={result.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
+                        layoutId={`chart-${result.id}`}
+                        onClick={() => handleWidgetClick(result)}
+                        className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
+                          selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
+                        } relative`}
+                        transition={{ duration: 0.3 }}
                       >
-                        {/* Overlay indicating clickable */}
-                        <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
+                        {/* Clickable indicator badge */}
+                        <div className="absolute -top-2 -right-2 bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Click to Explore & Chat
+                        </div>
                         
-                        {/* LinkedIn Icon in top right corner */}
-                        <div className="absolute top-2 right-2">
-                          <img 
-                            src="/assets/linkedin_gray.png" 
-                            alt="LinkedIn" 
-                            className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
-                          />
+                        <div className="flex justify-between items-start mb-4">
+                          <motion.h3 layoutId={`title-${result.id}`} className="text-lg font-medium text-gray-900">
+                            {result.name}
+                          </motion.h3>
                         </div>
                         
                         <div className="flex items-center">
@@ -985,7 +999,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         </div>
-                      </a>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -1021,20 +1035,21 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-semibold">Explore the Sidebar</h4>
-                      <p className="text-sm text-gray-600">Click the sidebar icons to access Analytics, Reports, and more features.</p>
+                      <h4 className="font-semibold">Interactive Results</h4>
+                      <p className="text-sm text-gray-600">Click on search results to view LinkedIn profiles and explore alumni connections.</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
                     <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-semibold">Interactive Results</h4>
-                      <p className="text-sm text-gray-600">Click on search results to view LinkedIn profiles and explore alumni connections.</p>
+                      <h4 className="font-semibold">AI-Powered Analytics</h4>
+                      <p className="text-sm text-gray-600">Visit the Analytics section to see data visualizations that you can click on to chat with our AI assistant about the insights.</p>
                     </div>
                   </div>
                 </div>
