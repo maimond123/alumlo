@@ -1031,12 +1031,9 @@ export default function DashboardPage() {
                   👈 <span className="font-semibold">Pro Tip:</span> Click on the sidebar to explore more features like <span className="underline font-medium">Analytics</span> and <span className="underline font-medium">Reports</span>!
                 </p>
                 
-                {/* Add X button to dismiss the pro tip with analytics */}
+                {/* Add X button to dismiss the pro tip */}
                 <button 
-                  onClick={() => {
-                    setShowProTip(false);
-                    analytics.trackProTip('dismiss');
-                  }}
+                  onClick={() => setShowProTip(false)}
                   className="absolute top-2 right-2 text-emerald-500 hover:text-emerald-700 transition-colors"
                   aria-label="Dismiss tip"
                 >

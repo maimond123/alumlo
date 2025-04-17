@@ -3,40 +3,45 @@ import mixpanel from 'mixpanel-browser';
 // Initialize Mixpanel with your project token
 const MIXPANEL_TOKEN = '734da60febbf101dd204ef6d430dbfeb';
 
-// Configure Mixpanel with session recording enabled
-mixpanel.init(MIXPANEL_TOKEN, {
-  debug: process.env.NODE_ENV !== 'production',
-  track_pageview: true,
-  persistence: 'localStorage',
-  api_host: 'https://api.mixpanel.com',
-  cookie_name: 'alumIntel_mp',
-  secure_cookie: true,
-  ip: false,
-  property_blacklist: ['$current_url', '$initial_referrer', '$referrer'],
-  loaded: () => {
-    // Enable session recording for 100% of users
-    mixpanel.set_config({ 
-      'record_sessions_percent': 100,
-      'persistence': 'localStorage'
-    });
-    
-    // Ensure autotracking for enhanced session replay
-    try {
-      if ('autotrack' in mixpanel) {
-        // Enable autotrack to capture DOM events automatically
-        (mixpanel as any).autotrack();
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
+// Only initialize if in browser
+if (isBrowser) {
+  mixpanel.init(MIXPANEL_TOKEN, {
+    debug: process.env.NODE_ENV !== 'production',
+    track_pageview: true,
+    persistence: 'localStorage',
+    api_host: 'https://api.mixpanel.com',
+    cookie_name: 'alumIntel_mp',
+    secure_cookie: true,
+    ip: false,
+    property_blacklist: ['$current_url', '$initial_referrer', '$referrer'],
+    loaded: () => {
+      // Enable session recording for 100% of users
+      mixpanel.set_config({ 
+        'record_sessions_percent': 100,
+        'persistence': 'localStorage'
+      });
+      
+      // Ensure autotracking for enhanced session replay
+      try {
+        if ('autotrack' in mixpanel) {
+          // Enable autotrack to capture DOM events automatically
+          (mixpanel as any).autotrack();
+        }
+      } catch (e) {
+        console.error('Mixpanel autotrack setup error:', e);
       }
-    } catch (e) {
-      console.error('Mixpanel autotrack setup error:', e);
     }
-  }
-});
+  });
+}
 
 // Session ID to link events together
-let sessionId = generateSessionId();
+let sessionId = isBrowser ? generateSessionId() : '';
 
 // Visitor ID to identify unique users (persists across sessions)
-let visitorId = getOrCreateVisitorId();
+let visitorId = isBrowser ? getOrCreateVisitorId() : '';
 
 // Flag to determine if session recording is active
 let isSessionRecordingActive = false;
@@ -48,6 +53,8 @@ function generateSessionId() {
 
 // Get existing visitor ID from localStorage or create a new one
 function getOrCreateVisitorId() {
+  if (!isBrowser) return '';
+  
   const storedVisitorId = localStorage.getItem('alumIntel_visitor_id');
   if (storedVisitorId) {
     return storedVisitorId;
@@ -60,6 +67,8 @@ function getOrCreateVisitorId() {
 
 // Initialize session recording and advanced tracking
 export const initSessionRecording = () => {
+  if (!isBrowser) return;
+  
   try {
     // Reset session ID for new sessions
     sessionId = generateSessionId();
@@ -113,6 +122,8 @@ export const initSessionRecording = () => {
 
 // Setup global event listeners for session recording
 function setupGlobalEventListeners() {
+  if (!isBrowser) return;
+  
   // Track all clicks
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
@@ -227,6 +238,8 @@ function setupGlobalEventListeners() {
 
 // Track page views
 export const trackPageView = (pageName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Page View', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -239,6 +252,8 @@ export const trackPageView = (pageName: string, properties = {}) => {
 // Track scroll depth
 let lastScrollDepth = 0;
 export const trackScrollDepth = () => {
+  if (!isBrowser) return;
+  
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
   const scrollDepth = Math.round((scrollTop / scrollHeight) * 100);
@@ -258,6 +273,8 @@ export const trackScrollDepth = () => {
 
 // Track button clicks
 export const trackButtonClick = (buttonName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Button Click', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -269,6 +286,8 @@ export const trackButtonClick = (buttonName: string, properties = {}) => {
 
 // Track search actions
 export const trackSearch = (query: string, resultCount: number, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Search', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -281,6 +300,8 @@ export const trackSearch = (query: string, resultCount: number, properties = {})
 
 // Track search result clicks
 export const trackSearchResultClick = (resultIndex: number, resultName: string, linkedInUrl: string) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Search Result Click', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -293,6 +314,8 @@ export const trackSearchResultClick = (resultIndex: number, resultName: string, 
 
 // Track modal interactions
 export const trackModalOpen = (modalName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Modal Open', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -303,6 +326,8 @@ export const trackModalOpen = (modalName: string, properties = {}) => {
 };
 
 export const trackModalClose = (modalName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Modal Close', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -314,6 +339,8 @@ export const trackModalClose = (modalName: string, properties = {}) => {
 
 // Track form submissions
 export const trackFormSubmit = (formName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Form Submit', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -325,6 +352,8 @@ export const trackFormSubmit = (formName: string, properties = {}) => {
 
 // Track tag clicks
 export const trackTagClick = (tagName: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Tag Click', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -336,6 +365,8 @@ export const trackTagClick = (tagName: string, properties = {}) => {
 
 // Track feature spotlight interactions
 export const trackFeatureSpotlight = (action: 'view' | 'dismiss', properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Feature Spotlight', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -347,6 +378,8 @@ export const trackFeatureSpotlight = (action: 'view' | 'dismiss', properties = {
 
 // Track ProTip interactions
 export const trackProTip = (action: 'view' | 'dismiss', properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Pro Tip', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -358,6 +391,8 @@ export const trackProTip = (action: 'view' | 'dismiss', properties = {}) => {
 
 // Set user properties while maintaining the visitor ID
 export const setUserProperties = (properties = {}) => {
+  if (!isBrowser) return;
+  
   // Keep the unique visitor ID but set additional properties
   mixpanel.people.set({
     // Include visitor ID with properties
@@ -368,6 +403,8 @@ export const setUserProperties = (properties = {}) => {
 
 // Identify user with custom ID while maintaining the visitor tracking
 export const identifyUser = (userId: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   // For demo users, we want to track them as unique visitors
   // but still associate them with the demo account
   
@@ -400,6 +437,8 @@ export const identifyUser = (userId: string, properties = {}) => {
 
 // Track errors
 export const trackError = (errorType: string, errorMessage: string, properties = {}) => {
+  if (!isBrowser) return;
+  
   mixpanel.track('Error', {
     session_id: sessionId,
     visitor_id: visitorId,
@@ -412,11 +451,14 @@ export const trackError = (errorType: string, errorMessage: string, properties =
 
 // Get visitor ID (exposed for components that need it)
 export const getVisitorId = () => {
+  if (!isBrowser) return '';
   return visitorId;
 };
 
 // Additional function to force a session replay snapshot
 export const captureReplaySnapshot = (reason: string = 'manual_capture') => {
+  if (!isBrowser) return;
+  
   try {
     mixpanel.track('Replay Snapshot', {
       session_id: sessionId,
