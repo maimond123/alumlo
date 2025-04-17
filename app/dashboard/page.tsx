@@ -160,6 +160,9 @@ export default function DashboardPage() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [showDemoSurvey, setShowDemoSurvey] = useState(false)
   
+  // Add new state for the Want More modal
+  const [showWantMoreModal, setShowWantMoreModal] = useState(false)
+  
   // Add new state for feature spotlight
   const [showFeatureSpotlight, setShowFeatureSpotlight] = useState(true)
   
@@ -393,7 +396,7 @@ export default function DashboardPage() {
         }));
       } else {
         // Regular message for other users
-        await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
+        await typewriterEffect(`Searching across our demo database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
           (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
         );
       }
@@ -999,9 +1002,55 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
+                
+                {/* Add "Want More?" button at the bottom of search results */}
+                <div className="mt-8 flex justify-center">
+                  <button 
+                    onClick={() => setShowWantMoreModal(true)}
+                    className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
+                  >
+                    Want More?
+                  </button>
+                </div>
               </div>
             )}
           </div>
+
+          {/* Want More Modal */}
+          {showWantMoreModal && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              onClick={(e) => {
+                // Close the modal when clicking the backdrop
+                if (e.target === e.currentTarget) {
+                  setShowWantMoreModal(false);
+                }
+              }}
+            >
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+                <h2 className="text-xl font-bold text-center mb-4">Are you interested in having access to ALL of your alumni?</h2>
+                
+                <div className="flex justify-center space-x-4 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowWantMoreModal(false);
+                      router.push('/support');
+                    }}
+                    className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+                  >
+                    Yes
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowWantMoreModal(false)}
+                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Demo Feature Spotlight */}
           {isDemoMode && showFeatureSpotlight && (
