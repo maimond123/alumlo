@@ -217,6 +217,19 @@ export default function DashboardPage() {
             setIsDemoMode(true);
             setFormattedSchoolName("Your School");
             setIsLoading(false);
+            
+            // Track as a unique visitor while maintaining demo status
+            // This ensures each visitor has a unique ID in Mixpanel
+            // while still using the demo account data
+            const visitorId = analytics.getVisitorId();
+            console.log(`Demo visitor identified with unique ID: ${visitorId}`);
+            
+            // Use visitor ID for analytics but keep demo email for data retrieval
+            analytics.identifyUser("maimondavid553@gmail.com", {
+              isDemoUser: true,
+              visitorId: visitorId,
+              school: "Your School"
+            });
           }
         }
       } catch (error) {
@@ -344,11 +357,19 @@ export default function DashboardPage() {
         try {
           const userEmail = await getUserEmail();
           if (userEmail) {
-            analytics.identifyUser(userEmail, {
-              email: userEmail,
-              isDemoUser: isDemoMode,
-              school: formattedSchoolName
-            });
+            if (isDemoMode) {
+              // For demo users, we already identified them in the checkAuth function
+              // This ensures we maintain the visitor ID while still using the demo email
+              // for Supabase data retrieval
+              console.log("Demo user already identified with unique visitor ID");
+            } else {
+              // For real users, identify them with their actual email
+              analytics.identifyUser(userEmail, {
+                email: userEmail,
+                isDemoUser: false,
+                school: formattedSchoolName
+              });
+            }
           }
         } catch (error) {
           console.error("Error identifying user in analytics:", error);
@@ -375,7 +396,7 @@ export default function DashboardPage() {
     });
   };
 
-  // Update handleSearch to track search analytics
+  // Update handleSearch to include replay snapshot on search
   const handleSearch = async (e: React.FormEvent, directQuery?: string) => {
     e.preventDefault();
     
@@ -387,6 +408,9 @@ export default function DashboardPage() {
     }
     
     console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${queryToUse}"`);
+    
+    // Capture a replay snapshot for this important user interaction
+    analytics.captureReplaySnapshot('search_initiated');
     
     // Track search event
     analytics.trackSearch(queryToUse, 0, { source: directQuery ? 'tag_click' : 'search_input' });
@@ -757,10 +781,11 @@ export default function DashboardPage() {
     }
   }
 
-  // Function to handle search result click
+  // Update handleSearchResultClick to capture snapshots
   const handleSearchResultClick = (url: string, resultIndex: number, resultName: string) => {
-    // Track search result click
+    // Track search result click and capture replay snapshot
     analytics.trackSearchResultClick(resultIndex, resultName, url);
+    analytics.captureReplaySnapshot('search_result_click');
     
     // Check if this is demo mode
     if (isDemoMode) {
@@ -770,6 +795,7 @@ export default function DashboardPage() {
       if (!hasSeenSurvey) {
         // Track first-time survey shown
         analytics.trackModalOpen('FirstClickSurvey', { isFirstTime: true });
+        analytics.captureReplaySnapshot('first_click_survey_shown');
         
         // If not seen, show the survey and store the URL to navigate to later
         setPendingLinkedInUrl(url);
@@ -784,12 +810,15 @@ export default function DashboardPage() {
     window.open(url, '_blank');
   };
 
-  // Function to handle survey submission
+  // Update handleSurveySubmit to capture survey completion
   const handleSurveySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Track form submission
     analytics.trackFormSubmit('LinkedInClickSurvey', { email: surveyEmail });
+    
+    // Capture a replay snapshot for survey submission
+    analytics.captureReplaySnapshot('survey_submitted');
     
     try {
       // Save email to Supabase - updated table name
