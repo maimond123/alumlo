@@ -920,27 +920,23 @@ export default function DashboardPage() {
                     const currentTitle = result.current_title || "";
                     
                     return (
-                      <motion.div
+                      <a
                         key={result.id || index}
-                        layoutId={`chart-${result.id}`}
-                        onClick={() => handleWidgetClick(result)}
-                        className={`bg-white rounded-lg p-6 cursor-pointer border border-black shadow-lg transition-shadow h-[500px] flex flex-col ${
-                          selectedChart ? "" : "hover:shadow-xl hover:-translate-y-1"
-                        } relative`}
-                        transition={{ duration: 0.3 }}
+                        href={result.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
                       >
-                        {/* Clickable indicator badge */}
-                        <div className="absolute -top-2 -right-2 bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Click to Explore & Chat
-                        </div>
+                        {/* Overlay indicating clickable */}
+                        <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
                         
-                        <div className="flex justify-between items-start mb-4">
-                          <motion.h3 layoutId={`title-${result.id}`} className="text-lg font-medium text-gray-900">
-                            {result.name}
-                          </motion.h3>
+                        {/* LinkedIn Icon in top right corner */}
+                        <div className="absolute top-2 right-2">
+                          <img 
+                            src="/assets/linkedin_gray.png" 
+                            alt="LinkedIn" 
+                            className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
+                          />
                         </div>
                         
                         <div className="flex items-center">
@@ -999,7 +995,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </a>
                     );
                   })}
                 </div>
