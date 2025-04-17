@@ -4,6 +4,7 @@
 import { SchoolProvider } from './contexts/SchoolContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
+import MixpanelAnalytics from './components/MixpanelAnalytics'
 
 export default function ClientLayout({
   children,
@@ -14,6 +15,7 @@ export default function ClientLayout({
     <SupabaseAuthListener>
       <SchoolProvider>
         <SidebarProvider>
+          <MixpanelAnalytics />
           {children}
         </SidebarProvider>
       </SchoolProvider>
