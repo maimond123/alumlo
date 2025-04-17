@@ -166,6 +166,9 @@ export default function DashboardPage() {
   // Add new state for feature spotlight
   const [showFeatureSpotlight, setShowFeatureSpotlight] = useState(true)
   
+  // Add state for Pro Tip visibility
+  const [showProTip, setShowProTip] = useState(true)
+  
   // Add states for the first-click survey
   const [showFirstClickSurvey, setShowFirstClickSurvey] = useState(false)
   const [showEmailCollection, setShowEmailCollection] = useState(false)
@@ -903,8 +906,8 @@ export default function DashboardPage() {
           {/* Analysis and Search Results */}
           <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
             {/* Demo sidebar guidance - only show in demo mode */}
-            {isDemoMode && searchPhase === 'idle' && (
-              <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4 flex items-center">
+            {isDemoMode && searchPhase === 'idle' && showProTip && (
+              <div className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4 flex items-center relative">
                 <div className="flex-shrink-0 mr-3 text-emerald-500">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
@@ -913,6 +916,17 @@ export default function DashboardPage() {
                 <p className="text-emerald-700">
                   👈 <span className="font-semibold">Pro Tip:</span> Click on the sidebar to explore more features like <span className="underline font-medium">Analytics</span> and <span className="underline font-medium">Reports</span>!
                 </p>
+                
+                {/* Add X button to dismiss the pro tip */}
+                <button 
+                  onClick={() => setShowProTip(false)}
+                  className="absolute top-2 right-2 text-emerald-500 hover:text-emerald-700 transition-colors"
+                  aria-label="Dismiss tip"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
             )}
             
