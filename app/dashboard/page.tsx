@@ -9,6 +9,7 @@ import { supabase } from "../data/supabase"
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import analytics from "../utils/analytics"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -305,6 +306,59 @@ export default function DashboardPage() {
     }
   }, [formattedSchoolName]);
 
+  // Track page view when component mounts
+  useEffect(() => {
+    if (!authState.isLoading && authState.isAuthenticated) {
+      analytics.trackPageView('Dashboard');
+    }
+  }, [authState.isLoading, authState.isAuthenticated]);
+
+  // Track scroll depth
+  useEffect(() => {
+    const handleScroll = () => {
+      analytics.trackScrollDepth();
+    };
+
+    // Throttle scroll events to prevent too many events
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    const throttledScrollHandler = () => {
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          handleScroll();
+          scrollTimeout = null;
+        }, 500);
+      }
+    };
+
+    window.addEventListener('scroll', throttledScrollHandler);
+    return () => {
+      window.removeEventListener('scroll', throttledScrollHandler);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
+  }, []);
+
+  // Identify user when authenticated
+  useEffect(() => {
+    const identifyUserInAnalytics = async () => {
+      if (authState.isAuthenticated) {
+        try {
+          const userEmail = await getUserEmail();
+          if (userEmail) {
+            analytics.identifyUser(userEmail, {
+              email: userEmail,
+              isDemoUser: isDemoMode,
+              school: formattedSchoolName
+            });
+          }
+        } catch (error) {
+          console.error("Error identifying user in analytics:", error);
+        }
+      }
+    };
+
+    identifyUserInAnalytics();
+  }, [authState.isAuthenticated, isDemoMode, formattedSchoolName]);
+
   // Add this helper function to simulate typewriter effect
   const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
     return new Promise((resolve) => {
@@ -321,7 +375,7 @@ export default function DashboardPage() {
     });
   };
 
-  // Update the handleSearch function to ensure consistency 
+  // Update handleSearch to track search analytics
   const handleSearch = async (e: React.FormEvent, directQuery?: string) => {
     e.preventDefault();
     
@@ -334,7 +388,9 @@ export default function DashboardPage() {
     
     console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${queryToUse}"`);
     
-    // Continue with the rest of the function using queryToUse
+    // Track search event
+    analytics.trackSearch(queryToUse, 0, { source: directQuery ? 'tag_click' : 'search_input' });
+    
     if (searchTimerRef.current) {
       console.log(`[DEBUG ${new Date().toISOString()}] Cancelling previous search timer`);
       clearTimeout(searchTimerRef.current);
@@ -372,10 +428,10 @@ export default function DashboardPage() {
         throw new Error('Search failed');
       }
       return response.json();
-    }).then(data => {
-      console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${data.results?.length || 0} results`);
-      console.log(`[DEBUG ${new Date().toISOString()}] First result:`, data.results?.[0] || 'No results');
-      return data;
+    }).then(rawData => {
+      console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${rawData.results?.length || 0} results`);
+      console.log(`[DEBUG ${new Date().toISOString()}] First result:`, rawData.results?.[0] || 'No results');
+      return rawData;
     });
     
     // Start the AI animation sequence
@@ -422,21 +478,27 @@ export default function DashboardPage() {
       
       // Get search results that were fetching in parallel
       console.log(`[DEBUG ${new Date().toISOString()}] Waiting for search promise to resolve for query: "${currentQuery}"`);
-      const data = await searchPromise;
-      const results = data.results;
-      console.log(`[DEBUG ${new Date().toISOString()}] Search promise resolved with ${results?.length || 0} results for query: "${currentQuery}"`);
+      const searchData = await searchPromise;
+      const searchResultsData = searchData.results;
+      console.log(`[DEBUG ${new Date().toISOString()}] Search promise resolved with ${searchResultsData?.length || 0} results for query: "${currentQuery}"`);
       
       // Phase 5: Display results
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 5: Displaying results`);
       setSearchPhase('complete');
-      await typewriterEffect(`Displaying top ${Math.min(10, results.length)} personalized results...`, 
+      await typewriterEffect(`Displaying top ${Math.min(10, searchResultsData.length)} personalized results...`, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
       console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
-      console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, results);
-      setSearchResults(results);
+      console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
+      setSearchResults(searchResultsData);
       console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
+      
+      // Track search completion with result count
+      analytics.trackSearch(currentQuery, searchResultsData?.length || 0, { 
+        source: directQuery ? 'tag_click' : 'search_input',
+        status: 'complete'
+      });
     } catch (error) {
       console.error(`[DEBUG ERROR ${new Date().toISOString()}] Search error for query "${currentQuery}":`, error);
     } finally {
@@ -449,6 +511,9 @@ export default function DashboardPage() {
   // Fix the handleTagClick function
   const handleTagClick = async (query: string) => {
     console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
+    
+    // Track tag click
+    analytics.trackTagClick(query);
     
     // Set the query first
     setSearchQuery(query);
@@ -693,13 +758,19 @@ export default function DashboardPage() {
   }
 
   // Function to handle search result click
-  const handleSearchResultClick = (url: string) => {
+  const handleSearchResultClick = (url: string, resultIndex: number, resultName: string) => {
+    // Track search result click
+    analytics.trackSearchResultClick(resultIndex, resultName, url);
+    
     // Check if this is demo mode
     if (isDemoMode) {
       // Check if user has already seen the first-click survey
       const hasSeenSurvey = localStorage.getItem('hasSeenAlumIntelSurvey') === 'true';
       
       if (!hasSeenSurvey) {
+        // Track first-time survey shown
+        analytics.trackModalOpen('FirstClickSurvey', { isFirstTime: true });
+        
         // If not seen, show the survey and store the URL to navigate to later
         setPendingLinkedInUrl(url);
         setShowFirstClickSurvey(true);
@@ -716,6 +787,9 @@ export default function DashboardPage() {
   // Function to handle survey submission
   const handleSurveySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Track form submission
+    analytics.trackFormSubmit('LinkedInClickSurvey', { email: surveyEmail });
     
     try {
       // Save email to Supabase - updated table name
@@ -741,8 +815,16 @@ export default function DashboardPage() {
       // Clear the pending URL
       setPendingLinkedInUrl("");
       
+      // Track successful submission
+      analytics.trackFormSubmit('LinkedInClickSurvey', { 
+        status: 'success',
+        email: surveyEmail 
+      });
+      
     } catch (error) {
       console.error('Error submitting survey:', error);
+      // Track error
+      analytics.trackError('SurveySubmission', 'Failed to submit survey', { email: surveyEmail });
       alert('There was an error submitting your information. Please try again.');
     }
   };
@@ -770,7 +852,10 @@ export default function DashboardPage() {
       <button 
         id="demo-trigger" 
         className="hidden" 
-        onClick={() => setShowDemoSurvey(true)}
+        onClick={() => {
+          setShowDemoSurvey(true);
+          analytics.trackModalOpen('DemoSurvey', { source: 'want_more_link' });
+        }}
         aria-hidden="true"
       />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
@@ -917,9 +1002,12 @@ export default function DashboardPage() {
                   👈 <span className="font-semibold">Pro Tip:</span> Click on the sidebar to explore more features like <span className="underline font-medium">Analytics</span> and <span className="underline font-medium">Reports</span>!
                 </p>
                 
-                {/* Add X button to dismiss the pro tip */}
+                {/* Add X button to dismiss the pro tip with analytics */}
                 <button 
-                  onClick={() => setShowProTip(false)}
+                  onClick={() => {
+                    setShowProTip(false);
+                    analytics.trackProTip('dismiss');
+                  }}
                   className="absolute top-2 right-2 text-emerald-500 hover:text-emerald-700 transition-colors"
                   aria-label="Dismiss tip"
                 >
@@ -1006,7 +1094,7 @@ export default function DashboardPage() {
                         className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSearchResultClick(result.linkedin_url);
+                          handleSearchResultClick(result.linkedin_url, index, result.name);
                         }}
                       >
                         {/* Overlay indicating clickable */}
@@ -1085,7 +1173,10 @@ export default function DashboardPage() {
                 {/* Add "Want More?" button at the bottom of search results */}
                 <div className="mt-8 pb-12 flex justify-center">
                   <button 
-                    onClick={() => setShowWantMoreModal(true)}
+                    onClick={() => {
+                      setShowWantMoreModal(true);
+                      analytics.trackModalOpen('WantMoreModal');
+                    }}
                     className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
                   >
                     Want More?
@@ -1103,6 +1194,7 @@ export default function DashboardPage() {
                 // Close the modal when clicking the backdrop
                 if (e.target === e.currentTarget) {
                   setShowFirstClickSurvey(false);
+                  analytics.trackModalClose('FirstClickSurvey', { userAction: 'backdrop_click' });
                   // Navigate to LinkedIn if there's a pending URL
                   if (pendingLinkedInUrl) {
                     window.open(pendingLinkedInUrl, '_blank');
@@ -1119,6 +1211,9 @@ export default function DashboardPage() {
                     onClick={() => {
                       setShowFirstClickSurvey(false);
                       setShowEmailCollection(true);
+                      analytics.trackButtonClick('FirstClickSurvey_Yes');
+                      analytics.trackModalClose('FirstClickSurvey', { userAction: 'yes_click' });
+                      analytics.trackModalOpen('EmailCollection');
                     }}
                     className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
                   >
@@ -1128,6 +1223,8 @@ export default function DashboardPage() {
                   <button
                     onClick={() => {
                       setShowFirstClickSurvey(false);
+                      analytics.trackButtonClick('FirstClickSurvey_No');
+                      analytics.trackModalClose('FirstClickSurvey', { userAction: 'no_click' });
                       // Navigate to LinkedIn if there's a pending URL
                       if (pendingLinkedInUrl) {
                         window.open(pendingLinkedInUrl, '_blank');
@@ -1143,7 +1240,7 @@ export default function DashboardPage() {
             </div>
           )}
           
-          {/* Email Collection Modal */}
+          {/* Email Collection Modal with analytics */}
           {showEmailCollection && (
             <div 
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -1165,7 +1262,15 @@ export default function DashboardPage() {
                       type="email"
                       id="work-email"
                       value={surveyEmail}
-                      onChange={(e) => setSurveyEmail(e.target.value)}
+                      onChange={(e) => {
+                        setSurveyEmail(e.target.value);
+                        // Track email input change
+                        if (e.target.value && e.target.value.includes('@')) {
+                          analytics.trackFormSubmit('EmailCollection_Input', { 
+                            hasDomain: e.target.value.includes('@') && e.target.value.split('@')[1].length > 0
+                          });
+                        }
+                      }}
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="name@work.edu"
@@ -1185,7 +1290,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Want More Modal */}
+          {/* Want More Modal with analytics */}
           {showWantMoreModal && (
             <div 
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -1193,6 +1298,7 @@ export default function DashboardPage() {
                 // Close the modal when clicking the backdrop
                 if (e.target === e.currentTarget) {
                   setShowWantMoreModal(false);
+                  analytics.trackModalClose('WantMoreModal', { userAction: 'backdrop_click' });
                 }
               }}
             >
@@ -1203,7 +1309,10 @@ export default function DashboardPage() {
                   <button
                     onClick={() => {
                       setShowWantMoreModal(false);
+                      analytics.trackButtonClick('WantMoreModal_Yes');
+                      analytics.trackModalClose('WantMoreModal', { userAction: 'yes_click' });
                       router.push('/support');
+                      analytics.trackPageView('Support', { source: 'want_more_modal' });
                     }}
                     className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
                   >
@@ -1211,7 +1320,11 @@ export default function DashboardPage() {
                   </button>
                   
                   <button
-                    onClick={() => setShowWantMoreModal(false)}
+                    onClick={() => {
+                      setShowWantMoreModal(false); 
+                      analytics.trackButtonClick('WantMoreModal_No');
+                      analytics.trackModalClose('WantMoreModal', { userAction: 'no_click' });
+                    }}
                     className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
                   >
                     No
@@ -1269,7 +1382,10 @@ export default function DashboardPage() {
                 </div>
                 
                 <button
-                  onClick={() => setShowFeatureSpotlight(false)}
+                  onClick={() => {
+                    setShowFeatureSpotlight(false);
+                    analytics.trackFeatureSpotlight('dismiss');
+                  }}
                   className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors"
                 >
                   Got it, let's explore
@@ -1278,7 +1394,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Demo Survey Modal */}
+          {/* Demo Survey Modal with analytics */}
           {isDemoMode && showDemoSurvey && (
             <div 
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -1286,6 +1402,7 @@ export default function DashboardPage() {
                 // Close the modal when clicking the backdrop (outside the modal)
                 if (e.target === e.currentTarget) {
                   setShowDemoSurvey(false);
+                  analytics.trackModalClose('DemoSurvey', { userAction: 'backdrop_click' });
                 }
               }}
             >
@@ -1293,7 +1410,10 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want this for your School's Alumni Data?</h2>
                   <button 
-                    onClick={() => setShowDemoSurvey(false)}
+                    onClick={() => {
+                      setShowDemoSurvey(false);
+                      analytics.trackModalClose('DemoSurvey', { userAction: 'x_button_click' });
+                    }}
                     className="text-gray-500 hover:text-gray-700 absolute right-6 top-6"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1312,6 +1432,14 @@ export default function DashboardPage() {
                   const features = Array.from(formData.getAll('features')) as string[];
                   const budget = formData.get('budget') as string;
                   
+                  // Track form submission
+                  analytics.trackFormSubmit('DemoSurvey', { 
+                    schoolName,
+                    email,
+                    features,
+                    budget
+                  });
+                  
                   try {
                     // Save to Supabase
                     const { error } = await supabase
@@ -1325,17 +1453,31 @@ export default function DashboardPage() {
                       
                     if (error) throw error;
                     
+                    // Track successful submission
+                    analytics.trackFormSubmit('DemoSurvey', { 
+                      status: 'success',
+                      schoolName,
+                      email 
+                    });
+                    
                     // Show confirmation message
                     setShowDemoSurvey(false);
+                    analytics.trackModalClose('DemoSurvey', { userAction: 'form_submit' });
                     
                     // Show confirmation modal
                     alert("Thank you for your interest! We'll contact you within 24 hours with more information about how AlumIntel can work for your institution.");
                     
                   } catch (error) {
                     console.error('Error submitting survey:', error);
+                    // Track error
+                    analytics.trackError('DemoSurveySubmission', 'Failed to submit survey', { 
+                      schoolName, 
+                      email 
+                    });
                     alert('There was an error submitting your information. Please try again.');
                   }
                 }}>
+                  {/* Form fields with input tracking */}
                   <div>
                     <label htmlFor="school-name" className="block text-sm font-medium text-gray-700 mb-1">
                       What's your school's name?
@@ -1345,6 +1487,13 @@ export default function DashboardPage() {
                       id="school-name"
                       name="school-name"
                       required
+                      onChange={(e) => {
+                        if (e.target.value.length > 0) {
+                          analytics.trackFormSubmit('DemoSurvey_SchoolNameInput', { 
+                            length: e.target.value.length 
+                          });
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="e.g., Westfield High School"
                     />
@@ -1359,6 +1508,13 @@ export default function DashboardPage() {
                       id="email"
                       name="email"
                       required
+                      onChange={(e) => {
+                        if (e.target.value && e.target.value.includes('@')) {
+                          analytics.trackFormSubmit('DemoSurvey_EmailInput', { 
+                            hasDomain: e.target.value.includes('@') && e.target.value.split('@')[1].length > 0 
+                          });
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="name@work.edu"
                     />
@@ -1385,6 +1541,11 @@ export default function DashboardPage() {
                             id={`feature-${index}`}
                             name="features"
                             value={feature}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                analytics.trackButtonClick('DemoSurvey_FeatureSelected', { feature });
+                              }
+                            }}
                             className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                           />
                           <label htmlFor={`feature-${index}`} className="ml-2 text-gray-700">
