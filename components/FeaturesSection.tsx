@@ -139,12 +139,6 @@ export default function FeaturesSection() {
                   <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
-                  <span>We guarantee 85%+ coverage for each requested graduating class</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1.5">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                  </div>
                   <span>Collect 30+ unique data points for each alumni profile</span>
                 </li>
               </ul>
