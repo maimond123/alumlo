@@ -44,8 +44,7 @@ export default function Hero() {
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
         <h1 className="text-7xl font-bold text-emerald-800 mb-4">
-          Alumni Intelligence<br />
-          for Schools<span className="text-teal-500">.</span>
+          Alumni Intelligence<br /> 
         </h1>
         
         <p className="text-xl text-emerald-700 mb-8 max-w-2xl">
