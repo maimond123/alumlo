@@ -983,17 +983,8 @@ export default function DashboardPage() {
 
   // Initialize with a welcome message when switching to learn mode
   useEffect(() => {
-    if (mode === 'learn' && conversations.length === 0) {
-      setConversations([{
-        role: 'assistant',
-        content: `Welcome to Learn mode! I can help you understand your ${formattedSchoolName || "school's"} alumni data and provide insights. Try asking questions like:
-• What's the average salary of our alumni?
-• How do our alumni compare to the general population?
-• What industries are our alumni working in?
-• How many of our alumni have founded companies?
-• What are the career progression patterns of our alumni?`
-      }]);
-    }
+    // Remove the auto-generation of welcome message
+    // Keep the dependency array to avoid linter warnings
   }, [mode, formattedSchoolName, conversations.length]);
 
   if (authState.isLoading) {
@@ -1177,190 +1168,249 @@ export default function DashboardPage() {
           {/* Learn mode interface - only show in learn mode */}
           {mode === 'learn' && (
             <>
-              <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
-                <div className="relative mb-6">
-                  {/* Mode toggle button on left side */}
-                  <button
-                    type="button"
-                    onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
-                    className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                    aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
-                  >
-                    {mode === 'learn' ? (
-                      <Search className="h-5 w-5" />
-                    ) : (
-                      <Brain className="h-5 w-5" />
-                    )}
-                  </button>
-                  
-                  <input
-                    type="text"
-                    value={currentQuestion}
-                    onChange={(e) => setCurrentQuestion(e.target.value)}
-                    placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                    className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                    disabled={isProcessing}
-                    onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
-                  />
-                  
-                  {/* Buttons inside the input field, positioned at the bottom right */}
-                  <div className="absolute bottom-3 right-4 flex space-x-2">
-                    {/* Refresh button */}
-                    <button
-                      type="button" 
-                      onClick={() => {
-                        setCurrentQuestion('');
-                        setConversations([{
-                          role: 'assistant',
-                          content: `Welcome to Learn mode! I can help you understand your ${formattedSchoolName || "school's"} alumni data and provide insights. Try asking questions like:
-• What's the average salary of our alumni?
-• How do our alumni compare to the general population?
-• What industries are our alumni working in?
-• How many of our alumni have founded companies?
-• What are the career progression patterns of our alumni?`
-                        }]);
-                      }}
-                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                      aria-label="Clear"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                    
-                    {/* Send button */}
-                    <button
-                      type="submit"
-                      disabled={isProcessing || !currentQuestion.trim()}
-                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      aria-label="Send"
-                    >
-                      {isProcessing ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </form>
+              {conversations.length === 0 ? (
+                <>
+                  <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
+                    <div className="relative mb-6">
+                      {/* Mode toggle button on left side */}
+                      <button
+                        type="button"
+                        onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
+                        className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
+                        aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
+                      >
+                        {mode === 'learn' ? (
+                          <Search className="h-5 w-5" />
+                        ) : (
+                          <Brain className="h-5 w-5" />
+                        )}
+                      </button>
+                      
+                      <input
+                        type="text"
+                        value={currentQuestion}
+                        onChange={(e) => setCurrentQuestion(e.target.value)}
+                        placeholder="Ask about your alumni data (e.g., What's the average salary?)"
+                        className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                        disabled={isProcessing}
+                        onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
+                      />
+                      
+                      {/* Buttons inside the input field, positioned at the bottom right */}
+                      <div className="absolute bottom-3 right-4 flex space-x-2">
+                        {/* Refresh button */}
+                        <button
+                          type="button" 
+                          onClick={() => {
+                            setCurrentQuestion('');
+                            setConversations([]);
+                          }}
+                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+                          aria-label="Clear"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        
+                        {/* Send button */}
+                        <button
+                          type="submit"
+                          disabled={isProcessing || !currentQuestion.trim()}
+                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          aria-label="Send"
+                        >
+                          {isProcessing ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
 
-              <style jsx>{tagScrollAnimation}</style>
-              
-              <div className="w-full max-w-2xl">
-                <div className="scrolling-tags-container">
-                  <div className="scrolling-tags">
-                    {/* First copy of question suggestion tags */}
-                    <div className="scrolling-tags-content">
-                      {[
-                        "What's the average salary of our alumni?",
-                        "How do our alumni compare to the general population?",
-                        "What industries are our alumni working in?",
-                        "How many of our alumni have founded companies?",
-                        "What are the career progression patterns of our alumni?",
-                        "What percentage of alumni reach executive positions?",
-                        "In which countries do our alumni work?",
-                        "How quickly do our alumni change jobs?",
-                        "What's the entrepreneurship success rate of our alumni?",
-                        "How can alumni data help with student recruitment?"
-                      ].map((question, index) => (
-                        <span 
-                          key={`first-learn-${index}`}
-                          onClick={() => {
-                            setCurrentQuestion(question);
-                            setTimeout(() => {
-                              const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                              handleLearnSubmit(fakeEvent);
-                            }, 50);
-                          }}
-                          className="tag-item"
-                        >
-                          {question}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    {/* Second copy of question suggestion tags for infinite scrolling */}
-                    <div className="scrolling-tags-content">
-                      {[
-                        "What's the average salary of our alumni?",
-                        "How do our alumni compare to the general population?",
-                        "What industries are our alumni working in?",
-                        "How many of our alumni have founded companies?",
-                        "What are the career progression patterns of our alumni?",
-                        "What percentage of alumni reach executive positions?",
-                        "In which countries do our alumni work?",
-                        "How quickly do our alumni change jobs?",
-                        "What's the entrepreneurship success rate of our alumni?",
-                        "How can alumni data help with student recruitment?"
-                      ].map((question, index) => (
-                        <span 
-                          key={`second-learn-${index}`}
-                          onClick={() => {
-                            setCurrentQuestion(question);
-                            setTimeout(() => {
-                              const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                              handleLearnSubmit(fakeEvent);
-                            }, 50);
-                          }}
-                          className="tag-item"
-                        >
-                          {question}
-                        </span>
-                      ))}
+                  <style jsx>{tagScrollAnimation}</style>
+                  
+                  <div className="w-full max-w-2xl">
+                    <div className="scrolling-tags-container">
+                      <div className="scrolling-tags">
+                        {/* First copy of question suggestion tags */}
+                        <div className="scrolling-tags-content">
+                          {[
+                            "What's the average salary of our alumni?",
+                            "How do our alumni compare to the general population?",
+                            "What industries are our alumni working in?",
+                            "How many of our alumni have founded companies?",
+                            "What are the career progression patterns of our alumni?",
+                            "What percentage of alumni reach executive positions?",
+                            "In which countries do our alumni work?",
+                            "How quickly do our alumni change jobs?",
+                            "What's the entrepreneurship success rate of our alumni?",
+                            "How can alumni data help with student recruitment?"
+                          ].map((question, index) => (
+                            <span 
+                              key={`first-learn-${index}`}
+                              onClick={() => {
+                                setCurrentQuestion(question);
+                                setTimeout(() => {
+                                  const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                                  handleLearnSubmit(fakeEvent);
+                                }, 50);
+                              }}
+                              className="tag-item"
+                            >
+                              {question}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        {/* Second copy of question suggestion tags for infinite scrolling */}
+                        <div className="scrolling-tags-content">
+                          {[
+                            "What's the average salary of our alumni?",
+                            "How do our alumni compare to the general population?",
+                            "What industries are our alumni working in?",
+                            "How many of our alumni have founded companies?",
+                            "What are the career progression patterns of our alumni?",
+                            "What percentage of alumni reach executive positions?",
+                            "In which countries do our alumni work?",
+                            "How quickly do our alumni change jobs?",
+                            "What's the entrepreneurship success rate of our alumni?",
+                            "How can alumni data help with student recruitment?"
+                          ].map((question, index) => (
+                            <span 
+                              key={`second-learn-${index}`}
+                              onClick={() => {
+                                setCurrentQuestion(question);
+                                setTimeout(() => {
+                                  const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                                  handleLearnSubmit(fakeEvent);
+                                }, 50);
+                              }}
+                              className="tag-item"
+                            >
+                              {question}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Conversation history container - Only show if there's content to display */}
-              {conversations.length > 0 && (
-                <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
-                  <div className="w-full p-6 bg-white border border-black rounded-lg shadow-sm">
-                    <div className="space-y-6">
-                      {conversations.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div 
-                            className={`max-w-[80%] p-4 rounded-2xl ${
-                              msg.role === 'user' 
-                                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                                : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                            }`}
-                          >
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Show the in-progress answer */}
-                      {currentAnswer && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
-                            <p className="whitespace-pre-wrap">{currentAnswer}</p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Show typing indicator when processing */}
-                      {isProcessing && !currentAnswer && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
-                            <div className="flex space-x-2">
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </>
+              ) : (
+                <>
+                  {/* Conversation history container - Only show if there's content to display */}
+                  <div className="w-full max-w-4xl flex flex-col gap-4">
+                    <div className="w-full p-6 bg-white border border-black rounded-lg shadow-sm mb-6">
+                      <div className="space-y-6">
+                        {conversations.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div 
+                              className={`max-w-[80%] p-4 rounded-2xl ${
+                                msg.role === 'user' 
+                                  ? 'bg-emerald-600 text-white rounded-tr-none' 
+                                  : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap">{msg.content}</p>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Invisible element to scroll to */}
-                      <div ref={messagesEndRef} />
+                        ))}
+                        
+                        {/* Show the in-progress answer */}
+                        {currentAnswer && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
+                              <p className="whitespace-pre-wrap">{currentAnswer}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Show typing indicator when processing */}
+                        {isProcessing && !currentAnswer && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
+                              <div className="flex space-x-2">
+                                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Invisible element to scroll to */}
+                        <div ref={messagesEndRef} />
+                      </div>
                     </div>
+
+                    {/* Input form below conversation when there's conversation history */}
+                    <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
+                      <div className="relative mb-6">
+                        {/* Mode toggle button on left side */}
+                        <button
+                          type="button"
+                          onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
+                          className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
+                          aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
+                        >
+                          {mode === 'learn' ? (
+                            <Search className="h-5 w-5" />
+                          ) : (
+                            <Brain className="h-5 w-5" />
+                          )}
+                        </button>
+                        
+                        <input
+                          type="text"
+                          value={currentQuestion}
+                          onChange={(e) => setCurrentQuestion(e.target.value)}
+                          placeholder="Ask about your alumni data (e.g., What's the average salary?)"
+                          className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                          disabled={isProcessing}
+                          onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
+                        />
+                        
+                        {/* Buttons inside the input field, positioned at the bottom right */}
+                        <div className="absolute bottom-3 right-4 flex space-x-2">
+                          {/* Refresh button */}
+                          <button
+                            type="button" 
+                            onClick={() => {
+                              setCurrentQuestion('');
+                              setConversations([]);
+                            }}
+                            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+                            aria-label="Clear"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                          
+                          {/* Send button */}
+                          <button
+                            type="submit"
+                            disabled={isProcessing || !currentQuestion.trim()}
+                            className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            aria-label="Send"
+                          >
+                            {isProcessing ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
                   </div>
-                </div>
+                </>
               )}
             </>
           )}
