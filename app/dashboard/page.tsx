@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2 } from "lucide-react"
+import { Search, Loader2, Brain } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -1031,23 +1031,6 @@ export default function DashboardPage() {
            !displayedText.filters && searchResults.length === 0) 
              ? 'justify-center' : 'pt-24'
         }`}>
-          {/* Mode Toggle Buttons */}
-          <div className="flex space-x-4 mb-6">
-            <button
-              className={`px-6 py-2 rounded-full font-semibold border-2 transition-colors duration-200 ${mode === 'search' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-50'}`}
-              onClick={() => setMode('search')}
-              type="button"
-            >
-              Search
-            </button>
-            <button
-              className={`px-6 py-2 rounded-full font-semibold border-2 transition-colors duration-200 ${mode === 'learn' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-50'}`}
-              onClick={() => setMode('learn')}
-              type="button"
-            >
-              Learn
-            </button>
-          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
             {mode === 'search' ? 'Search' : 'Learn'}{" "}
             {isDemoMode ? (
@@ -1068,12 +1051,26 @@ export default function DashboardPage() {
             <>
               <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
+                  {/* Mode toggle button on left side */}
+                  <button
+                    type="button"
+                    onClick={() => setMode(mode === 'search' ? 'learn' : 'search')}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white text-emerald-600 rounded-lg border border-emerald-600 hover:bg-emerald-50 transition-colors z-10"
+                    aria-label={`Switch to ${mode === 'search' ? 'learn' : 'search'} mode`}
+                  >
+                    {mode === 'search' ? (
+                      <Brain className="h-5 w-5" />
+                    ) : (
+                      <Search className="h-5 w-5" />
+                    )}
+                  </button>
+                  
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Begin typing to search through your alumni network..."
-                    className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                    className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
                   />
                   
@@ -1226,12 +1223,26 @@ export default function DashboardPage() {
               
               {/* Input form */}
               <form onSubmit={handleLearnSubmit} className="relative">
+                {/* Mode toggle button on left side */}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white text-emerald-600 rounded-lg border border-emerald-600 hover:bg-emerald-50 transition-colors z-10"
+                  aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
+                >
+                  {mode === 'learn' ? (
+                    <Search className="h-5 w-5" />
+                  ) : (
+                    <Brain className="h-5 w-5" />
+                  )}
+                </button>
+                
                 <input 
                   type="text"
                   value={currentQuestion}
                   onChange={(e) => setCurrentQuestion(e.target.value)}
                   placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                  className="w-full px-6 py-4 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg pr-16"
+                  className="w-full px-6 py-4 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg pr-16 pl-16"
                   disabled={isProcessing}
                 />
                 <button
@@ -1614,7 +1625,7 @@ export default function DashboardPage() {
                   <div className="flex items-start">
                     <div className="bg-emerald-100 rounded-full p-2 mr-3">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
                     </div>
                     <div>
