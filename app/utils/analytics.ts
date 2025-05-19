@@ -477,6 +477,19 @@ export const trackTagClick = (tagName: string, properties = {}) => {
   });
 };
 
+// Track Learn mode questions
+export const trackLearnModeQuestion = (question: string, properties = {}) => {
+  if (!isBrowser) return;
+  
+  mixpanel.track('Learn Mode Question', {
+    session_id: sessionId,
+    visitor_id: visitorId,
+    question,
+    page: window.location.pathname,
+    ...properties
+  });
+};
+
 // Track feature spotlight interactions
 export const trackFeatureSpotlight = (action: 'view' | 'dismiss', properties = {}) => {
   if (!isBrowser) return;
@@ -615,6 +628,7 @@ export default {
   trackModalClose,
   trackFormSubmit,
   trackTagClick,
+  trackLearnModeQuestion,
   trackFeatureSpotlight,
   trackProTip,
   setUserProperties,
