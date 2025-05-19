@@ -178,6 +178,9 @@ export default function DashboardPage() {
   const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
   const [isProTipDismissed, setIsProTipDismissed] = useState(false)
   
+  // Add state for mode toggle
+  const [mode, setMode] = useState<'search' | 'learn'>('search');
+
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -903,8 +906,25 @@ export default function DashboardPage() {
            !displayedText.filters && searchResults.length === 0) 
              ? 'justify-center' : 'pt-24'
         }`}>
+          {/* Mode Toggle Buttons */}
+          <div className="flex space-x-4 mb-6">
+            <button
+              className={`px-6 py-2 rounded-full font-semibold border-2 transition-colors duration-200 ${mode === 'search' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-50'}`}
+              onClick={() => setMode('search')}
+              type="button"
+            >
+              Search
+            </button>
+            <button
+              className={`px-6 py-2 rounded-full font-semibold border-2 transition-colors duration-200 ${mode === 'learn' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-50'}`}
+              onClick={() => setMode('learn')}
+              type="button"
+            >
+              Learn
+            </button>
+          </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Explore{" "}
+            {mode === 'search' ? 'Search' : 'Learn'}{" "}
             {isDemoMode ? (
               <span 
                 className="text-emerald-600 cursor-pointer hover:underline"
