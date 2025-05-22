@@ -34,7 +34,7 @@ const suggestionTags = [
   "Engineers at SpaceX",
   "Harvard MBA graduates in Finance",
   "Product Managers in New York",
-  "Data Scientists at startups",
+  "Data Scientists at Startups",
   "Alumni working in Renewable Energy",
   "Lawyers at top firms in Chicago",
   "Marketing Directors in Los Angeles",
