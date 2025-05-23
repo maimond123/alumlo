@@ -187,7 +187,7 @@ export default function DashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -1040,8 +1040,8 @@ export default function DashboardPage() {
           {/* Search interface - only show in search mode */}
           {mode === 'search' && (
             <>
-              <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
-                <div className="relative mb-6">
+          <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
+            <div className="relative mb-6">
                   {/* Mode toggle button on left side */}
                   <button
                     type="button"
@@ -1056,112 +1056,112 @@ export default function DashboardPage() {
                     )}
                   </button>
                   
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Begin typing to search through your alumni network..."
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Begin typing to search through your alumni network..."
                     className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
-                  />
-                  
-                  {/* Buttons inside the input field, positioned at the bottom right */}
-                  <div className="absolute bottom-3 right-4 flex space-x-2">
-                    {/* Refresh button */}
-                    <button
-                      type="button" 
-                      onClick={() => {
-                        setSearchQuery('')
-                        setSearchResults([])
-                        setSearchPhase('idle')
-                        setError(null)
-                        setExpandedQueries([])
-                        setExtractedFilters({})
-                      }}
-                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                      aria-label="Clear"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                    
-                    {/* Search/Send button */}
-                    <button
-                      onClick={(e) => handleSearch(e)}
-                      disabled={isSearching}
-                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                      aria-label="Search"
-                    >
-                      {isSearching ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </form>
-
-              <style jsx>{tagScrollAnimation}</style>
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+              />
               
-              <div className="w-full max-w-2xl">
-                <div className="scrolling-tags-container">
-                  <div className="scrolling-tags">
-                    {/* First copy of tags */}
-                    <div className="scrolling-tags-content">
-                      {randomizedTags.length > 0 ? 
-                        randomizedTags.map((tag, index) => (
-                          <span 
-                            key={`first-${index}`}
-                            onClick={() => handleTagClick(tag)}
-                            className="tag-item"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                        :
-                        suggestionTags.map((tag, index) => (
-                          <span 
-                            key={`first-${index}`}
-                            onClick={() => handleTagClick(tag)}
-                            className="tag-item"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      }
-                    </div>
-                    
-                    {/* Second copy of tags to create the infinite loop effect */}
-                    <div className="scrolling-tags-content">
-                      {randomizedTags.length > 0 ? 
-                        randomizedTags.map((tag, index) => (
-                          <span 
-                            key={`second-${index}`}
-                            onClick={() => handleTagClick(tag)}
-                            className="tag-item"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                        :
-                        suggestionTags.map((tag, index) => (
-                          <span 
-                            key={`second-${index}`}
-                            onClick={() => handleTagClick(tag)}
-                            className="tag-item"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      }
-                    </div>
-                  </div>
+              {/* Buttons inside the input field, positioned at the bottom right */}
+              <div className="absolute bottom-3 right-4 flex space-x-2">
+                {/* Refresh button */}
+                <button
+                  type="button" 
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSearchResults([])
+                    setSearchPhase('idle')
+                    setError(null)
+                    setExpandedQueries([])
+                    setExtractedFilters({})
+                  }}
+                  className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+                  aria-label="Clear"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                
+                {/* Search/Send button */}
+                <button
+                  onClick={(e) => handleSearch(e)}
+                  disabled={isSearching}
+                  className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
+                  aria-label="Search"
+                >
+                  {isSearching ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <style jsx>{tagScrollAnimation}</style>
+          
+          <div className="w-full max-w-2xl">
+            <div className="scrolling-tags-container">
+              <div className="scrolling-tags">
+                {/* First copy of tags */}
+                <div className="scrolling-tags-content">
+                  {randomizedTags.length > 0 ? 
+                    randomizedTags.map((tag, index) => (
+                      <span 
+                        key={`first-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                    :
+                    suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`first-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  }
+                </div>
+                
+                {/* Second copy of tags to create the infinite loop effect */}
+                <div className="scrolling-tags-content">
+                  {randomizedTags.length > 0 ? 
+                    randomizedTags.map((tag, index) => (
+                      <span 
+                        key={`second-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                    :
+                    suggestionTags.map((tag, index) => (
+                      <span 
+                        key={`second-${index}`}
+                        onClick={() => handleTagClick(tag)}
+                        className="tag-item"
+                      >
+                        {tag}
+                      </span>
+                    ))
+                  }
                 </div>
               </div>
+            </div>
+          </div>
             </>
           )}
 
@@ -1417,193 +1417,193 @@ export default function DashboardPage() {
 
           {/* Analysis and Search Results - only show in search mode */}
           {mode === 'search' && (
-            <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
-              {/* Demo sidebar guidance - only show in demo mode */}
-              {isDemoMode && searchPhase === 'idle' && showProTip && !isProTipDismissed && (
-                <div className="bg-blue-50 p-4 rounded-lg mb-6 flex items-start justify-between">
-                  <div className="flex items-center">
-                    <FaLightbulb className="text-blue-500 mr-2" />
-                    <span className="text-blue-700 font-medium">
-                      Pro Tip: Click on the sidebar to explore more features like Analytics and Reports!
-                    </span>
-                  </div>
+          <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
+            {/* Demo sidebar guidance - only show in demo mode */}
+            {isDemoMode && searchPhase === 'idle' && showProTip && !isProTipDismissed && (
+              <div className="bg-blue-50 p-4 rounded-lg mb-6 flex items-start justify-between">
+                <div className="flex items-center">
+                  <FaLightbulb className="text-blue-500 mr-2" />
+                  <span className="text-blue-700 font-medium">
+                    Pro Tip: Click on the sidebar to explore more features like Analytics and Reports!
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setIsProTipDismissed(true)}
+                  className="text-gray-500 hover:text-gray-700"
+                  aria-label="Dismiss tip"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            )}
+            
+            {/* Analysis Section - Only show if there's content to display */}
+            {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
+              <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
+                {/* Collapse/Expand Button */}
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
                   <button 
-                    onClick={() => setIsProTipDismissed(true)}
-                    className="text-gray-500 hover:text-gray-700"
-                    aria-label="Dismiss tip"
+                    onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
+                    className="text-black hover:text-emerald-600 transition-colors"
                   >
-                    <FaTimes />
+                    {isAnalysisCollapsed ? 'Expand ▼' : 'Collapse ▲'}
                   </button>
                 </div>
-              )}
-              
-              {/* Analysis Section - Only show if there's content to display */}
-              {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
-                <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
-                  {/* Collapse/Expand Button */}
-                  <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
-                    <button 
-                      onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
-                      className="text-black hover:text-emerald-600 transition-colors"
-                    >
-                      {isAnalysisCollapsed ? 'Expand ▼' : 'Collapse ▲'}
-                    </button>
-                  </div>
+                
+                {/* Collapsible Content */}
+                <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
+                  {displayedText.analyzing && (
+                    <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+                  )}
                   
-                  {/* Collapsible Content */}
-                  <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
-                    {displayedText.analyzing && (
-                      <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
-                    )}
-                    
-                    {displayedText.searching && (
-                      <p 
-                        className="text-gray-700 mb-3"
-                        dangerouslySetInnerHTML={{ __html: displayedText.searching }}
-                      ></p>
-                    )}
-                    
-                    {displayedText.profiling && (
-                      <>
-                        <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
-                        <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
-                      </>
-                    )}
-                    
-                    {displayedText.filters && (
-                      <>
-                        <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
-                        <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
-                      </>
-                    )}
-                    
-                    {displayedText.displaying && (
-                      <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
-                    )}
-                  </div>
+                  {displayedText.searching && (
+                    <p 
+                      className="text-gray-700 mb-3"
+                      dangerouslySetInnerHTML={{ __html: displayedText.searching }}
+                    ></p>
+                  )}
+                  
+                  {displayedText.profiling && (
+                    <>
+                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
+                      <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
+                    </>
+                  )}
+                  
+                  {displayedText.filters && (
+                    <>
+                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
+                      <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
+                    </>
+                  )}
+                  
+                  {displayedText.displaying && (
+                    <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Search Results Section - Show below the analysis */}
-              {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
-                <div className="w-full">
-                  <h2 className="text-xl font-semibold mb-4 text-black">
-                    Found {searchResults.length} alumni matching your search
-                  </h2>
-                  
-                  {/* Add instruction message for clickability */}
-                  <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Click on any result to view the person's LinkedIn profile</span>
-                  </div>
-                  
-                  <div className="grid gap-4">
-                    {searchResults.map((result, index) => {
-                      const currentTitle = result.current_title || "";
-                      
-                      return (
-                        <a
-                          key={result.id || index}
-                          href={result.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleSearchResultClick(result.linkedin_url, index, result.name);
-                          }}
-                        >
-                          {/* Overlay indicating clickable */}
-                          <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
-                          
-                          {/* LinkedIn Icon in top right corner */}
-                          <div className="absolute top-2 right-2">
-                            <img 
-                              src="/assets/linkedin_gray.png" 
-                              alt="LinkedIn" 
-                              className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
-                            />
+            {/* Search Results Section - Show below the analysis */}
+            {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
+              <div className="w-full">
+                <h2 className="text-xl font-semibold mb-4 text-black">
+                  Found {searchResults.length} alumni matching your search
+                </h2>
+                
+                {/* Add instruction message for clickability */}
+                <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Click on any result to view the person's LinkedIn profile</span>
+                </div>
+                
+                <div className="grid gap-4">
+                  {searchResults.map((result, index) => {
+                    const currentTitle = result.current_title || "";
+                    
+                    return (
+                      <a
+                        key={result.id || index}
+                        href={result.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSearchResultClick(result.linkedin_url, index, result.name);
+                        }}
+                      >
+                        {/* Overlay indicating clickable */}
+                        <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
+                        
+                        {/* LinkedIn Icon in top right corner */}
+                        <div className="absolute top-2 right-2">
+                          <img 
+                            src="/assets/linkedin_gray.png" 
+                            alt="LinkedIn" 
+                            className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
+                          />
+                        </div>
+                        
+                        <div className="flex items-center">
+                          {/* Profile Image */}
+                          <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
+                            {result.profile_photo_url ? (
+                              <img 
+                                src={result.profile_photo_url} 
+                                alt={`${result.name}'s profile`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                                {result.name?.split(' ').map(name => name[0]).join('') || '?'}
+                              </div>
+                            )}
                           </div>
                           
-                          <div className="flex items-center">
-                            {/* Profile Image */}
-                            <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                              {result.profile_photo_url ? (
-                                <img 
-                                  src={result.profile_photo_url} 
-                                  alt={`${result.name}'s profile`}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                                  {result.name?.split(' ').map(name => name[0]).join('') || '?'}
-                                </div>
+                          {/* Content */}
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                            
+                            {/* Metadata in one row */}
+                            <div className="flex flex-wrap items-center text-gray-600 mt-1">
+                              <span>{currentTitle}</span>
+                              {result.current_company && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>{result.current_company}</span>
+                                </>
+                              )}
+                              {result.current_job_location && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>{result.current_job_location}</span>
+                                </>
                               )}
                             </div>
                             
-                            {/* Content */}
-                            <div className="flex-1">
-                              <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                              
-                              {/* Metadata in one row */}
-                              <div className="flex flex-wrap items-center text-gray-600 mt-1">
-                                <span>{currentTitle}</span>
-                                {result.current_company && (
-                                  <>
-                                    <span className="mx-1">•</span>
-                                    <span>{result.current_company}</span>
-                                  </>
-                                )}
-                                {result.current_job_location && (
-                                  <>
-                                    <span className="mx-1">•</span>
-                                    <span>{result.current_job_location}</span>
-                                  </>
-                                )}
+                            {/* Industry */}
+                            <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
+                            
+                            {/* Match index instead of percentage */}
+                            <div className="mt-2 flex items-center justify-between">
+                              <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
+                                Match: #{index + 1}
                               </div>
                               
-                              {/* Industry */}
-                              <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
-                              
-                              {/* Match index instead of percentage */}
-                              <div className="mt-2 flex items-center justify-between">
-                                <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                                  Match: #{index + 1}
-                                </div>
-                                
-                                {/* Add a clear LinkedIn view button */}
-                                <div className="text-blue-600 hover:text-blue-800 flex items-center text-sm">
-                                  <span>View LinkedIn</span>
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                  </svg>
-                                </div>
+                              {/* Add a clear LinkedIn view button */}
+                              <div className="text-blue-600 hover:text-blue-800 flex items-center text-sm">
+                                <span>View LinkedIn</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
                               </div>
                             </div>
                           </div>
-                        </a>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Add "Want More?" button at the bottom of search results */}
-                  <div className="mt-8 pb-12 flex justify-center">
-                    <button 
-                      onClick={() => {
-                        setShowWantMoreModal(true);
-                        analytics.trackModalOpen('WantMoreModal');
-                      }}
-                      className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
-                    >
-                      Want More?
-                    </button>
-                  </div>
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+                
+                {/* Add "Want More?" button at the bottom of search results */}
+                <div className="mt-8 pb-12 flex justify-center">
+                  <button 
+                    onClick={() => {
+                      setShowWantMoreModal(true);
+                      analytics.trackModalOpen('WantMoreModal');
+                    }}
+                    className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
+                  >
+                    Want More?
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           )}
 
           {/* First Click Survey Modal */}

@@ -127,6 +127,8 @@ export class LinkedInProfileSearchEngine {
   // Add new method for company search (only used for chick_fil_a case)
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}): Promise<CompanySearchResult[]> {
     try {
+      console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with query: "${query}", filters:`, filters);
+      
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
         model: "text-embedding-3-small",
@@ -146,6 +148,8 @@ export class LinkedInProfileSearchEngine {
         exit_year_max
       } = filters;
       
+      console.log(`[AI_SEARCH DEBUG] 🏢 Calling hybrid_search_company RPC function`);
+      
       // Call the hybrid_search_company function
       const { data, error } = await this.supabase
         .rpc('hybrid_search_company', {
@@ -163,8 +167,11 @@ export class LinkedInProfileSearchEngine {
         .returns<HybridSearchCompanyResult[]>();
       
       if (error) {
+        console.error(`[AI_SEARCH DEBUG] 🏢 Error from hybrid_search_company:`, error);
         throw new Error(`Company vector search failed: ${error.message}`);
       }
+      
+      console.log(`[AI_SEARCH DEBUG] 🏢 hybrid_search_company returned ${data?.length || 0} results`);
       
       // Format the results for company search
       return data.map((item: HybridSearchCompanyResult): CompanySearchResult => ({
@@ -191,7 +198,12 @@ export class LinkedInProfileSearchEngine {
       const storedSchoolName = typeof window !== 'undefined' ? 
         localStorage.getItem('schoolName') : null;
       
+      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedSchoolName: "${storedSchoolName}"`);
+      console.log(`[AI_SEARCH DEBUG] Checking condition: !isDemo (${!isDemo}) && storedSchoolName === 'chick_fil_a' (${storedSchoolName === 'chick_fil_a'})`);
+      
       if (!isDemo && storedSchoolName === 'chick_fil_a') {
+        console.log(`[AI_SEARCH DEBUG] ✅ USING COMPANY SEARCH for chick_fil_a`);
+        
         // Use company search for chick_fil_a
         const companyFilters: CompanySearchFilters = {
           company: filters.company,
@@ -201,10 +213,11 @@ export class LinkedInProfileSearchEngine {
           school: filters.school
         };
         
+        console.log(`[AI_SEARCH DEBUG] Calling searchCompany with filters:`, companyFilters);
         const companyResults = await this.searchCompany(query, top_k, companyFilters);
         
         // Convert company results to regular search results format for compatibility
-        return companyResults.map((item: CompanySearchResult): SearchResult => ({
+        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => ({
           id: item.id,
           name: item.name,
           linkedin_url: item.profile_url, // Map profile_url to linkedin_url
@@ -217,7 +230,13 @@ export class LinkedInProfileSearchEngine {
           profile_photo_url: item.picture_url,
           similarity: item.similarity
         }));
+        
+        console.log(`[AI_SEARCH DEBUG] ✅ Company search completed, returning ${convertedResults.length} results`);
+        return convertedResults;
       }
+      
+      console.log(`[AI_SEARCH DEBUG] ❌ NOT using company search, falling back to regular search`);
+      console.log(`[AI_SEARCH DEBUG] Reason: isDemo=${isDemo}, storedSchoolName="${storedSchoolName}"`);
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -238,6 +257,7 @@ export class LinkedInProfileSearchEngine {
       
       // Determine the RPC function to call based on whether it's a demo search
       const rpcFunction = isDemo ? 'hybrid_search_demo' : 'hybrid_search';
+      console.log(`[AI_SEARCH DEBUG] Using RPC function: ${rpcFunction}`);
       
       // Call the appropriate hybrid_search function with the embedding and filters
       const { data, error } = await this.supabase
@@ -254,8 +274,11 @@ export class LinkedInProfileSearchEngine {
         .returns<HybridSearchResult[]>();
       
       if (error) {
+        console.error(`[AI_SEARCH DEBUG] Error from ${rpcFunction}:`, error);
         throw new Error(`Vector search failed: ${error.message}`);
       }
+      
+      console.log(`[AI_SEARCH DEBUG] ${rpcFunction} returned ${data?.length || 0} results`);
       
       // Format the results to match your frontend expectations
       return data.map((item: HybridSearchResult): SearchResult => ({
@@ -272,6 +295,7 @@ export class LinkedInProfileSearchEngine {
         similarity: item.similarity
       }));
     } catch (error) {
+      console.error(`[AI_SEARCH DEBUG] Search method error:`, error);
       throw error;
     }
   }

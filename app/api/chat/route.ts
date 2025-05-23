@@ -86,27 +86,27 @@ export async function POST(req: Request) {
 async function handleChartAnalysis(chartId: string, chartType: string, chartTitle: string, chartData: ChartItem[], messages: any[]) {
   // Create chart object
   const chart = {
-    id: chartId,
-    type: chartType,
-    title: chartTitle,
-    data: chartData,
-    description: `${chartTitle} visualization`
-  };
-  
-  // Format the data for better readability
+        id: chartId,
+        type: chartType,
+        title: chartTitle,
+        data: chartData,
+        description: `${chartTitle} visualization`
+      };
+      
+      // Format the data for better readability
   const formattedData = chartData.map((item: ChartItem) => 
-    `${item.name}: ${item.value}${chartType === 'pie' || chartType === 'industry' ? '%' : ''}`
-  ).join('\n');
+        `${item.name}: ${item.value}${chartType === 'pie' || chartType === 'industry' ? '%' : ''}`
+      ).join('\n');
 
   // Use the OpenAI client for chart analysis
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    stream: true,
-    messages: [
-      {
-        role: 'system',
-        content: `You are an AI assistant specialized in analyzing data visualizations for AlumIntel, a platform that helps schools track and analyze alumni data. 
-        
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: `You are an AI assistant specialized in analyzing data visualizations for AlumIntel, a platform that helps schools track and analyze alumni data. 
+          
 You are currently analyzing chart ${chartId}:
 - Chart Type: ${chart.type}
 - Chart Title: ${chart.title}
@@ -117,9 +117,9 @@ The actual data values are:
 ${formattedData}
 
 Provide insights, answer questions, and help users understand this specific data. Keep responses concise and focused on analyzing these exact values. For percentage values, make sure to reference them as percentages in your analysis.`,
-      },
-      ...messages,
-    ],
+        },
+        ...messages,
+      ],
   });
 
   return createStreamResponse(response);
@@ -176,14 +176,14 @@ Your goal is to help users understand how alumni data can be leveraged for marke
 
 // Create a streaming response from OpenAI
 function createStreamResponse(response: any) {
-  // Create a new stream
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of response) {
+    // Create a new stream
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of response) {
           const content = chunk.choices[0]?.delta?.content || '';
-          if (content) {
-            // Send the content chunk
+            if (content) {
+              // Send the content chunk
             controller.enqueue(new TextEncoder().encode(content));
           }
         }
@@ -195,12 +195,12 @@ function createStreamResponse(response: any) {
     }
   });
 
-  return new Response(stream, {
-    headers: {
+    return new Response(stream, {
+      headers: {
       'Content-Type': 'text/plain',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
   });
 }
 
