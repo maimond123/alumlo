@@ -247,6 +247,244 @@ export default function DataInsightsPage() {
     loadInitialData();
   }, []); // Empty dependency array means this runs once on mount
 
+  // Generate dummy data for Chick-fil-A demo user
+  const generateChickFilADummyData = (year: string) => {
+    const yearNum = parseInt(year)
+    
+    // Calculate how many people left each year (total 1,371 over 15 years: 2010-2024)
+    // More people leave in recent years due to company growth
+    const yearDistribution: { [key: number]: number } = {
+      2010: 45, 2011: 52, 2012: 58, 2013: 65, 2014: 72,
+      2015: 78, 2016: 85, 2017: 92, 2018: 98, 2019: 105,
+      2020: 112, 2021: 118, 2022: 125, 2023: 132, 2024: 134
+    }
+    
+    const totalForYear = yearDistribution[yearNum] || 91 // Default average
+    
+    // Calculate years since graduation (assuming they graduated and immediately started working)
+    const yearsExperience = Math.max(0, 2024 - yearNum)
+    
+    // 1. SALARY DISTRIBUTION - grows with experience
+    // Starting salaries around 35-45k, growing to 55-75k with experience
+    const baseSalary = 35000 + (yearsExperience * 2800) // ~2.8k increase per year
+    const salarySpread = 15000 + (yearsExperience * 1000) // Wider spread with experience
+    
+    const salaryRanges = [
+      { min: 20000, max: 30000, label: "$20K-$30K" },
+      { min: 30000, max: 40000, label: "$30K-$40K" },
+      { min: 40000, max: 50000, label: "$40K-$50K" },
+      { min: 50000, max: 60000, label: "$50K-$60K" },
+      { min: 60000, max: 70000, label: "$60K-$70K" },
+      { min: 70000, max: 80000, label: "$70K-$80K" },
+      { min: 80000, max: 90000, label: "$80K-$90K" },
+      { min: 90000, max: 200000, label: "$90K+" }
+    ]
+    
+    const salaryData = salaryRanges.map(range => {
+      // Calculate normal distribution around the base salary for this year
+      const rangeMidpoint = (range.min + range.max) / 2
+      const distanceFromBase = Math.abs(rangeMidpoint - baseSalary)
+      const normalizedDistance = distanceFromBase / salarySpread
+      
+      // Use normal distribution formula (simplified)
+      let percentage = Math.exp(-0.5 * Math.pow(normalizedDistance, 2))
+      
+      // Adjust for early career vs experienced workers
+      if (yearsExperience <= 3) {
+        // Early career - more concentrated in lower ranges
+        if (rangeMidpoint < 50000) percentage *= 1.5
+        if (rangeMidpoint > 70000) percentage *= 0.3
+      } else if (yearsExperience >= 10) {
+        // Experienced workers - shift toward higher salaries
+        if (rangeMidpoint > 60000) percentage *= 1.8
+        if (rangeMidpoint < 40000) percentage *= 0.4
+      }
+      
+      // Ensure minimum representation and reasonable distribution
+      percentage = Math.max(0.02, Math.min(0.35, percentage))
+      
+      return {
+        name: range.label,
+        value: Math.round(totalForYear * percentage)
+      }
+    }).filter(item => item.value > 0)
+    
+    // Normalize to ensure total adds up correctly
+    const salaryTotal = salaryData.reduce((sum, item) => sum + item.value, 0)
+    const salaryMultiplier = totalForYear / salaryTotal
+    salaryData.forEach(item => {
+      item.value = Math.round(item.value * salaryMultiplier)
+    })
+    
+    // 2. INDUSTRY DISTRIBUTION - changes over time as people switch careers
+    const industryEvolution = {
+      // Early career (0-2 years) - mostly hospitality/retail
+      early: {
+        "Hospitality & Food Service": 35,
+        "Retail Management": 25,
+        "Healthcare": 8,
+        "Business & Finance": 6,
+        "Education": 5,
+        "Technology": 3,
+        "Other": 18
+      },
+      // Mid career (3-7 years) - diversification begins
+      mid: {
+        "Hospitality & Food Service": 22,
+        "Retail Management": 20,
+        "Healthcare": 15,
+        "Business & Finance": 18,
+        "Education": 10,
+        "Technology": 8,
+        "Other": 7
+      },
+      // Late career (8+ years) - more specialized roles
+      late: {
+        "Hospitality & Food Service": 15,
+        "Retail Management": 18,
+        "Healthcare": 20,
+        "Business & Finance": 25,
+        "Education": 12,
+        "Technology": 7,
+        "Other": 3
+      }
+    }
+    
+    let industryPercentages;
+    if (yearsExperience <= 2) {
+      industryPercentages = industryEvolution.early
+    } else if (yearsExperience <= 7) {
+      industryPercentages = industryEvolution.mid
+    } else {
+      industryPercentages = industryEvolution.late
+    }
+    
+    const industryData = Object.entries(industryPercentages).map(([name, percentage]) => ({
+      name,
+      value: percentage
+    }))
+    
+    // 3. LOCATION DISTRIBUTION - migration patterns over time
+    // Younger workers stay local, older workers spread out more
+    const locationEvolution = {
+      // Early career - mostly NJ/NY local area
+      early: {
+        "Newark, NJ": 22, "Jersey City, NJ": 18, "Trenton, NJ": 12,
+        "New York, NY": 10, "Paterson, NJ": 8, "Elizabeth, NJ": 7,
+        "Camden, NJ": 6, "Philadelphia, PA": 5, "Bridgeport, CT": 4,
+        "Boston, MA": 3, "Baltimore, MD": 2, "Washington, DC": 2, "Atlanta, GA": 1
+      },
+      // Mid career - some movement to bigger cities
+      mid: {
+        "New York, NY": 18, "Newark, NJ": 15, "Jersey City, NJ": 12,
+        "Philadelphia, PA": 10, "Boston, MA": 8, "Trenton, NJ": 7,
+        "Washington, DC": 6, "Baltimore, MD": 5, "Paterson, NJ": 5,
+        "Elizabeth, NJ": 4, "Atlanta, GA": 4, "Bridgeport, CT": 3, "Camden, NJ": 3
+      },
+      // Late career - national distribution
+      late: {
+        "New York, NY": 20, "Boston, MA": 12, "Philadelphia, PA": 11,
+        "Washington, DC": 10, "Atlanta, GA": 8, "Newark, NJ": 8,
+        "Baltimore, MD": 7, "Jersey City, NJ": 6, "Richmond, VA": 5,
+        "Trenton, NJ": 4, "Bridgeport, CT": 4, "Paterson, NJ": 3, "Elizabeth, NJ": 2
+      }
+    }
+    
+    let locationPercentages;
+    if (yearsExperience <= 2) {
+      locationPercentages = locationEvolution.early
+    } else if (yearsExperience <= 7) {
+      locationPercentages = locationEvolution.mid
+    } else {
+      locationPercentages = locationEvolution.late
+    }
+    
+    const locationData = Object.entries(locationPercentages).map(([name, percentage]) => ({
+      name,
+      value: Math.round(totalForYear * percentage / 100)
+    })).filter(item => item.value > 0).slice(0, 10)
+    
+    // 4. GRADUATE SCHOOL DISTRIBUTION - changes over time
+    // More people pursue grad school as they gain experience
+    const gradSchoolPercentages = {
+      "No Graduate School": Math.max(75, 95 - (yearsExperience * 1.5)), // Decreases over time
+      "Master's Degree": Math.min(20, 3 + (yearsExperience * 1.2)), // Increases over time
+      "Doctoral Degree": Math.min(4, 1 + (yearsExperience * 0.3)), // Slight increase
+      "Professional Degree": Math.min(3, 1 + (yearsExperience * 0.2)) // Slight increase
+    }
+    
+    // Normalize graduate school percentages
+    const gradTotal = Object.values(gradSchoolPercentages).reduce((sum, val) => sum + val, 0)
+    const gradSchoolData = Object.entries(gradSchoolPercentages).map(([name, percentage]) => ({
+      name,
+      value: Math.round((percentage / gradTotal) * 100)
+    }))
+    
+    // 5. AVERAGE SALARY BY INDUSTRY - varies by year and experience
+    const baseSalaries = {
+      "Technology": 55000,
+      "Business & Finance": 50000,
+      "Healthcare": 45000,
+      "Hospitality & Food Service": 38000,
+      "Retail Management": 42000,
+      "Education": 40000,
+      "Other": 41000
+    }
+    
+    const industrySalaryData = Object.entries(baseSalaries).map(([industry, baseSal]) => ({
+      name: industry,
+      value: Math.round(baseSal + (yearsExperience * 2200) + (Math.random() * 5000 - 2500)) // Growth + some randomness
+    })).sort((a, b) => b.value - a.value)
+    
+    // Set all the calculated data
+    setSalaryData(salaryData)
+    setIndustryData(industryData)
+    setLocationData(locationData)
+    setGraduateSchoolData(gradSchoolData)
+    setIndustrySalaryData(industrySalaryData)
+    
+    // Enhanced industry progression data based on the year
+    const progressionYears = [1, 3, 5].filter(y => y <= yearsExperience + 1)
+    const sampleProgressionData = progressionYears.map(yearsAfter => {
+      const adjustedYear = yearsAfter + (2024 - yearNum)
+      const experience = Math.min(adjustedYear, 15)
+      
+      // Calculate industry distribution for this experience level
+      let progressionPercentages;
+      if (experience <= 2) {
+        progressionPercentages = industryEvolution.early
+      } else if (experience <= 7) {
+        progressionPercentages = industryEvolution.mid
+      } else {
+        progressionPercentages = industryEvolution.late
+      }
+      
+      const industries: { [key: string]: { count: number } } = {}
+      Object.entries(progressionPercentages).forEach(([industry, percentage]) => {
+        industries[industry] = { count: Math.round(totalForYear * percentage / 100) }
+      })
+      
+      return {
+        industries,
+        years_after: yearsAfter
+      }
+    })
+    
+    setIndustryProgressionData(sampleProgressionData)
+    
+    console.log("DEBUG: Chick-fil-A dummy data generated for year", year, {
+      totalForYear,
+      yearsExperience,
+      baseSalary,
+      salaryDataLength: salaryData.length,
+      industryDataLength: industryData.length,
+      locationDataLength: locationData.length,
+      gradSchoolDataLength: gradSchoolData.length,
+      industrySalaryDataLength: industrySalaryData.length,
+      progressionDataLength: sampleProgressionData.length
+    })
+  }
+
   // Modify the beginning of fetchSchoolData to add more diagnostics
   const fetchSchoolData = async () => {
     console.log("DEBUG: fetchSchoolData called with:", {
@@ -263,6 +501,14 @@ export default function DataInsightsPage() {
     }
 
     try {
+      // Check if this is the Chick-fil-A demo user and generate dummy data
+      const userEmail = await getUserEmail()
+      if (userEmail === "davod@alumintel.co") {
+        console.log("DEBUG: Generating Chick-fil-A dummy data for year:", selectedYear)
+        generateChickFilADummyData(selectedYear)
+        return
+      }
+
       const tableName = schoolName.toLowerCase().replace(/\s+/g, "_") + "_distribution"
       console.log(`DEBUG: Will fetch from table: ${tableName} for year: ${selectedYear}`)
 
