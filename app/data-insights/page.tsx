@@ -264,10 +264,9 @@ export default function DataInsightsPage() {
     // Calculate years since graduation (assuming they graduated and immediately started working)
     const yearsExperience = Math.max(0, 2024 - yearNum)
     
-    // 1. SALARY DISTRIBUTION - grows with experience
+    // 1. IMPROVED SALARY DISTRIBUTION - right-skewed bell curve
     // Starting salaries around 35-45k, growing to 55-75k with experience
-    const baseSalary = 35000 + (yearsExperience * 2800) // ~2.8k increase per year
-    const salarySpread = 15000 + (yearsExperience * 1000) // Wider spread with experience
+    const baseSalary = 35000 + (yearsExperience * 3200) // ~3.2k increase per year
     
     const salaryRanges = [
       { min: 20000, max: 30000, label: "$20K-$30K" },
@@ -281,27 +280,44 @@ export default function DataInsightsPage() {
     ]
     
     const salaryData = salaryRanges.map(range => {
-      // Calculate normal distribution around the base salary for this year
       const rangeMidpoint = (range.min + range.max) / 2
-      const distanceFromBase = Math.abs(rangeMidpoint - baseSalary)
-      const normalizedDistance = distanceFromBase / salarySpread
       
-      // Use normal distribution formula (simplified)
-      let percentage = Math.exp(-0.5 * Math.pow(normalizedDistance, 2))
+      // Create right-skewed bell curve using modified normal distribution
+      const distanceFromBase = rangeMidpoint - baseSalary
+      const standardDeviation = 15000 + (yearsExperience * 2000)
       
-      // Adjust for early career vs experienced workers
-      if (yearsExperience <= 3) {
-        // Early career - more concentrated in lower ranges
-        if (rangeMidpoint < 50000) percentage *= 1.5
-        if (rangeMidpoint > 70000) percentage *= 0.3
-      } else if (yearsExperience >= 10) {
-        // Experienced workers - shift toward higher salaries
-        if (rangeMidpoint > 60000) percentage *= 1.8
-        if (rangeMidpoint < 40000) percentage *= 0.4
+      // Right-skewed distribution (log-normal approximation)
+      let percentage;
+      if (rangeMidpoint <= baseSalary) {
+        // Left side of the curve - steeper drop
+        percentage = Math.exp(-0.8 * Math.pow(distanceFromBase / standardDeviation, 2))
+      } else {
+        // Right side of the curve - longer tail
+        const skewFactor = 1 + (rangeMidpoint - baseSalary) / (baseSalary * 0.8)
+        percentage = Math.exp(-0.3 * Math.pow(distanceFromBase / standardDeviation, 2)) / skewFactor
       }
       
-      // Ensure minimum representation and reasonable distribution
-      percentage = Math.max(0.02, Math.min(0.35, percentage))
+      // Adjust for career stage with more dramatic differences
+      if (yearsExperience <= 2) {
+        // Early career - heavily concentrated in lower ranges
+        if (rangeMidpoint < 45000) percentage *= 2.2
+        if (rangeMidpoint > 65000) percentage *= 0.1
+      } else if (yearsExperience <= 5) {
+        // Mid-early career
+        if (rangeMidpoint < 55000) percentage *= 1.6
+        if (rangeMidpoint > 75000) percentage *= 0.3
+      } else if (yearsExperience <= 10) {
+        // Mid career - more balanced
+        if (rangeMidpoint > 45000 && rangeMidpoint < 70000) percentage *= 1.4
+        if (rangeMidpoint > 85000) percentage *= 0.6
+      } else {
+        // Experienced workers - shift significantly toward higher salaries
+        if (rangeMidpoint > 65000) percentage *= 2.5
+        if (rangeMidpoint < 45000) percentage *= 0.2
+      }
+      
+      // Ensure minimum representation and realistic distribution
+      percentage = Math.max(0.01, Math.min(0.45, percentage))
       
       return {
         name: range.label,
@@ -316,47 +332,61 @@ export default function DataInsightsPage() {
       item.value = Math.round(item.value * salaryMultiplier)
     })
     
-    // 2. INDUSTRY DISTRIBUTION - changes over time as people switch careers
+    // 2. INDUSTRY DISTRIBUTION - more dramatic changes over time
     const industryEvolution = {
       // Early career (0-2 years) - mostly hospitality/retail
       early: {
-        "Hospitality & Food Service": 35,
-        "Retail Management": 25,
-        "Healthcare": 8,
-        "Business & Finance": 6,
-        "Education": 5,
-        "Technology": 3,
-        "Other": 18
+        "Hospitality & Food Service": 42,
+        "Retail Management": 28,
+        "Healthcare": 6,
+        "Business & Finance": 4,
+        "Education": 3,
+        "Technology": 2,
+        "Other": 15
       },
-      // Mid career (3-7 years) - diversification begins
+      // Mid career (3-7 years) - major diversification
       mid: {
-        "Hospitality & Food Service": 22,
-        "Retail Management": 20,
-        "Healthcare": 15,
-        "Business & Finance": 18,
-        "Education": 10,
-        "Technology": 8,
-        "Other": 7
-      },
-      // Late career (8+ years) - more specialized roles
-      late: {
-        "Hospitality & Food Service": 15,
-        "Retail Management": 18,
+        "Hospitality & Food Service": 18,
+        "Retail Management": 16,
         "Healthcare": 20,
-        "Business & Finance": 25,
+        "Business & Finance": 22,
         "Education": 12,
         "Technology": 7,
-        "Other": 3
+        "Other": 5
+      },
+      // Late career (8+ years) - specialized professional roles
+      late: {
+        "Hospitality & Food Service": 8,
+        "Retail Management": 12,
+        "Healthcare": 25,
+        "Business & Finance": 35,
+        "Education": 15,
+        "Technology": 4,
+        "Other": 1
       }
     }
     
-    let industryPercentages;
+    let industryPercentages: { [key: string]: number };
     if (yearsExperience <= 2) {
       industryPercentages = industryEvolution.early
     } else if (yearsExperience <= 7) {
-      industryPercentages = industryEvolution.mid
+      // Smooth transition between early and mid
+      const transitionFactor = (yearsExperience - 2) / 5
+      industryPercentages = {}
+      Object.keys(industryEvolution.early).forEach(industry => {
+        const earlyValue = (industryEvolution.early as { [key: string]: number })[industry] || 0
+        const midValue = (industryEvolution.mid as { [key: string]: number })[industry] || 0
+        industryPercentages[industry] = Math.round(earlyValue + (midValue - earlyValue) * transitionFactor)
+      })
     } else {
-      industryPercentages = industryEvolution.late
+      // Transition from mid to late career
+      const transitionFactor = Math.min(1, (yearsExperience - 7) / 8)
+      industryPercentages = {}
+      Object.keys(industryEvolution.mid).forEach(industry => {
+        const midValue = (industryEvolution.mid as { [key: string]: number })[industry] || 0
+        const lateValue = (industryEvolution.late as { [key: string]: number })[industry] || 0
+        industryPercentages[industry] = Math.round(midValue + (lateValue - midValue) * transitionFactor)
+      })
     }
     
     const industryData = Object.entries(industryPercentages).map(([name, percentage]) => ({
@@ -364,33 +394,32 @@ export default function DataInsightsPage() {
       value: percentage
     }))
     
-    // 3. LOCATION DISTRIBUTION - migration patterns over time
-    // Younger workers stay local, older workers spread out more
+    // 3. LOCATION DISTRIBUTION - more dramatic migration patterns
     const locationEvolution = {
-      // Early career - mostly NJ/NY local area
+      // Early career - heavily concentrated in NJ/NY
       early: {
-        "Newark, NJ": 22, "Jersey City, NJ": 18, "Trenton, NJ": 12,
-        "New York, NY": 10, "Paterson, NJ": 8, "Elizabeth, NJ": 7,
-        "Camden, NJ": 6, "Philadelphia, PA": 5, "Bridgeport, CT": 4,
-        "Boston, MA": 3, "Baltimore, MD": 2, "Washington, DC": 2, "Atlanta, GA": 1
+        "Newark, NJ": 28, "Jersey City, NJ": 22, "Trenton, NJ": 15,
+        "New York, NY": 8, "Paterson, NJ": 10, "Elizabeth, NJ": 8,
+        "Camden, NJ": 5, "Philadelphia, PA": 2, "Bridgeport, CT": 1,
+        "Boston, MA": 1
       },
-      // Mid career - some movement to bigger cities
+      // Mid career - significant movement to bigger cities
       mid: {
-        "New York, NY": 18, "Newark, NJ": 15, "Jersey City, NJ": 12,
-        "Philadelphia, PA": 10, "Boston, MA": 8, "Trenton, NJ": 7,
-        "Washington, DC": 6, "Baltimore, MD": 5, "Paterson, NJ": 5,
-        "Elizabeth, NJ": 4, "Atlanta, GA": 4, "Bridgeport, CT": 3, "Camden, NJ": 3
+        "New York, NY": 25, "Newark, NJ": 12, "Jersey City, NJ": 10,
+        "Philadelphia, PA": 15, "Boston, MA": 12, "Trenton, NJ": 6,
+        "Washington, DC": 8, "Baltimore, MD": 4, "Paterson, NJ": 3,
+        "Elizabeth, NJ": 2, "Atlanta, GA": 2, "Bridgeport, CT": 1
       },
       // Late career - national distribution
       late: {
-        "New York, NY": 20, "Boston, MA": 12, "Philadelphia, PA": 11,
-        "Washington, DC": 10, "Atlanta, GA": 8, "Newark, NJ": 8,
-        "Baltimore, MD": 7, "Jersey City, NJ": 6, "Richmond, VA": 5,
-        "Trenton, NJ": 4, "Bridgeport, CT": 4, "Paterson, NJ": 3, "Elizabeth, NJ": 2
+        "New York, NY": 22, "Boston, MA": 18, "Philadelphia, PA": 14,
+        "Washington, DC": 15, "Atlanta, GA": 10, "Newark, NJ": 5,
+        "Baltimore, MD": 8, "Jersey City, NJ": 3, "Richmond, VA": 3,
+        "Trenton, NJ": 2
       }
     }
     
-    let locationPercentages;
+    let locationPercentages: { [key: string]: number };
     if (yearsExperience <= 2) {
       locationPercentages = locationEvolution.early
     } else if (yearsExperience <= 7) {
@@ -404,37 +433,58 @@ export default function DataInsightsPage() {
       value: Math.round(totalForYear * percentage / 100)
     })).filter(item => item.value > 0).slice(0, 10)
     
-    // 4. GRADUATE SCHOOL DISTRIBUTION - changes over time
-    // More people pursue grad school as they gain experience
-    const gradSchoolPercentages = {
-      "No Graduate School": Math.max(75, 95 - (yearsExperience * 1.5)), // Decreases over time
-      "Master's Degree": Math.min(20, 3 + (yearsExperience * 1.2)), // Increases over time
-      "Doctoral Degree": Math.min(4, 1 + (yearsExperience * 0.3)), // Slight increase
-      "Professional Degree": Math.min(3, 1 + (yearsExperience * 0.2)) // Slight increase
+    // 4. GRADUATE SCHOOL DISTRIBUTION - more dramatic changes
+    const gradSchoolBase = {
+      "No Graduate School": Math.max(60, 90 - (yearsExperience * 2.5)), // Decreases more dramatically
+      "Master's Degree": Math.min(30, 5 + (yearsExperience * 2.0)), // Increases significantly
+      "Doctoral Degree": Math.min(7, 1 + (yearsExperience * 0.4)), // Modest increase
+      "Professional Degree": Math.min(6, 2 + (yearsExperience * 0.3)) // Modest increase
     }
     
     // Normalize graduate school percentages
-    const gradTotal = Object.values(gradSchoolPercentages).reduce((sum, val) => sum + val, 0)
-    const gradSchoolData = Object.entries(gradSchoolPercentages).map(([name, percentage]) => ({
+    const gradTotal = Object.values(gradSchoolBase).reduce((sum, val) => sum + val, 0)
+    const gradSchoolData = Object.entries(gradSchoolBase).map(([name, percentage]) => ({
       name,
       value: Math.round((percentage / gradTotal) * 100)
     }))
     
-    // 5. AVERAGE SALARY BY INDUSTRY - varies by year and experience
-    const baseSalaries = {
-      "Technology": 55000,
-      "Business & Finance": 50000,
-      "Healthcare": 45000,
-      "Hospitality & Food Service": 38000,
-      "Retail Management": 42000,
-      "Education": 40000,
-      "Other": 41000
+    // 5. IMPROVED AVERAGE SALARY BY INDUSTRY - less uniform with realistic variations
+    const baseSalaries: { [key: string]: number } = {
+      "Technology": 62000,
+      "Business & Finance": 54000,
+      "Healthcare": 48000,
+      "Hospitality & Food Service": 36000,
+      "Retail Management": 41000,
+      "Education": 38000,
+      "Other": 43000
     }
     
-    const industrySalaryData = Object.entries(baseSalaries).map(([industry, baseSal]) => ({
-      name: industry,
-      value: Math.round(baseSal + (yearsExperience * 2200) + (Math.random() * 5000 - 2500)) // Growth + some randomness
-    })).sort((a, b) => b.value - a.value)
+    const industrySalaryData = Object.entries(baseSalaries).map(([industry, baseSal]) => {
+      // More varied growth rates by industry
+      const growthRates: { [key: string]: number } = {
+        "Technology": 3800, // Fastest growth
+        "Business & Finance": 3200, // Good growth
+        "Healthcare": 2800, // Steady growth
+        "Education": 1800, // Slower growth
+        "Hospitality & Food Service": 2200, // Moderate growth
+        "Retail Management": 2400, // Moderate growth
+        "Other": 2600 // Average growth
+      }
+      
+      const growthRate = growthRates[industry] || 2600
+      const experienceBonus = yearsExperience * growthRate
+      
+      // Add some year-specific variation and industry-specific volatility
+      const yearVariation = Math.sin((yearNum - 2010) * 0.8) * (baseSal * 0.08) // 8% variation
+      const industryVolatility = (Math.random() - 0.5) * (baseSal * 0.12) // 12% random variation
+      
+      const finalSalary = baseSal + experienceBonus + yearVariation + industryVolatility
+      
+      return {
+        name: industry,
+        value: Math.round(Math.max(25000, finalSalary)) // Minimum salary floor
+      }
+    }).sort((a, b) => b.value - a.value)
     
     // Set all the calculated data
     setSalaryData(salaryData)
@@ -443,13 +493,13 @@ export default function DataInsightsPage() {
     setGraduateSchoolData(gradSchoolData)
     setIndustrySalaryData(industrySalaryData)
     
-    // Enhanced industry progression data based on the year
+    // Enhanced industry progression data with more variation
     const progressionYears = [1, 3, 5].filter(y => y <= yearsExperience + 1)
     const sampleProgressionData = progressionYears.map(yearsAfter => {
       const adjustedYear = yearsAfter + (2024 - yearNum)
       const experience = Math.min(adjustedYear, 15)
       
-      // Calculate industry distribution for this experience level
+      // Calculate industry distribution for this experience level with more variation
       let progressionPercentages;
       if (experience <= 2) {
         progressionPercentages = industryEvolution.early
@@ -461,7 +511,10 @@ export default function DataInsightsPage() {
       
       const industries: { [key: string]: { count: number } } = {}
       Object.entries(progressionPercentages).forEach(([industry, percentage]) => {
-        industries[industry] = { count: Math.round(totalForYear * percentage / 100) }
+        // Add some random variation to make progression more interesting
+        const variation = (Math.random() - 0.5) * 0.3 // ±15% variation
+        const adjustedPercentage = Math.max(0, percentage * (1 + variation))
+        industries[industry] = { count: Math.round(totalForYear * adjustedPercentage / 100) }
       })
       
       return {
@@ -472,16 +525,13 @@ export default function DataInsightsPage() {
     
     setIndustryProgressionData(sampleProgressionData)
     
-    console.log("DEBUG: Chick-fil-A dummy data generated for year", year, {
+    console.log("DEBUG: Enhanced Chick-fil-A dummy data generated for year", year, {
       totalForYear,
       yearsExperience,
-      baseSalary,
-      salaryDataLength: salaryData.length,
-      industryDataLength: industryData.length,
-      locationDataLength: locationData.length,
-      gradSchoolDataLength: gradSchoolData.length,
-      industrySalaryDataLength: industrySalaryData.length,
-      progressionDataLength: sampleProgressionData.length
+      salaryRange: `${Math.min(...salaryData.map(s => parseInt(s.name.split('-')[0].replace(/\D/g, ''))))}k - ${Math.max(...salaryData.map(s => parseInt(s.name.split('-')[1]?.replace(/\D/g, '') || '90')))}k+`,
+      topIndustries: industryData.slice(0, 3).map(i => `${i.name}: ${i.value}%`),
+      topLocations: locationData.slice(0, 3).map(l => l.name),
+      avgSalaryByTopIndustry: industrySalaryData.slice(0, 3).map(i => `${i.name}: $${i.value.toLocaleString()}`)
     })
   }
 
