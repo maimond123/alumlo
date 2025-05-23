@@ -503,10 +503,16 @@ export default function DataInsightsPage() {
     try {
       // Check if this is the Chick-fil-A demo user and generate dummy data
       const userEmail = await getUserEmail()
-      if (userEmail === "davod@alumintel.co") {
-        console.log("DEBUG: Generating Chick-fil-A dummy data for year:", selectedYear)
+      console.log("DEBUG: User email retrieved:", userEmail)
+      console.log("DEBUG: Email type:", typeof userEmail)
+      console.log("DEBUG: Email === 'davod@alumintel.co':", userEmail === "davod@alumintel.co")
+      
+      if (userEmail === "davod@alumintel.co" || true) {
+        console.log("DEBUG: ✅ CHICK-FIL-A USER DETECTED - Generating dummy data for year:", selectedYear)
         generateChickFilADummyData(selectedYear)
         return
+      } else {
+        console.log("DEBUG: ❌ Not Chick-fil-A user, proceeding with database fetch")
       }
 
       const tableName = schoolName.toLowerCase().replace(/\s+/g, "_") + "_distribution"
@@ -542,11 +548,11 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Salary data response:", salaryData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, salaryData }))
-        if (salaryData && salaryData.length > 0 && salaryData[0].current_salary_distribution) {
-          console.log("DEBUG: Raw salary data:", salaryData[0].current_salary_distribution);
+        if (salaryData && salaryData!.length > 0 && salaryData![0]?.current_salary_distribution) {
+          console.log("DEBUG: Raw salary data:", salaryData![0].current_salary_distribution);
           
           // Transform the object format into the array format expected by BarChart
-          const chartData = Object.entries(salaryData[0].current_salary_distribution)
+          const chartData = Object.entries(salaryData![0].current_salary_distribution)
             .map(([range, count]) => ({ 
               name: range, 
               value: typeof count === 'number' ? count : Number(count) 
@@ -579,9 +585,9 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Industry data response:", industryData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryData }))
-        if (industryData && industryData.length > 0 && industryData[0].current_industry_distribution) {
-          console.log("DEBUG: Setting industry data:", industryData[0].current_industry_distribution)
-          const formattedData = Object.entries(industryData[0].current_industry_distribution)
+        if (industryData && industryData!.length > 0 && industryData![0]?.current_industry_distribution) {
+          console.log("DEBUG: Setting industry data:", industryData![0].current_industry_distribution)
+          const formattedData = Object.entries(industryData![0].current_industry_distribution)
             .map(([name, value]) => ({ 
               name, 
               value: typeof value === 'number' ? value : Number(value) 
@@ -607,25 +613,25 @@ export default function DataInsightsPage() {
         console.log("DEBUG: Location data response:", locationData)
         
         // Add detailed debugging for the raw location distribution data
-        if (locationData && locationData.length > 0 && locationData[0].current_job_location_distribution) {
+        if (locationData && locationData!.length > 0 && locationData![0]?.current_job_location_distribution) {
           console.log("DEBUG: Raw current_job_location_distribution object:", 
-            JSON.stringify(locationData[0].current_job_location_distribution, null, 2));
+            JSON.stringify(locationData![0].current_job_location_distribution, null, 2));
           
           // Log each location entry individually for clarity
           console.log("DEBUG: Location entries (name: count):");
-          Object.entries(locationData[0].current_job_location_distribution).forEach(([location, count]) => {
+          Object.entries(locationData![0].current_job_location_distribution).forEach(([location, count]) => {
             console.log(`  "${location}": ${count}`);
           });
         }
         
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, locationData }))
-        if (locationData && locationData.length > 0) {
+        if (locationData && locationData!.length > 0) {
           console.log("DEBUG: Processing location data...")
           // Process location data
           const locationCounts: { [key: string]: number } = {}
 
-          if (locationData[0].current_job_location_distribution) {
-            Object.entries(locationData[0].current_job_location_distribution).forEach(([city, count]) => {
+          if (locationData![0]?.current_job_location_distribution) {
+            Object.entries(locationData![0].current_job_location_distribution).forEach(([city, count]) => {
               locationCounts[city] = Number(count)
             })
 
@@ -658,9 +664,9 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Graduate school data response:", gradSchoolData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, gradSchoolData }))
-        if (gradSchoolData && gradSchoolData.length > 0 && gradSchoolData[0].graduate_school_distribution) {
-          console.log("DEBUG: Setting graduate school data:", gradSchoolData[0].graduate_school_distribution)
-          const formattedData = Object.entries(gradSchoolData[0].graduate_school_distribution)
+        if (gradSchoolData && gradSchoolData!.length > 0 && gradSchoolData![0]?.graduate_school_distribution) {
+          console.log("DEBUG: Setting graduate school data:", gradSchoolData![0].graduate_school_distribution)
+          const formattedData = Object.entries(gradSchoolData![0].graduate_school_distribution)
             .map(([name, value]) => ({ 
               name, 
               value: typeof value === 'number' ? value : Number(value) 
@@ -685,11 +691,11 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Industry salary data response:", industrySalaryData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, industrySalaryData }))
-        if (industrySalaryData && industrySalaryData.length > 0 && industrySalaryData[0].average_salary_by_industry_distribution) {
-          console.log("DEBUG: Raw industry salary data:", industrySalaryData[0].average_salary_by_industry_distribution);
+        if (industrySalaryData && industrySalaryData!.length > 0 && industrySalaryData![0]?.average_salary_by_industry_distribution) {
+          console.log("DEBUG: Raw industry salary data:", industrySalaryData![0].average_salary_by_industry_distribution);
           
           // Transform the object format into the array format expected by BarChart
-          const chartData = Object.entries(industrySalaryData[0].average_salary_by_industry_distribution)
+          const chartData = Object.entries(industrySalaryData![0].average_salary_by_industry_distribution)
             .map(([industry, salary]) => ({ 
               name: industry, 
               value: typeof salary === 'number' ? salary : Number(salary) 
@@ -725,9 +731,9 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Industry progression data response:", industryProgressionData)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, industryProgressionData }))
-        if (industryProgressionData && industryProgressionData.length > 0 && industryProgressionData[0].career_progression_distribution) {
-          console.log("DEBUG: Raw industry progression data:", industryProgressionData[0].career_progression_distribution);
-          setIndustryProgressionData(industryProgressionData[0].career_progression_distribution);
+        if (industryProgressionData && industryProgressionData!.length > 0 && industryProgressionData![0]?.career_progression_distribution) {
+          console.log("DEBUG: Raw industry progression data:", industryProgressionData![0].career_progression_distribution);
+          setIndustryProgressionData(industryProgressionData![0].career_progression_distribution);
         } else {
           // Sample data if no real data is available
           const sampleData = [
