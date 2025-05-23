@@ -224,21 +224,32 @@ export class LinkedInProfileSearchEngine {
         console.log(`[AI_SEARCH DEBUG] Calling searchCompany with filters:`, companyFilters);
         const companyResults = await this.searchCompany(query, top_k, companyFilters);
         
+        console.log(`[AI_SEARCH DEBUG] 🏢 Company results before conversion:`, companyResults.map(r => ({
+          id: r.id,
+          name: r.name,
+          industry: r.industry,
+          headline: r.headline
+        })));
+        
         // Convert company results to regular search results format for compatibility
-        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => ({
-          id: item.id,
-          name: item.name,
-          linkedin_url: item.profile_url, // Map profile_url to linkedin_url
-          current_company: item.post_company_current_company,
-          current_title: item.post_company_current_title,
-          current_industry: item.industry,
-          current_general_industry: item.post_company_current_industry,
-          current_job_location: item.post_company_current_location,
-          years_experience: 0, // Not applicable for company data
-          profile_photo_url: item.picture_url,
-          similarity: item.similarity,
-          headline: item.headline
-        }));
+        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => {
+          console.log(`[AI_SEARCH DEBUG] 🏢 Converting item - industry: "${item.industry}", headline: "${item.headline}"`);
+          
+          return {
+            id: item.id,
+            name: item.name,
+            linkedin_url: item.profile_url, // Map profile_url to linkedin_url
+            current_company: item.post_company_current_company,
+            current_title: item.post_company_current_title,
+            current_industry: item.industry,
+            current_general_industry: item.post_company_current_industry,
+            current_job_location: item.post_company_current_location,
+            years_experience: 0, // Not applicable for company data
+            profile_photo_url: item.picture_url,
+            similarity: item.similarity,
+            headline: item.headline
+          };
+        });
         
         console.log(`[AI_SEARCH DEBUG] ✅ Company search completed, returning ${convertedResults.length} results`);
         return convertedResults;
