@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[API] Request body parsed:', body);
     
-    const { query, top_k = 10 } = body;
+    const { query, top_k = 10, filters = {} } = body;
     
     if (!query || typeof query !== 'string') {
       console.log('[API] Invalid query parameter');
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     });
     
     console.log('[API] Executing search with query:', query);
-    const results = await search_engine.search(query, top_k);
+    const results = await search_engine.search(query, top_k, filters);
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
     return NextResponse.json({ results });
