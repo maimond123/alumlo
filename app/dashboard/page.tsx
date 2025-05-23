@@ -1046,20 +1046,23 @@ export default function DashboardPage() {
            !displayedText.filters && searchResults.length === 0) 
              ? 'justify-center' : 'pt-24'
         } ${mode === 'learn' && conversations.length > 0 ? 'pb-32' : ''}`}>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            {mode === 'search' ? 'Search' : 'Learn'}{" "}
-            {isDemoMode ? (
-              <span 
-                className="text-emerald-600 cursor-pointer hover:underline"
-                onClick={handleSchoolNameClick}
-              >
-                {"{Your School}"}
-              </span>
-            ) : (
-              formattedSchoolName
-            )}
-            {" "}Alumni Data
-          </h1>
+          {/* Only show title when there are no conversations in Learn mode */}
+          {!(mode === 'learn' && conversations.length > 0) && (
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+              {mode === 'search' ? 'Search' : 'Learn'}{" "}
+              {isDemoMode ? (
+                <span 
+                  className="text-emerald-600 cursor-pointer hover:underline"
+                  onClick={handleSchoolNameClick}
+                >
+                  {"{Your School}"}
+                </span>
+              ) : (
+                formattedSchoolName
+              )}
+              {" "}Alumni Data
+            </h1>
+          )}
 
           {/* Search interface - only show in search mode */}
           {mode === 'search' && (
@@ -1373,7 +1376,7 @@ export default function DashboardPage() {
 
                   {/* Fixed input form at bottom when there's conversation history */}
                   <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-                    <div className={`max-w-2xl mx-auto ${isSidebarOpen ? 'ml-72' : 'ml-24'} transition-all duration-300 ease-in-out`}>
+                    <div className="max-w-2xl mx-auto">
                       <form onSubmit={handleLearnSubmit} className="w-full">
                         <div className="relative">
                           {/* Mode toggle button on left side */}
