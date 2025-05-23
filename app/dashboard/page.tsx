@@ -25,52 +25,59 @@ interface SearchResult {
   years_experience: number;
   similarity: number;
   profile_photo_url?: string;
+  headline: string;
 }
 
+// Add realistic suggestion tags for Chick-fil-A employees and alumni
 const suggestionTags = [
-  "Working on AI at FAANG",
-  "Recent graduates in Silicon Valley",
-  "Alumni in Healthcare Tech",
-  "Engineers at SpaceX",
-  "Harvard MBA graduates in Finance",
-  "Product Managers in New York",
-  "Data Scientists at Startups",
-  "Alumni working in Renewable Energy",
-  "Lawyers at top firms in Chicago",
-  "Marketing Directors in Los Angeles",
-  "People who worked at Goldman Sachs",
-  "Alumni in Pharmaceutical Research",
-  "Consultants at McKinsey",
-  "UX Designers at tech companies",
-  "People with experience in Biotech",
-  "Stanford graduates in Venture Capital",
-  "Doctors working in telemedicine",
-  "MBA graduates in Consumer Goods",
-  "People working remotely in Tech",
-  "Alumni with experience at Amazon",
-  "Architects in sustainable design",
-  "Graduates working in London",
-  "Data Engineers in Financial Services",
-  "People who transitioned to Nonprofit",
-  "MIT graduates in Robotics",
-  "Alumni in Media and Entertainment",
-  "Product Designers in San Francisco",
-  "People with experience in Cybersecurity",
-  "Alumni who became professors",
-  "Software Developers in Austin",
-  "People with experience in Supply Chain",
-  "Yale Law graduates in Public Policy",
-  "Alumni working in Hospitality",
-  "Machine Learning Engineers at Google",
-  "Graduates in Advertising in Chicago",
-  "People who started E-commerce businesses",
-  "Alumni with experience in Real Estate",
-  "Project Managers in Seattle",
-  "Graduates working in Aerospace",
-  "People with experience in Healthcare Administration",
-  "Columbia graduates in Journalism",
-  "Alumni in Sustainable Fashion",
-  "DevOps Engineers at unicorn startups"
+  "Restaurant managers in New Jersey",
+  "Alumni working in healthcare now",
+  "Former employees who went to business school after leaving",
+  "Former cashiers now in customer success roles",
+  "Alumni who started their own companies",
+  "People who went from fast food to finance",
+  "Harvard MBA graduates who worked at Chick-fil-A",
+  "Former team members now in hospitality",
+  "Alumni who became VPs or directors",
+  "Former employees in the startup ecosystem",
+  "People who got their degree while working here",
+  "Kitchen staff who became operations managers",
+  "Operations directors at QSR chains",
+  "Former employees who went into consulting",
+  "Alumni in the hospitality industry",
+  "People with culinary arts education",
+  "Drive-thru team leads now in logistics",
+  "Corporate employees in Atlanta headquarters",
+  "People who transitioned to marketing roles",
+  "Former shift leaders now in C-suite positions",
+  "Alumni with engineering backgrounds",
+  "Former employees now in real estate",
+  "Quality assurance in food service",
+  "Alumni who worked here during college (2018-2022)",
+  "People who became franchise owners",
+  "Former trainers who became HR professionals",
+  "People who moved into tech roles",
+  "Alumni working in major metropolitan areas",
+  "Former employees with marketing degrees",
+  "People who moved into education sector",
+  "Supply chain managers in retail",
+  "Alumni in senior management roles",
+  "Team members who became district managers",
+  "Alumni working in nonprofit organizations",
+  "Training and development specialists",
+  "People who left during COVID and pivoted careers",
+  "Former employees in technology companies",
+  "Alumni who studied hospitality management",
+  "Customer experience managers",
+  "Former employees who relocated for better opportunities",
+  "People who transitioned to retail management",
+  "People who completed leadership development programs",
+  "Former supervisors now running their own businesses",
+  "Food safety and compliance officers",
+  "Franchise development specialists",
+  "Alumni who studied hospitality management",
+  "Business analysts in hospitality",
+  "Digital marketing in food brands"
 ]
 
 // Remove the module-level useEffect
@@ -1564,6 +1571,11 @@ export default function DashboardPage() {
                           {/* Content */}
                           <div className="flex-1">
                             <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
+                            
+                            {/* Headline */}
+                            {result.headline && (
+                              <p className="text-gray-600 text-sm mt-1 italic">{result.headline}</p>
+                            )}
                             
                             {/* Metadata in one row */}
                             <div className="flex flex-wrap items-center text-gray-600 mt-1">

@@ -33,6 +33,7 @@ export interface SearchResult {
   years_experience: number;
   similarity: number;
   profile_photo_url?: string;
+  headline: string;
 }
 
 // Add new interface for company search results
@@ -48,6 +49,8 @@ export interface CompanySearchResult {
   company_exit_year: number;
   picture_url?: string;
   similarity: number;
+  industry: string;
+  headline: string;
 }
 
 export interface ProfileDetail {
@@ -98,6 +101,8 @@ interface HybridSearchCompanyResult {
   company_exit_year: number;
   picture_url?: string;
   similarity: number;
+  industry: string;
+  headline: string;
 }
 
 export class LinkedInProfileSearchEngine {
@@ -185,7 +190,9 @@ export class LinkedInProfileSearchEngine {
         post_company_current_location: item.post_company_current_location,
         company_exit_year: item.company_exit_year,
         picture_url: item.picture_url,
-        similarity: item.similarity
+        similarity: item.similarity,
+        industry: item.industry,
+        headline: item.headline
       }));
     } catch (error) {
       throw error;
@@ -224,12 +231,13 @@ export class LinkedInProfileSearchEngine {
           linkedin_url: item.profile_url, // Map profile_url to linkedin_url
           current_company: item.post_company_current_company,
           current_title: item.post_company_current_title,
-          current_industry: item.post_company_current_industry,
+          current_industry: item.industry,
           current_general_industry: item.post_company_current_industry,
           current_job_location: item.post_company_current_location,
           years_experience: 0, // Not applicable for company data
           profile_photo_url: item.picture_url,
-          similarity: item.similarity
+          similarity: item.similarity,
+          headline: item.headline
         }));
         
         console.log(`[AI_SEARCH DEBUG] ✅ Company search completed, returning ${convertedResults.length} results`);
@@ -293,7 +301,8 @@ export class LinkedInProfileSearchEngine {
         current_job_location: item.current_job_location,
         years_experience: item.years_of_experience,
         profile_photo_url: item.profile_photo_url,
-        similarity: item.similarity
+        similarity: item.similarity,
+        headline: ''
       }));
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] Search method error:`, error);
