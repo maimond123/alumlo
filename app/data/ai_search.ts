@@ -191,8 +191,8 @@ export class LinkedInProfileSearchEngine {
         company_exit_year: item.company_exit_year,
         picture_url: item.picture_url,
         similarity: item.similarity,
-        industry: item.industry,
-        headline: item.headline
+        industry: '', // Will be enriched later
+        headline: '' // Will be enriched later
       }));
     } catch (error) {
       throw error;
@@ -231,9 +231,48 @@ export class LinkedInProfileSearchEngine {
           headline: r.headline
         })));
         
+        // Fetch additional data for each result from the main table
+        const enrichedResults = await Promise.all(companyResults.map(async (item: CompanySearchResult) => {
+          try {
+            // Fetch industry from the main chick_fil_a_vector table
+            const { data: profileData, error } = await this.supabase
+              .from('chick_fil_a_vector')
+              .select('current_general_industry')
+              .eq('id', item.profile_id)
+              .single();
+            
+            if (error) {
+              console.warn(`[AI_SEARCH DEBUG] Could not fetch profile data for ID ${item.profile_id}:`, error);
+            }
+            
+            // Construct headline from title and company
+            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
+              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
+              : '';
+            
+            return {
+              ...item,
+              industry: profileData?.current_general_industry || item.post_company_current_industry || '',
+              headline: constructedHeadline
+            };
+          } catch (error) {
+            console.warn(`[AI_SEARCH DEBUG] Error enriching result for ID ${item.profile_id}:`, error);
+            // Fallback to constructed headline
+            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
+              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
+              : '';
+            
+            return {
+              ...item,
+              industry: item.post_company_current_industry || '',
+              headline: constructedHeadline
+            };
+          }
+        }));
+        
         // Convert company results to regular search results format for compatibility
-        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => {
-          console.log(`[AI_SEARCH DEBUG] 🏢 Converting item - industry: "${item.industry}", headline: "${item.headline}"`);
+        const convertedResults = enrichedResults.map((item: CompanySearchResult): SearchResult => {
+          console.log(`[AI_SEARCH DEBUG] 🏢 Converting enriched item - industry: "${item.industry}", headline: "${item.headline}"`);
           
           return {
             id: item.id,
