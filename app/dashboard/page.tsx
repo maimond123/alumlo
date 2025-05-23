@@ -1528,6 +1528,14 @@ export default function DashboardPage() {
                   {searchResults.map((result, index) => {
                     const currentTitle = result.current_title || "";
                     
+                    // Add debugging for each result
+                    console.log(`[FRONTEND DEBUG] Result ${index}:`, {
+                      name: result.name,
+                      current_industry: result.current_industry,
+                      headline: result.headline,
+                      current_general_industry: result.current_general_industry
+                    });
+                    
                     return (
                       <a
                         key={result.id || index}
