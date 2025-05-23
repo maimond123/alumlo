@@ -192,13 +192,14 @@ export class LinkedInProfileSearchEngine {
     }
   }
   
-  async search(query: string, top_k: number = 10, filters: SearchFilters = {}, isDemo: boolean = false): Promise<SearchResult[]> {
+  async search(query: string, top_k: number = 10, filters: SearchFilters = {}, isDemo: boolean = false, schoolName?: string): Promise<SearchResult[]> {
     try {
       // Check if this is a chick_fil_a case (company search)
-      const storedSchoolName = typeof window !== 'undefined' ? 
-        localStorage.getItem('schoolName') : null;
+      // Use the provided schoolName parameter first, then fall back to localStorage
+      const storedSchoolName = schoolName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('schoolName') : null);
       
-      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedSchoolName: "${storedSchoolName}"`);
+      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedSchoolName: "${storedSchoolName}" (from ${schoolName ? 'parameter' : 'localStorage'})`);
       console.log(`[AI_SEARCH DEBUG] Checking condition: !isDemo (${!isDemo}) && storedSchoolName === 'chick_fil_a' (${storedSchoolName === 'chick_fil_a'})`);
       
       if (!isDemo && storedSchoolName === 'chick_fil_a') {

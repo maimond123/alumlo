@@ -287,6 +287,13 @@ export default function DashboardPage() {
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
           setFormattedSchoolName(formatted)
+          
+          // Store the original school name in localStorage for the search engine
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('schoolName', data.school_name);
+            console.log(`[DEBUG] Stored original school name in localStorage: "${data.school_name}"`);
+          }
+          
           setIsLoading(false)
         } catch (err: any) {
           if (err.message?.includes('not authenticated')) {
@@ -452,12 +459,22 @@ export default function DashboardPage() {
     
     // IMPORTANT: Start the actual search request immediately in parallel with animations
     console.log(`[DEBUG ${new Date().toISOString()}] Starting API search request for: "${currentQuery}"`);
+    
+    // Get the original school name from localStorage for the API
+    const originalSchoolName = typeof window !== 'undefined' ? localStorage.getItem('schoolName') : null;
+    console.log(`[DEBUG ${new Date().toISOString()}] Original school name for API: "${originalSchoolName}"`);
+    
     const searchPromise = fetch('/api/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query: currentQuery, top_k: 10 }),
+      body: JSON.stringify({ 
+        query: currentQuery, 
+        top_k: 10,
+        schoolName: originalSchoolName,
+        isDemo: isDemoMode
+      }),
     }).then(response => {
       console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
       if (!response.ok) {
