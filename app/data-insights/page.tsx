@@ -279,58 +279,78 @@ export default function DataInsightsPage() {
       { min: 90000, max: 200000, label: "$90K+" }
     ]
     
-    const salaryData = salaryRanges.map(range => {
-      const rangeMidpoint = (range.min + range.max) / 2
+    // Create dramatically different distributions based on experience
+    let salaryDistributionWeights: number[];
+    
+    if (yearsExperience <= 1) {
+      // Fresh graduates - heavily skewed toward lower salaries
+      salaryDistributionWeights = [0.05, 0.35, 0.35, 0.15, 0.07, 0.02, 0.01, 0.00]
+    } else if (yearsExperience <= 3) {
+      // Early career - still concentrated in lower-mid range
+      salaryDistributionWeights = [0.02, 0.25, 0.40, 0.20, 0.08, 0.03, 0.01, 0.01]
+    } else if (yearsExperience <= 6) {
+      // Mid-early career - shifting toward middle ranges
+      salaryDistributionWeights = [0.01, 0.12, 0.30, 0.30, 0.15, 0.07, 0.03, 0.02]
+    } else if (yearsExperience <= 10) {
+      // Mid career - more balanced but still right-skewed
+      salaryDistributionWeights = [0.01, 0.08, 0.20, 0.28, 0.22, 0.12, 0.06, 0.03]
+    } else if (yearsExperience <= 15) {
+      // Experienced - significant shift toward higher salaries
+      salaryDistributionWeights = [0.00, 0.03, 0.12, 0.22, 0.25, 0.20, 0.12, 0.06]
+    } else {
+      // Very experienced - heavy concentration in higher ranges
+      salaryDistributionWeights = [0.00, 0.02, 0.08, 0.15, 0.22, 0.25, 0.18, 0.10]
+    }
+    
+    // Add year-specific variation to make distributions change between years
+    const yearFactor = (yearNum - 2010) / 14 // 0 to 1 progression from 2010 to 2024
+    const economicCycle = Math.sin((yearNum - 2010) * 0.7) * 0.15 // Economic ups and downs
+    
+    // Apply year-based adjustments
+    const adjustedWeights = salaryDistributionWeights.map((weight, index) => {
+      let adjustedWeight = weight;
       
-      // Create right-skewed bell curve using modified normal distribution
-      const distanceFromBase = rangeMidpoint - baseSalary
-      const standardDeviation = 15000 + (yearsExperience * 2000)
-      
-      // Right-skewed distribution (log-normal approximation)
-      let percentage;
-      if (rangeMidpoint <= baseSalary) {
-        // Left side of the curve - steeper drop
-        percentage = Math.exp(-0.8 * Math.pow(distanceFromBase / standardDeviation, 2))
-      } else {
-        // Right side of the curve - longer tail
-        const skewFactor = 1 + (rangeMidpoint - baseSalary) / (baseSalary * 0.8)
-        percentage = Math.exp(-0.3 * Math.pow(distanceFromBase / standardDeviation, 2)) / skewFactor
+      // Economic growth over time - gradual shift toward higher salaries
+      if (index >= 4) { // Higher salary ranges
+        adjustedWeight += yearFactor * 0.1 * weight
+      } else { // Lower salary ranges
+        adjustedWeight -= yearFactor * 0.05 * weight
       }
       
-      // Adjust for career stage with more dramatic differences
-      if (yearsExperience <= 2) {
-        // Early career - heavily concentrated in lower ranges
-        if (rangeMidpoint < 45000) percentage *= 2.2
-        if (rangeMidpoint > 65000) percentage *= 0.1
-      } else if (yearsExperience <= 5) {
-        // Mid-early career
-        if (rangeMidpoint < 55000) percentage *= 1.6
-        if (rangeMidpoint > 75000) percentage *= 0.3
-      } else if (yearsExperience <= 10) {
-        // Mid career - more balanced
-        if (rangeMidpoint > 45000 && rangeMidpoint < 70000) percentage *= 1.4
-        if (rangeMidpoint > 85000) percentage *= 0.6
-      } else {
-        // Experienced workers - shift significantly toward higher salaries
-        if (rangeMidpoint > 65000) percentage *= 2.5
-        if (rangeMidpoint < 45000) percentage *= 0.2
+      // Economic cycles - affects all ranges
+      adjustedWeight += economicCycle * weight * 0.3
+      
+      // Industry-specific year effects (simulating market conditions)
+      const industryGrowth = Math.cos((yearNum - 2012) * 0.9) * 0.08
+      if (index >= 3 && index <= 6) { // Mid-range salaries most affected
+        adjustedWeight += industryGrowth * weight
       }
       
-      // Ensure minimum representation and realistic distribution
-      percentage = Math.max(0.01, Math.min(0.45, percentage))
-      
+      return Math.max(0.001, adjustedWeight) // Ensure no negative weights
+    })
+    
+    // Normalize weights to sum to 1
+    const totalWeight = adjustedWeights.reduce((sum, weight) => sum + weight, 0)
+    const normalizedWeights = adjustedWeights.map(weight => weight / totalWeight)
+    
+    // Apply weights to create the salary distribution
+    const salaryData = salaryRanges.map((range, index) => {
+      const count = Math.round(totalForYear * normalizedWeights[index])
       return {
         name: range.label,
-        value: Math.round(totalForYear * percentage)
+        value: Math.max(1, count) // Ensure at least 1 person in each non-zero range
       }
-    }).filter(item => item.value > 0)
+    }).filter(item => item.value > 1) // Remove ranges with only 1 person for cleaner display
     
-    // Normalize to ensure total adds up correctly
-    const salaryTotal = salaryData.reduce((sum, item) => sum + item.value, 0)
-    const salaryMultiplier = totalForYear / salaryTotal
-    salaryData.forEach(item => {
-      item.value = Math.round(item.value * salaryMultiplier)
-    })
+    // Final adjustment to ensure total matches
+    const currentTotal = salaryData.reduce((sum, item) => sum + item.value, 0)
+    if (currentTotal !== totalForYear && salaryData.length > 0) {
+      const difference = totalForYear - currentTotal
+      // Add/subtract from the most populated range (usually the modal range)
+      const maxIndex = salaryData.reduce((maxIdx, item, idx) => 
+        item.value > salaryData[maxIdx].value ? idx : maxIdx, 0)
+      salaryData[maxIndex].value = Math.max(1, salaryData[maxIndex].value + difference)
+    }
     
     // 2. INDUSTRY DISTRIBUTION - more dramatic changes over time
     const industryEvolution = {
