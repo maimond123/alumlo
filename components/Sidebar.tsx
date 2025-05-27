@@ -209,15 +209,15 @@ export default function Sidebar() {
           </SidebarLink>
         </nav>
 
-        {/* Recent Section - Between navigation and profile */}
+        {/* Recent Section - Positioned close below navigation */}
         {isSidebarOpen && shouldShowRecentSection && (
-          <div className="mb-6">
-            <div className="px-6 mb-3">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">{recentSectionTitle}</h3>
+          <div className="mt-8 mb-auto">
+            <div className="px-6 mb-4">
+              <h3 className="text-sm font-medium text-gray-600">{recentSectionTitle}</h3>
             </div>
-            <div className="space-y-1 px-3 max-h-48 overflow-y-auto">
+            <div className="space-y-2 px-6 max-h-64 overflow-y-auto">
               {isLoadingRecent ? (
-                <div className="text-gray-500 text-sm px-3 py-2">
+                <div className="text-gray-500 text-sm py-2">
                   Loading...
                 </div>
               ) : recentItems.length > 0 ? (
@@ -241,7 +241,7 @@ export default function Sidebar() {
                   />
                 ))
               ) : (
-                <div className="text-gray-500 text-sm px-3 py-2">
+                <div className="text-gray-500 text-sm py-2">
                   {pathname === '/dashboard' ? 'No recent searches' : 'No recent chats'}
                 </div>
               )}
@@ -317,14 +317,6 @@ function RecentItem({
   onClick: () => void;
   formatTime: (timestamp: string) => string;
 }) {
-  const getIcon = () => {
-    if (type === 'search') {
-      return <Search className="w-4 h-4 text-gray-500" />
-    } else {
-      return <MessageCircle className="w-4 h-4 text-gray-500" />
-    }
-  }
-
   const getTitle = () => {
     if (type === 'search') {
       return item.query || 'Untitled search'
@@ -343,21 +335,11 @@ function RecentItem({
 
   return (
     <div 
-      className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-200 group"
+      className="py-3 text-gray-800 hover:bg-gray-50 cursor-pointer transition-colors duration-200 group border-b border-gray-100 last:border-b-0"
       onClick={onClick}
     >
-      <div className="flex items-start space-x-2">
-        <div className="mt-0.5 flex-shrink-0">
-          {getIcon()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="truncate font-medium">
-            {getTitle()}
-          </div>
-          <div className="text-xs text-gray-500 mt-0.5">
-            {formatTime(getTimestamp())}
-          </div>
-        </div>
+      <div className="text-base font-medium leading-relaxed">
+        {getTitle()}
       </div>
     </div>
   )
