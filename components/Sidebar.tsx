@@ -90,8 +90,9 @@ export default function Sidebar() {
       onMouseLeave={closeSidebar}
     >
       <div className="p-6 flex flex-col h-full w-full">
+        {/* Logo Section with more space below */}
         <div
-          className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
+          className="flex items-center mb-16 transition-transform duration-300 ease-in-out"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
         >
           <Image
@@ -109,25 +110,8 @@ export default function Sidebar() {
           </span>
         </div>
 
-        <div
-          className="flex items-center mb-8 transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
-        >
-          <div
-            className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
-          >
-            <span className="text-black font-semibold text-base">{getInitials()}</span>
-          </div>
-          <div
-            className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
-            style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
-          >
-            <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
-            <span className="text-black/80 text-base whitespace-nowrap">Admin</span>
-          </div>
-        </div>
-
-        <nav className="flex-1 mt-3">
+        {/* Navigation Links with more space between them */}
+        <nav className="flex-1">
           <SidebarLink href="/dashboard" icon={Home} isOpen={isSidebarOpen}>
             Dashboard
           </SidebarLink>
@@ -145,27 +129,27 @@ export default function Sidebar() {
           </SidebarLink>
         </nav>
 
-        {/* Recent Activity Section - Only visible when sidebar is open */}
+        {/* Recent Activity Section - Between navigation and profile */}
         {isSidebarOpen && (
-          <div className="mt-auto mb-4">
+          <div className="mb-6">
             <div className="px-6 mb-3">
               <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Activity</h3>
             </div>
             <div className="space-y-1 px-3 max-h-48 overflow-y-auto">
               {recentActivity.length > 0 ? (
                 recentActivity.map((item) => (
-                                     <RecentActivityItem
-                     key={item.id}
-                     item={item}
-                     formatActivityTime={formatActivityTime}
-                     onClick={() => {
-                       if (item.type === 'search') {
-                         router.push('/dashboard')
-                       } else {
-                         router.push('/learn')
-                       }
-                     }}
-                   />
+                  <RecentActivityItem
+                    key={item.id}
+                    item={item}
+                    formatActivityTime={formatActivityTime}
+                    onClick={() => {
+                      if (item.type === 'search') {
+                        router.push('/dashboard')
+                      } else {
+                        router.push('/learn')
+                      }
+                    }}
+                  />
                 ))
               ) : (
                 <div className="text-gray-500 text-sm px-3 py-2">
@@ -175,6 +159,25 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+
+        {/* Profile Section moved to bottom */}
+        <div
+          className="flex items-center transition-transform duration-300 ease-in-out"
+          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
+        >
+          <div
+            className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
+          >
+            <span className="text-black font-semibold text-base">{getInitials()}</span>
+          </div>
+          <div
+            className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
+            style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+          >
+            <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
+            <span className="text-black/80 text-base whitespace-nowrap">Admin</span>
+          </div>
+        </div>
       </div>
     </motion.div>
   )
@@ -194,7 +197,7 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className="flex items-center text-black/90 hover:text-black mb-8 transition-transform duration-300 ease-in-out relative"
+      className="flex items-center text-black/90 hover:text-black mb-12 transition-transform duration-300 ease-in-out relative"
       style={{ transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
     >
       <Icon className="w-8 h-8 shrink-0" />
