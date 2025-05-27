@@ -552,7 +552,16 @@ export default function DashboardPage() {
       
       // Save search to history with complete session data
       if (!isDemoMode) {
-        await saveSearch({
+        // Capture current state at time of saving
+        const currentDisplayedText = {
+          analyzing: displayedText.analyzing,
+          searching: displayedText.searching,
+          profiling: displayedText.profiling,
+          filters: displayedText.filters,
+          displaying: displayedText.displaying
+        };
+        
+        const searchId = await saveSearch({
           query: currentQuery,
           results: searchResultsData,
           metadata: {
@@ -561,20 +570,21 @@ export default function DashboardPage() {
             extractedFilters: extractedFilters,
             // Save complete search session data
             searchSession: {
-              displayedText: {
-                analyzing: displayedText.analyzing,
-                searching: displayedText.searching,
-                profiling: displayedText.profiling,
-                filters: displayedText.filters,
-                displaying: displayedText.displaying
-              },
+              displayedText: currentDisplayedText,
               searchPhase: 'complete',
-              isAnalysisCollapsed: false,
+              isAnalysisCollapsed: isAnalysisCollapsed,
               totalAlumniCount: totalAlumniCount,
               formattedSchoolName: formattedSchoolName,
-              isDemoMode: isDemoMode
+              isDemoMode: isDemoMode,
+              timestamp: new Date().toISOString()
             }
           }
+        });
+        
+        console.log(`[DEBUG] Saved complete search session with ID: ${searchId}`, {
+          hasDisplayedText: !!currentDisplayedText.analyzing,
+          expandedQueriesCount: expandedQueries.length,
+          extractedFiltersKeys: Object.keys(extractedFilters)
         });
       }
       
@@ -898,7 +908,15 @@ export default function DashboardPage() {
             setExtractedFilters(searchDetails.search.metadata.extractedFilters);
           }
           
-          console.log('Restored complete search session data');
+          console.log('[DEBUG] Restored complete search session data:', {
+            hasAnalyzing: !!sessionData.displayedText.analyzing,
+            hasSearching: !!sessionData.displayedText.searching,
+            hasProfiling: !!sessionData.displayedText.profiling,
+            hasFilters: !!sessionData.displayedText.filters,
+            hasDisplaying: !!sessionData.displayedText.displaying,
+            expandedQueriesCount: searchDetails.search.metadata?.expandedQueries?.length || 0,
+            extractedFiltersKeys: Object.keys(searchDetails.search.metadata?.extractedFilters || {})
+          });
         } else {
           // Fallback for searches without complete session data
           setDisplayedText({
