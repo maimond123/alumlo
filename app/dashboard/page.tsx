@@ -931,20 +931,20 @@ export default function DashboardPage() {
            !displayedText.filters && searchResults.length === 0) 
              ? 'justify-center' : 'pt-24'
         }`}>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
             Search{" "}
-            {isDemoMode ? (
-              <span 
-                className="text-emerald-600 cursor-pointer hover:underline"
-                onClick={handleSchoolNameClick}
-              >
-                {"{Your School}"}
-              </span>
-            ) : (
-              formattedSchoolName
-            )}
-            {" "}Alumni Data
-          </h1>
+              {isDemoMode ? (
+                <span 
+                  className="text-emerald-600 cursor-pointer hover:underline"
+                  onClick={handleSchoolNameClick}
+                >
+                  {"{Your School}"}
+                </span>
+              ) : (
+                formattedSchoolName
+              )}
+              {" "}Alumni Data
+            </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
             <div className="relative mb-6">

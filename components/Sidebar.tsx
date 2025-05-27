@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Settings, HelpCircle, LogOut, Home, Upload, Brain } from "lucide-react"
+import { BarChart2, FileText, Home, Upload, Brain } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
-import { useRouter } from 'next/navigation'
-import { getUserEmail, signOutUser, getCurrentUser } from '../app/utils/auth'
+import { getUserEmail, getCurrentUser } from '../app/utils/auth'
 
 interface UserInfo {
   first_name: string;
@@ -20,16 +19,6 @@ interface UserInfo {
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-  const router = useRouter()
-  
-  const handleLogout = async () => {
-    try {
-      await signOutUser()
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -141,24 +130,39 @@ export default function Sidebar() {
           <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen}>
             Upload Data
           </SidebarLink>
-          <SidebarLink href="/support" icon={HelpCircle} isOpen={isSidebarOpen}>
-            Support
-          </SidebarLink>
         </nav>
 
-        <button
-          onClick={handleLogout}
-          className="mt-auto flex items-center text-black/90 hover:text-black transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(1rem)" }}
-        >
-          <LogOut className="w-8 h-8 shrink-0" />
-          <span
-            className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
-            style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
-          >
-            Logout
-          </span>
-        </button>
+        {/* Recent Chats Section - Only visible when sidebar is open */}
+        {isSidebarOpen && (
+          <div className="mt-auto mb-4">
+            <div className="px-6 mb-3">
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Chats</h3>
+            </div>
+            <div className="space-y-1 px-3 max-h-48 overflow-y-auto">
+              <RecentChatItem>
+                What's the average salary of our alumni?
+              </RecentChatItem>
+              <RecentChatItem>
+                How do our alumni compare to the general population?
+              </RecentChatItem>
+              <RecentChatItem>
+                What industries are our alumni working in?
+              </RecentChatItem>
+              <RecentChatItem>
+                Find me people that live in New York
+              </RecentChatItem>
+              <RecentChatItem>
+                Peak AI located in New York
+              </RecentChatItem>
+              <RecentChatItem>
+                Founders working on climate solutions
+              </RecentChatItem>
+              <RecentChatItem>
+                Founders offering open-source solutions
+              </RecentChatItem>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   )
@@ -189,6 +193,18 @@ function SidebarLink({
         {children}
       </span>
     </Link>
+  )
+}
+
+function RecentChatItem({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md cursor-pointer transition-colors duration-200 truncate leading-relaxed">
+      {children}
+    </div>
   )
 }
 
