@@ -139,7 +139,7 @@ export default function DashboardPage() {
   const [isSearching, setIsSearching] = useState(false)
 
   // Add search history hook
-  const { saveSearch } = useSearchHistory()
+  const { saveSearch, loadSearchDetails } = useSearchHistory()
 
   const [authState, setAuthState] = useState({
     isLoading: true,
@@ -818,6 +818,77 @@ export default function DashboardPage() {
       }
     };
   }, []);
+
+  // Listen for search loading events from sidebar
+  useEffect(() => {
+    const handleLoadSearch = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { id, query } = customEvent.detail;
+      await loadPastSearch(id, query);
+    };
+
+    // Listen for custom event
+    window.addEventListener('loadSearch', handleLoadSearch);
+
+    // Check localStorage for pending search load (when navigating from other pages)
+    const pendingSearch = localStorage.getItem('loadSearch');
+    if (pendingSearch) {
+      try {
+        const searchData = JSON.parse(pendingSearch);
+        // Only load if it's recent (within 5 seconds) to avoid stale data
+        if (Date.now() - searchData.timestamp < 5000) {
+          loadPastSearch(searchData.id, searchData.query);
+        }
+        localStorage.removeItem('loadSearch');
+      } catch (error) {
+        console.error('Error parsing pending search:', error);
+        localStorage.removeItem('loadSearch');
+      }
+    }
+
+    return () => {
+      window.removeEventListener('loadSearch', handleLoadSearch);
+    };
+  }, []);
+
+  // Function to load a past search
+  const loadPastSearch = async (searchId: string, query: string) => {
+    try {
+      console.log(`Loading past search: ${searchId} with query: "${query}"`);
+      
+      // Set the search query in the input
+      setSearchQuery(query);
+      
+      // Load the search details including results
+      const searchDetails = await loadSearchDetails(searchId);
+      
+      if (searchDetails) {
+        // Set the search results
+        setSearchResults(searchDetails.results);
+        setSearchPhase('complete');
+        
+        // Set some basic display text to show it's a loaded search
+        setDisplayedText({
+          analyzing: 'Loaded previous search',
+          searching: `Restored search for: "${query}"`,
+          profiling: 'Previous analysis results',
+          filters: 'Previous filters applied',
+          displaying: `Showing ${searchDetails.results.length} saved results`
+        });
+        
+        // Expand the analysis section
+        setIsAnalysisCollapsed(false);
+        
+        // Track the loaded search
+        analytics.trackSearch(query, searchDetails.results.length, { 
+          source: 'history_load',
+          status: 'loaded'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading past search:', error);
+    }
+  };
 
   // Handle school name click in demo mode
   const handleSchoolNameClick = () => {

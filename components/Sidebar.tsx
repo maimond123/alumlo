@@ -161,6 +161,26 @@ export default function Sidebar() {
   const recentSectionTitle = pathname === '/dashboard' ? 'Recent Searches' : 'Recent Chats'
   const recentItems = pathname === '/dashboard' ? recentSearches : recentConversations
 
+  // Function to load a search into the dashboard
+  const loadSearchInDashboard = (searchId: string, query: string) => {
+    // Store the search data in localStorage to be picked up by the dashboard
+    localStorage.setItem('loadSearch', JSON.stringify({
+      id: searchId,
+      query: query,
+      timestamp: Date.now()
+    }))
+    
+    // Navigate to dashboard if not already there
+    if (pathname !== '/dashboard') {
+      router.push('/dashboard')
+    } else {
+      // If already on dashboard, trigger a custom event to reload the search
+      window.dispatchEvent(new CustomEvent('loadSearch', {
+        detail: { id: searchId, query: query }
+      }))
+    }
+  }
+
   return (
     <motion.div
       className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
@@ -191,7 +211,7 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation Links with more space between them */}
-        <nav className="flex-1">
+        <nav>
           <SidebarLink href="/dashboard" icon={Home} isOpen={isSidebarOpen}>
             Dashboard
           </SidebarLink>
@@ -211,7 +231,7 @@ export default function Sidebar() {
 
         {/* Recent Section - Positioned close below navigation */}
         {isSidebarOpen && shouldShowRecentSection && (
-          <div className="mt-8 mb-auto">
+          <div className="mt-8">
             <div className="px-6 mb-4">
               <h3 className="text-sm font-medium text-gray-600">{recentSectionTitle}</h3>
             </div>
@@ -229,9 +249,8 @@ export default function Sidebar() {
                     formatTime={formatTime}
                     onClick={() => {
                       if (pathname === '/dashboard') {
-                        // For searches, we could potentially restore the search query
-                        // For now, just navigate to dashboard
-                        router.push('/dashboard')
+                        // Load the search into the dashboard
+                        loadSearchInDashboard(item.id, item.query || '')
                       } else {
                         // For conversations, we could potentially load the conversation
                         // For now, just navigate to learn
@@ -248,6 +267,9 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+
+        {/* Spacer to push profile to bottom */}
+        <div className="flex-1"></div>
 
         {/* Profile Section moved to bottom */}
         <div
