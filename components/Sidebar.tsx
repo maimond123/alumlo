@@ -4,11 +4,13 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Home, Upload, Brain } from "lucide-react"
+import { BarChart2, FileText, Home, Upload, Brain, Search, MessageCircle } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { getUserEmail, getCurrentUser } from '../app/utils/auth'
+import { useRecentActivity } from '../hooks/useRecentActivity'
+import { useRouter } from 'next/navigation'
 
 interface UserInfo {
   first_name: string;
@@ -19,6 +21,10 @@ interface UserInfo {
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const router = useRouter()
+  
+  // Add recent activity hook
+  const { recentActivity, loadRecentActivity, formatActivityTitle, formatActivityTime } = useRecentActivity()
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -55,6 +61,13 @@ export default function Sidebar() {
     
     getUserInfo()
   }, [])
+
+  // Load recent activity when sidebar opens
+  useEffect(() => {
+    if (isSidebarOpen) {
+      loadRecentActivity()
+    }
+  }, [isSidebarOpen, loadRecentActivity])
 
   // Get initials from full name
   const getInitials = () => {
@@ -132,34 +145,33 @@ export default function Sidebar() {
           </SidebarLink>
         </nav>
 
-        {/* Recent Chats Section - Only visible when sidebar is open */}
+        {/* Recent Activity Section - Only visible when sidebar is open */}
         {isSidebarOpen && (
           <div className="mt-auto mb-4">
             <div className="px-6 mb-3">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Chats</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Activity</h3>
             </div>
             <div className="space-y-1 px-3 max-h-48 overflow-y-auto">
-              <RecentChatItem>
-                What's the average salary of our alumni?
-              </RecentChatItem>
-              <RecentChatItem>
-                How do our alumni compare to the general population?
-              </RecentChatItem>
-              <RecentChatItem>
-                What industries are our alumni working in?
-              </RecentChatItem>
-              <RecentChatItem>
-                Find me people that live in New York
-              </RecentChatItem>
-              <RecentChatItem>
-                Peak AI located in New York
-              </RecentChatItem>
-              <RecentChatItem>
-                Founders working on climate solutions
-              </RecentChatItem>
-              <RecentChatItem>
-                Founders offering open-source solutions
-              </RecentChatItem>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((item) => (
+                                     <RecentActivityItem
+                     key={item.id}
+                     item={item}
+                     formatActivityTime={formatActivityTime}
+                     onClick={() => {
+                       if (item.type === 'search') {
+                         router.push('/dashboard')
+                       } else {
+                         router.push('/learn')
+                       }
+                     }}
+                   />
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm px-3 py-2">
+                  No recent activity
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -196,14 +208,46 @@ function SidebarLink({
   )
 }
 
-function RecentChatItem({
-  children,
+function RecentActivityItem({
+  item,
+  onClick,
+  formatActivityTime,
 }: {
-  children: React.ReactNode
+  item: {
+    id: string;
+    type: 'search' | 'learn';
+    title: string;
+    created_at: string;
+  };
+  onClick: () => void;
+  formatActivityTime: (created_at: string) => string;
 }) {
+  const getIcon = () => {
+    if (item.type === 'search') {
+      return <Search className="w-4 h-4 text-gray-500" />
+    } else {
+      return <MessageCircle className="w-4 h-4 text-gray-500" />
+    }
+  }
+
   return (
-    <div className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md cursor-pointer transition-colors duration-200 truncate leading-relaxed">
-      {children}
+    <div 
+      className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md cursor-pointer transition-colors duration-200 group"
+      onClick={onClick}
+    >
+      <div className="flex items-start space-x-2">
+        <div className="mt-0.5 flex-shrink-0">
+          {getIcon()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="truncate font-medium">
+            {item.title}
+          </div>
+          <div className="text-xs text-gray-500 mt-0.5">
+            {formatActivityTime(item.created_at)}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import analytics from "../utils/analytics"
 import { supabase } from "../data/supabase"
+import { useLearnConversations } from "../../hooks/useLearnConversations"
 
 // Add realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
@@ -97,6 +98,16 @@ export default function LearnPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Add conversation history hook
+  const { 
+    createConversation, 
+    addMessage, 
+    generateConversationTitle 
+  } = useLearnConversations();
+  
+  // Add state for current conversation ID
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
@@ -311,6 +322,17 @@ export default function LearnPage() {
     // Track the question in analytics
     analytics.trackLearnModeQuestion(userQuestion);
     
+    // Create conversation if this is the first message and not in demo mode
+    let conversationId = currentConversationId;
+    if (!conversationId && !isDemoMode) {
+      const title = generateConversationTitle(userQuestion);
+      conversationId = await createConversation({
+        title,
+        initialMessage: userQuestion
+      });
+      setCurrentConversationId(conversationId);
+    }
+    
     try {
       // Call the API to get the response
       const response = await fetch('/api/chat', {
@@ -361,6 +383,15 @@ export default function LearnPage() {
       // Add the AI's answer to the conversation history
       setConversations(prev => [...prev, { role: 'assistant', content: responseText }]);
       setCurrentAnswer('');
+      
+      // Save assistant message to database if not in demo mode
+      if (conversationId && !isDemoMode) {
+        await addMessage({
+          conversationId,
+          role: 'assistant',
+          content: responseText
+        });
+      }
       
     } catch (error) {
       console.error('Error in learn mode chat:', error);

@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import analytics from "../utils/analytics"
 import { FaLightbulb, FaTimes } from "react-icons/fa"
+import { useSearchHistory } from "../../hooks/useSearchHistory"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -136,6 +137,9 @@ export default function DashboardPage() {
   // Add new states for search functionality
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
+
+  // Add search history hook
+  const { saveSearch } = useSearchHistory()
 
   const [authState, setAuthState] = useState({
     isLoading: true,
@@ -545,6 +549,19 @@ export default function DashboardPage() {
       console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
       setSearchResults(searchResultsData);
       console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
+      
+      // Save search to history
+      if (!isDemoMode) {
+        await saveSearch({
+          query: currentQuery,
+          results: searchResultsData,
+          metadata: {
+            source: directQuery ? 'tag_click' : 'search_input',
+            expandedQueries: expandedQueries,
+            extractedFilters: extractedFilters
+          }
+        });
+      }
       
       // Track search completion with result count
       analytics.trackSearch(currentQuery, searchResultsData?.length || 0, { 
