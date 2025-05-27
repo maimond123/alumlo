@@ -10,7 +10,7 @@ import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { getUserEmail, getCurrentUser } from '../app/utils/auth'
 import { useRecentActivity } from '../hooks/useRecentActivity'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface UserInfo {
   first_name: string;
@@ -22,9 +22,15 @@ export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const router = useRouter()
+  const pathname = usePathname()
   
   // Add recent activity hook
   const { recentActivity, loadRecentActivity, formatActivityTitle, formatActivityTime } = useRecentActivity()
+  
+  // Add state for page-specific recent items
+  const [recentSearches, setRecentSearches] = useState<any[]>([])
+  const [recentConversations, setRecentConversations] = useState<any[]>([])
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false)
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -62,12 +68,63 @@ export default function Sidebar() {
     getUserInfo()
   }, [])
 
-  // Load recent activity when sidebar opens
+  // Load page-specific recent data
+  const loadRecentSearches = async () => {
+    try {
+      setIsLoadingRecent(true)
+      const userEmail = await getUserEmail()
+      if (!userEmail) return
+
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('id, query, created_at')
+        .eq('user_email', userEmail)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+      setRecentSearches(data || [])
+    } catch (error) {
+      console.error('Error loading recent searches:', error)
+      setRecentSearches([])
+    } finally {
+      setIsLoadingRecent(false)
+    }
+  }
+
+  const loadRecentConversations = async () => {
+    try {
+      setIsLoadingRecent(true)
+      const userEmail = await getUserEmail()
+      if (!userEmail) return
+
+      const { data, error } = await supabase
+        .from('learn_conversations')
+        .select('id, title, updated_at')
+        .eq('user_email', userEmail)
+        .order('updated_at', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+      setRecentConversations(data || [])
+    } catch (error) {
+      console.error('Error loading recent conversations:', error)
+      setRecentConversations([])
+    } finally {
+      setIsLoadingRecent(false)
+    }
+  }
+
+  // Load page-specific data when sidebar opens and pathname changes
   useEffect(() => {
     if (isSidebarOpen) {
-      loadRecentActivity()
+      if (pathname === '/dashboard') {
+        loadRecentSearches()
+      } else if (pathname === '/learn') {
+        loadRecentConversations()
+      }
     }
-  }, [isSidebarOpen, loadRecentActivity])
+  }, [isSidebarOpen, pathname])
 
   // Get initials from full name
   const getInitials = () => {
@@ -80,6 +137,29 @@ export default function Sidebar() {
     if (!userInfo) return 'Loading...'
     return `${userInfo.first_name} ${userInfo.last_name}`
   }
+
+  // Format time for recent items
+  const formatTime = (timestamp: string) => {
+    const now = new Date()
+    const time = new Date(timestamp)
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) return 'Just now'
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+    
+    const diffInHours = Math.floor(diffInMinutes / 60)
+    if (diffInHours < 24) return `${diffInHours}h ago`
+    
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return `${diffInDays}d ago`
+    
+    return time.toLocaleDateString()
+  }
+
+  // Determine what to show in the recent section
+  const shouldShowRecentSection = pathname === '/dashboard' || pathname === '/learn'
+  const recentSectionTitle = pathname === '/dashboard' ? 'Recent Searches' : 'Recent Chats'
+  const recentItems = pathname === '/dashboard' ? recentSearches : recentConversations
 
   return (
     <motion.div
@@ -129,23 +209,32 @@ export default function Sidebar() {
           </SidebarLink>
         </nav>
 
-        {/* Recent Activity Section - Between navigation and profile */}
-        {isSidebarOpen && (
+        {/* Recent Section - Between navigation and profile */}
+        {isSidebarOpen && shouldShowRecentSection && (
           <div className="mb-6">
             <div className="px-6 mb-3">
-              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent Activity</h3>
+              <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider">{recentSectionTitle}</h3>
             </div>
             <div className="space-y-1 px-3 max-h-48 overflow-y-auto">
-              {recentActivity.length > 0 ? (
-                recentActivity.map((item) => (
-                  <RecentActivityItem
+              {isLoadingRecent ? (
+                <div className="text-gray-500 text-sm px-3 py-2">
+                  Loading...
+                </div>
+              ) : recentItems.length > 0 ? (
+                recentItems.map((item) => (
+                  <RecentItem
                     key={item.id}
                     item={item}
-                    formatActivityTime={formatActivityTime}
+                    type={pathname === '/dashboard' ? 'search' : 'learn'}
+                    formatTime={formatTime}
                     onClick={() => {
-                      if (item.type === 'search') {
+                      if (pathname === '/dashboard') {
+                        // For searches, we could potentially restore the search query
+                        // For now, just navigate to dashboard
                         router.push('/dashboard')
                       } else {
+                        // For conversations, we could potentially load the conversation
+                        // For now, just navigate to learn
                         router.push('/learn')
                       }
                     }}
@@ -153,7 +242,7 @@ export default function Sidebar() {
                 ))
               ) : (
                 <div className="text-gray-500 text-sm px-3 py-2">
-                  No recent activity
+                  {pathname === '/dashboard' ? 'No recent searches' : 'No recent chats'}
                 </div>
               )}
             </div>
@@ -211,25 +300,44 @@ function SidebarLink({
   )
 }
 
-function RecentActivityItem({
+function RecentItem({
   item,
+  type,
   onClick,
-  formatActivityTime,
+  formatTime,
 }: {
   item: {
     id: string;
-    type: 'search' | 'learn';
-    title: string;
-    created_at: string;
+    query?: string;
+    title?: string;
+    created_at?: string;
+    updated_at?: string;
   };
+  type: 'search' | 'learn';
   onClick: () => void;
-  formatActivityTime: (created_at: string) => string;
+  formatTime: (timestamp: string) => string;
 }) {
   const getIcon = () => {
-    if (item.type === 'search') {
+    if (type === 'search') {
       return <Search className="w-4 h-4 text-gray-500" />
     } else {
       return <MessageCircle className="w-4 h-4 text-gray-500" />
+    }
+  }
+
+  const getTitle = () => {
+    if (type === 'search') {
+      return item.query || 'Untitled search'
+    } else {
+      return item.title || 'Untitled conversation'
+    }
+  }
+
+  const getTimestamp = () => {
+    if (type === 'search') {
+      return item.created_at || ''
+    } else {
+      return item.updated_at || ''
     }
   }
 
@@ -244,10 +352,10 @@ function RecentActivityItem({
         </div>
         <div className="flex-1 min-w-0">
           <div className="truncate font-medium">
-            {item.title}
+            {getTitle()}
           </div>
           <div className="text-xs text-gray-500 mt-0.5">
-            {formatActivityTime(item.created_at)}
+            {formatTime(getTimestamp())}
           </div>
         </div>
       </div>
