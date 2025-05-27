@@ -550,7 +550,7 @@ export default function DashboardPage() {
       setSearchResults(searchResultsData);
       console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
       
-      // Save search to history
+      // Save search to history with complete session data
       if (!isDemoMode) {
         await saveSearch({
           query: currentQuery,
@@ -558,7 +558,22 @@ export default function DashboardPage() {
           metadata: {
             source: directQuery ? 'tag_click' : 'search_input',
             expandedQueries: expandedQueries,
-            extractedFilters: extractedFilters
+            extractedFilters: extractedFilters,
+            // Save complete search session data
+            searchSession: {
+              displayedText: {
+                analyzing: displayedText.analyzing,
+                searching: displayedText.searching,
+                profiling: displayedText.profiling,
+                filters: displayedText.filters,
+                displaying: displayedText.displaying
+              },
+              searchPhase: 'complete',
+              isAnalysisCollapsed: false,
+              totalAlumniCount: totalAlumniCount,
+              formattedSchoolName: formattedSchoolName,
+              isDemoMode: isDemoMode
+            }
           }
         });
       }
@@ -867,22 +882,42 @@ export default function DashboardPage() {
         setSearchResults(searchDetails.results);
         setSearchPhase('complete');
         
-        // Set some basic display text to show it's a loaded search
-        setDisplayedText({
-          analyzing: 'Loaded previous search',
-          searching: `Restored search for: "${query}"`,
-          profiling: 'Previous analysis results',
-          filters: 'Previous filters applied',
-          displaying: `Showing ${searchDetails.results.length} saved results`
-        });
+        // Check if we have complete session data saved
+        const sessionData = searchDetails.search.metadata?.searchSession;
         
-        // Expand the analysis section
-        setIsAnalysisCollapsed(false);
+        if (sessionData && sessionData.displayedText) {
+          // Restore complete search session
+          setDisplayedText(sessionData.displayedText);
+          setIsAnalysisCollapsed(sessionData.isAnalysisCollapsed || false);
+          
+          // Restore expanded queries and filters if available
+          if (searchDetails.search.metadata?.expandedQueries) {
+            setExpandedQueries(searchDetails.search.metadata.expandedQueries);
+          }
+          if (searchDetails.search.metadata?.extractedFilters) {
+            setExtractedFilters(searchDetails.search.metadata.extractedFilters);
+          }
+          
+          console.log('Restored complete search session data');
+        } else {
+          // Fallback for searches without complete session data
+          setDisplayedText({
+            analyzing: 'Loaded previous search',
+            searching: `Restored search for: "${query}"`,
+            profiling: 'Previous analysis results not available',
+            filters: 'Previous filters not available',
+            displaying: `Showing ${searchDetails.results.length} saved results`
+          });
+          setIsAnalysisCollapsed(false);
+          
+          console.log('Used fallback display for search without session data');
+        }
         
         // Track the loaded search
         analytics.trackSearch(query, searchDetails.results.length, { 
           source: 'history_load',
-          status: 'loaded'
+          status: 'loaded',
+          hasSessionData: !!sessionData
         });
       }
     } catch (error) {

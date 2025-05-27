@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Home, Upload, Brain, Search, MessageCircle } from "lucide-react"
+import { BarChart2, FileText, Search, Upload, Brain, MessageCircle } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
@@ -212,20 +212,20 @@ export default function Sidebar() {
 
         {/* Navigation Links with more space between them */}
         <nav>
-          <SidebarLink href="/dashboard" icon={Home} isOpen={isSidebarOpen}>
-            Dashboard
+          <SidebarLink href="/dashboard" icon={Search} isOpen={isSidebarOpen}>
+            Search
           </SidebarLink>
           <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen}>
             Learn
           </SidebarLink>
           <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen}>
-            Analytics
+            Visualize
           </SidebarLink>
           <SidebarLink href="/reports" icon={FileText} isOpen={isSidebarOpen}>
             Reports
           </SidebarLink>
           <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen}>
-            Upload Data
+            Enrich Data
           </SidebarLink>
         </nav>
 
