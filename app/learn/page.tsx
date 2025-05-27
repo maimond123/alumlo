@@ -479,24 +479,13 @@ export default function LearnPage() {
             <>
               <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
-                  {/* Mode toggle button on left side */}
-                  <button
-                    type="button"
-                    onClick={() => router.push('/dashboard')}
-                    className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                    aria-label="Switch to search mode"
-                  >
-                    <Search className="h-5 w-5" />
-                  </button>
-                  
                   <input
                     type="text"
                     value={currentQuestion}
                     onChange={(e) => setCurrentQuestion(e.target.value)}
                     placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                    className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                    disabled={isProcessing}
-                    onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
+                    className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                    onKeyDown={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
                   />
                   
                   {/* Buttons inside the input field, positioned at the bottom right */}
@@ -516,11 +505,11 @@ export default function LearnPage() {
                       </svg>
                     </button>
                     
-                    {/* Send button */}
+                    {/* Search/Send button */}
                     <button
-                      type="submit"
-                      disabled={isProcessing || !currentQuestion.trim()}
-                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      onClick={(e) => handleLearnSubmit(e)}
+                      disabled={isProcessing}
+                      className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Send"
                     >
                       {isProcessing ? (
@@ -645,24 +634,13 @@ export default function LearnPage() {
                 <div className="max-w-2xl mx-auto">
                   <form onSubmit={handleLearnSubmit} className="w-full">
                     <div className="relative">
-                      {/* Mode toggle button on left side */}
-                      <button
-                        type="button"
-                        onClick={() => router.push('/dashboard')}
-                        className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                        aria-label="Switch to search mode"
-                      >
-                        <Search className="h-5 w-5" />
-                      </button>
-                      
                       <input
                         type="text"
                         value={currentQuestion}
                         onChange={(e) => setCurrentQuestion(e.target.value)}
                         placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                        className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                        disabled={isProcessing}
-                        onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
+                        className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                        onKeyDown={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
                       />
                       
                       {/* Buttons inside the input field, positioned at the bottom right */}
@@ -682,11 +660,11 @@ export default function LearnPage() {
                           </svg>
                         </button>
                         
-                        {/* Send button */}
+                        {/* Search/Send button */}
                         <button
-                          type="submit"
-                          disabled={isProcessing || !currentQuestion.trim()}
-                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          onClick={(e) => handleLearnSubmit(e)}
+                          disabled={isProcessing}
+                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                           aria-label="Send"
                         >
                           {isProcessing ? (
