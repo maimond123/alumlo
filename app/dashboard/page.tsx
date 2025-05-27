@@ -849,51 +849,65 @@ export default function DashboardPage() {
     const handleLoadSearch = async (event: Event) => {
       const customEvent = event as CustomEvent;
       const { id, query } = customEvent.detail;
+      console.log(`[DASHBOARD DEBUG] Received loadSearch event: ${id}, "${query}"`);
       await loadPastSearch(id, query);
     };
 
     // Listen for custom event
     window.addEventListener('loadSearch', handleLoadSearch);
+    console.log(`[DASHBOARD DEBUG] Added loadSearch event listener`);
 
     // Check localStorage for pending search load (when navigating from other pages)
     const pendingSearch = localStorage.getItem('loadSearch');
     if (pendingSearch) {
       try {
         const searchData = JSON.parse(pendingSearch);
+        console.log(`[DASHBOARD DEBUG] Found pending search in localStorage:`, searchData);
         // Only load if it's recent (within 5 seconds) to avoid stale data
         if (Date.now() - searchData.timestamp < 5000) {
+          console.log(`[DASHBOARD DEBUG] Loading pending search: ${searchData.id}`);
           loadPastSearch(searchData.id, searchData.query);
+        } else {
+          console.log(`[DASHBOARD DEBUG] Pending search too old, ignoring`);
         }
         localStorage.removeItem('loadSearch');
       } catch (error) {
         console.error('Error parsing pending search:', error);
         localStorage.removeItem('loadSearch');
       }
+    } else {
+      console.log(`[DASHBOARD DEBUG] No pending search found in localStorage`);
     }
 
     return () => {
       window.removeEventListener('loadSearch', handleLoadSearch);
+      console.log(`[DASHBOARD DEBUG] Removed loadSearch event listener`);
     };
-  }, []);
+  }, [loadSearchDetails]);
 
   // Function to load a past search
   const loadPastSearch = async (searchId: string, query: string) => {
     try {
-      console.log(`Loading past search: ${searchId} with query: "${query}"`);
+      console.log(`[DASHBOARD DEBUG] loadPastSearch called with: ${searchId}, "${query}"`);
       
       // Set the search query in the input
       setSearchQuery(query);
+      console.log(`[DASHBOARD DEBUG] Set search query to: "${query}"`);
       
       // Load the search details including results
+      console.log(`[DASHBOARD DEBUG] Loading search details for ID: ${searchId}`);
       const searchDetails = await loadSearchDetails(searchId);
+      console.log(`[DASHBOARD DEBUG] Search details loaded:`, searchDetails);
       
       if (searchDetails) {
         // Set the search results
         setSearchResults(searchDetails.results);
         setSearchPhase('complete');
+        console.log(`[DASHBOARD DEBUG] Set ${searchDetails.results.length} search results`);
         
         // Check if we have complete session data saved
         const sessionData = searchDetails.search.metadata?.searchSession;
+        console.log(`[DASHBOARD DEBUG] Session data:`, sessionData);
         
         if (sessionData && sessionData.displayedText) {
           // Restore complete search session
@@ -908,7 +922,7 @@ export default function DashboardPage() {
             setExtractedFilters(searchDetails.search.metadata.extractedFilters);
           }
           
-          console.log('[DEBUG] Restored complete search session data:', {
+          console.log('[DASHBOARD DEBUG] Restored complete search session data:', {
             hasAnalyzing: !!sessionData.displayedText.analyzing,
             hasSearching: !!sessionData.displayedText.searching,
             hasProfiling: !!sessionData.displayedText.profiling,
@@ -928,7 +942,7 @@ export default function DashboardPage() {
           });
           setIsAnalysisCollapsed(false);
           
-          console.log('Used fallback display for search without session data');
+          console.log('[DASHBOARD DEBUG] Used fallback display for search without session data');
         }
         
         // Track the loaded search
@@ -937,9 +951,13 @@ export default function DashboardPage() {
           status: 'loaded',
           hasSessionData: !!sessionData
         });
+        
+        console.log(`[DASHBOARD DEBUG] loadPastSearch completed successfully`);
+      } else {
+        console.log(`[DASHBOARD DEBUG] No search details found for ID: ${searchId}`);
       }
     } catch (error) {
-      console.error('Error loading past search:', error);
+      console.error('[DASHBOARD DEBUG] Error loading past search:', error);
     }
   };
 

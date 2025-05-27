@@ -163,6 +163,8 @@ export default function Sidebar() {
 
   // Function to load a search into the dashboard
   const loadSearchInDashboard = (searchId: string, query: string) => {
+    console.log(`[SIDEBAR DEBUG] Loading search: ${searchId} with query: "${query}"`);
+    
     // Store the search data in localStorage to be picked up by the dashboard
     localStorage.setItem('loadSearch', JSON.stringify({
       id: searchId,
@@ -172,9 +174,11 @@ export default function Sidebar() {
     
     // Navigate to dashboard if not already there
     if (pathname !== '/dashboard') {
+      console.log(`[SIDEBAR DEBUG] Navigating to dashboard from ${pathname}`);
       router.push('/dashboard')
     } else {
       // If already on dashboard, trigger a custom event to reload the search
+      console.log(`[SIDEBAR DEBUG] Already on dashboard, dispatching loadSearch event`);
       window.dispatchEvent(new CustomEvent('loadSearch', {
         detail: { id: searchId, query: query }
       }))
