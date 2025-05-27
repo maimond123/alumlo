@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, Brain } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -185,15 +185,7 @@ export default function DashboardPage() {
   const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
   const [isProTipDismissed, setIsProTipDismissed] = useState(false)
   
-  // Add state for mode toggle
-  const [mode, setMode] = useState<'search' | 'learn'>('search');
 
-  // Add these new states for the Learn mode
-  const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [currentAnswer, setCurrentAnswer] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Initialize randomized tags on component mount
   useEffect(() => {
@@ -902,114 +894,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Add the learn mode typewriter effect
-  const learnTypewriterEffect = (text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      setCurrentAnswer('');
-      let i = 0;
-      const speed = 20; // slightly faster than the search typewriter
-      
-      const typing = setInterval(() => {
-        if (i <= text.length) {
-          setCurrentAnswer(text.substring(0, i));
-          i++;
-        } else {
-          clearInterval(typing);
-          resolve();
-        }
-      }, speed);
-    });
-  };
 
-  // Add handleLearnSubmit function to handle questions in learn mode
-  const handleLearnSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!currentQuestion.trim()) return;
-    
-    // Add the user's question to the conversation
-    const userQuestion = currentQuestion.trim();
-    setConversations(prev => [...prev, { role: 'user', content: userQuestion }]);
-    setCurrentQuestion('');
-    setIsProcessing(true);
-    
-    // Track the question in analytics
-    analytics.trackLearnModeQuestion(userQuestion);
-    
-    try {
-      // Call the API to get the response
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          message: userQuestion,
-          schoolName: formattedSchoolName || "Your School",
-          history: conversations
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get response from chat API');
-      }
-      
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Response body is null');
-      }
-      
-      // Get the streaming response
-      let responseText = '';
-      const processStream = async () => {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) {
-            break;
-          }
-          
-          // Decode and process the chunk
-          const chunk = new TextDecoder().decode(value);
-          responseText += chunk;
-          
-          // Update the display with typewriter-like effect
-          setCurrentAnswer(responseText);
-        }
-      };
-      
-      await processStream();
-      
-      // Use the typewriter effect for a smoother appearance
-      await learnTypewriterEffect(responseText);
-      
-      // Add the AI's answer to the conversation history
-      setConversations(prev => [...prev, { role: 'assistant', content: responseText }]);
-      setCurrentAnswer('');
-      
-    } catch (error) {
-      console.error('Error in learn mode chat:', error);
-      setConversations(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm sorry, there was an error processing your request. Please try again." 
-      }]);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Add a function to scroll to the bottom of the chat
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [conversations, currentAnswer]);
-
-  // Initialize with a welcome message when switching to learn mode
-  useEffect(() => {
-    // Remove the auto-generation of welcome message
-    // Keep the dependency array to avoid linter warnings
-  }, [mode, formattedSchoolName, conversations.length]);
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -1045,50 +930,31 @@ export default function DashboardPage() {
           (searchPhase === 'idle' && !displayedText.analyzing && !displayedText.searching && !displayedText.profiling && 
            !displayedText.filters && searchResults.length === 0) 
              ? 'justify-center' : 'pt-24'
-        } ${mode === 'learn' && conversations.length > 0 ? 'pb-32' : ''}`}>
-          {/* Only show title when there are no conversations in Learn mode */}
-          {!(mode === 'learn' && conversations.length > 0) && (
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-              {mode === 'search' ? 'Search' : 'Learn'}{" "}
-              {isDemoMode ? (
-                <span 
-                  className="text-emerald-600 cursor-pointer hover:underline"
-                  onClick={handleSchoolNameClick}
-                >
-                  {"{Your School}"}
-                </span>
-              ) : (
-                formattedSchoolName
-              )}
-              {" "}Alumni Data
-            </h1>
-          )}
+        }`}>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+            Search{" "}
+            {isDemoMode ? (
+              <span 
+                className="text-emerald-600 cursor-pointer hover:underline"
+                onClick={handleSchoolNameClick}
+              >
+                {"{Your School}"}
+              </span>
+            ) : (
+              formattedSchoolName
+            )}
+            {" "}Alumni Data
+          </h1>
 
-          {/* Search interface - only show in search mode */}
-          {mode === 'search' && (
-            <>
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
             <div className="relative mb-6">
-                  {/* Mode toggle button on left side */}
-                  <button
-                    type="button"
-                    onClick={() => setMode(mode === 'search' ? 'learn' : 'search')}
-                    className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                    aria-label={`Switch to ${mode === 'search' ? 'learn' : 'search'} mode`}
-                  >
-                    {mode === 'search' ? (
-                      <Brain className="h-5 w-5" />
-                    ) : (
-                      <Search className="h-5 w-5" />
-                    )}
-                  </button>
                   
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Begin typing to search through your alumni network..."
-                    className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
+                className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
               
@@ -1189,264 +1055,8 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-            </>
-          )}
 
-          {/* Learn mode interface - only show in learn mode */}
-          {mode === 'learn' && (
-            <>
-              {conversations.length === 0 ? (
-                <>
-                  <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
-                    <div className="relative mb-6">
-                      {/* Mode toggle button on left side */}
-                      <button
-                        type="button"
-                        onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
-                        className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                        aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
-                      >
-                        {mode === 'learn' ? (
-                          <Search className="h-5 w-5" />
-                        ) : (
-                          <Brain className="h-5 w-5" />
-                        )}
-                      </button>
-                      
-                      <input
-                        type="text"
-                        value={currentQuestion}
-                        onChange={(e) => setCurrentQuestion(e.target.value)}
-                        placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                        className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                        disabled={isProcessing}
-                        onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
-                      />
-                      
-                      {/* Buttons inside the input field, positioned at the bottom right */}
-                      <div className="absolute bottom-3 right-4 flex space-x-2">
-                        {/* Refresh button */}
-                        <button
-                          type="button" 
-                          onClick={() => {
-                            setCurrentQuestion('');
-                            setConversations([]);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                          aria-label="Clear"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        
-                        {/* Send button */}
-                        <button
-                          type="submit"
-                          disabled={isProcessing || !currentQuestion.trim()}
-                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                          aria-label="Send"
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-
-                  <style jsx>{tagScrollAnimation}</style>
-                  
-                  <div className="w-full max-w-2xl">
-                    <div className="scrolling-tags-container">
-                      <div className="scrolling-tags">
-                        {/* First copy of question suggestion tags */}
-                        <div className="scrolling-tags-content">
-                          {[
-                            "What's the average salary of our alumni?",
-                            "How do our alumni compare to the general population?",
-                            "What industries are our alumni working in?",
-                            "How many of our alumni have founded companies?",
-                            "What are the career progression patterns of our alumni?",
-                            "What percentage of alumni reach executive positions?",
-                            "In which countries do our alumni work?",
-                            "How quickly do our alumni change jobs?",
-                            "What's the entrepreneurship success rate of our alumni?",
-                            "How can alumni data help with student recruitment?"
-                          ].map((question, index) => (
-                            <span 
-                              key={`first-learn-${index}`}
-                              onClick={() => {
-                                setCurrentQuestion(question);
-                                setTimeout(() => {
-                                  const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                                  handleLearnSubmit(fakeEvent);
-                                }, 50);
-                              }}
-                              className="tag-item"
-                            >
-                              {question}
-                            </span>
-                          ))}
-                        </div>
-                        
-                        {/* Second copy of question suggestion tags for infinite scrolling */}
-                        <div className="scrolling-tags-content">
-                          {[
-                            "What's the average salary of our alumni?",
-                            "How do our alumni compare to the general population in terms of salary?",
-                            "What industries are our alumni working in?",
-                            "How many of our alumni have founded companies?",
-                            "What are the career progression patterns of our alumni?",
-                            "What percentage of alumni reach executive positions?",
-                            "In which countries do our alumni work?",
-                            "How quickly do our alumni change jobs?",
-                            "What's the entrepreneurship success rate of our alumni?",
-                            "How can alumni data help with student recruitment?"
-                          ].map((question, index) => (
-                            <span 
-                              key={`second-learn-${index}`}
-                              onClick={() => {
-                                setCurrentQuestion(question);
-                                setTimeout(() => {
-                                  const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                                  handleLearnSubmit(fakeEvent);
-                                }, 50);
-                              }}
-                              className="tag-item"
-                            >
-                              {question}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Conversation history container - Only show if there's content to display */}
-                  <div className="w-full max-w-4xl flex flex-col gap-4">
-                    {/* Conversation messages without border */}
-                    <div className="w-full space-y-6 mb-6">
-                      {conversations.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div 
-                            className={`max-w-[80%] p-4 rounded-2xl ${
-                              msg.role === 'user' 
-                                ? 'bg-emerald-600 text-white rounded-tr-none' 
-                                : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                            }`}
-                          >
-                            <p className="whitespace-pre-wrap">{msg.content}</p>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Show the in-progress answer */}
-                      {currentAnswer && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
-                            <p className="whitespace-pre-wrap">{currentAnswer}</p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Show typing indicator when processing */}
-                      {isProcessing && !currentAnswer && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
-                            <div className="flex space-x-2">
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Invisible element to scroll to */}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </div>
-
-                  {/* Fixed input form at bottom when there's conversation history */}
-                  <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-                    <div className="max-w-2xl mx-auto">
-                      <form onSubmit={handleLearnSubmit} className="w-full">
-                        <div className="relative">
-                          {/* Mode toggle button on left side */}
-                          <button
-                            type="button"
-                            onClick={() => setMode(mode === 'learn' ? 'search' : 'learn')}
-                            className="absolute left-4 bottom-3 w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors z-10"
-                            aria-label={`Switch to ${mode === 'learn' ? 'search' : 'learn'} mode`}
-                          >
-                            {mode === 'learn' ? (
-                              <Search className="h-5 w-5" />
-                            ) : (
-                              <Brain className="h-5 w-5" />
-                            )}
-                          </button>
-                          
-                          <input
-                            type="text"
-                            value={currentQuestion}
-                            onChange={(e) => setCurrentQuestion(e.target.value)}
-                            placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                            className="w-full px-6 pt-4 pb-14 pl-16 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                            disabled={isProcessing}
-                            onKeyDown={(e) => e.key === 'Enter' && !isProcessing && handleLearnSubmit(e)}
-                          />
-                          
-                          {/* Buttons inside the input field, positioned at the bottom right */}
-                          <div className="absolute bottom-3 right-4 flex space-x-2">
-                            {/* Refresh button */}
-                            <button
-                              type="button" 
-                              onClick={() => {
-                                setCurrentQuestion('');
-                                setConversations([]);
-                              }}
-                              className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                              aria-label="Clear"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                            
-                            {/* Send button */}
-                            <button
-                              type="submit"
-                              disabled={isProcessing || !currentQuestion.trim()}
-                              className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                              aria-label="Send"
-                            >
-                              {isProcessing ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
-          {/* Analysis and Search Results - only show in search mode */}
-          {mode === 'search' && (
+          {/* Analysis and Search Results */}
           <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
             {/* Demo sidebar guidance - only show in demo mode */}
             {isDemoMode && searchPhase === 'idle' && showProTip && !isProTipDismissed && (
@@ -1647,7 +1257,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          )}
 
           {/* First Click Survey Modal */}
           {showFirstClickSurvey && (

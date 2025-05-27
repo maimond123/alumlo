@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Settings, HelpCircle, LogOut, Home, Upload } from "lucide-react"
+import { BarChart2, FileText, Settings, HelpCircle, LogOut, Home, Upload, Brain } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
@@ -128,6 +128,9 @@ export default function Sidebar() {
         <nav className="flex-1 mt-3">
           <SidebarLink href="/dashboard" icon={Home} isOpen={isSidebarOpen}>
             Dashboard
+          </SidebarLink>
+          <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen}>
+            Learn
           </SidebarLink>
           <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen}>
             Analytics
