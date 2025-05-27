@@ -1291,13 +1291,15 @@ export default function DashboardPage() {
                   Found {searchResults.length} alumni matching your search
                 </h2>
                 
-                {/* Add instruction message for clickability */}
-                <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Click on any result to view the person's LinkedIn profile</span>
-                </div>
+                {/* Add instruction message for clickability - only in demo mode */}
+                {isDemoMode && (
+                  <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Click on any result to view the person's LinkedIn profile</span>
+                  </div>
+                )}
                 
                 <div className="grid gap-4">
                   {searchResults.map((result, index) => {
@@ -1401,18 +1403,20 @@ export default function DashboardPage() {
                   })}
                 </div>
                 
-                {/* Add "Want More?" button at the bottom of search results */}
-                <div className="mt-8 pb-12 flex justify-center">
-                  <button 
-                    onClick={() => {
-                      setShowWantMoreModal(true);
-                      analytics.trackModalOpen('WantMoreModal');
-                    }}
-                    className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
-                  >
-                    Want More?
-                  </button>
-                </div>
+                {/* Add "Want More?" button at the bottom of search results - only in demo mode */}
+                {isDemoMode && (
+                  <div className="mt-8 pb-12 flex justify-center">
+                    <button 
+                      onClick={() => {
+                        setShowWantMoreModal(true);
+                        analytics.trackModalOpen('WantMoreModal');
+                      }}
+                      className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
+                    >
+                      Want More?
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
