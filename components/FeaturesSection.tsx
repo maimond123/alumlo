@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
+import Image from 'next/image'
 
 export default function FeaturesSection() {
   // Create separate refs for each section
@@ -34,7 +35,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-6">Perfect search over humans</h2>
@@ -95,7 +96,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
@@ -135,7 +136,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
@@ -179,80 +180,37 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Feature 3: Reports - Redesigned Layout */}
+      {/* New Section: We handle the hard data work */}
       <section 
         ref={reportsRef}
-        className={`pt-12 pb-24 bg-white transition-all duration-1000 ease-in-out border-t border-b border-black border-[0.5px] ${
+        className={`py-32 bg-white transition-all duration-1000 ease-in-out ${
           reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="container mx-auto px-6">
-          {/* Centered Catchphrase */}
-          <div className="text-center mb-16 pt-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
-              Customizable Comprehensive Reports
-            </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-              We transform your alumni data into compelling visual stories that drive action
-            </p>
+        <div className="container mx-auto px-6 text-center">
+          {/* AlumIntel Logo */}
+          <div className="flex justify-center mb-10">
+            <Image 
+              src="/assets/icons8-atom-48.png"
+              alt="AlumIntel Logo"
+              width={72} 
+              height={72}
+            />
           </div>
-          
-          {/* Main Content - Image on Left, Description on Right */}
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            {/* Report Image - Takes up more space */}
-            <div className="lg:w-7/12">
-              <div className="h-[535px] overflow-hidden">
-                <img 
-                  src="/report_demo.png" 
-                  alt="Alumni Success Report" 
-                  className="rounded-xl shadow-xl border border-black w-full h-full object-cover"
-                />
-              </div>
-            </div>
-            
-            {/* Description Content - Takes up less space */}
-            <div className="lg:w-5/12">
-              <h3 className="text-2xl font-bold text-black mb-4">Data-Driven Decision Making</h3>
-              <p className="text-lg text-gray-700 mb-6">
-                Receive professional customizable school reports based on our extracted data and insights. Generating your own report is currently in beta testing.
-              </p>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">School-Specific Analysis</h4>
-                    <p className="text-gray-600">Comprehensive reports tailored to your institution's unique alumni ecosystem and challenges</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">Alumni Success Metrics</h4>
-                    <p className="text-gray-600">Detailed insights into career trajectories, industry impact, and professional achievements</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-2 mr-4 mt-1">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800">Custom Branding Options</h4>
-                    <p className="text-gray-600">Reports can be styled with your institution's colors, logos, and visual identity</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Added padding at the end of the section - reduced further */}
-          <div className="pb-20"></div>
+
+          {/* Headline */}
+          <h2 className="text-5xl md:text-6xl font-bold text-black mb-12 max-w-4xl mx-auto leading-tight">
+            We handle the hard data work <br /> so you can focus on your business.
+          </h2>
+
+          {/* Get a demo button */}
+          <motion.button
+            whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
+          >
+            Get a demo
+          </motion.button>
         </div>
       </section>
     </>
