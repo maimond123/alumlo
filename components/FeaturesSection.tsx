@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
 
 export default function FeaturesSection() {
   // Create separate refs for each section
@@ -34,9 +34,9 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6">
             {/* Text Column (Left on lg screens, or top on mobile) */}
-            <div className="order-2 lg:order-1">
+            <div className="order-2 lg:order-1 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-6">Perfect search over humans</h2>
               <p className="text-xl text-gray-700">
                 Clado filters through millions of profiles to surface genuinely relevant people — not random matches. The results feel like magic, but it's pure AI precision.
@@ -44,176 +44,51 @@ export default function FeaturesSection() {
             </div>
             
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
-            <div className="order-1 lg:order-2">
+            <div className="order-1 lg:order-2 lg:col-span-3">
               {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
               <div className="bg-amber-50/30 backdrop-blur-lg rounded-2xl p-3 shadow-xl">
-                {/* Inner container for the animation (mimics the whiter card) */}
-                <div className="bg-white/60 backdrop-blur-md rounded-xl p-4 shadow-lg w-full">
-                  {/* This is where the existing animation content starts */}
-                  <div className="relative h-[450px] overflow-hidden rounded-lg border border-gray-300/70">
-                    {/* Data table with scrolling effect */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div className="animate-dataScroll" style={{ animationDuration: '15s', animationPlayState: 'running' }}>
-                        {/* Table header */}
-                        <div className="sticky top-0 bg-emerald-100/80 backdrop-blur-sm border-b border-gray-300/70 px-4 py-3 grid grid-cols-5 gap-2 text-sm font-medium text-emerald-800">
-                          <div>Name</div>
-                          <div>Graduation</div>
-                          <div>Company</div>
-                          <div>Position</div>
-                          <div>Location</div>
-                        </div>
-                        
-                        {/* Table rows - will be scrolling */}
-                        {[...Array(40)].map((_, i) => (
-                          <div 
-                            key={i}
-                            className={`px-4 py-3 grid grid-cols-5 gap-2 text-sm border-b border-gray-200/70 ${
-                              i % 7 === 3 ? 'bg-emerald-50/80' : 'bg-white/80'
-                            } transition-colors duration-300 hover:bg-emerald-50/90 backdrop-blur-xs`}
-                          >
-                            <div className="font-medium">Alumni {i + 1}</div>
-                            <div>{2010 + (i % 12)}</div>
-                            <div>{['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Tesla', 'Adobe', 'Salesforce', 'IBM'][i % 10]}</div>
-                            <div>{['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'Marketing Manager', 'Financial Analyst', 'HR Specialist'][i % 7]}</div>
-                            <div>{['San Francisco', 'New York', 'Seattle', 'Boston', 'Austin', 'Chicago', 'Los Angeles', 'Denver'][i % 8]}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Profile highlights that appear periodically */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      {/* Profile 1 */}
-                      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center opacity-0 animate-profile1">
-                        <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200/70">
-                          <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                            <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold">
-                              JD
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-lg text-emerald-800">Jane Doe</h3>
-                            <p className="text-emerald-600 mb-2">Class of 2015</p>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span>Senior Product Manager at Google</span>
-                              </div>
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>San Francisco, CA</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Profile 2 */}
-                      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center opacity-0 animate-profile2">
-                        <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200/70">
-                          <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-                              MS
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-lg text-emerald-800">Michael Smith</h3>
-                            <p className="text-emerald-600 mb-2">Class of 2018</p>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span>Software Engineer at Microsoft</span>
-                              </div>
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>Seattle, WA</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Profile 3 */}
-                      <div className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center opacity-0 animate-profile3">
-                        <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 max-w-md flex items-start space-x-4 border border-emerald-200/70">
-                          <div className="w-20 h-20 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                            <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                              AJ
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-lg text-emerald-800">Aisha Johnson</h3>
-                            <p className="text-emerald-600 mb-2">Class of 2020</p>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span>Data Scientist at Amazon</span>
-                              </div>
-                              <div className="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>New York, NY</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <style jsx>{`
-                      @keyframes dataScroll {
-                        0%, 100% { transform: translateY(0); }
-                        16.66%, 50%, 83.33% { transform: translateY(-50%); }
-                        20%, 53.33%, 86.66% { transform: translateY(0); }
-                      }
-                      
-                      @keyframes profile1 {
-                        0%, 16.66%, 33.33%, 100% { opacity: 0; }
-                        20%, 30% { opacity: 1; }
-                      }
-                      
-                      @keyframes profile2 {
-                        0%, 50%, 66.66%, 100% { opacity: 0; }
-                        53.33%, 63.33% { opacity: 1; }
-                      }
-                      
-                      @keyframes profile3 {
-                        0%, 83.33%, 100% { opacity: 0; }
-                        86.66%, 96.66% { opacity: 1; }
-                      }
-                      
-                      .animate-dataScroll {
-                        animation: dataScroll 15s linear infinite;
-                      }
-                      
-                      .animate-profile1 {
-                        animation: profile1 15s linear infinite;
-                      }
-                      
-                      .animate-profile2 {
-                        animation: profile2 15s linear infinite;
-                      }
-                      
-                      .animate-profile3 {
-                        animation: profile3 15s linear infinite;
-                      }
-                    `}</style>
+                {/* Inner container for the new UI (mimics the whiter card) */}
+                <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-lg w-full text-gray-700">
+                  {/* Search Bar */}
+                  <div className="flex items-center p-3 mb-4 bg-white/80 rounded-lg shadow border border-gray-300/70">
+                    <Search className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" />
+                    <p className="text-sm">
+                      People who work as <span className="text-yellow-700 font-semibold">Site Supervisor</span> & are in <span className="text-yellow-700 font-semibold">NewYork</span>
+                    </p>
                   </div>
-                  {/* End of existing animation content */}
+
+                  {/* Feature List */}
+                  <ul className="space-y-2.5 mb-6 text-sm">
+                    {[ 
+                      "AI Query Translator",
+                      "Data Retrieval from 100M prospects",
+                      "Data Refinery",
+                      "Semantic Relevance Filter",
+                      "Background Learning & Caching",
+                      "Clear Results Delivered in 02s"
+                    ].map((feature, index) => (
+                      <li key={index} className="flex items-center py-1 px-2 bg-white/50 rounded-md">
+                        <Check className="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Profile Card */}
+                  <div className="flex items-center p-3 bg-white/80 rounded-lg shadow border border-gray-300/70">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                      <UserCircle className="w-10 h-10 text-gray-500" />
+                    </div>
+                    <div className="flex-grow">
+                      <h4 className="font-semibold text-gray-800">Ava Knight</h4>
+                      <p className="text-xs text-gray-600">Site Supervisor</p>
+                    </div>
+                    <div className="ml-auto pl-2">
+                      <span className="px-2.5 py-1 text-xs font-semibold text-green-800 bg-green-200/80 rounded-md whitespace-nowrap">
+                        ICP Match <span className="font-bold">80%</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
