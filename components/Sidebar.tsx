@@ -237,7 +237,7 @@ export default function Sidebar() {
         {isSidebarOpen && shouldShowRecentSection && (
           <div className="mt-8">
             <div className="px-6 mb-4">
-              <h3 className="text-sm font-medium text-gray-600">{recentSectionTitle}</h3>
+              <h3 className="text-lg font-semibold text-black">{recentSectionTitle}</h3>
             </div>
             <div className="space-y-2 px-6 max-h-64 overflow-y-auto">
               {isLoadingRecent ? (
@@ -361,7 +361,7 @@ function RecentItem({
 
   return (
     <div 
-      className="py-3 text-gray-800 hover:bg-gray-50 cursor-pointer transition-colors duration-200 group border-b border-gray-100 last:border-b-0"
+      className="py-3 text-gray-800 hover:bg-emerald-500/10 cursor-pointer transition-colors duration-200 group border-b border-gray-100 last:border-b-0"
       onClick={onClick}
     >
       <div className="text-base font-medium leading-relaxed">

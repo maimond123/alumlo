@@ -82,6 +82,7 @@ export default function LearnPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formattedSchoolName, setFormattedSchoolName] = useState("")
+  const [displayedSchoolName, setDisplayedSchoolName] = useState("")
   const { isSidebarOpen } = useSidebar()
   
   // Add new state for demo mode
@@ -436,6 +437,22 @@ export default function LearnPage() {
     }
   }, [conversations, currentAnswer]);
 
+  useEffect(() => {
+    if (formattedSchoolName) {
+      let i = 0;
+      setDisplayedSchoolName("");
+      const typing = setInterval(() => {
+        if (i < formattedSchoolName.length) {
+          setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+          i++;
+        } else {
+          clearInterval(typing);
+        }
+      }, 50);
+      return () => clearInterval(typing);
+    }
+  }, [formattedSchoolName]);
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -457,22 +474,22 @@ export default function LearnPage() {
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className={`min-h-screen flex flex-col items-center px-4 ${
-          conversations.length > 0 ? 'pt-24 pb-32' : 'justify-center'
+          (conversations.length === 0 && !currentQuestion && !currentAnswer) 
+            ? 'justify-center' : 'pt-24'
         }`}>
-          {/* Only show title when there are no conversations */}
-          {conversations.length === 0 && (
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-              Learn{" "}
-              {isDemoMode ? (
-                <span className="text-emerald-600">
-                  {"{Your School}"}
-                </span>
-              ) : (
-                formattedSchoolName
-              )}
-              {" "}Alumni Data
-            </h1>
-          )}
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+            Learn About Your{" "}
+            {isDemoMode ? (
+              <span 
+                className="text-emerald-600 cursor-pointer hover:underline"
+              >
+                {displayedSchoolName}
+              </span>
+            ) : (
+              displayedSchoolName
+            )}
+            {" "}Alumni
+          </h1>
 
           {/* Learn mode interface */}
           {conversations.length === 0 ? (

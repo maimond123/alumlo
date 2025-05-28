@@ -337,7 +337,7 @@ export default function UploadDataPage() {
               <li>College/University they are attending (Column 3)</li>
               <li>Graduation Year (Column 4)</li>
             </ol>
-            <p>Your file will be processed within 24-48 hours, and the data will be added to your analytics and search data base.</p>
+            <p>Your file will be processed within a few days, and the data will be added to your analytics and search data base.</p>
           </div>
 
           {uploadStatus === 'success' ? (

@@ -130,6 +130,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formattedSchoolName, setFormattedSchoolName] = useState("")
+  const [displayedSchoolName, setDisplayedSchoolName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
   
@@ -1053,7 +1054,21 @@ export default function DashboardPage() {
     }
   };
 
-
+  useEffect(() => {
+    if (formattedSchoolName) {
+      let i = 0;
+      setDisplayedSchoolName("");
+      const typing = setInterval(() => {
+        if (i < formattedSchoolName.length) {
+          setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+          i++;
+        } else {
+          clearInterval(typing);
+        }
+      }, 50);
+      return () => clearInterval(typing);
+    }
+  }, [formattedSchoolName]);
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -1097,10 +1112,10 @@ export default function DashboardPage() {
                   className="text-emerald-600 cursor-pointer hover:underline"
                   onClick={handleSchoolNameClick}
                 >
-                  {"{Your Organization}"}
+                  {displayedSchoolName}
                 </span>
               ) : (
-                formattedSchoolName
+                displayedSchoolName
               )}
               {" "}Alumni Data
             </h1>
