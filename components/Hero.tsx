@@ -63,7 +63,7 @@ export default function Hero() {
                 Loading...
               </>
             ) : (
-              "Demo Now"
+              "Try Now"
             )}
           </button>
         </div>
