@@ -34,7 +34,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-6">Perfect search over humans</h2>
@@ -95,8 +95,9 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            <div className="order-1 lg:order-2">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
+            {/* Text Column (Right on lg screens) */}
+            <div className="order-1 lg:order-2 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
               <p className="text-lg text-gray-700 mb-6">
                 Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
@@ -123,8 +124,8 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* Visualization Demo with Static Image */}
-            <div className="order-2 lg:order-1">
+            {/* Visualization Demo with Static Image (Left on lg screens) */}
+            <div className="order-2 lg:order-1 lg:col-span-3">
               <img 
                 src="/try.png" 
                 alt="Data visualization dashboard" 
@@ -134,8 +135,9 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="order-2 lg:order-1">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-32 border border-black rounded-xl shadow-lg p-6 min-h-[600px]">
+            {/* Text Column (Left on lg screens) */}
+            <div className="order-2 lg:order-1 lg:col-span-2">
               <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
               <p className="text-lg text-gray-700 mb-6">
                 Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
@@ -162,8 +164,8 @@ export default function FeaturesSection() {
               </ul>
             </div>
             
-            {/* AI Insights Image */}
-            <div className="order-1 lg:order-2">
+            {/* AI Insights Image (Right on lg screens) */}
+            <div className="order-1 lg:order-2 lg:col-span-3">
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
