@@ -3,16 +3,10 @@
 import { useRef, useEffect, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Zap, Link } from 'lucide-react'
-import AlumniSearchDemo from './AlumniSearchDemo'
+import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function FeaturesSection() {
   // Create separate refs for each section
-  const { ref: searchRef, inView: searchInView } = useInView({
-    threshold: 0.1,
-    triggerOnce: true
-  })
-  
   const { ref: visualizationsRef, inView: visualizationsInView } = useInView({
     threshold: 0.1,
     triggerOnce: true
@@ -23,95 +17,14 @@ export default function FeaturesSection() {
     triggerOnce: true
   })
 
-  // Demo state for search feature
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
-  
   // Demo state for visualization feature
   const [activeChart, setActiveChart] = useState(0)
   
   // Demo state for reports feature
   const [reportPage, setReportPage] = useState(0)
 
-  // Typewriter animation state
-  const [typedText, setTypedText] = useState('')
-  const [isTypingComplete, setIsTypingComplete] = useState(false)
-  const fullText = "Search your alumni network using natural language. No complex filters needed."
-  
-  useEffect(() => {
-    if (searchInView && typedText.length < fullText.length) {
-      // Get the next character
-      const nextChar = fullText[typedText.length]
-      
-      const timeout = setTimeout(() => {
-        // Add the character to the typed text
-        setTypedText(fullText.slice(0, typedText.length + 1))
-      }, nextChar === '.' ? 250 : 40) // Speed up from 50ms to 25ms, pause 300ms after period
-      
-      return () => clearTimeout(timeout)
-    } else if (typedText.length === fullText.length && !isTypingComplete) {
-      setIsTypingComplete(true)
-    }
-  }, [searchInView, typedText, fullText, isTypingComplete])
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      setIsSearching(true)
-      setTimeout(() => setIsSearching(false), 1500)
-    }
-  }
-
   return (
     <>
-      {/* Feature 1: Search */}
-      <section 
-        ref={searchRef}
-        className="py-32 bg-white min-h-[800px] border-t border-b border-black border-[0.5px]">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6">
-              Alumni Access, Reimagined with Search
-            </h2>
-            <p className="text-xl md:text-2xl text-black max-w-3xl mx-auto h-16 flex items-center justify-center">
-              {typedText}
-              {!isTypingComplete && (
-                <span className="ml-1 inline-block w-0.5 h-6 bg-emerald-700 animate-blink"></span>
-              )}
-            </p>
-          </div>
-        
-          {/* Working Demo */}
-          <AlumniSearchDemo />
-          
-          {/* Benefits Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24">
-            <div className="bg-emerald-50 p-6 rounded-lg">
-              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
-                <Search className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Boost Engagement</h3>
-              <p>Increase alumni participation by making it effortless to find relevant connections for mentorship and networking.</p>
-            </div>
-            
-            <div className="bg-emerald-50 p-6 rounded-lg">
-              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
-                <Zap className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Improve Fundraising</h3>
-              <p>Strengthen donor relationships by connecting alumni with shared interests and career paths.</p>
-            </div>
-            
-            <div className="bg-emerald-50 p-6 rounded-lg">
-              <div className="bg-emerald-100 rounded-full p-3 w-14 h-14 flex items-center justify-center mb-4">
-                <Link className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Enhance Career Services</h3>
-              <p>Provide students with valuable industry connections and mentorship opportunities to improve career outcomes.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Feature 2: Data Visualizations - Redesigned as 3 parts */}
       <section 
         ref={visualizationsRef}

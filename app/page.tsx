@@ -2,7 +2,7 @@
 import Navigation from '../components/navigation'
 import Hero from '../components/Hero'
 import FeaturesSection from '../components/FeaturesSection'
-import ValueProposition from '../components/ValueProposition'
+
 import Footer from '../components/footer'
 import NetworkVisualization from '../components/network-visualization'
 
@@ -17,7 +17,6 @@ export default function Home() {
 
       <main className="pt-16 relative z-10">
         <Hero />
-        <ValueProposition />
         <FeaturesSection />
       </main>
 
