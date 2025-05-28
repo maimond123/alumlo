@@ -37,9 +37,11 @@ export default function FeaturesSection() {
           {/* Part 1: Data Collection - REVISED based on image */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
-            <div className="order-2 lg:order-1 lg:col-span-2">
-              <h2 className="text-5xl font-bold text-black mb-6">Perfect search over humans</h2>
-              <p className="text-xl text-gray-700">
+            <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-6">Perfect search over humans</h2>
+              </div>
+              <p className="text-xl text-gray-700 mt-auto">
                 Clado filters through millions of profiles to surface genuinely relevant people — not random matches. The results feel like magic, but it's pure AI precision.
               </p>
             </div>
@@ -56,8 +58,8 @@ export default function FeaturesSection() {
                     <p className="text-sm">
                       People who work as <span className="text-yellow-700 font-semibold">Site Supervisor</span> & are in <span className="text-yellow-700 font-semibold">NewYork</span>
                     </p>
-                  </div>
-
+                    </div>
+                    
                   {/* Feature List */}
                   <ul className="space-y-2.5 mb-6 text-sm">
                     {[ 
@@ -98,31 +100,33 @@ export default function FeaturesSection() {
           {/* Part 2: Visualizations */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Right on lg screens) */}
-            <div className="order-1 lg:order-2 lg:col-span-2">
-              <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
-              <p className="text-lg text-gray-700 mb-6">
+            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-4">We Transform It Visually</h2>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>Interactive charts that respond to your queries</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>Real-time data updates reflected instantly</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>Customizable views created upon request</span>
+                  </li>
+                </ul>
+              </div>
+              <p className="text-lg text-gray-700 mt-auto">
                 Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
               </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Interactive charts that respond to your queries</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Real-time data updates reflected instantly</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Customizable views created upon request</span>
-                </li>
-              </ul>
             </div>
             
             {/* Visualization Demo with Static Image (Left on lg screens) */}
@@ -138,31 +142,33 @@ export default function FeaturesSection() {
           {/* Part 3: AI Insights */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens) */}
-            <div className="order-2 lg:order-1 lg:col-span-2">
-              <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
-              <p className="text-lg text-gray-700 mb-6">
+            <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>AI-powered analysis explains what the data means for your specific institution</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>Natural language interface for asking questions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    </div>
+                    <span>School-specific insights and recommendations</span>
+                  </li>
+                </ul>
+              </div>
+              <p className="text-lg text-gray-700 mt-auto">
                 Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
               </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>AI-powered analysis explains what the data means for your specific institution</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>Natural language interface for asking questions</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <span>School-specific insights and recommendations</span>
-                </li>
-              </ul>
             </div>
             
             {/* AI Insights Image (Right on lg screens) */}
@@ -197,7 +203,7 @@ export default function FeaturesSection() {
               height={72}
             />
           </div>
-
+          
           {/* Headline */}
           <h2 className="text-5xl md:text-6xl font-bold text-black mb-12 max-w-4xl mx-auto leading-tight">
             We handle the hard data work <br /> so you can focus on your business.
