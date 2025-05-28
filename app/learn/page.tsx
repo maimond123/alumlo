@@ -445,9 +445,11 @@ export default function LearnPage() {
       const delayTimer = setTimeout(() => {
         setIsSchoolNameReadyToAnimate(true);
         let i = 0;
+        // Ensure the full string is iterated
+        const schoolNameToAnimate = formattedSchoolName; 
         const typingInterval = setInterval(() => {
-          if (i < formattedSchoolName.length) {
-            setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+          if (i < schoolNameToAnimate.length) {
+            setDisplayedSchoolName((prev) => prev + schoolNameToAnimate.charAt(i));
             i++;
           } else {
             clearInterval(typingInterval);
@@ -488,12 +490,12 @@ export default function LearnPage() {
             {isSchoolNameReadyToAnimate && displayedSchoolName ? (
                 isDemoMode ? (
                   <span 
-                    className="text-emerald-600 cursor-pointer hover:underline"
+                    className="text-black cursor-pointer hover:underline"
                   >
                     {displayedSchoolName}
                   </span>
                 ) : (
-                  <span className="text-emerald-600">{displayedSchoolName}</span>
+                  <span className="text-black">{displayedSchoolName}</span>
                 )
               ) : null}
             {" "}Alumni

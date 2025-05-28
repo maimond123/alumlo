@@ -1057,21 +1057,23 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (formattedSchoolName) {
-      setDisplayedSchoolName("");     // Clear displayed name immediately
-      setIsSchoolNameReadyToAnimate(false); // Ensure animation doesn't start prematurely
+      setDisplayedSchoolName("");
+      setIsSchoolNameReadyToAnimate(false);
       const delayTimer = setTimeout(() => {
-        setIsSchoolNameReadyToAnimate(true); // Set flag to start animation
+        setIsSchoolNameReadyToAnimate(true);
         let i = 0;
+        // Ensure the full string is iterated
+        const schoolNameToAnimate = formattedSchoolName; 
         const typingInterval = setInterval(() => {
-          if (i < formattedSchoolName.length) {
-            setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+          if (i < schoolNameToAnimate.length) {
+            setDisplayedSchoolName((prev) => prev + schoolNameToAnimate.charAt(i));
             i++;
           } else {
             clearInterval(typingInterval);
           }
-        }, 70); 
+        }, 70);
         return () => clearInterval(typingInterval);
-      }, 500); // 500ms delay
+      }, 500);
       return () => clearTimeout(delayTimer);
     }
   }, [formattedSchoolName]);
@@ -1116,13 +1118,13 @@ export default function DashboardPage() {
               {isSchoolNameReadyToAnimate && displayedSchoolName ? (
                 isDemoMode ? (
                   <span 
-                    className="text-emerald-600 cursor-pointer hover:underline"
+                    className="text-black cursor-pointer hover:underline"
                     onClick={handleSchoolNameClick}
                   >
                     {displayedSchoolName}
                   </span>
                 ) : (
-                  <span className="text-emerald-600">{displayedSchoolName}</span>
+                  <span className="text-black">{displayedSchoolName}</span>
                 )
               ) : null} 
               Alumni Data
