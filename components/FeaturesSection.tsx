@@ -35,7 +35,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -79,18 +79,8 @@ export default function FeaturesSection() {
 
                   {/* Profile Card */}
                   <div className="flex items-center p-3 bg-white/80 rounded-lg shadow border border-gray-300/70">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                      <UserCircle className="w-10 h-10 text-gray-500" />
-                    </div>
-                    <div className="flex-grow">
-                      <h4 className="font-semibold text-gray-800">Ava Knight</h4>
-                      <p className="text-xs text-gray-600">Site Supervisor</p>
-                    </div>
-                    <div className="ml-auto pl-2">
-                      <span className="px-2.5 py-1 text-xs font-semibold text-green-800 bg-green-200/80 rounded-md whitespace-nowrap">
-                        ICP Match <span className="font-bold">80%</span>
-                      </span>
-                    </div>
+                    {/* Placeholder blurred rectangle */}
+                    <div className="w-full h-12 bg-slate-200/50 backdrop-blur-sm rounded-md"></div>
                   </div>
                 </div>
               </div>
@@ -98,7 +88,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -140,7 +130,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
