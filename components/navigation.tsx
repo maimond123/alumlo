@@ -57,10 +57,18 @@ export default function Navigation() {
             </motion.button>
           </Link> */}
           <motion.button
+            onClick={handleGetStarted} // Assuming this function is appropriate for "Try Now"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-white text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300"
+          >
+            Try Now
+          </motion.button>
+          <motion.button
             onClick={handleGetStarted} // Updated to call the new function
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-emerald-500/30 text-green-800 px-6 py-3 text-lg rounded-lg hover:bg-emerald-500/40 transition-colors border-2 border-green-800 font-semibold"
+            className="bg-yellow-400/30 text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold"
           >
             Book a Demo
           </motion.button>
