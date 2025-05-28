@@ -10,6 +10,7 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  zoom: 0.8; /* Set default zoom to 80% */
 }
 
 /* Your custom styles below */

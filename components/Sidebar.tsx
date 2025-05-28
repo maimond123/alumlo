@@ -204,7 +204,7 @@ export default function Sidebar() {
 
   return (
     <motion.div
-      className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
+      className={`fixed top-0 left-2 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
       initial={false}
       animate={{ width: isSidebarOpen ? "18rem" : "6rem" }}
       onMouseEnter={openSidebar}
@@ -311,16 +311,17 @@ export default function Sidebar() {
             </div>
           </div>
           
-          <button 
-            onClick={handleSignOut}
-            onMouseEnter={() => setIsSpinning(true)}
-            onMouseLeave={() => setIsSpinning(false)}
-            className={`p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 ${isSidebarOpen ? "" : "mr-4"}`}
-            aria-label="Settings and Sign Out"
-            style={{ opacity: isSidebarOpen ? 1 : 1, transform: isSidebarOpen ? "translateX(0)" : "translateX(-0.25rem)" }}
-          >
-            <Settings className={`w-6 h-6 text-black ${isSpinning ? "animate-spin" : ""}`} />
-          </button>
+          {isSidebarOpen && (
+            <button 
+              onClick={handleSignOut}
+              onMouseEnter={() => setIsSpinning(true)}
+              onMouseLeave={() => setIsSpinning(false)}
+              className={`p-2 rounded-full hover:bg-gray-200 transition-colors duration-200`}
+              aria-label="Settings and Sign Out"
+            >
+              <Settings className={`w-6 h-6 text-black ${isSpinning ? "animate-spin" : ""}`} />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
