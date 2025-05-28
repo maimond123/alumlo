@@ -190,8 +190,9 @@ export default function DashboardPage() {
   const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
   const [isProTipDismissed, setIsProTipDismissed] = useState(false)
   
+  // Add new state to control animation start
+  const [isSchoolNameReadyToAnimate, setIsSchoolNameReadyToAnimate] = useState(false)
 
-  
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -1056,17 +1057,22 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (formattedSchoolName) {
-      let i = 0;
-      setDisplayedSchoolName("");
-      const typing = setInterval(() => {
-        if (i < formattedSchoolName.length) {
-          setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
-          i++;
-        } else {
-          clearInterval(typing);
-        }
-      }, 50);
-      return () => clearInterval(typing);
+      setDisplayedSchoolName("");     // Clear displayed name immediately
+      setIsSchoolNameReadyToAnimate(false); // Ensure animation doesn't start prematurely
+      const delayTimer = setTimeout(() => {
+        setIsSchoolNameReadyToAnimate(true); // Set flag to start animation
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          if (i < formattedSchoolName.length) {
+            setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 70); 
+        return () => clearInterval(typingInterval);
+      }, 500); // 500ms delay
+      return () => clearTimeout(delayTimer);
     }
   }, [formattedSchoolName]);
 
@@ -1106,18 +1112,20 @@ export default function DashboardPage() {
              ? 'justify-center' : 'pt-24'
         }`}>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Search{" "}
-              {isDemoMode ? (
-                <span 
-                  className="text-emerald-600 cursor-pointer hover:underline"
-                  onClick={handleSchoolNameClick}
-                >
-                  {displayedSchoolName}
-                </span>
-              ) : (
-                displayedSchoolName
-              )}
-              {" "}Alumni Data
+              Search{" "}
+              {isSchoolNameReadyToAnimate && displayedSchoolName ? (
+                isDemoMode ? (
+                  <span 
+                    className="text-emerald-600 cursor-pointer hover:underline"
+                    onClick={handleSchoolNameClick}
+                  >
+                    {displayedSchoolName}
+                  </span>
+                ) : (
+                  <span className="text-emerald-600">{displayedSchoolName}</span>
+                )
+              ) : null} 
+              Alumni Data
             </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">

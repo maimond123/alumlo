@@ -83,6 +83,7 @@ export default function LearnPage() {
   const [error, setError] = useState<string | null>(null)
   const [formattedSchoolName, setFormattedSchoolName] = useState("")
   const [displayedSchoolName, setDisplayedSchoolName] = useState("")
+  const [isSchoolNameReadyToAnimate, setIsSchoolNameReadyToAnimate] = useState(false)
   const { isSidebarOpen } = useSidebar()
   
   // Add new state for demo mode
@@ -439,17 +440,22 @@ export default function LearnPage() {
 
   useEffect(() => {
     if (formattedSchoolName) {
-      let i = 0;
       setDisplayedSchoolName("");
-      const typing = setInterval(() => {
-        if (i < formattedSchoolName.length) {
-          setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
-          i++;
-        } else {
-          clearInterval(typing);
-        }
-      }, 50);
-      return () => clearInterval(typing);
+      setIsSchoolNameReadyToAnimate(false);
+      const delayTimer = setTimeout(() => {
+        setIsSchoolNameReadyToAnimate(true);
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          if (i < formattedSchoolName.length) {
+            setDisplayedSchoolName((prev) => prev + formattedSchoolName.charAt(i));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+          }
+        }, 70);
+        return () => clearInterval(typingInterval);
+      }, 500);
+      return () => clearTimeout(delayTimer);
     }
   }, [formattedSchoolName]);
 
@@ -479,15 +485,17 @@ export default function LearnPage() {
         }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
             Learn About Your{" "}
-            {isDemoMode ? (
-              <span 
-                className="text-emerald-600 cursor-pointer hover:underline"
-              >
-                {displayedSchoolName}
-              </span>
-            ) : (
-              displayedSchoolName
-            )}
+            {isSchoolNameReadyToAnimate && displayedSchoolName ? (
+                isDemoMode ? (
+                  <span 
+                    className="text-emerald-600 cursor-pointer hover:underline"
+                  >
+                    {displayedSchoolName}
+                  </span>
+                ) : (
+                  <span className="text-emerald-600">{displayedSchoolName}</span>
+                )
+              ) : null}
             {" "}Alumni
           </h1>
 
