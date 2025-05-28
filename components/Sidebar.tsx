@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Search, Upload, Brain, MessageCircle } from "lucide-react"
+import { BarChart2, FileText, Search, Upload, Brain, MessageCircle, Settings } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
@@ -31,6 +31,7 @@ export default function Sidebar() {
   const [recentSearches, setRecentSearches] = useState<any[]>([])
   const [recentConversations, setRecentConversations] = useState<any[]>([])
   const [isLoadingRecent, setIsLoadingRecent] = useState(false)
+  const [isSpinning, setIsSpinning] = useState(false); // State for gear icon spin
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -185,6 +186,22 @@ export default function Sidebar() {
     }
   }
 
+  // Add sign out function
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error("Error signing out:", error)
+        // Optionally, show an error message to the user
+        return;
+      }
+      router.push('/signin')
+    } catch (error) {
+      console.error("Error during sign out process:", error)
+      // Optionally, show an error message to the user
+    }
+  }
+
   return (
     <motion.div
       className={`fixed top-0 left-0 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
@@ -277,21 +294,33 @@ export default function Sidebar() {
 
         {/* Profile Section moved to bottom */}
         <div
-          className="flex items-center transition-transform duration-300 ease-in-out"
+          className="flex items-center justify-between transition-transform duration-300 ease-in-out w-full"
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
         >
-          <div
-            className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
-          >
-            <span className="text-black font-semibold text-base">{getInitials()}</span>
+          <div className="flex items-center">
+            <div
+              className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
+            >
+              <span className="text-black font-semibold text-base">{getInitials()}</span>
+            </div>
+            <div
+              className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
+              style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+            >
+              <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
+            </div>
           </div>
-          <div
-            className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
-            style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+          
+          <button 
+            onClick={handleSignOut}
+            onMouseEnter={() => setIsSpinning(true)}
+            onMouseLeave={() => setIsSpinning(false)}
+            className={`p-2 rounded-full hover:bg-gray-200 transition-colors duration-200 ${isSidebarOpen ? "" : "mr-4"}`}
+            aria-label="Settings and Sign Out"
+            style={{ opacity: isSidebarOpen ? 1 : 1, transform: isSidebarOpen ? "translateX(0)" : "translateX(-0.25rem)" }}
           >
-            <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
-            <span className="text-black/80 text-base whitespace-nowrap">Admin</span>
-          </div>
+            <Settings className={`w-6 h-6 text-black ${isSpinning ? "animate-spin" : ""}`} />
+          </button>
         </div>
       </div>
     </motion.div>
