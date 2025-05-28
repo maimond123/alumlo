@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../app/data/supabase'
+import { motion } from 'framer-motion'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
@@ -46,7 +47,7 @@ export default function Hero() {
         aria-hidden="true"
       >
         <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%]"
+          className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%]"
           style={{
             background:
               'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0) 70%)',
@@ -66,9 +67,11 @@ export default function Hero() {
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <button
+          <motion.button
             onClick={handleDemoAccess}
             disabled={isLoading}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             className="bg-white text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center"
           >
             {isLoading ? (
@@ -79,7 +82,7 @@ export default function Hero() {
             ) : (
               "Explore More"
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </section>
