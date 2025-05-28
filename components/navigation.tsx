@@ -68,7 +68,7 @@ export default function Navigation() {
             onClick={handleGetStarted} // Updated to call the new function
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-yellow-400/30 text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold"
+            className="bg-yellow-400/30 text-black border-[3px] border-yellow-500 px-10 py-4 text-xl rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold"
           >
             Book a Demo
           </motion.button>

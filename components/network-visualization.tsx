@@ -50,7 +50,7 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
         this.y = y
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
-        this.radius = Math.random() * 2 + 2;
+        this.radius = Math.random() * 2 + 1.5; // Slightly smaller nodes
       }
 
       update(width: number, height: number) {
@@ -62,8 +62,8 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
       }
     }
 
-    // Create nodes
-    const nodes: Node[] = Array.from({ length: 120 }, () => 
+    // Create nodes - Reduced count
+    const nodes: Node[] = Array.from({ length: 60 }, () => 
       new Node(
         Math.random() * container.offsetWidth,
         Math.random() * container.offsetHeight
@@ -81,8 +81,8 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
       })
 
       // Draw connections
-      ctx.strokeStyle = 'rgba(0, 0, 0, 1)'
-      ctx.lineWidth = 3
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)' // Darker black (already was, ensuring it stays)
+      ctx.lineWidth = 0.5 // Thinner lines
       
       nodes.forEach((nodeA, i) => {
         nodes.slice(i + 1).forEach(nodeB => {
@@ -90,7 +90,7 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
           const dy = nodeA.y - nodeB.y
           const distance = Math.sqrt(dx * dx + dy * dy)
           
-          if (distance < 110) {
+          if (distance < 120) { // Slightly increased connection distance to maintain some density with fewer nodes
             ctx.beginPath()
             ctx.moveTo(nodeA.x, nodeA.y)
             ctx.lineTo(nodeB.x, nodeB.y)
@@ -102,8 +102,8 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
       // Draw nodes
       nodes.forEach(node => {
         ctx.beginPath()
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 4)
-        ctx.fillStyle = 'rgba(255, 215, 0, 1)'
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2) // Corrected to PI * 2 for a full circle
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.8)' // Golden yellow with adjusted opacity
         ctx.fill()
       })
 
@@ -118,10 +118,11 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
   }, [])
 
   return (
-    <div ref={containerRef} className="fixed inset-y-0 right-0 w-2/3 h-full">
+    // Changed w-2/3 to w-1/2 to occupy the right half
+    <div ref={containerRef} className="fixed inset-y-0 right-0 w-1/2 h-full">
       <canvas 
         ref={canvasRef}
-        className="absolute top-0 right-0 w-full h-full opacity-40"
+        className="absolute top-0 right-0 w-full h-full opacity-30" // Reduced opacity further to make it less distracting
       />
     </div>
   )
