@@ -40,6 +40,20 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-[91vh] flex items-center">
+      {/* Fading emerald background element */}
+      <div
+        className="absolute inset-0 overflow-hidden z-0"
+        aria-hidden="true"
+      >
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%]"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0) 70%)',
+          }}
+        />
+      </div>
+
       <div className={`container mx-auto px-6 relative z-10 transition-all duration-1000 ease-in-out ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       }`}>
