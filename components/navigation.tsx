@@ -36,14 +36,14 @@ export default function Navigation() {
     <nav className="fixed w-full z-50 px-6 py-4 bg-soft-white/80 backdrop-blur-sm mt-4 border-t border-b border-black">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-black text-4xl font-bold flex items-center">
+          Alumlo
           <Image 
             src="/assets/icons8-atom-48.png"
             alt="AlumIntel Logo"
             width={48}
             height={48}
-            className="mr-2"
+            className="ml-2"
           />
-          Alumlo
         </Link>
         
         <div className="flex items-center space-x-4">
@@ -57,7 +57,7 @@ export default function Navigation() {
             </motion.button>
           </Link> */}
           <motion.button
-            onClick={handleGetStarted} // Assuming this function is appropriate for "Try Now"
+            onClick={() => router.push('/signin')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-white text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300"
@@ -65,10 +65,10 @@ export default function Navigation() {
             Try Now
           </motion.button>
           <motion.button
-            onClick={handleGetStarted} // Updated to call the new function
+            onClick={handleGetStarted}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-yellow-400/30 text-black border-[3px] border-yellow-500 px-10 py-4 text-xl rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-lg shadow-yellow-500/50 hover:shadow-yellow-400/70"
+            className="bg-yellow-400/30 text-black border-[3px] border-yellow-500 px-10 py-4 text-xl rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40"
           >
             Book Demo
           </motion.button>

@@ -47,10 +47,14 @@ export default function Hero() {
         aria-hidden="true"
       >
         <div
-          className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%]"
+          className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 z-0"
+          aria-hidden="true"
           style={{
+            width: '100%',
+            height: '100%',
             background:
-              'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0) 70%)',
+              'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%)',
+            filter: 'blur(50px)', 
           }}
         />
       </div>

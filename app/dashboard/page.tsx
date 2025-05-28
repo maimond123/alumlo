@@ -230,7 +230,7 @@ export default function DashboardPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated");
             setIsDemoMode(true);
-            setFormattedSchoolName("Your School");
+            setFormattedSchoolName("Your Organization");
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
@@ -243,7 +243,7 @@ export default function DashboardPage() {
             analytics.identifyUser("maimondavid553@gmail.com", {
               isDemoUser: true,
               visitorId: visitorId,
-              school: "Your School"
+              school: "Your Organization"
             });
           }
         }
@@ -1097,7 +1097,7 @@ export default function DashboardPage() {
                   className="text-emerald-600 cursor-pointer hover:underline"
                   onClick={handleSchoolNameClick}
                 >
-                  {"{Your School}"}
+                  {"{Your Organization}"}
                 </span>
               ) : (
                 formattedSchoolName
@@ -1217,25 +1217,6 @@ export default function DashboardPage() {
 
           {/* Analysis and Search Results */}
           <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
-            {/* Demo sidebar guidance - only show in demo mode */}
-            {isDemoMode && searchPhase === 'idle' && showProTip && !isProTipDismissed && (
-              <div className="bg-blue-50 p-4 rounded-lg mb-6 flex items-start justify-between">
-                <div className="flex items-center">
-                  <FaLightbulb className="text-blue-500 mr-2" />
-                  <span className="text-blue-700 font-medium">
-                    Pro Tip: Click on the sidebar to explore more features like Analytics and Reports!
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setIsProTipDismissed(true)}
-                  className="text-gray-500 hover:text-gray-700"
-                  aria-label="Dismiss tip"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            )}
-            
             {/* Analysis Section - Only show if there's content to display */}
             {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
@@ -1439,7 +1420,7 @@ export default function DashboardPage() {
               }}
             >
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using Alumlo for your school?</h2>
+                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using Alumlo for your Organization?</h2>
                 
                 <div className="flex justify-center space-x-4 mt-6">
                   <button
