@@ -10,14 +10,15 @@ const isBrowser = typeof window !== 'undefined';
 if (isBrowser) {
   // Initialize with more flexible configuration for cross-platform support
   mixpanel.init(MIXPANEL_TOKEN, {
-    debug: process.env.NODE_ENV !== 'production',
+    debug: process.env.NODE_ENV === 'development',
     track_pageview: true,
-    persistence: 'localStorage', // Use localStorage for better cross-browser compatibility
+    persistence: 'localStorage',
+    cookie_name: 'alumlo_mp',
+    cross_subdomain_cookie: false,
+    ignore_dnt: true,
     api_host: 'https://api.mixpanel.com',
-    cookie_name: 'alumIntel_mp',
     secure_cookie: true,
     ip: false,
-    cross_subdomain_cookie: false, // Helps with cookie issues on some browsers
     property_blacklist: ['$current_url', '$initial_referrer', '$referrer'],
     loaded: () => {
       // Configure session recording for all browsers
@@ -36,7 +37,7 @@ if (isBrowser) {
             (mixpanel as any).autotrack({
               persist: true,
               cross_subdomain_cookie: false,
-              cookie_name: 'alumIntel_mp_at',
+              cookie_name: 'alumlo_mp_at',
               secure_cookie: true,
               track_links: true,
               track_forms: true
@@ -69,13 +70,13 @@ function getOrCreateVisitorId() {
   if (!isBrowser) return '';
   
   try {
-    const storedVisitorId = localStorage.getItem('alumIntel_visitor_id');
+    const storedVisitorId = localStorage.getItem('alumlo_visitor_id');
     if (storedVisitorId) {
       return storedVisitorId;
     }
     
     const newVisitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem('alumIntel_visitor_id', newVisitorId);
+    localStorage.setItem('alumlo_visitor_id', newVisitorId);
     return newVisitorId;
   } catch (e) {
     // Fallback if localStorage fails (private browsing mode)

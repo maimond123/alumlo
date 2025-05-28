@@ -979,7 +979,7 @@ export default function DashboardPage() {
       // Check if we're in a browser environment
       const isBrowser = typeof window !== 'undefined';
       // Check if user has already seen the first-click survey
-      const hasSeenSurvey = isBrowser ? localStorage.getItem('hasSeenAlumIntelSurvey') === 'true' : false;
+      const hasSeenSurvey = isBrowser ? localStorage.getItem('hasSeenAlumloSurvey') === 'true' : false;
       
       if (!hasSeenSurvey) {
         // Track first-time survey shown
@@ -992,7 +992,7 @@ export default function DashboardPage() {
         // Mark as seen for future clicks
         if (isBrowser) {
           try {
-            localStorage.setItem('hasSeenAlumIntelSurvey', 'true');
+            localStorage.setItem('hasSeenAlumloSurvey', 'true');
           } catch (e) {
             console.error('Failed to set localStorage item:', e);
           }
@@ -1439,7 +1439,7 @@ export default function DashboardPage() {
               }}
             >
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using AlumIntel for your school?</h2>
+                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using Alumlo for your school?</h2>
                 
                 <div className="flex justify-center space-x-4 mt-6">
                   <button
@@ -1486,7 +1486,7 @@ export default function DashboardPage() {
             >
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
                 <h2 className="text-xl font-bold text-center mb-4">Great! Please share your work email</h2>
-                <p className="text-gray-600 mb-4 text-center">We'll reach out with more information about AlumIntel for your institution.</p>
+                <p className="text-gray-600 mb-4 text-center">We'll reach out with more information about Alumlo for your institution.</p>
                 
                 <form onSubmit={handleSurveySubmit} className="space-y-4">
                   <div>
@@ -1574,7 +1574,7 @@ export default function DashboardPage() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-md">
                 <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-emerald-600">Welcome to the AlumIntel Demo!</h3>
+                  <h3 className="text-xl font-bold text-emerald-600">Welcome to the Alumlo Demo!</h3>
                 </div>
                 
                 <div className="space-y-4 mb-6">
@@ -1643,7 +1643,7 @@ export default function DashboardPage() {
             >
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want this for your School's Alumni Data?</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Are you interested in using Alumlo for your school?</h2>
                   <button 
                     onClick={() => {
                       setShowDemoSurvey(false);
@@ -1700,7 +1700,7 @@ export default function DashboardPage() {
                     analytics.trackModalClose('DemoSurvey', { userAction: 'form_submit' });
                     
                     // Show confirmation modal
-                    alert("Thank you for your interest! We'll contact you within 24 hours with more information about how AlumIntel can work for your institution.");
+                    alert("Thank you for your interest! We'll contact you within 24 hours with more information about how Alumlo can work for your institution.");
                     
                   } catch (error) {
                     console.error('Error submitting survey:', error);

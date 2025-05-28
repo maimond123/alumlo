@@ -55,7 +55,7 @@ export default function SupportPage() {
               >
                 <h2 className="text-2xl font-semibold mb-6 text-black">Schedule a Call</h2>
                 <div className="rounded-lg overflow-hidden border border-gray-200">
-                  <InlineWidget url="https://calendly.com/maimondavid553/alumintel-support" styles={{ height: '600px' }} />
+                  <InlineWidget url="https://calendly.com/maimondavid553/alumlo-support" styles={{ height: '600px' }} />
                 </div>
               </motion.div>
 
@@ -66,9 +66,9 @@ export default function SupportPage() {
                   transition={{ duration: 0.5 }}
                   className="bg-emerald-50 p-6 rounded-lg shadow-sm w-full max-w-2xl border border-emerald-200"
                 >
-                  <h2 className="text-2xl font-semibold mb-6 text-emerald-800">Want AlumIntel for Your School?</h2>
+                  <h2 className="text-2xl font-semibold mb-6 text-emerald-800">Want Alumlo for Your School?</h2>
                   <p className="text-lg text-gray-700 mb-6">
-                    Ready to transform how you track and leverage your alumni network? Get AlumIntel customized for your institution.
+                    Ready to transform how you track and leverage your alumni network? Get Alumlo customized for your institution.
                   </p>
                   <button 
                     onClick={() => setShowDemoSurvey(true)}
@@ -86,7 +86,7 @@ export default function SupportPage() {
                 >
                   <h2 className="text-2xl font-semibold mb-6 text-black">Email Us</h2>
                   <p className="text-lg text-gray-700">
-                    For further assistance, please email us at <a href="mailto:david@alumintel.com" className="text-teal-500">david@alumintel.com</a>.
+                    For further assistance, please email us at <a href="mailto:david@alumlo.com" className="text-teal-500">david@alumlo.com</a>.
                   </p>
                 </motion.div>
               )}
@@ -108,7 +108,7 @@ export default function SupportPage() {
         >
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want AlumIntel for Your School?</h2>
+              <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Want Alumlo for Your School?</h2>
               <button 
                 onClick={() => setShowDemoSurvey(false)}
                 className="text-gray-500 hover:text-gray-700 absolute right-6 top-6"
@@ -146,7 +146,7 @@ export default function SupportPage() {
                 setShowDemoSurvey(false);
                 
                 // Show confirmation modal
-                alert("Thank you for your interest! We'll contact you within 24 hours with more information about how AlumIntel can work for your institution.");
+                alert("Thank you for your interest! We'll contact you within 24 hours with more information about how Alumlo can work for your institution.");
                 
               } catch (error) {
                 console.error('Error submitting survey:', error);

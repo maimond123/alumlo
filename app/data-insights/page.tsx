@@ -1439,7 +1439,7 @@ export default function DataInsightsPage() {
                 setShowDemoSurvey(false);
                 
                 // Show confirmation modal
-                alert("Thank you for your interest! We'll contact you within 24 hours with more information about how AlumIntel can work for your institution.");
+                alert("Thank you for your interest! We'll contact you within 24 hours with more information about how Alumlo can work for your institution.");
                 
               } catch (error) {
                 console.error('Error submitting survey:', error);

@@ -81,8 +81,8 @@ export default function NetworkVisualization({ fullScreen = false }: NetworkVisu
       })
 
       // Draw connections
-      ctx.strokeStyle = 'rgba(64, 224, 208, 0.55)'
-      ctx.lineWidth = 2.2
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)'
+      ctx.lineWidth = 3
       
       nodes.forEach((nodeA, i) => {
         nodes.slice(i + 1).forEach(nodeB => {
