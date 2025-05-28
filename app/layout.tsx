@@ -10,8 +10,8 @@ import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'AlumIntel',
-  description: 'Transform your alumni engagement with AlumIntel',
+  title: 'Alumlo',
+  description: 'Transform your alumni engagement with Alumlo',
   icons: {
     icon: [
       { url: '/favicon.ico' },

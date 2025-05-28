@@ -36,7 +36,7 @@ export default function Navigation() {
     <nav className="fixed w-full z-50 px-6 py-4 bg-soft-white/80 backdrop-blur-sm mt-4 border-t border-b border-black">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-black text-4xl font-bold flex items-center">
-          alumlo
+          Alumlo
           <Image 
             src="/assets/icons8-atom-48.png"
             alt="AlumIntel Logo"

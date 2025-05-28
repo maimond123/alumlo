@@ -53,7 +53,7 @@ export default function SignIn() {
             <ArrowLeft className="mr-2" size={20} />
             Back to Home
           </Link>
-          <h2 className="text-3xl font-bold text-emerald-800 mb-6 text-center">Sign in to AlumIntel</h2>
+          <h2 className="text-3xl font-bold text-emerald-800 mb-6 text-center">Sign in to Alumlo</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-emerald-700 mb-1">

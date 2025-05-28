@@ -157,17 +157,14 @@ export default function Onboarding() {
           <Image
             src="/assets/icons8-atom-96.png"
             alt="AlumIntel Logo"
-            width={150}
-            height={50}
-            className="mx-auto"
+            width={48}
+            height={48}
           />
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Complete Your Account Setup
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Create a password to access your AlumIntel dashboard.
-          </p>
+          <h1 className="text-4xl font-bold text-emerald-700 ml-3">Welcome</h1>
         </div>
+        <p className="text-gray-600 mb-8 text-center text-lg">
+          Create a password to access your Alumlo dashboard.
+        </p>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>

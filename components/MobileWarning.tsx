@@ -40,7 +40,7 @@ const MobileWarning: React.FC = () => {
         </h2>
         
         <p className="text-gray-700 mb-6 text-center">
-          alumlo is designed for desktop computers. Some features may not work correctly on mobile devices.
+          Alumlo is designed for desktop computers. Some features may not work correctly on mobile devices.
         </p>
         
         <p className="text-sm text-gray-600 mb-6 text-center">

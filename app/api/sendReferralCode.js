@@ -4,22 +4,20 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { email } = req.body;
 
-    // Create a transporter object using SMTP transport
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.your-email-provider.com', // Replace with your email provider's SMTP server
-      port: 587, // Replace with the appropriate port
-      secure: false, // true for 465, false for other ports
+    // Create a transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+      service: 'gmail',
       auth: {
         user: 'david@alumintel.com', // Your email address
-        pass: 'nahroc-kIdfy9-migcyq', // Your email password or app-specific password
+        pass: process.env.EMAIL_PASS, // Your email password
       },
     });
 
-    // Set up email data
-    const mailOptions = {
-      from: '"AlumIntel" <david@alumintel.com>', // Sender address
+    // Email options
+    let mailOptions = {
+      from: '"Alumlo" <david@alumlo.com>', // Sender address
       to: email, // List of receivers
-      subject: 'Your AlumIntel Demo Code Request', // Subject line
+      subject: 'Your Alumlo Demo Code Request', // Subject line
       text: 'Thank you for your interest! You will receive your demo referral code within the next few hours.', // Plain text body
       html: '<p>Thank you for your interest! You will receive your demo referral code within the next few hours.</p>', // HTML body
     };

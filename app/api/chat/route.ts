@@ -124,7 +124,7 @@ async function handleChartAnalysis(chartId: string, chartType: string, chartTitl
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant specialized in analyzing data visualizations for AlumIntel, a platform that helps schools track and analyze alumni data. 
+          content: `You are an AI assistant specialized in analyzing data visualizations for Alumlo, a platform that helps schools track and analyze alumni data. 
           
 You are currently analyzing chart ${chartId}:
 - Chart Type: ${chart.type}
@@ -201,14 +201,10 @@ async function handleLearnModeChat(message: string, schoolName: string, history:
     messages: [
       {
         role: 'system',
-        content: `You are AlumIntel's AI assistant specializing in Chick-fil-A alumni data analysis. You help users understand alumni statistics and derive marketing insights focused on recruitment, retention, and marketing strategies.
+        content: `You are Alumlo's AI assistant specializing in Chick-fil-A alumni data analysis. You help users understand alumni statistics and derive marketing insights focused on recruitment, retention, and marketing strategies.
 
-You have access to comprehensive Chick-fil-A alumni data including:
-- Average salary: $68,500 (35% higher than national average of $50,800)
-- 17% entrepreneurship rate with 73% success rate
-- 32% reach executive positions within 10 years
-- Alumni in 23 countries
-- Career advancement 2x faster than industry average
+Below is a JSON object representing Chick-fil-A alumni data. Your task is to answer user questions based *only* on this data. 
+Do not make up information or answer questions outside the scope of this dataset.
 
 When responding to questions:
 1. Reference specific statistics and dollar amounts when relevant
@@ -219,7 +215,7 @@ When responding to questions:
 6. Keep responses informative yet conversational
 7. Maintain a positive, professional tone
 
-Your goal is to help users understand how alumni data can be leveraged for marketing, recruitment, and institutional advancement.`
+Your goal is to help users understand how alumni data can be leveraged for marketing, recruitment, and institutional advancement.`,
       },
       ...formattedHistory,
       {

@@ -200,7 +200,7 @@ export default function Sidebar() {
           style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
         >
           <Image
-            src="/assets/icons8-atom-24.png"
+            src="/assets/icons8-atom-48.png"
             alt="AlumIntel Logo"
             width={32}
             height={32}
@@ -210,7 +210,7 @@ export default function Sidebar() {
             className={`ml-3 text-black text-2xl font-bold transition-all duration-300 ease-in-out origin-left`}
             style={{ opacity: isSidebarOpen ? 1 : 0, transform: isSidebarOpen ? "scaleX(1)" : "scaleX(0)" }}
           >
-            AlumIntel
+            Alumlo
           </span>
         </div>
 
