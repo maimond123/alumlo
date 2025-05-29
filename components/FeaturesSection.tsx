@@ -39,10 +39,10 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data</h2>
+                <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
               <p className="text-xl text-gray-700 mt-auto">
-                Alumlo gathers all publicly available data on your alumni - no more losing track of the people that represent your organization.
+                Alumlo gathers publicly available data on your alumni - no more losing track of the people that represent your organization.
               </p>
             </div>
             
@@ -60,30 +60,10 @@ export default function FeaturesSection() {
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Search your alumni</h2>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>Interactive charts that respond to your queries</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>Real-time data updates reflected instantly</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>Customizable views created upon request</span>
-                  </li>
-                </ul>
+                <h2 className="text-5xl font-bold text-black mb-4">Find your alumni, with natural language</h2>
               </div>
               <p className="text-lg text-gray-700 mt-auto">
-                Turn complex alumni data into beautiful, interactive visualizations that reveal patterns and trends at a glance.
+                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
               </p>
             </div>
             
@@ -102,7 +82,7 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">We Deliver the Insights</h2>
+                <h2 className="text-5xl font-bold text-black mb-4">Discover deep alumni insights to solve business problems and market your organization </h2>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
