@@ -30,7 +30,6 @@ export default function SignInPage() {
     // e.g., const { error } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName, last_name: lastName } } })
     // if (error) setError(error.message) else setShowCalendly(true)
     
-    // For UI testing, directly show Calendly after a short delay
     setTimeout(() => {
       setShowCalendly(true)
       setIsLoading(false)
@@ -40,20 +39,14 @@ export default function SignInPage() {
   const handleSignIn = async () => {
     setIsLoading(true)
     setError(null)
-    // Placeholder: Implement Supabase sign in
-    // e.g., const { error } = await supabase.auth.signInWithPassword({ email, password })
-    // if (error) setError(error.message) else router.push('/dashboard')
     setTimeout(() => {
       console.log("Signing in with:", email, password)
       setIsLoading(false)
-      // router.push('/dashboard'); // Example redirect
     }, 1000)
   }
   
   const handleOAuth = (provider: 'google' | 'microsoft') => {
     console.log(`Continue with ${provider}`)
-    // Placeholder: Implement Supabase OAuth
-    // e.g., await supabase.auth.signInWithOAuth({ provider })
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -65,53 +58,58 @@ export default function SignInPage() {
     }
   }
 
-  const inputClasses = "w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+  const inputClasses = "w-full px-4 py-2.5 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
   const labelClasses = "block text-xs font-medium text-gray-600 mb-1"
-  const buttonBaseClasses = "w-full py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-center transition-colors duration-200"
-  const primaryButtonClasses = `${buttonBaseClasses} bg-indigo-700 text-white hover:bg-indigo-800`
-  const secondaryButtonClasses = `${buttonBaseClasses} bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300`
+  // Button base classes are now part of specific button styles to match navigation buttons
+
+  // Styles for the main "Sign In" button on the form (matches nav "Sign In" / "Try Now")
+  const formSignInButtonClasses = "w-full py-2.5 px-9 text-lg rounded-full bg-white text-black border-2 border-black hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center font-semibold"
+
+  // Styles for the "Verify Email & Schedule Demo" button (matches nav "Book Demo")
+  const verifyAndBookButtonClasses = "w-full py-2.5 px-9 text-lg rounded-full bg-yellow-400/30 text-black border-[3px] border-yellow-500 hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40 flex items-center justify-center"
+  
+  const oAuthButtonClasses = "w-full py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-center transition-colors duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-black"
 
   return (
     <div 
       className="min-h-screen w-full flex items-center justify-center p-4 bg-white"
       style={{
-        backgroundImage: 'radial-gradient(ellipse at center, rgba(250,204,21,0.12) 0%, rgba(255,255,255,0) 60%)'
+        backgroundImage: 'radial-gradient(ellipse at center, rgba(250,204,21,0.35) 0%, rgba(255,255,255,0) 70%)'
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md"
+        className="bg-white p-10 rounded-xl border-2 border-black w-full max-w-lg shadow-lg"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-800">Alumlo</h1>
+          <h1 className="text-4xl font-bold text-emerald-800">Alumlo</h1>
           <p className="text-gray-500 text-sm mt-1">Turn Alumni Data into Action.</p>
         </div>
 
         <div className="space-y-3 mb-6">
-          <button onClick={() => handleOAuth('google')} className={secondaryButtonClasses}>
+          <button onClick={() => handleOAuth('google')} className={oAuthButtonClasses}>
             <Image src="/google-logo.svg" alt="Google" width={18} height={18} className="mr-2.5" />
             Continue with Google
           </button>
-          <button onClick={() => handleOAuth('microsoft')} className={secondaryButtonClasses}>
-             {/* You'll need a Microsoft logo SVG, e.g., /microsoft-logo.svg */}
+          <button onClick={() => handleOAuth('microsoft')} className={oAuthButtonClasses}>
             <svg className="mr-2.5" width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#F35325" d="M1 1h10v10H1z"></path><path fill="#81BC06" d="M12 1h10v10H12z"></path><path fill="#05A6F0" d="M1 12h10v10H1z"></path><path fill="#FFBA08" d="M12 12h10v10H12z"></path></svg>
             Continue with Microsoft
           </button>
         </div>
 
         <div className="flex items-center my-6">
-          <hr className="flex-grow border-t border-gray-300" />
+          <hr className="flex-grow border-t border-black" /> {/* Changed to border-black */}
           <span className="mx-3 text-xs text-gray-400 uppercase">OR CONTINUE WITH</span>
-          <hr className="flex-grow border-t border-gray-300" />
+          <hr className="flex-grow border-t border-black" /> {/* Changed to border-black */}
         </div>
 
-        <div className="mb-6 p-1 bg-gray-100 rounded-lg flex">
+        <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border-2 border-black">
           <button
             onClick={() => setActiveTab('signin')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'signin' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signin' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign In
@@ -119,7 +117,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'signup' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signup' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign Up
@@ -151,7 +149,7 @@ export default function SignInPage() {
             <div className="flex justify-between items-center mb-1">
               <label htmlFor="password" className={labelClasses}>Password</label>
               {activeTab === 'signin' && (
-                <a href="#" className="text-xs text-indigo-600 hover:underline">Forgot password?</a>
+                <a href="#" className="text-xs text-emerald-600 hover:underline">Forgot password?</a>
               )}
             </div>
             <div className="relative">
@@ -181,7 +179,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={primaryButtonClasses}
+            className={activeTab === 'signup' ? verifyAndBookButtonClasses : formSignInButtonClasses}
           >
             {isLoading ? (
               <Loader2 className="animate-spin h-5 w-5" />
@@ -198,18 +196,18 @@ export default function SignInPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowCalendly(false)} // Close on overlay click
+          onClick={() => setShowCalendly(false)}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+            className="bg-white rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative border-2 border-black"
+            onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={() => setShowCalendly(false)} 
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10 p-1 bg-white rounded-full"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10 p-1 bg-white rounded-full border-2 border-black"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
