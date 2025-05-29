@@ -214,6 +214,11 @@ export default function LearnPage() {
             .join(' ');
           setFormattedSchoolName(formatted)
           
+          // Introduce a short delay before signaling animation readiness
+          setTimeout(() => {
+            setIsSchoolNameReadyToAnimate(true);
+          }, 100); // 100ms delay
+          
           setIsLoading(false)
         } catch (err: any) {
           if (err.message?.includes('not authenticated')) {
@@ -438,28 +443,26 @@ export default function LearnPage() {
     }
   }, [conversations, currentAnswer]);
 
+  // Refined Typewriter effect for school name (matches dashboard)
   useEffect(() => {
-    if (formattedSchoolName) {
-      setDisplayedSchoolName("");
-      setIsSchoolNameReadyToAnimate(false);
-      const delayTimer = setTimeout(() => {
-        setIsSchoolNameReadyToAnimate(true);
-        let i = 0;
-        // Ensure the full string is iterated
-        const schoolNameToAnimate = formattedSchoolName; 
-        const typingInterval = setInterval(() => {
-          if (i < schoolNameToAnimate.length) {
-            setDisplayedSchoolName((prev) => prev + schoolNameToAnimate.charAt(i));
-            i++;
-          } else {
-            clearInterval(typingInterval);
-          }
-        }, 70);
-        return () => clearInterval(typingInterval);
-      }, 500);
-      return () => clearTimeout(delayTimer);
+    if (isSchoolNameReadyToAnimate && formattedSchoolName) {
+      setDisplayedSchoolName(""); // Initialize for animation
+      let i = 0;
+      const schoolNameToAnimate = formattedSchoolName;
+      
+      const typingInterval = setInterval(() => {
+        if (i < schoolNameToAnimate.length) {
+          setDisplayedSchoolName(schoolNameToAnimate.substring(0, i + 1));
+          i++;
+        } else {
+          clearInterval(typingInterval);
+        }
+      }, 70); // Speed of typing
+      return () => clearInterval(typingInterval); // Cleanup interval
+    } else if (!formattedSchoolName) {
+      setDisplayedSchoolName(""); // Clear if no formatted name
     }
-  }, [formattedSchoolName]);
+  }, [formattedSchoolName, isSchoolNameReadyToAnimate]); // Dependencies
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -485,20 +488,24 @@ export default function LearnPage() {
           (conversations.length === 0 && !currentQuestion && !currentAnswer) 
             ? 'justify-center' : 'pt-24'
         }`}>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Learn About {" "}
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
+            Learn About
+            {/* Conditional space, only if school name will be rendered */}
+            {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
             {isSchoolNameReadyToAnimate && displayedSchoolName ? (
-                isDemoMode ? (
-                  <span 
-                    className="text-black cursor-pointer hover:underline"
-                  >
-                    {displayedSchoolName}
-                  </span>
-                ) : (
-                  <span className="text-black">{displayedSchoolName}</span>
-                )
-              ) : null}
-            {" "}Alumni
+              isDemoMode ? (
+                <span 
+                  className="text-black cursor-pointer hover:underline"
+                >
+                  {displayedSchoolName}
+                </span>
+              ) : (
+                <span className="text-black">{displayedSchoolName}</span>
+              )
+            ) : null}
+            {/* Conditional space, only if school name was rendered */}
+            {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
+            Alumni
           </h1>
 
           {/* Learn mode interface */}
