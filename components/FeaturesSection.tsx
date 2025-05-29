@@ -49,7 +49,7 @@ export default function FeaturesSection() {
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
             <div className="order-1 lg:order-2 lg:col-span-3">
               {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
-              <div className="bg-amber-50/30 backdrop-blur-lg rounded-2xl p-3 shadow-xl">
+              <div className="bg-amber-50/30 backdrop-blur-lg rounded-4xl p-5 shadow-xl">
                 {/* Inner container for the new UI (mimics the whiter card) */}
                 <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-lg w-full text-gray-700">
                   {/* Search Bar */}
