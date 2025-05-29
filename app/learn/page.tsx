@@ -486,7 +486,7 @@ export default function LearnPage() {
             ? 'justify-center' : 'pt-24'
         }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-            Learn About Your{" "}
+            Learn About {" "}
             {isSchoolNameReadyToAnimate && displayedSchoolName ? (
                 isDemoMode ? (
                   <span 
