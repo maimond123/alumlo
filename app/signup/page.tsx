@@ -7,7 +7,6 @@ import { motion } from "framer-motion"
 import { InlineWidget } from "react-calendly"
 import NetworkVisualization from "../../components/network-visualization"
 import Footer from "../../components/footer"
-import Navigation from "../../components/navigation-signup"
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
 import { normalizeSchoolName } from "../../components/schoolNameUtils"
@@ -80,7 +79,6 @@ export default function Signup() {
   return (
     <div className="min-h-screen w-full">
       <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 to-white overflow-hidden">
-        <Navigation />
         <main className="relative min-h-screen w-full mt-5">
           <div className="container mx-auto px-6 pt-32">
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start">
