@@ -124,11 +124,39 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* New Section: We handle the hard data work */}
+      {/* Section 5: New Feature Section (Formatted like Section 2) - MOVED UP & SPACING ADJUSTED */}
       <section 
-        ref={reportsRef}
-        className={`py-32 bg-white transition-all duration-1000 ease-in-out ${
-          reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        className="pb-24 bg-white opacity-100 translate-y-0" // Removed top padding, kept bottom
+      >
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
+            {/* Text Column (Right on lg screens) */}
+            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
+              </div>
+              <p className="text-lg text-gray-700 mt-auto">
+                Placeholder description for this new feature. Please replace this with the actual content.
+              </p>
+            </div>
+            
+            {/* Visual Column (Left on lg screens) */}
+            <div className="order-2 lg:order-1 lg:col-span-3">
+              <img 
+                src="/try.png" // Using existing image as a placeholder
+                alt="Placeholder visual for new section" 
+                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-black"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: "We handle the hard data work..." - NOW LAST & SPACING ADJUSTED */}
+      <section 
+        ref={reportsRef} // reportsRef might need to be re-evaluated if it was for the original last section
+        className={`pb-32 bg-white transition-all duration-1000 ease-in-out ${ // Removed top padding, kept bottom
+          reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10' // Animation trigger might need adjustment
         }`}
       >
         <div className="container mx-auto px-6 text-center">
@@ -155,34 +183,8 @@ export default function FeaturesSection() {
           >
             Get a demo
           </motion.button>
-        </div>
-      </section>
-
-      {/* Section 5: New Feature Section (Formatted like Section 2) */}
-      <section 
-        className="py-24 bg-white opacity-100 translate-y-0" // Statically visible
-      >
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
-            {/* Text Column (Right on lg screens) */}
-            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
-              <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
-              </div>
-              <p className="text-lg text-gray-700 mt-auto">
-                Placeholder description for this new feature. Please replace this with the actual content.
-              </p>
-            </div>
-            
-            {/* Visual Column (Left on lg screens) */}
-            <div className="order-2 lg:order-1 lg:col-span-3">
-              <img 
-                src="/try.png" // Using existing image as a placeholder
-                alt="Placeholder visual for new section" 
-                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-black"
-              />
-            </div>
-          </div>
+          {/* Added spacing at the bottom of this now last section */}
+          <div className="pb-48"></div> 
         </div>
       </section>
     </>
