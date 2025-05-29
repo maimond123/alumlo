@@ -193,6 +193,16 @@ export default function DashboardPage() {
   // Add new state to control animation start
   const [isSchoolNameReadyToAnimate, setIsSchoolNameReadyToAnimate] = useState(false)
 
+  // Define formatSchoolName function here
+  const formatSchoolName = (name: string): string => {
+    if (!name) return "Your Organization"; // Fallback for empty or null names
+    return name
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -267,48 +277,65 @@ export default function DashboardPage() {
     if (authState.isAuthenticated && !isDemoMode) {
       console.log("Dashboard: User authenticated, fetching data...")
       const fetchSchoolName = async () => {
-        try {
-          const userEmail = await getUserEmail()
+        if (isDemoMode) {
+          setFormattedSchoolName("Your Organization");
+          setIsSchoolNameReadyToAnimate(true); // Allow animation for demo
+          setIsLoading(false);
+          return;
+        }
 
+        try {
+          const userEmail = await getUserEmail();
           if (!userEmail) {
-            console.error('No email found in user data:', userEmail)
-            throw new Error('No user email found')
+            setError("Unable to retrieve user email.");
+            setFormattedSchoolName("Your Organization"); // Fallback
+            setIsSchoolNameReadyToAnimate(true);
+            setIsLoading(false);
+            return;
           }
 
           const { data, error } = await supabase
             .from('customer_information')
             .select('school_name')
             .eq('school_email', userEmail)
-            .single()
+            .single();
+
+          console.log("[DEBUG] Raw data from customer_information:", data);
 
           if (error) {
-            console.error('Supabase query error:', error)
-            throw error
+            console.error("Error fetching school name:", error);
+            setError("Failed to load school data.");
+            setFormattedSchoolName("Your Organization"); // Fallback
+            setIsSchoolNameReadyToAnimate(true);
+            setIsLoading(false);
+            return;
           }
 
-          const formatted = data.school_name
-            .replace(/_/g, ' ')
-            .split(' ')
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-          setFormattedSchoolName(formatted)
-          
-          // Store the original school name in localStorage for the search engine
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('schoolName', data.school_name);
-            console.log(`[DEBUG] Stored original school name in localStorage: "${data.school_name}"`);
+          if (data && data.school_name) {
+            const rawSchoolName = data.school_name;
+            const formattedName = formatSchoolName(rawSchoolName);
+            console.log("[DEBUG] Result from formatSchoolName function:", formattedName);
+            setFormattedSchoolName(formattedName);
+            setIsSchoolNameReadyToAnimate(true);
+             // Store the original school name in localStorage for the search engine
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('schoolName', rawSchoolName);
+              console.log(`[DEBUG] Stored original school name in localStorage: "${rawSchoolName}"`);
+            }
+          } else {
+            setError("School name not found for this user.");
+            setFormattedSchoolName("Your Organization"); // Fallback
+            setIsSchoolNameReadyToAnimate(true);
           }
-          
-          setIsLoading(false)
-        } catch (err: any) {
-          if (err.message?.includes('not authenticated')) {
-            router.push('/signin')
-            return
-          }
-          setError('Failed to load school data')
-          setIsLoading(false)
+        } catch (err) {
+          console.error("Exception in fetchSchoolName:", err);
+          setError("An error occurred while fetching school data.");
+          setFormattedSchoolName("Your Organization"); // Fallback
+          setIsSchoolNameReadyToAnimate(true);
+        } finally {
+          setIsLoading(false);
         }
-      }
+      };
 
       fetchSchoolName()
     }
