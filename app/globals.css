@@ -10,7 +10,8 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
-  zoom: 0.85;
+  transform: scale(0.85);
+  transform-origin: top left;
 }
 
 /* Your custom styles below */
