@@ -21,6 +21,13 @@ body {
   overflow: auto;
 }
 
+body.no-scale {
+  transform: none;
+  width: 100vw;
+  height: 100vh;
+  /* overflow: auto; is likely still desired, or adjust as needed */
+}
+
 /* Your custom styles below */
 
 @keyframes typing {
