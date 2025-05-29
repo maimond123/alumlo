@@ -7,11 +7,18 @@
   --background-rgb: 255, 255, 255;
 }
 
+html {
+  overflow: hidden;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  width: calc(100vw / 0.85);
+  height: calc(100vh / 0.85);
   transform: scale(0.85);
   transform-origin: top left;
+  overflow: auto;
 }
 
 /* Your custom styles below */
