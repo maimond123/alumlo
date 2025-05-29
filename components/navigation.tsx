@@ -33,7 +33,7 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="fixed w-full z-50 px-6 py-3 bg-soft-white/80 backdrop-blur-sm mt-4 border-t border-b border-black">
+    <nav className="fixed w-full z-50 px-6 py-3 bg-soft-white/80 backdrop-blur-sm mt-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-black text-[2rem] font-bold flex items-center">
           Alumlo

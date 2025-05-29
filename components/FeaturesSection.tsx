@@ -203,7 +203,7 @@ export default function FeaturesSection() {
           <motion.button
             whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
             whileTap={{ scale: 0.95 }}
-            className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
+            className="bg-emerald-m text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
           >
             Get a demo
           </motion.button>
