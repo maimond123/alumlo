@@ -35,7 +35,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -47,48 +47,16 @@ export default function FeaturesSection() {
             </div>
             
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
-            <div className="order-1 lg:order-2 lg:col-span-3">
+            <div className="order-1 lg:order-2 lg:col-span-3 h-full">
               {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
-              <div className="bg-amber-50/30 backdrop-blur-lg rounded-2xl p-3 shadow-xl">
-                {/* Inner container for the new UI (mimics the whiter card) */}
-                <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-lg w-full text-gray-700">
-                  {/* Search Bar */}
-                  <div className="flex items-center p-3 mb-4 bg-white/80 rounded-lg shadow border border-gray-300/70">
-                    <Search className="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" />
-                    <p className="text-sm">
-                      People who work as <span className="text-yellow-700 font-semibold">Site Supervisor</span> & are in <span className="text-yellow-700 font-semibold">NewYork</span>
-                    </p>
-                    </div>
-                    
-                  {/* Feature List */}
-                  <ul className="space-y-2.5 mb-6 text-sm">
-                    {[ 
-                      "AI Query Translator",
-                      "Data Retrieval from 100M prospects",
-                      "Data Refinery",
-                      "Semantic Relevance Filter",
-                      "Background Learning & Caching",
-                      "Clear Results Delivered in 02s"
-                    ].map((feature, index) => (
-                      <li key={index} className="flex items-center py-1 px-2 bg-white/50 rounded-md">
-                        <Check className="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Profile Card */}
-                  <div className="flex items-center p-3 bg-white/80 rounded-lg shadow border border-gray-300/70">
-                    {/* Placeholder blurred rectangle */}
-                    <div className="w-full h-12 bg-slate-200/50 backdrop-blur-sm rounded-md"></div>
-                  </div>
-                </div>
+              <div className="bg-black/5 backdrop-blur-lg rounded-2xl p-3 shadow-xl h-full">
+                {/* Inner container and its content previously here are now removed */}
               </div>
             </div>
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
