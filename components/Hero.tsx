@@ -84,7 +84,7 @@ export default function Hero() {
                 Loading...
               </>
             ) : (
-              "Explore More"
+              "Try Now"
             )}
           </motion.button>
         </div>

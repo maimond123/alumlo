@@ -62,7 +62,7 @@ export default function Navigation() {
             whileTap={{ scale: 0.95 }}
             className="bg-white text-black border-2 border-black px-9 py-2.5 text-lg rounded-full hover:bg-gray-100 transition-colors duration-300"
           >
-            Try Now
+            Sign In
           </motion.button>
           <motion.button
             onClick={handleGetStarted}
