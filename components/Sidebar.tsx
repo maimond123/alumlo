@@ -215,7 +215,7 @@ export default function Sidebar() {
         {/* Logo Section with more space below */}
         <div
           className="flex items-center mb-16 transition-transform duration-300 ease-in-out"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
+          style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
         >
           <Image
             src="/assets/icons8-atom-48.png"
@@ -296,7 +296,7 @@ export default function Sidebar() {
         {/* Profile Section moved to bottom */}
         <div
           className="flex items-center justify-between transition-transform duration-300 ease-in-out w-full"
-          style={{ transform: isSidebarOpen ? "translateX(1.5rem)" : "translateX(0.5rem)" }}
+          style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.5rem)" }}
         >
           <div className="flex items-center">
             <div
@@ -344,7 +344,7 @@ function SidebarLink({
     <Link
       href={href}
       className="flex items-center text-black/90 hover:text-black mb-12 transition-transform duration-300 ease-in-out relative"
-      style={{ transform: isOpen ? "translateX(1.5rem)" : "translateX(0.75rem)" }}
+      style={{ transform: isOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
     >
       <Icon className="w-8 h-8 shrink-0" />
       <span
