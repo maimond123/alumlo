@@ -35,7 +35,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -49,7 +49,7 @@ export default function FeaturesSection() {
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
             <div className="order-1 lg:order-2 lg:col-span-3">
               {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
-              <div className="bg-amber-50/30 backdrop-blur-lg rounded-4xl p-5 shadow-xl">
+              <div className="bg-amber-50/30 backdrop-blur-lg rounded-2xl p-3 shadow-xl">
                 {/* Inner container for the new UI (mimics the whiter card) */}
                 <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow-lg w-full text-gray-700">
                   {/* Search Bar */}
@@ -88,7 +88,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -130,7 +130,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -203,7 +203,7 @@ export default function FeaturesSection() {
           <motion.button
             whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
             whileTap={{ scale: 0.95 }}
-            className="bg-emerald-m text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
+            className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
           >
             Get a demo
           </motion.button>
