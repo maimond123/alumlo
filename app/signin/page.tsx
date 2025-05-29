@@ -5,11 +5,11 @@ import { motion } from 'framer-motion'
 import { InlineWidget } from 'react-calendly'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Image from 'next/image' // For Google/Microsoft logos
-
-// Placeholder for Supabase client and auth functions
-// import { supabase } from '../utils/supabaseClient'; // Adjust path as needed
+import { useRouter } from 'next/navigation' // Added for redirection
+import { supabase } from '../data/supabase' // Added Supabase client import
 
 export default function SignInPage() {
+  const router = useRouter() // Initialize router
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,7 +21,6 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showCalendly, setShowCalendly] = useState(false)
 
-  // Placeholder functions for Supabase interactions
   const handleSignUp = async () => {
     setIsLoading(true)
     setError(null)
@@ -39,14 +38,31 @@ export default function SignInPage() {
   const handleSignIn = async () => {
     setIsLoading(true)
     setError(null)
-    setTimeout(() => {
-      console.log("Signing in with:", email, password)
-      setIsLoading(false)
-    }, 1000)
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        if (signInError.message.includes("Invalid login credentials")) {
+          setError("Invalid email or password. Please try again.");
+        } else if (signInError.message.includes("Email not confirmed")) {
+           setError("Please verify your email before signing in.");
+        }
+        else {
+          setError(signInError.message || "Failed to sign in. Please try again.");
+        }
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
   }
   
   const handleOAuth = (provider: 'google' | 'microsoft') => {
     console.log(`Continue with ${provider}`)
+    // Placeholder: Implement Supabase OAuth
+    // e.g., await supabase.auth.signInWithOAuth({ provider })
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -58,15 +74,14 @@ export default function SignInPage() {
     }
   }
 
-  const inputClasses = "w-full px-4 py-2.5 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+  const inputClasses = "w-full px-4 py-2.5 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
   const labelClasses = "block text-xs font-medium text-gray-600 mb-1"
-  // Button base classes are now part of specific button styles to match navigation buttons
-
-  // Styles for the main "Sign In" button on the form (matches nav "Sign In" / "Try Now")
-  const formSignInButtonClasses = "w-full py-2.5 px-9 text-lg rounded-full bg-white text-black border-2 border-black hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center font-semibold"
 
   // Styles for the "Verify Email & Schedule Demo" button (matches nav "Book Demo")
   const verifyAndBookButtonClasses = "w-full py-2.5 px-9 text-lg rounded-full bg-yellow-400/30 text-black border-[3px] border-yellow-500 hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40 flex items-center justify-center"
+  
+  // Styles for the main "Sign In" button on the form
+  const formSignInButtonClasses = "w-full py-2.5 px-9 text-lg rounded-full bg-emerald-500/30 text-black border-[3px] border-emerald-600 hover:bg-emerald-500/40 transition-colors duration-300 font-semibold shadow-md shadow-emerald-600/30 hover:shadow-emerald-500/40 flex items-center justify-center"
   
   const oAuthButtonClasses = "w-full py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-center transition-colors duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-black"
 
@@ -81,10 +96,10 @@ export default function SignInPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-10 rounded-xl border-2 border-black w-full max-w-lg shadow-lg"
+        className="bg-white p-10 rounded-xl w-full max-w-lg shadow-lg" // Removed outermost border
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-emerald-800">Alumlo</h1>
+          <h1 className="text-4xl font-bold text-black">Alumlo</h1> {/* Green to Black */}
           <p className="text-gray-500 text-sm mt-1">Turn Alumni Data into Action.</p>
         </div>
 
@@ -100,16 +115,16 @@ export default function SignInPage() {
         </div>
 
         <div className="flex items-center my-6">
-          <hr className="flex-grow border-t border-black" /> {/* Changed to border-black */}
+          <hr className="flex-grow border-t border-black" />
           <span className="mx-3 text-xs text-gray-400 uppercase">OR CONTINUE WITH</span>
-          <hr className="flex-grow border-t border-black" /> {/* Changed to border-black */}
+          <hr className="flex-grow border-t border-black" />
         </div>
 
         <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border-2 border-black">
           <button
             onClick={() => setActiveTab('signin')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'signin' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signin' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50' // Active tab text to black
             }`}
           >
             Sign In
@@ -117,7 +132,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
-              activeTab === 'signup' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signup' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50' // Active tab text to black
             }`}
           >
             Sign Up
@@ -142,14 +157,14 @@ export default function SignInPage() {
 
           <div>
             <label htmlFor="email" className={labelClasses}>Email</label>
-            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="m@example.com" required />
+            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="johndoe@example.com" required />
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-1">
               <label htmlFor="password" className={labelClasses}>Password</label>
               {activeTab === 'signin' && (
-                <a href="#" className="text-xs text-emerald-600 hover:underline">Forgot password?</a>
+                <a href="#" className="text-xs text-gray-700 hover:text-black">Forgot password?</a> /* Green to Gray/Black */
               )}
             </div>
             <div className="relative">
