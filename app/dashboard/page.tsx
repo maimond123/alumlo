@@ -316,7 +316,7 @@ export default function DashboardPage() {
             const formattedName = formatSchoolName(rawSchoolName);
             console.log("[DEBUG] Result from formatSchoolName function:", formattedName);
             setFormattedSchoolName(formattedName);
-            setIsSchoolNameReadyToAnimate(true);
+            //setIsSchoolNameReadyToAnimate(true); // We will let the typewriter useEffect handle this
              // Store the original school name in localStorage for the search engine
             if (typeof window !== 'undefined') {
               localStorage.setItem('schoolName', rawSchoolName);
@@ -339,7 +339,7 @@ export default function DashboardPage() {
 
       fetchSchoolName()
     }
-  }, [authState.isAuthenticated, router, isDemoMode])
+  }, [authState.isAuthenticated, isDemoMode]) // Removed router from dependencies as it might not be needed for just fetching school name
 
   // Add this useEffect to fetch the total count on component mount
   useEffect(() => {
@@ -1082,14 +1082,14 @@ export default function DashboardPage() {
     }
   };
 
+  // Typewriter effect for school name - ADAPTED FROM learn/page.tsx
   useEffect(() => {
     if (formattedSchoolName) {
       setDisplayedSchoolName("");
-      setIsSchoolNameReadyToAnimate(false);
+      setIsSchoolNameReadyToAnimate(false); // Set to false initially
       const delayTimer = setTimeout(() => {
-        setIsSchoolNameReadyToAnimate(true);
+        setIsSchoolNameReadyToAnimate(true); // Set to true when animation should start
         let i = 0;
-        // Ensure the full string is iterated
         const schoolNameToAnimate = formattedSchoolName; 
         const typingInterval = setInterval(() => {
           if (i < schoolNameToAnimate.length) {
@@ -1098,12 +1098,12 @@ export default function DashboardPage() {
           } else {
             clearInterval(typingInterval);
           }
-        }, 70);
-        return () => clearInterval(typingInterval);
-      }, 500);
-      return () => clearTimeout(delayTimer);
+        }, 70); // Speed of typing
+        return () => clearInterval(typingInterval); // Cleanup interval
+      }, 500); // Delay before animation starts
+      return () => clearTimeout(delayTimer); // Cleanup delayTimer
     }
-  }, [formattedSchoolName]);
+  }, [formattedSchoolName]); // Dependency on formattedSchoolName
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -1141,7 +1141,9 @@ export default function DashboardPage() {
              ? 'justify-center' : 'pt-24'
         }`}>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-              Search{" "}
+              Search
+              {/* Conditional space before school name */}
+              {isSchoolNameReadyToAnimate && displayedSchoolName && " "}
               {isSchoolNameReadyToAnimate && displayedSchoolName ? (
                 isDemoMode ? (
                   <span 
@@ -1153,7 +1155,9 @@ export default function DashboardPage() {
                 ) : (
                   <span className="text-black">{displayedSchoolName}</span>
                 )
-              ) : null} 
+              ) : null}
+              {/* Conditional space after school name */}
+              {isSchoolNameReadyToAnimate && displayedSchoolName && " "}
               Alumni Data
             </h1>
 
