@@ -1161,7 +1161,7 @@ export default function DashboardPage() {
               ) : null}
               {/* Conditional space, only if school name was rendered */}
               {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
-              Alumni Data
+              Alumni
             </h1>
 
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">

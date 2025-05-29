@@ -489,7 +489,7 @@ export default function LearnPage() {
             ? 'justify-center' : 'pt-24'
         }`}>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
-            Learn About
+            Learn
             {/* Conditional space, only if school name will be rendered */}
             {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
             {isSchoolNameReadyToAnimate && displayedSchoolName ? (
