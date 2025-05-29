@@ -35,7 +35,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -56,7 +56,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[750px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -98,7 +98,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[725px]">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
