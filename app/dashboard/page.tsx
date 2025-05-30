@@ -14,7 +14,7 @@ import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
 
 // Add the new interface for search results
-interface SearchResult {
+interface SearchResult  {
   id: number;
   name: string;
   linkedin_url: string;
