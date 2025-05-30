@@ -70,7 +70,7 @@ export default function Hero() {
           Transform outdated alumni databases into actionable marketing insights with our AI-powered search, analytics, and custom reports.
         </p>
         
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-16">
+        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <motion.button
             onClick={handleDemoAccess}
             disabled={isLoading}
