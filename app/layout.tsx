@@ -6,7 +6,6 @@ import { Inter } from 'next/font/google'
 import { SchoolProvider } from './contexts/SchoolContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
-import MobileWarning from '@/components/MobileWarning'
 import { Analytics } from "@vercel/analytics/react"
 import { usePathname } from 'next/navigation'
 
@@ -32,7 +31,6 @@ export default function RootLayout({
         <SupabaseAuthListener>
           <SchoolProvider>
             <SidebarProvider>
-              <MobileWarning />
               {children}
             </SidebarProvider>
           </SchoolProvider>

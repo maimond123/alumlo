@@ -105,12 +105,15 @@ interface HybridSearchCompanyResult {
   headline: string;
 }
 
-// Add temporal search interface
+// Add temporal interfaces at the top:
 export interface TemporalSearchFilters {
   target_company_year?: number;
   subsequent_function?: string;
   subsequent_year?: number;
-  query_embedding?: number[];
+  cfa_years_filter?: number[];
+  functions_filter?: string[];
+  exit_year_min?: number;
+  exit_year_max?: number;
 }
 
 export interface TemporalSearchResult {
@@ -239,8 +242,10 @@ export class LinkedInProfileSearchEngine {
       const years = temporalElements.years || [];
       const functions = temporalElements.functions || [];
       
+      // Try specific sequence search first
       if (years.length >= 2 && functions.length >= 1) {
-        // Call temporal search function
+        console.log(`[AI_SEARCH DEBUG] 🕐 Using sequence search: CFA in ${years[0]}, then ${functions[0]} in ${years[1]}`);
+        
         const { data, error } = await this.supabase
           .rpc('temporal_career_search', {
             target_company_year: years[0],
@@ -252,15 +257,37 @@ export class LinkedInProfileSearchEngine {
           });
         
         if (error) {
-          console.error(`[AI_SEARCH DEBUG] 🕐 Temporal search error:`, error);
-          throw new Error(`Temporal search failed: ${error.message}`);
+          console.error(`[AI_SEARCH DEBUG] 🕐 Sequence search error:`, error);
+          throw new Error(`Temporal sequence search failed: ${error.message}`);
         }
         
+        console.log(`[AI_SEARCH DEBUG] 🕐 Sequence search returned ${data?.length || 0} results`);
         return data || [];
       }
       
-      // Fallback to regular search if temporal parameters insufficient
-      console.log(`[AI_SEARCH DEBUG] 🕐 Insufficient temporal data, falling back to regular search`);
+      // Fallback to general temporal filter search
+      if (years.length >= 1 || functions.length >= 1) {
+        console.log(`[AI_SEARCH DEBUG] 🕐 Using general temporal filter search`);
+        
+        const { data, error } = await this.supabase
+          .rpc('temporal_filter_search', {
+            query_embedding: embeddingArray,
+            similarity_threshold: 0.3,
+            cfa_years_filter: years.length > 0 ? years : null,
+            functions_filter: functions.length > 0 ? functions : null,
+            limit_count: top_k
+          });
+        
+        if (error) {
+          console.error(`[AI_SEARCH DEBUG] 🕐 Temporal filter error:`, error);
+          throw new Error(`Temporal filter search failed: ${error.message}`);
+        }
+        
+        console.log(`[AI_SEARCH DEBUG] 🕐 Temporal filter returned ${data?.length || 0} results`);
+        return data || [];
+      }
+      
+      console.log(`[AI_SEARCH DEBUG] 🕐 Insufficient temporal data, returning empty results`);
       return [];
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] 🕐 Temporal search error:`, error);
@@ -274,51 +301,97 @@ export class LinkedInProfileSearchEngine {
     filters: SearchFilters = {}, 
     isDemo: boolean = false, 
     schoolName?: string,
-    queryClassification?: any  // Add this parameter
+    queryClassification?: any
   ): Promise<SearchResult[]> {
-    // Add temporal routing logic at the beginning
-    if (queryClassification?.type === 'temporal' && queryClassification?.temporal_elements) {
-      console.log(`[AI_SEARCH DEBUG] 🕐 Temporal query detected, routing to temporal search`);
-      
-      try {
-        const temporalResults = await this.searchTemporal(
-          query, 
-          queryClassification.temporal_elements, 
-          top_k
-        );
-        
-        // Convert temporal results to standard format
-        return temporalResults.map((item): SearchResult => ({
-          id: item.id,
-          name: item.name,
-          linkedin_url: '', // Will need to fetch from main table
-          current_company: item.post_company_current_company,
-          current_title: item.post_company_current_title,
-          current_industry: '',
-          current_general_industry: '',
-          current_job_location: '',
-          years_experience: 0,
-          similarity: item.similarity,
-          headline: `${item.post_company_current_title} • ${item.post_company_current_company}`
-        }));
-      } catch (error) {
-        console.log(`[AI_SEARCH DEBUG] 🕐 Temporal search failed, falling back to standard search`);
-      }
-    }
-    
     try {
-      // Check if this is a chick_fil_a case (company search)
-      // Use the provided schoolName parameter first, then fall back to localStorage
-      const storedSchoolName = schoolName || (typeof window !== 'undefined' ? 
+      console.log(`[AI_SEARCH DEBUG] 🔍 search called with classification:`, queryClassification);
+      
+      // Determine the organization name dynamically (same pattern as rest of file)
+      const storedOrganizationName = schoolName || (typeof window !== 'undefined' ? 
         localStorage.getItem('schoolName') : null);
       
-      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedSchoolName: "${storedSchoolName}" (from ${schoolName ? 'parameter' : 'localStorage'})`);
-      console.log(`[AI_SEARCH DEBUG] Checking condition: !isDemo (${!isDemo}) && storedSchoolName === 'chick_fil_a' (${storedSchoolName === 'chick_fil_a'})`);
+      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedOrganizationName: "${storedOrganizationName}"`);
       
-      if (!isDemo && storedSchoolName === 'chick_fil_a') {
-        console.log(`[AI_SEARCH DEBUG] ✅ USING COMPANY SEARCH for chick_fil_a`);
+      // TEMPORAL ROUTING - Check for temporal classification first (NON-DEMO ONLY)
+      if (queryClassification?.type === 'temporal' && 
+          queryClassification?.temporal_elements && 
+          !isDemo && 
+          storedOrganizationName) {  // Remove specific chick_fil_a check
         
-        // Use company search for chick_fil_a
+        console.log(`[AI_SEARCH DEBUG] 🕐 Temporal query detected for ${storedOrganizationName}, routing to temporal search`);
+        
+        try {
+          const temporalResults = await this.searchTemporal(
+            query, 
+            queryClassification.temporal_elements, 
+            top_k
+          );
+          
+          if (temporalResults.length > 0) {
+            // Convert temporal results to standard format
+            const convertedResults = await Promise.all(temporalResults.map(async (item): Promise<SearchResult> => {
+              // Try to fetch additional profile data using NEW naming convention
+              let linkedinUrl = '';
+              let headline = '';
+              let industry = '';
+              
+              try {
+                // NEW naming convention: organizationName_alumni_vector
+                const vectorTableName = `${storedOrganizationName}_alumni_vector`;
+                
+                const { data: profileData, error } = await this.supabase
+                  .from(vectorTableName)
+                  .select('profile_url, headline, industry')
+                  .eq('profile_id', item.profile_id)
+                  .single();
+                
+                if (!error && profileData) {
+                  linkedinUrl = profileData.profile_url || '';
+                  headline = profileData.headline || '';
+                  industry = profileData.industry || '';
+                }
+              } catch (error) {
+                console.warn(`[AI_SEARCH DEBUG] Could not fetch additional data for profile ${item.profile_id}`);
+              }
+              
+              // Construct headline if not available
+              if (!headline && item.post_company_current_title && item.post_company_current_company) {
+                headline = `${item.post_company_current_title} • ${item.post_company_current_company}`;
+              }
+              
+              return {
+                id: item.id,
+                name: item.name,
+                linkedin_url: linkedinUrl,
+                current_company: item.post_company_current_company || '',
+                current_title: item.post_company_current_title || '',
+                current_industry: industry,
+                current_general_industry: industry,
+                current_job_location: '',
+                years_experience: 0,
+                similarity: item.similarity,
+                headline: headline
+              };
+            }));
+            
+            console.log(`[AI_SEARCH DEBUG] 🕐 Temporal search completed, returning ${convertedResults.length} results`);
+            return convertedResults;
+          } else {
+            console.log(`[AI_SEARCH DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+          }
+        } catch (error) {
+          console.log(`[AI_SEARCH DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+        }
+      }
+      
+      // STANDARD SEARCH - Updated to use new naming convention
+      console.log(`[AI_SEARCH DEBUG] 📊 Using standard search`);
+      
+      // Check if this is a non-demo search (updated logic)
+      if (!isDemo && storedOrganizationName) {  // Removed specific chick_fil_a check
+        console.log(`[AI_SEARCH DEBUG] ✅ USING COMPANY SEARCH for ${storedOrganizationName}`);
+        
+        // Use company search for any organization (not just chick_fil_a)
         const companyFilters: CompanySearchFilters = {
           company: filters.company,
           industry: filters.industry,
@@ -337,12 +410,14 @@ export class LinkedInProfileSearchEngine {
           headline: r.headline
         })));
         
-        // Fetch additional data for each result from the main table
+        // Fetch additional data for each result from the main table using NEW naming convention
         const enrichedResults = await Promise.all(companyResults.map(async (item: CompanySearchResult) => {
           try {
-            // Fetch industry from the main chick_fil_a_vector table
+            // NEW naming convention: organizationName_alumni_vector
+            const vectorTableName = `${storedOrganizationName}_alumni_vector`;
+            
             const { data: profileData, error } = await this.supabase
-              .from('chick_fil_a_vector')
+              .from(vectorTableName)  // Updated to use new naming convention
               .select('current_general_industry')
               .eq('id', item.profile_id)
               .single();
@@ -401,7 +476,7 @@ export class LinkedInProfileSearchEngine {
       }
       
       console.log(`[AI_SEARCH DEBUG] ❌ NOT using company search, falling back to regular search`);
-      console.log(`[AI_SEARCH DEBUG] Reason: isDemo=${isDemo}, storedSchoolName="${storedSchoolName}"`);
+      console.log(`[AI_SEARCH DEBUG] Reason: isDemo=${isDemo}, storedOrganizationName="${storedOrganizationName}"`);
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -468,21 +543,21 @@ export class LinkedInProfileSearchEngine {
   
   async getProfileById(id: number, schoolName?: string): Promise<ProfileDetail> {
     try {
-      // Determine the table name based on the provided school name or fetch from localStorage
+      // Determine the table name using NEW naming convention
       let tableName: string;
       
       if (schoolName) {
-        tableName = `${schoolName}_vector`;
+        tableName = `${schoolName}_alumni_vector`;  // Updated naming convention
       } else {
-        // Try to get the school name from localStorage if running in browser
-        const storedSchoolName = typeof window !== 'undefined' ? 
+        // Try to get the organization name from localStorage if running in browser
+        const storedOrganizationName = typeof window !== 'undefined' ? 
           localStorage.getItem('schoolName') : null;
         
-        if (!storedSchoolName) {
-          throw new Error('School name is required but not provided');
+        if (!storedOrganizationName) {
+          throw new Error('Organization name is required but not provided');
         }
         
-        tableName = `${storedSchoolName}_vector`;
+        tableName = `${storedOrganizationName}_alumni_vector`;  // Updated naming convention
       }
       
       const { data, error } = await this.supabase
