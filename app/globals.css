@@ -28,15 +28,6 @@ body.no-scale {
   /* overflow: auto; is likely still desired, or adjust as needed */
 }
 
-/* Fix navigation positioning when body is scaled */
-body:not(.no-scale) .navigation-bar {
-  transform: scale(1.111111111); /* 1 / 0.90 = 1.111... */
-  transform-origin: top left;
-  width: 90vw; /* Compensate for the scaling */
-  left: 0;
-  top: 0;
-}
-
 /* Your custom styles below */
 
 @keyframes typing {
