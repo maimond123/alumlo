@@ -7,7 +7,6 @@ import { BarChart, PieChart } from "../../components/chart"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
-import NetworkVisualization from "../../components/network-visualization-1"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useSchool } from "../contexts/SchoolContext"
@@ -1276,7 +1275,6 @@ export default function DataInsightsPage() {
   if (isLoading && fromSignin) {
     return (
       <div className="min-h-screen bg-white relative overflow-hidden">
-        <NetworkVisualization fullScreen />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -10,8 +10,9 @@ export interface SearchFilters {
   school?: string;
 }
 
-// Add new interface for company search filters (only for company cases like chick_fil_a)
+// UPDATED: Enhanced interface for company search filters with all new options
 export interface CompanySearchFilters {
+  // Original filters
   company?: string;
   industry?: string;
   title?: string;
@@ -19,6 +20,24 @@ export interface CompanySearchFilters {
   school?: string;
   exit_year_min?: number;
   exit_year_max?: number;
+  
+  // NEW: Enhanced text filters
+  job_level_filter?: string;
+  job_function_filter?: string;
+  career_stage_filter?: string;
+  degree_level_filter?: string;
+  school_tier_filter?: string;
+  metro_area_filter?: string;
+  
+  // NEW: Boolean filters
+  leadership_only?: boolean;
+  management_exp_only?: boolean;
+  technical_background_only?: boolean;
+  sales_exp_only?: boolean;
+  startup_exp_only?: boolean;
+  enterprise_exp_only?: boolean;
+  remote_worker_only?: boolean;
+  mentor_potential_only?: boolean;
 }
 
 export interface SearchResult {
@@ -36,7 +55,7 @@ export interface SearchResult {
   headline: string;
 }
 
-// Add new interface for company search results
+// UPDATED: Enhanced interface for company search results with new fields
 export interface CompanySearchResult {
   id: number;
   profile_id: number;
@@ -51,6 +70,14 @@ export interface CompanySearchResult {
   similarity: number;
   industry: string;
   headline: string;
+  
+  // NEW: Enhanced fields from the enhanced search function
+  current_job_level?: string;
+  current_job_function?: string;
+  career_stage?: string;
+  highest_degree_level?: string;
+  school_ranking_tier?: string;
+  major_metro_area?: string;
 }
 
 export interface ProfileDetail {
@@ -88,7 +115,7 @@ interface HybridSearchResult {
   profile_photo_url?: string;
 }
 
-// Add new interface for the data returned by the hybrid_search_company function
+// UPDATED: Enhanced interface for the data returned by the enhanced_hybrid_search function
 interface HybridSearchCompanyResult {
   id: bigint;
   profile_id: bigint;
@@ -103,6 +130,14 @@ interface HybridSearchCompanyResult {
   similarity: number;
   industry: string;
   headline: string;
+  
+  // NEW: Enhanced fields
+  current_job_level?: string;
+  current_job_function?: string;
+  career_stage?: string;
+  highest_degree_level?: string;
+  school_ranking_tier?: string;
+  major_metro_area?: string;
 }
 
 export class LinkedInProfileSearchEngine {
@@ -129,10 +164,10 @@ export class LinkedInProfileSearchEngine {
     return;
   }
   
-  // Add new method for company search (only used for chick_fil_a case)
+  // UPDATED: Enhanced searchCompany method using the new enhanced_hybrid_search function
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}): Promise<CompanySearchResult[]> {
     try {
-      console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with query: "${query}", filters:`, filters);
+      console.log(`[AI_SEARCH DEBUG] 🏢 Enhanced searchCompany called with query: "${query}", filters:`, filters);
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -142,24 +177,45 @@ export class LinkedInProfileSearchEngine {
       
       const embeddingArray = response.data[0].embedding;
       
-      // Extract company-specific filters
+      // Extract all filters (original + enhanced)
       const { 
+        // Original filters
         company, 
         industry, 
         title, 
         location, 
         school,
         exit_year_min,
-        exit_year_max
+        exit_year_max,
+        
+        // Enhanced text filters
+        job_level_filter,
+        job_function_filter,
+        career_stage_filter,
+        degree_level_filter,
+        school_tier_filter,
+        metro_area_filter,
+        
+        // Boolean filters
+        leadership_only = false,
+        management_exp_only = false,
+        technical_background_only = false,
+        sales_exp_only = false,
+        startup_exp_only = false,
+        enterprise_exp_only = false,
+        remote_worker_only = false,
+        mentor_potential_only = false
       } = filters;
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 Calling hybrid_search_company RPC function`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 Calling enhanced_hybrid_search RPC function with enhanced filters`);
       
-      // Call the hybrid_search_company function
+      // Call the enhanced_hybrid_search function with all new parameters
       const { data, error } = await this.supabase
-        .rpc('hybrid_search_company', {
+        .rpc('enhanced_hybrid_search', {
           query_embedding: embeddingArray,
           similarity_threshold: 0.3,
+          
+          // Original filters
           company_filter: company || null,
           industry_filter: industry || null,
           title_filter: title || null,
@@ -167,18 +223,37 @@ export class LinkedInProfileSearchEngine {
           school_filter: school || null,
           exit_year_min: exit_year_min || null,
           exit_year_max: exit_year_max || null,
+          
+          // Enhanced text filters
+          job_level_filter: job_level_filter || null,
+          job_function_filter: job_function_filter || null,
+          career_stage_filter: career_stage_filter || null,
+          degree_level_filter: degree_level_filter || null,
+          school_tier_filter: school_tier_filter || null,
+          metro_area_filter: metro_area_filter || null,
+          
+          // Boolean filters
+          leadership_only,
+          management_exp_only,
+          technical_background_only,
+          sales_exp_only,
+          startup_exp_only,
+          enterprise_exp_only,
+          remote_worker_only,
+          mentor_potential_only,
+          
           limit_count: top_k
         })
         .returns<HybridSearchCompanyResult[]>();
       
       if (error) {
-        console.error(`[AI_SEARCH DEBUG] 🏢 Error from hybrid_search_company:`, error);
-        throw new Error(`Company vector search failed: ${error.message}`);
+        console.error(`[AI_SEARCH DEBUG] 🏢 Error from enhanced_hybrid_search:`, error);
+        throw new Error(`Enhanced company vector search failed: ${error.message}`);
       }
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 hybrid_search_company returned ${data?.length || 0} results`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 enhanced_hybrid_search returned ${data?.length || 0} results`);
       
-      // Format the results for company search
+      // Format the results for company search with enhanced fields
       return data.map((item: HybridSearchCompanyResult): CompanySearchResult => ({
         id: Number(item.id),
         profile_id: Number(item.profile_id),
@@ -191,13 +266,23 @@ export class LinkedInProfileSearchEngine {
         company_exit_year: item.company_exit_year,
         picture_url: item.picture_url,
         similarity: item.similarity,
-        industry: '', // Will be enriched later
-        headline: '' // Will be enriched later
+        industry: item.industry || '',
+        headline: item.headline || '',
+        
+        // NEW: Enhanced fields
+        current_job_level: item.current_job_level,
+        current_job_function: item.current_job_function,
+        career_stage: item.career_stage,
+        highest_degree_level: item.highest_degree_level,
+        school_ranking_tier: item.school_ranking_tier,
+        major_metro_area: item.major_metro_area
       }));
     } catch (error) {
       throw error;
     }
   }
+  
+  // ... rest of the existing methods remain unchanged ...
   
   async search(query: string, top_k: number = 10, filters: SearchFilters = {}, isDemo: boolean = false, schoolName?: string): Promise<SearchResult[]> {
     try {
@@ -210,74 +295,70 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] Checking condition: !isDemo (${!isDemo}) && storedSchoolName === 'chick_fil_a' (${storedSchoolName === 'chick_fil_a'})`);
       
       if (!isDemo && storedSchoolName === 'chick_fil_a') {
-        console.log(`[AI_SEARCH DEBUG] ✅ USING COMPANY SEARCH for chick_fil_a`);
+        console.log(`[AI_SEARCH DEBUG] ✅ USING ENHANCED COMPANY SEARCH for chick_fil_a`);
         
-        // Use company search for chick_fil_a
+        // Use enhanced company search for chick_fil_a with basic filters
         const companyFilters: CompanySearchFilters = {
           company: filters.company,
           industry: filters.industry,
           title: filters.title,
           location: filters.location,
           school: filters.school
+          // Note: Boolean filters are set to false by default, can be enhanced later in UI
         };
         
-        console.log(`[AI_SEARCH DEBUG] Calling searchCompany with filters:`, companyFilters);
+        console.log(`[AI_SEARCH DEBUG] Calling enhanced searchCompany with filters:`, companyFilters);
         const companyResults = await this.searchCompany(query, top_k, companyFilters);
         
-        console.log(`[AI_SEARCH DEBUG] 🏢 Company results before conversion:`, companyResults.map(r => ({
+        console.log(`[AI_SEARCH DEBUG] 🏢 Enhanced company results before conversion:`, companyResults.map(r => ({
           id: r.id,
           name: r.name,
-          industry: r.industry,
-          headline: r.headline
+          current_job_level: r.current_job_level,
+          career_stage: r.career_stage,
+          highest_degree_level: r.highest_degree_level
         })));
         
-        // Fetch additional data for each result from the main table
+        // Enhanced enrichment with additional data if needed
         const enrichedResults = await Promise.all(companyResults.map(async (item: CompanySearchResult) => {
           try {
-            // Fetch industry from the main chick_fil_a_vector table
-            const { data: profileData, error } = await this.supabase
-              .from('chick_fil_a_vector')
-              .select('current_general_industry')
-              .eq('id', item.profile_id)
-              .single();
+            // Enhanced headline construction with new data
+            let constructedHeadline = '';
             
-            if (error) {
-              console.warn(`[AI_SEARCH DEBUG] Could not fetch profile data for ID ${item.profile_id}:`, error);
+            if (item.current_job_level && item.post_company_current_title && item.post_company_current_company) {
+              constructedHeadline = `${item.current_job_level} ${item.post_company_current_title} • ${item.post_company_current_company}`;
+            } else if (item.post_company_current_title && item.post_company_current_company) {
+              constructedHeadline = `${item.post_company_current_title} • ${item.post_company_current_company}`;
             }
             
-            // Construct headline from title and company
-            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
-              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
-              : '';
+            // Add career stage and education info if available
+            const additionalInfo = [];
+            if (item.career_stage) additionalInfo.push(item.career_stage);
+            if (item.highest_degree_level) additionalInfo.push(item.highest_degree_level);
+            if (item.major_metro_area) additionalInfo.push(item.major_metro_area);
             
-            return {
-              ...item,
-              industry: profileData?.current_general_industry || item.post_company_current_industry || '',
-              headline: constructedHeadline
-            };
-          } catch (error) {
-            console.warn(`[AI_SEARCH DEBUG] Error enriching result for ID ${item.profile_id}:`, error);
-            // Fallback to constructed headline
-            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
-              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
-              : '';
+            if (additionalInfo.length > 0) {
+              constructedHeadline += ` | ${additionalInfo.join(' • ')}`;
+            }
             
             return {
               ...item,
               industry: item.post_company_current_industry || '',
               headline: constructedHeadline
             };
+          } catch (error) {
+            console.warn(`[AI_SEARCH DEBUG] Error enriching enhanced result for ID ${item.profile_id}:`, error);
+            return item;
           }
         }));
         
-        // Convert company results to regular search results format for compatibility
+        // Convert enhanced company results to regular search results format for compatibility
         const convertedResults = enrichedResults.map((item: CompanySearchResult): SearchResult => {
-          console.log(`[AI_SEARCH DEBUG] 🏢 Converting enriched item - industry: "${item.industry}", headline: "${item.headline}"`);
+          console.log(`[AI_SEARCH DEBUG] 🏢 Converting enhanced item - job_level: "${item.current_job_level}", career_stage: "${item.career_stage}"`);
           
           return {
             id: item.id,
             name: item.name,
-            linkedin_url: item.profile_url, // Map profile_url to linkedin_url
+            linkedin_url: item.profile_url,
             current_company: item.post_company_current_company,
             current_title: item.post_company_current_title,
             current_industry: item.industry,
@@ -290,12 +371,14 @@ export class LinkedInProfileSearchEngine {
           };
         });
         
-        console.log(`[AI_SEARCH DEBUG] ✅ Company search completed, returning ${convertedResults.length} results`);
+        console.log(`[AI_SEARCH DEBUG] ✅ Enhanced company search completed, returning ${convertedResults.length} results`);
         return convertedResults;
       }
       
       console.log(`[AI_SEARCH DEBUG] ❌ NOT using company search, falling back to regular search`);
       console.log(`[AI_SEARCH DEBUG] Reason: isDemo=${isDemo}, storedSchoolName="${storedSchoolName}"`);
+      
+      // ... rest of the existing search method remains unchanged ...
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({

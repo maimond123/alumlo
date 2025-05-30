@@ -5,7 +5,6 @@ import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { InlineWidget } from "react-calendly"
-import NetworkVisualization from "../../components/network-visualization"
 import Footer from "../../components/footer"
 import { supabase } from "../data/supabase"
 import { Loader2 } from "lucide-react"
@@ -185,10 +184,6 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* Network Visualization taking full height */}
-          <div className="absolute top-0 right-0 w-1/2 h-screen">
-            <NetworkVisualization />
-          </div>
 
           {showCalendly && (
             <motion.div
