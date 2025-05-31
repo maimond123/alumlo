@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname()
   // Routes that should NOT have any scaling (body will be 100vw/vh)
-  const noScaleRoutes = ['/data-insights', '/upload-data', '/reports', '/signin', '/dashboard'] 
+  const noScaleRoutes = ['/data-insights', '/upload-data', '/reports'] 
 
   let bodyClassName = inter.className
   // Apply .no-scale class if the current path is one of the explicitly unscaled routes
