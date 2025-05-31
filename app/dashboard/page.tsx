@@ -352,7 +352,7 @@ export default function DashboardPage() {
       if (formattedOrganizationName) {
         setIsLoadingCount(true);
         try {
-          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_vector`;
+          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_vector`;
           const { count, error } = await supabase
             .from(tableName)
             .select('*', { count: 'exact', head: true });
