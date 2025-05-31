@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <div className="fixed w-full z-20">
-        <div className="absolute inset-0 bg-soft-white/70 backdrop-blur-md"></div>
+        <div className="absolute inset-0 bg-soft-white/70"></div>
         <Navigation />
       </div>
 
