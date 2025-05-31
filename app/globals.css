@@ -11,10 +11,10 @@ html {
   overflow: hidden;
 }
 
-body { /* Default body, no scaling */
+body { /* Default body, unscaled, for home page or when .no-scale or .default-scale isn't applied */
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
-  overflow: auto; /* Body handles scrolling for unscaled pages or if wrapper doesn't scroll */
+  overflow: auto;
 }
 
 body.no-scale { /* For routes that explicitly should not be scaled AT ALL */
@@ -24,22 +24,30 @@ body.no-scale { /* For routes that explicitly should not be scaled AT ALL */
   overflow: auto;
 }
 
-.scaled-content-wrapper { /* Occupies viewport, clips scaled child. Sits below nav. */
-  width: 100vw;
-  /* height: calc(100vh - var(--nav-height, 68px)); Assuming nav height is fixed */
-  /* For simplicity, let main content inside scaled-content-area handle padding for nav */
-  height: 100vh; 
-  overflow: hidden; /* Crucial to clip the oversized scaled child */
-  position: relative; /* Establishes a containing block */
-}
-
-.scaled-content-area { /* The actual content that is scaled */
-  background: rgb(var(--background-rgb)); /* Match body background */
+body.default-scale { /* For pages that should be scaled globally */
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  width: calc(100vw / 0.82);
+  height: calc(100vh / 0.82);
   transform: scale(0.82);
   transform-origin: top left;
-  width: calc(100% / 0.82); /* 100% of wrapper's width (100vw), but oversized */
-  height: calc(100% / 0.82); /* 100% of wrapper's height (100vh), but oversized */
-  overflow-y: auto; /* Allow this area to scroll internally */
+  overflow: auto;
+}
+
+.scaled-content-wrapper { /* For home page content: Occupies viewport, clips scaled child. */
+  width: 100vw;
+  height: 100vh; 
+  overflow: hidden; 
+  position: relative; 
+}
+
+.scaled-content-area { /* For home page content: The actual content that is scaled */
+  background: rgb(var(--background-rgb)); 
+  transform: scale(0.82);
+  transform-origin: top left;
+  width: calc(100% / 0.82); 
+  height: calc(100% / 0.82); 
+  overflow-y: auto; 
   overflow-x: hidden;
 }
 
