@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const noScaleRoutes = ['/data-insights', '/upload-data', '/reports'] 
+  const noScaleRoutes = ['/reports'] 
 
   let bodyClassName = inter.className
 
