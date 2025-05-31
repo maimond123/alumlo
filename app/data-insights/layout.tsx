@@ -16,10 +16,8 @@ export default function DataInsightsLayout({
   const currentSidebarWidth = isSidebarOpen ? sidebarOpenWidth : sidebarClosedWidth
 
   return (
-    // The parent div sets the overall height context.
-    // bg-gray-50 is the background for the entire page area including behind the sidebar (if transparent)
-    // and the main content area.
-    <div className="h-screen bg-gray-50">
+    // Use h-full to take the full height of the scaled body parent.
+    <div className="h-full bg-gray-50">
       <Sidebar /> {/* Sidebar is position:fixed and will overlay on top of this div */}
       
       {/* Main content area */}
