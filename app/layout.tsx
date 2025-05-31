@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname()
   const noScaleRoutes = ['/data-insights', '/upload-data', '/reports']
-  const shouldApplyNoScale = noScaleRoutes.some(route => pathname.startsWith(route))
+  const shouldApplyNoScale = pathname === '/' || noScaleRoutes.some(route => pathname.startsWith(route))
 
   let bodyClassName = inter.className
   if (shouldApplyNoScale) {
