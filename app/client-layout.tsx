@@ -1,7 +1,7 @@
 // app/client-layout.tsx
 'use client'
 
-import { SchoolProvider } from './contexts/SchoolContext'
+import { SchoolProvider } from './contexts/OrganizationContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
 import MixpanelAnalytics from './components/MixpanelAnalytics'

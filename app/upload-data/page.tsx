@@ -102,8 +102,8 @@ export default function UploadDataPage() {
         console.log('Querying with email:', userEmail)
         const { data, error } = await supabase
           .from('customer_information')
-          .select('school_name')
-          .eq('school_email', userEmail)
+          .select('organization_name')
+          .eq('organization_email', userEmail)
           .single()
 
         if (error) {
@@ -111,7 +111,7 @@ export default function UploadDataPage() {
           throw error
         }
 
-        setSchoolName(data.school_name)
+        setSchoolName(data.organization_name)
       } catch (err) {
         console.error('Error fetching school name:', err)
         setErrorMessage('Failed to load school data')

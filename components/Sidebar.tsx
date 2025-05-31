@@ -47,7 +47,7 @@ export default function Sidebar() {
         const { data, error } = await supabase
           .from('customer_information')
           .select('first_name, last_name, school_name')
-          .eq('school_email', userEmail)
+          .eq('organization_email', userEmail)
           .single()
         
         if (error) {

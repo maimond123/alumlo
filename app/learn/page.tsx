@@ -198,8 +198,8 @@ export default function LearnPage() {
 
           const { data, error } = await supabase
             .from('customer_information')
-            .select('school_name')
-            .eq('school_email', userEmail)
+            .select('organization_name')
+            .eq('organization_email', userEmail)
             .single()
 
           if (error) {
@@ -207,7 +207,7 @@ export default function LearnPage() {
             throw error
           }
 
-          const formatted = data.school_name
+          const formatted = data.organization_name
             .replace(/_/g, ' ')
             .split(' ')
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))

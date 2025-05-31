@@ -49,7 +49,7 @@ export default function Signup() {
           last_name: formData.lastName,
           school_email: formData.schoolEmail,
           school_name: lowerCaseSchoolName,
-          table_name: normalizedTableName, // Store the normalized name
+          table_name: normalizedTableName, 
         },
       ])
 

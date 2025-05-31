@@ -103,7 +103,7 @@ export default function Onboarding() {
       await supabase
         .from('customer_information')
         .update({ account_status: 'active' })
-        .eq('school_email', email);
+        .eq('organization_email', email);
         
       // Redirect to dashboard
       router.push('/dashboard');

@@ -230,8 +230,8 @@ function ReportsContent() {
     
         const { data, error } = await supabase
           .from('customer_information')
-          .select('school_name')
-          .eq('school_email', userEmail)
+          .select('organization_name')
+          .eq('organization_email', userEmail)
           .single()
       
   
@@ -241,7 +241,7 @@ function ReportsContent() {
         }
   
         if (data) {
-          setSchoolName(data.school_name)
+          setSchoolName(data.organization_name)
         }
   
       } catch (err: any) {

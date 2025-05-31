@@ -3,7 +3,7 @@
 
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { SchoolProvider } from './contexts/SchoolContext'
+import { SchoolProvider } from './contexts/OrganizationContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
 import { Analytics } from "@vercel/analytics/react"

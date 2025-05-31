@@ -296,8 +296,8 @@ export default function DashboardPage() {
 
           const { data, error } = await supabase
             .from('customer_information')
-            .select('school_name')
-            .eq('school_email', userEmail)
+            .select('organization_name')
+            .eq('organization_email', userEmail)
             .single();
 
           console.log("[DEBUG] Raw data from customer_information:", data);

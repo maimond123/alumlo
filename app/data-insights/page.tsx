@@ -9,7 +9,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
-import { useSchool } from "../contexts/SchoolContext"
+import { useSchool } from "../contexts/OrganizationContext"
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 import { AverageSalaryByIndustryBarChart } from "../../components/chart"
@@ -131,7 +131,7 @@ export default function DataInsightsPage() {
           const { data, error } = await supabase
             .from("customer_information")
             .select("first_name, last_name")
-            .eq("school_email", userEmail)
+            .eq("organization_email", userEmail)
             .single()
 
           if (error) {
