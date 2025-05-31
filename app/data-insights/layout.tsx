@@ -17,11 +17,12 @@ export default function DataInsightsLayout({
   // The sidebar has a `left-2` class, which is 0.5rem offset
   const sidebarViewportOffset = 0.5; // rem
 
-  // When sidebar is open, reduce margin significantly for tighter layout
-  const marginLeftOpen = "16rem"; // Reduced from 18.5rem
+  // When sidebar is open, it extends to 18.5rem (18rem width + 0.5rem left offset)
+  // Set margin slightly beyond that but much less than before for tighter layout
+  const marginLeftOpen = "19rem"; // Just barely clears the sidebar for minimal gap
 
-  // When sidebar is closed, use much smaller margin for minimal gap
-  const marginLeftClosed = "3.5rem"; // Reduced from 5.25rem
+  // When sidebar is closed, use small margin for minimal gap  
+  const marginLeftClosed = "3.5rem";
 
   const currentMarginLeft = isSidebarOpen ? marginLeftOpen : marginLeftClosed;
 
