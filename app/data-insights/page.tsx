@@ -1310,7 +1310,7 @@ export default function DataInsightsPage() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <main style={{ marginLeft: isSidebarOpen ? "18rem" : "5rem" }} className="flex-1 transition-all duration-300">
+      <main className="flex-1 transition-all duration-300">
         <div className="p-8 pt-20">
 
           {/* Check if searchResults exists before mapping */}
