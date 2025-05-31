@@ -481,6 +481,9 @@ export default function DashboardPage() {
     setIsSearching(true);
     setSearchPhase('analyzing');
     
+    // Reset analysis collapsed state when starting a new search
+    setIsAnalysisCollapsed(false);
+    
     // Store the current query to ensure consistency 
     const currentQuery = queryToUse;
     console.log(`[DEBUG ${new Date().toISOString()}] Using query: "${currentQuery}"`);
@@ -581,6 +584,12 @@ export default function DashboardPage() {
       console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
       console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
       setSearchResults(searchResultsData);
+      
+      // Automatically collapse the search analysis when results are presented
+      if (searchResultsData && searchResultsData.length > 0) {
+        setIsAnalysisCollapsed(true);
+      }
+      
       console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
       
       // Save search to history with complete session data
