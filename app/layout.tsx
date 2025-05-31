@@ -17,15 +17,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const noScaleRoutes = ['/reports'] 
 
   let bodyClassName = inter.className
 
   if (pathname === '/') {
     // Home page: body is unscaled (uses default body style from globals.css)
     // Scaling is handled by .scaled-content-area inside the page
-  } else if (noScaleRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
-    bodyClassName += ' no-scale' // Routes that should explicitly not be scaled at all
   } else {
     bodyClassName += ' default-scale' // All other pages get the default global scaling
   }
