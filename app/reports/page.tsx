@@ -52,7 +52,7 @@ export default function ReportsPage() {
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      <div className={`relative flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
+      <div className="relative flex-1 transition-all duration-300 ease-in-out">
         <ReportsContent />
         <ComingSoonOverlay 
           email={email}
