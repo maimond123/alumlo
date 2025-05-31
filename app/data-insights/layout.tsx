@@ -17,13 +17,11 @@ export default function DataInsightsLayout({
   // The sidebar has a `left-2` class, which is 0.5rem offset
   const sidebarViewportOffset = 0.5; // rem
 
-  // When sidebar is open, main content should start after the full panel width + offset
-  const marginLeftOpen = `${sidebarOpenPanelWidth + sidebarViewportOffset}rem`; // Should be "18.5rem"
+  // When sidebar is open, reduce margin significantly for tighter layout
+  const marginLeftOpen = "16rem"; // Reduced from 18.5rem
 
-  // When sidebar is closed, icons end around 4.75rem from viewport left.
-  // Let's set main content margin to start slightly after that for a smaller gap.
-  // E.g., 5.25rem. This leaves (5.25rem_margin + 1.5rem_padding) - 4.75rem_icons_end = 2rem total gap to charts.
-  const marginLeftClosed = "5.25rem"; 
+  // When sidebar is closed, use much smaller margin for minimal gap
+  const marginLeftClosed = "3.5rem"; // Reduced from 5.25rem
 
   const currentMarginLeft = isSidebarOpen ? marginLeftOpen : marginLeftClosed;
 
@@ -42,7 +40,7 @@ export default function DataInsightsLayout({
         }}
       >
         {/* Inner div for padding and ensuring minimum height for the content area */}
-        <div className="p-6 min-h-full"> {/* p-6 for padding, min-h-full to fill vertical space */}
+        <div className="p-4 min-h-full"> {/* p-4 for padding, min-h-full to fill vertical space */}
           {children}
         </div>
       </main>
