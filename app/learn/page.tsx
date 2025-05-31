@@ -618,7 +618,7 @@ export default function LearnPage() {
             </>
           ) : (
             <>
-              {/* Conversation history container - Only show if there's content to display */}
+              {/* Conversation history container  - Only show if there's content to display */}
               <div className="w-full max-w-4xl flex flex-col gap-4">
                 {/* Conversation messages without border */}
                 <div className="w-full space-y-6 mb-6">
