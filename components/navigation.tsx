@@ -33,7 +33,7 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="fixed w-full z-50 px-6 py-3 bg-white mt-4">
+    <nav className="fixed w-full z-50 px-6 py-3 bg-white mt-4" style={{ transform: 'scale(1.111)', transformOrigin: 'top left' }}>
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-black text-[2rem] font-bold flex items-center">
           Alumlo
