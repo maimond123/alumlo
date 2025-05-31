@@ -10,10 +10,22 @@ export default function DataInsightsLayout({
 }) {
   const { isSidebarOpen } = useSidebar()
 
-  // These widths should match the widths defined in your Sidebar component
-  const sidebarOpenWidth = "18rem"
-  const sidebarClosedWidth = "6rem"
-  const currentSidebarWidth = isSidebarOpen ? sidebarOpenWidth : sidebarClosedWidth
+  // Nominal widths of the sidebar panel itself (from Sidebar.tsx animation)
+  const sidebarOpenPanelWidth = 18; // rem
+  // const sidebarClosedPanelWidth = 6; // rem - We'll use a custom margin for closed state
+  
+  // The sidebar has a `left-2` class, which is 0.5rem offset
+  const sidebarViewportOffset = 0.5; // rem
+
+  // When sidebar is open, main content should start after the full panel width + offset
+  const marginLeftOpen = `${sidebarOpenPanelWidth + sidebarViewportOffset}rem`; // Should be "18.5rem"
+
+  // When sidebar is closed, icons end around 4.75rem from viewport left.
+  // Let's set main content margin to start slightly after that for a smaller gap.
+  // E.g., 5.25rem. This leaves (5.25rem_margin + 1.5rem_padding) - 4.75rem_icons_end = 2rem total gap to charts.
+  const marginLeftClosed = "5.25rem"; 
+
+  const currentMarginLeft = isSidebarOpen ? marginLeftOpen : marginLeftClosed;
 
   return (
     // Use h-full to take the full height of the scaled body parent.
@@ -24,9 +36,8 @@ export default function DataInsightsLayout({
       <main
         className="h-full overflow-y-auto" // Takes full height of its parent, content scrolls vertically
         style={{
-          marginLeft: currentSidebarWidth,
-          // Adding a transition for margin-left can make the content shift smoothly
-          // when the sidebar opens/closes, if desired.
+          marginLeft: currentMarginLeft,
+          // Optional: Add transition if sidebar width transition is also present and matches.
           // transition: 'margin-left 0.3s ease-in-out',
         }}
       >
