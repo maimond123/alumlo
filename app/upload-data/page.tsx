@@ -318,7 +318,7 @@ export default function UploadDataPage() {
   };
  
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-full bg-gray-50 overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-y-auto p-8 pt-16 transition-all duration-300 ease-in-out">
         <div className="max-w-6xl mx-auto">
