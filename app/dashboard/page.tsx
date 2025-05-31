@@ -1334,7 +1334,7 @@ export default function DashboardPage() {
 
             {/* Search Results Section - Show below the analysis */}
             {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
-              <div className="w-full">
+              <div className="w-full pb-8">
                 <h2 className="text-xl font-semibold mb-4 text-black">
                   Found {searchResults.length} alumni matching your search
                 </h2>
