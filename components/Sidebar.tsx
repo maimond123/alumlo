@@ -243,9 +243,6 @@ export default function Sidebar() {
           <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen}>
             Visualize
           </SidebarLink>
-          <SidebarLink href="/reports" icon={FileText} isOpen={isSidebarOpen}>
-            Reports
-          </SidebarLink>
           <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen}>
             Enrich Data
           </SidebarLink>
