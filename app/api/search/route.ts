@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`[API DEBUG] Received parameters: query="${query}", organizationName="${organizationName}", isDemo=${isDemo}`);
+    console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
 
     // Try each step separately to identify where the error occurs
     console.log('[API] Creating search engine instance');
@@ -58,7 +59,8 @@ export async function POST(req: NextRequest) {
       console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
     }
     
-    const results = await search_engine.search(query, top_k, filters, isDemo, organizationName);
+    // Use gap-based filtering instead of fixed limit
+    const results = await search_engine.search(query, 50, filters, isDemo, organizationName);
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
     return NextResponse.json({ results });

@@ -136,20 +136,68 @@ export class LinkedInProfileSearchEngine {
   constructor() {
     // Initialize Supabase client
     this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://cxqxzmcvzzwtqkqoyuti.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'REMOVED_CREDENTIAL'
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     
     // Initialize OpenAI client
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      dangerouslyAllowBrowser: true // Only use this if you're handling the API key securely
     });
   }
   
   async initializeEmbedder() {
-    // No initialization needed for OpenAI API
-    return;
+    console.log('[AI_SEARCH DEBUG] Embedder initialized (using OpenAI API)');
+  }
+  
+  /**
+   * Apply gap-based filtering to search results
+   * Returns results above 0.4 threshold but stops when similarity drops significantly
+   */
+  private applyGapBasedFiltering<T extends { similarity: number }>(results: T[]): T[] {
+    console.log(`[GAP_FILTER DEBUG] Processing ${results.length} results for gap-based filtering`);
+    
+    if (!results.length) return results;
+
+    // Sort by similarity descending (should already be sorted from DB, but ensuring)
+    const sortedResults = [...results].sort((a, b) => b.similarity - a.similarity);
+    
+    // Filter results above 0.4 threshold first
+    const aboveThreshold = sortedResults.filter(r => r.similarity >= 0.4);
+    console.log(`[GAP_FILTER DEBUG] ${aboveThreshold.length} results above 0.4 threshold`);
+    
+    if (aboveThreshold.length === 0) {
+      console.log(`[GAP_FILTER DEBUG] No results above 0.4 threshold, returning empty array`);
+      return [];
+    }
+
+    if (aboveThreshold.length === 1) {
+      console.log(`[GAP_FILTER DEBUG] Only 1 result above threshold, returning it`);
+      return aboveThreshold;
+    }
+
+    // Apply gap detection
+    const finalResults: T[] = [aboveThreshold[0]]; // Always include the best result
+    let previousSimilarity = aboveThreshold[0].similarity;
+    
+    for (let i = 1; i < aboveThreshold.length; i++) {
+      const currentResult = aboveThreshold[i];
+      const gap = previousSimilarity - currentResult.similarity;
+      
+      console.log(`[GAP_FILTER DEBUG] Result ${i}: similarity=${currentResult.similarity.toFixed(3)}, gap=${gap.toFixed(3)}`);
+      
+      // Stop if we detect a significant gap (0.1 seems reasonable for similarity scores)
+      if (gap > 0.1) {
+        console.log(`[GAP_FILTER DEBUG] Significant gap detected (${gap.toFixed(3)}), stopping at ${finalResults.length} results`);
+        break;
+      }
+      
+      finalResults.push(currentResult);
+      previousSimilarity = currentResult.similarity;
+    }
+    
+    console.log(`[GAP_FILTER DEBUG] Final result count: ${finalResults.length} (started with ${results.length})`);
+    return finalResults;
   }
   
   // Company search method for any organization with alumni data
@@ -178,11 +226,11 @@ export class LinkedInProfileSearchEngine {
       
       console.log(`[AI_SEARCH DEBUG] 🏢 Calling hybrid_search_company RPC function`);
       
-      // Call the hybrid_search_company function
+      // Call the hybrid_search_company function with higher limit for gap-based filtering
       const { data, error } = await this.supabase
         .rpc('hybrid_search_company', {
           query_embedding: embeddingArray,
-          similarity_threshold: 0.3,
+          similarity_threshold: 0.3, // Keep lower threshold for more candidates
           company_filter: company || null,
           industry_filter: industry || null,
           title_filter: title || null,
@@ -190,7 +238,7 @@ export class LinkedInProfileSearchEngine {
           school_filter: school || null,
           exit_year_min: exit_year_min || null,
           exit_year_max: exit_year_max || null,
-          limit_count: top_k
+          limit_count: 50 // Increase limit to get more candidates for gap-based filtering
         })
         .returns<HybridSearchCompanyResult[]>();
       
@@ -202,7 +250,7 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] 🏢 hybrid_search_company returned ${data?.length || 0} results`);
       
       // Format the results for company search
-      return data.map((item: HybridSearchCompanyResult): CompanySearchResult => ({
+      const formattedResults = data.map((item: HybridSearchCompanyResult): CompanySearchResult => ({
         id: Number(item.id),
         profile_id: Number(item.profile_id),
         name: item.name,
@@ -217,6 +265,12 @@ export class LinkedInProfileSearchEngine {
         industry: '', // Will be enriched later
         headline: '' // Will be enriched later
       }));
+
+      // Apply gap-based filtering
+      const filteredResults = this.applyGapBasedFiltering(formattedResults);
+      console.log(`[AI_SEARCH DEBUG] 🏢 Gap-based filtering reduced results from ${formattedResults.length} to ${filteredResults.length}`);
+      
+      return filteredResults;
     } catch (error) {
       throw error;
     }
@@ -252,8 +306,8 @@ export class LinkedInProfileSearchEngine {
             subsequent_function: functions[0],
             subsequent_year: years[1],
             query_embedding: embeddingArray,
-            similarity_threshold: 0.3,
-            limit_count: top_k
+            similarity_threshold: 0.3, // Keep lower threshold for more candidates
+            limit_count: 50 // Increase limit for gap-based filtering
           });
         
         if (error) {
@@ -262,7 +316,13 @@ export class LinkedInProfileSearchEngine {
         }
         
         console.log(`[AI_SEARCH DEBUG] 🕐 Sequence search returned ${data?.length || 0} results`);
-        return data || [];
+        
+        // Apply gap-based filtering to sequence search results
+        if (data && data.length > 0) {
+          const filteredResults = this.applyGapBasedFiltering(data) as TemporalSearchResult[];
+          console.log(`[AI_SEARCH DEBUG] 🕐 Gap-based filtering reduced sequence results from ${data.length} to ${filteredResults.length}`);
+          return filteredResults;
+        }
       }
       
       // Fallback to general temporal filter search
@@ -272,10 +332,10 @@ export class LinkedInProfileSearchEngine {
         const { data, error } = await this.supabase
           .rpc('temporal_filter_search', {
             query_embedding: embeddingArray,
-            similarity_threshold: 0.3,
+            similarity_threshold: 0.3, // Keep lower threshold for more candidates
             cfa_years_filter: years.length > 0 ? years : null,
             functions_filter: functions.length > 0 ? functions : null,
-            limit_count: top_k
+            limit_count: 50 // Increase limit for gap-based filtering
           });
         
         if (error) {
@@ -284,7 +344,13 @@ export class LinkedInProfileSearchEngine {
         }
         
         console.log(`[AI_SEARCH DEBUG] 🕐 Temporal filter returned ${data?.length || 0} results`);
-        return data || [];
+        
+        // Apply gap-based filtering to filter search results
+        if (data && data.length > 0) {
+          const filteredResults = this.applyGapBasedFiltering(data) as TemporalSearchResult[];
+          console.log(`[AI_SEARCH DEBUG] 🕐 Gap-based filtering reduced filter results from ${data.length} to ${filteredResults.length}`);
+          return filteredResults;
+        }
       }
       
       console.log(`[AI_SEARCH DEBUG] 🕐 Insufficient temporal data, returning empty results`);
@@ -503,13 +569,13 @@ export class LinkedInProfileSearchEngine {
       const { data, error } = await this.supabase
         .rpc(rpcFunction, {
           query_embedding: embeddingArray,
-          similarity_threshold: 0.4,
+          similarity_threshold: 0.3, // Keep lower threshold for more candidates
           company_filter: company || null,
           industry_filter: industry || null,
           title_filter: title || null,
           location_filter: location || null,
           school_filter: school || null,
-          limit_count: top_k
+          limit_count: 50 // Increase limit to get more candidates for gap-based filtering
         })
         .returns<HybridSearchResult[]>();
       
@@ -521,7 +587,7 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] ${rpcFunction} returned ${data?.length || 0} results`);
       
       // Format the results to match your frontend expectations
-      return data.map((item: HybridSearchResult): SearchResult => ({
+      const formattedResults = data.map((item: HybridSearchResult): SearchResult => ({
         id: Number(item.id),
         name: item.name,
         linkedin_url: item.linkedin_url,
@@ -535,6 +601,12 @@ export class LinkedInProfileSearchEngine {
         similarity: item.similarity,
         headline: ''
       }));
+
+      // Apply gap-based filtering
+      const filteredResults = this.applyGapBasedFiltering(formattedResults);
+      console.log(`[AI_SEARCH DEBUG] ${rpcFunction} gap-based filtering reduced results from ${formattedResults.length} to ${filteredResults.length}`);
+      
+      return filteredResults;
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] Search method error:`, error);
       throw error;

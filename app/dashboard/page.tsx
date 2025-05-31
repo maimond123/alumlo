@@ -508,7 +508,6 @@ export default function DashboardPage() {
       },
       body: JSON.stringify({ 
         query: currentQuery, 
-        top_k: 10,
         organizationName: originalOrganizationName,
         isDemo: isDemoMode
       }),
@@ -575,7 +574,7 @@ export default function DashboardPage() {
       // Phase 5: Display results
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 5: Displaying results`);
       setSearchPhase('complete');
-      await typewriterEffect(`Displaying top ${Math.min(10, searchResultsData.length)} personalized results...`, 
+      await typewriterEffect(`Displaying ${searchResultsData.length} optimized results based on relevance...`, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
