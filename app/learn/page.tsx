@@ -481,7 +481,7 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className={`min-h-screen flex flex-col items-center px-4 ${

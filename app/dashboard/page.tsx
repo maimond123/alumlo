@@ -1125,7 +1125,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       {/* Hidden button to trigger demo survey */}
       <button 
