@@ -15,7 +15,7 @@ import { useRouter, usePathname } from 'next/navigation'
 interface UserInfo {
   first_name: string;
   last_name: string;
-  school_name: string;
+  organization_name: string;
 }
 
 export default function Sidebar() {
@@ -46,7 +46,7 @@ export default function Sidebar() {
         // Get user info from database
         const { data, error } = await supabase
           .from('customer_information')
-          .select('first_name, last_name, school_name')
+          .select('first_name, last_name, organization_name')
           .eq('organization_email', userEmail)
           .single()
         
@@ -58,7 +58,7 @@ export default function Sidebar() {
           setUserInfo({
             first_name: data.first_name,
             last_name: data.last_name,
-            school_name: data.school_name
+            organization_name: data.organization_name
           })
         }
       } catch (error) {
