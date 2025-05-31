@@ -14,19 +14,35 @@ import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
 
 // Add the new interface for search results
-interface SearchResult  {
+interface SearchResult {
   id: number;
   name: string;
-  linkedin_url: string;
-  current_company: string;
-  current_title: string;
-  current_industry: string;
-  current_general_industry: string;
-  current_job_location: string;
-  years_experience: number;
-  similarity: number;
-  profile_photo_url?: string;
+  profile_url: string;
+  picture_url?: string;
   headline: string;
+  industry: string;
+  post_company_current_company: string;
+  post_company_current_title: string;
+  post_company_current_industry: string;
+  post_company_current_location: string;
+  current_job_level: string;
+  current_job_function: string;
+  undergraduate_school: string[];
+  graduate_school: string[];
+  natural_language_geographic_profile: string;
+  natural_language_educational_profile: string;
+  highest_degree_level: string;
+  major_category: string;
+  similarity: number;
+  // Legacy fields for backward compatibility
+  linkedin_url?: string;
+  current_company?: string;
+  current_title?: string;
+  current_industry?: string;
+  current_general_industry?: string;
+  current_job_location?: string;
+  years_experience?: number;
+  profile_photo_url?: string;
 }
 
 // Add realistic suggestion tags for Chick-fil-A employees and alumni
@@ -124,6 +140,113 @@ const tagScrollAnimation = `
     100% { transform: translateX(-100%); }
   }
 `;
+
+// Helper function to extract location from natural language format
+const extractLocationFromText = (text: string): string => {
+  if (!text) return '';
+  const match = text.match(/currently located in (.+)/i);
+  return match ? match[1].trim() : '';
+};
+
+// Helper function to get education display
+const getEducationDisplay = (result: SearchResult): string => {
+  // Prioritize graduate school, then undergraduate
+  if (result.graduate_school && result.graduate_school.length > 0) {
+    return result.graduate_school[0];
+  }
+  if (result.undergraduate_school && result.undergraduate_school.length > 0) {
+    return result.undergraduate_school[0];
+  }
+  return '';
+};
+
+// Helper function to get standard profile info
+const getStandardProfileInfo = (result: SearchResult) => {
+  return {
+    location: extractLocationFromText(result.natural_language_geographic_profile),
+    currentRole: result.post_company_current_title || result.current_title || '',
+    currentCompany: result.post_company_current_company || result.current_company || '',
+    education: getEducationDisplay(result)
+  };
+};
+
+// Helper function to map extracted filters to database fields and get matching values
+const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: string]: string[]}) => {
+  const matches: {category: string, value: string, icon: string}[] = [];
+  
+  // Map filter categories to database fields
+  const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string), icon: string}} = {
+    'Job Functions': { field: 'current_job_function', icon: '💼' },
+    'Job Levels': { field: 'current_job_level', icon: '📊' },
+    'Industries': { field: (r) => r.post_company_current_industry || r.industry || r.current_industry || '', icon: '🏢' },
+    'Company Names': { field: (r) => r.post_company_current_company || r.current_company || '', icon: '🏬' },
+    'Locations': { field: (r) => extractLocationFromText(r.natural_language_geographic_profile), icon: '📍' },
+    'Degree Levels': { field: 'highest_degree_level', icon: '🎓' },
+    'Major Categories': { field: 'major_category', icon: '📚' }
+  };
+  
+  // Check each extracted filter category
+  Object.entries(extractedFilters).forEach(([category, filterValues]) => {
+    const mapping = filterMapping[category];
+    if (mapping && filterValues.length > 0) {
+      let resultValue = '';
+      
+      if (typeof mapping.field === 'function') {
+        resultValue = mapping.field(result);
+      } else {
+        resultValue = String(result[mapping.field] || '');
+      }
+      
+      // Check if any filter value matches (case insensitive, partial match)
+      const hasMatch = filterValues.some(filterValue => 
+        resultValue.toLowerCase().includes(filterValue.toLowerCase()) ||
+        filterValue.toLowerCase().includes(resultValue.toLowerCase())
+      );
+      
+      if (hasMatch && resultValue) {
+        matches.push({
+          category,
+          value: resultValue,
+          icon: mapping.icon
+        });
+      }
+    }
+  });
+  
+  return matches;
+};
+
+// Helper function to ensure search result compatibility
+const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
+  return results.map(result => ({
+    ...result,
+    // Ensure new fields exist with fallbacks to legacy fields
+    profile_url: result.profile_url || result.linkedin_url || '',
+    picture_url: result.picture_url || result.profile_photo_url,
+    industry: result.industry || result.current_industry || '',
+    post_company_current_company: result.post_company_current_company || result.current_company || '',
+    post_company_current_title: result.post_company_current_title || result.current_title || '',
+    post_company_current_industry: result.post_company_current_industry || result.current_industry || '',
+    post_company_current_location: result.post_company_current_location || result.current_job_location || '',
+    current_job_level: result.current_job_level || '',
+    current_job_function: result.current_job_function || '',
+    undergraduate_school: result.undergraduate_school || [],
+    graduate_school: result.graduate_school || [],
+    natural_language_geographic_profile: result.natural_language_geographic_profile || '',
+    natural_language_educational_profile: result.natural_language_educational_profile || '',
+    highest_degree_level: result.highest_degree_level || '',
+    major_category: result.major_category || '',
+    // Keep legacy fields for backward compatibility
+    linkedin_url: result.linkedin_url || result.profile_url || '',
+    current_company: result.current_company || result.post_company_current_company || '',
+    current_title: result.current_title || result.post_company_current_title || '',
+    current_industry: result.current_industry || result.post_company_current_industry || result.industry || '',
+    current_general_industry: result.current_general_industry || '',
+    current_job_location: result.current_job_location || result.post_company_current_location || '',
+    years_experience: result.years_experience || 0,
+    profile_photo_url: result.profile_photo_url || result.picture_url
+  }));
+};
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -583,7 +706,7 @@ export default function DashboardPage() {
       
       console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
       console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
-      setSearchResults(searchResultsData);
+      setSearchResults(ensureSearchResultCompatibility(searchResultsData));
       
       // Automatically collapse the search analysis when results are presented
       if (searchResultsData && searchResultsData.length > 0) {
@@ -943,7 +1066,7 @@ export default function DashboardPage() {
       
       if (searchDetails) {
         // Set the search results
-        setSearchResults(searchDetails.results);
+        setSearchResults(ensureSearchResultCompatibility(searchDetails.results));
         setSearchPhase('complete');
         console.log(`[DASHBOARD DEBUG] Set ${searchDetails.results.length} search results`);
         
@@ -1351,102 +1474,165 @@ export default function DashboardPage() {
                 
                 <div className="grid gap-4">
                   {searchResults.map((result, index) => {
-                    const currentTitle = result.current_title || "";
+                    // Get standard profile info
+                    const standardInfo = getStandardProfileInfo(result);
                     
-                    // Add debugging for each result
-                    console.log(`[FRONTEND DEBUG] Result ${index}:`, {
-                      name: result.name,
-                      current_industry: result.current_industry,
-                      headline: result.headline,
-                      current_general_industry: result.current_general_industry
-                    });
+                    // Get matching filters for this result
+                    const matchingFilters = getMatchingFilters(result, extractedFilters);
+                    
+                    // Use compatible field access
+                    const profileUrl = result.profile_url || result.linkedin_url || '';
+                    const profilePhotoUrl = result.picture_url || result.profile_photo_url;
                     
                     return (
-                      <a
+                      <div
                         key={result.id || index}
-                        href={result.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSearchResultClick(result.linkedin_url, index, result.name);
-                        }}
+                        className="block p-6 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500"
                       >
-                        {/* Overlay indicating clickable */}
-                        <div className="absolute inset-0 bg-emerald-500 bg-opacity-0 group-hover:bg-opacity-5 rounded-lg transition-all duration-300 pointer-events-none"></div>
-                        
-                        {/* LinkedIn Icon in top right corner */}
-                        <div className="absolute top-2 right-2">
-                          <img 
-                            src="/assets/linkedin_gray.png" 
-                            alt="LinkedIn" 
-                            className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity"
-                          />
-                        </div>
-                        
-                        <div className="flex items-center">
-                          {/* Profile Image */}
-                          <div className="w-16 h-16 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-4">
-                            {result.profile_photo_url ? (
-                              <img 
-                                src={result.profile_photo_url} 
-                                alt={`${result.name}'s profile`}
-                                className="w-full h-full object-cover"
-                              />
+                        {/* 4-Column Layout */}
+                        <div className="grid grid-cols-4 gap-6 items-start">
+                          
+                          {/* Column 1: Profile Identity */}
+                          <div className="flex flex-col items-center text-center">
+                            {/* Profile Image */}
+                            <div className="w-20 h-20 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mb-3">
+                              {profilePhotoUrl ? (
+                                <img 
+                                  src={profilePhotoUrl} 
+                                  alt={`${result.name}'s profile`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
+                                  {result.name?.split(' ').map(name => name[0]).join('') || '?'}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Name */}
+                            <h3 className="font-bold text-lg text-gray-900 mb-2">{result.name}</h3>
+                            
+                            {/* Match Ranking */}
+                            <div className="bg-emerald-100 text-emerald-800 text-sm px-3 py-1 rounded-full font-medium">
+                              Match #{index + 1}
+                            </div>
+                          </div>
+                          
+                          {/* Column 2: Match Criteria (Dynamic) */}
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wider border-b border-gray-200 pb-1">
+                              🎯 Match Highlights
+                            </h4>
+                            {matchingFilters.length > 0 ? (
+                              <div className="space-y-2">
+                                {matchingFilters.map((match, matchIndex) => (
+                                  <div key={matchIndex} className="flex items-start space-x-2">
+                                    <span className="text-lg">{match.icon}</span>
+                                    <div>
+                                      <div className="text-xs text-gray-500 uppercase tracking-wide">{match.category.replace(/s$/, '')}</div>
+                                      <div className="text-sm font-medium text-emerald-700">{match.value}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-800 font-semibold text-xl">
-                                {result.name?.split(' ').map(name => name[0]).join('') || '?'}
+                              <div className="text-sm text-gray-500 italic">
+                                General match based on search relevance
                               </div>
                             )}
                           </div>
                           
-                          {/* Content */}
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-900">{result.name}</h3>
-                            
-                            {/* Headline */}
-                            {result.headline && (
-                              <p className="text-gray-600 text-sm mt-1 italic">{result.headline}</p>
-                            )}
-                            
-                            {/* Metadata in one row */}
-                            <div className="flex flex-wrap items-center text-gray-600 mt-1">
-                              <span>{currentTitle}</span>
-                              {result.current_company && (
-                                <>
-                                  <span className="mx-1">•</span>
-                                  <span>{result.current_company}</span>
-                                </>
-                              )}
-                              {result.current_job_location && (
-                                <>
-                                  <span className="mx-1">•</span>
-                                  <span>{result.current_job_location}</span>
-                                </>
-                              )}
-                            </div>
-                            
-                            {/* Industry */}
-                            <p className="text-gray-500 text-sm mt-1">Industry: {result.current_industry}</p>
-                            
-                            {/* Match index instead of percentage */}
-                            <div className="mt-2 flex items-center justify-between">
-                              <div className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full inline-block">
-                                Match: #{index + 1}
+                          {/* Column 3: Standard Profile Info (Static) */}
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wider border-b border-gray-200 pb-1">
+                              📋 Profile Details
+                            </h4>
+                            <div className="space-y-2">
+                              {/* Location */}
+                              <div className="flex items-start space-x-2">
+                                <span className="text-lg">📍</span>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {standardInfo.location || 'Not specified'}
+                                  </div>
+                                </div>
                               </div>
                               
-                              {/* Add a clear LinkedIn view button */}
-                              <div className="text-blue-600 hover:text-blue-800 flex items-center text-sm">
-                                <span>View LinkedIn</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
+                              {/* Current Role */}
+                              <div className="flex items-start space-x-2">
+                                <span className="text-lg">💼</span>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Current Role</div>
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {standardInfo.currentRole || 'Not specified'}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Current Company */}
+                              <div className="flex items-start space-x-2">
+                                <span className="text-lg">🏢</span>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Current Company</div>
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {standardInfo.currentCompany || 'Not specified'}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Education */}
+                              <div className="flex items-start space-x-2">
+                                <span className="text-lg">🎓</span>
+                                <div>
+                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Education</div>
+                                  <div className="text-sm font-medium text-gray-700">
+                                    {standardInfo.education || 'Not specified'}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          
+                          {/* Column 4: Actions */}
+                          <div className="flex flex-col space-y-3">
+                            {/* LinkedIn Button */}
+                            <button
+                              onClick={() => handleSearchResultClick(profileUrl, index, result.name)}
+                              className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <img 
+                                src="/assets/linkedin_gray.png" 
+                                alt="LinkedIn" 
+                                className="w-4 h-4 filter invert brightness-0"
+                              />
+                              <span>LinkedIn</span>
+                            </button>
+                            
+                            {/* Save Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add save functionality here
+                                console.log('Save profile:', result.name);
+                              }}
+                              className="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                              </svg>
+                              <span>Save</span>
+                            </button>
+                          </div>
                         </div>
-                      </a>
+                        
+                        {/* Headline (if available) - spans full width below the 4 columns */}
+                        {result.headline && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-gray-600 text-sm italic text-center">"{result.headline}"</p>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
