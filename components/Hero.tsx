@@ -40,7 +40,7 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative min-h-[91vh] flex items-center pb-20">
+    <section className="relative min-h-screen flex items-center pb-20">
       {/* Fading emerald background element */}
       <div
         className="absolute inset-0 overflow-hidden z-0"
