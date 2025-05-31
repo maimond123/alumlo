@@ -51,12 +51,11 @@ export async function POST(req: NextRequest) {
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     
-    // For company searches like chick_fil_a, we need to simulate the localStorage context
-    // since the API doesn't have access to browser localStorage
-    if (!isDemo && organizationName === 'chick_fil_a') {
-      console.log(`[API DEBUG] ✅ Detected chick_fil_a company search context`);
-      // We'll need to modify the search method to accept organizationName as a parameter
-      // For now, let's call search normally and the method will handle it
+    // Auth-based routing: Any authenticated user with organizationName gets company search
+    if (!isDemo && organizationName) {
+      console.log(`[API DEBUG] ✅ Authenticated user detected with organization: "${organizationName}"`);
+    } else {
+      console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
     }
     
     const results = await search_engine.search(query, top_k, filters, isDemo, organizationName);

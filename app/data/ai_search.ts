@@ -10,7 +10,7 @@ export interface SearchFilters {
   school?: string;
 }
 
-// Add new interface for company search filters (only for company cases like chick_fil_a)
+// Add new interface for company search filters
 export interface CompanySearchFilters {
   company?: string;
   industry?: string;
@@ -152,7 +152,7 @@ export class LinkedInProfileSearchEngine {
     return;
   }
   
-  // Add new method for company search (only used for chick_fil_a case)
+  // Company search method for any organization with alumni data
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}): Promise<CompanySearchResult[]> {
     try {
       console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with query: "${query}", filters:`, filters);
