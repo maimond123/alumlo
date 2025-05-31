@@ -17,11 +17,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const noScaleRoutes = ['/data-insights', '/upload-data', '/reports']
-  const shouldApplyNoScale = noScaleRoutes.some(route => pathname.startsWith(route))
+  // Routes that should NOT have any scaling (body will be 100vw/vh)
+  const noScaleRoutes = ['/data-insights', '/upload-data', '/reports', '/signin', '/dashboard'] 
 
   let bodyClassName = inter.className
-  if (shouldApplyNoScale) {
+  // Apply .no-scale class if the current path is one of the explicitly unscaled routes
+  if (noScaleRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
     bodyClassName += ' no-scale'
   }
 
