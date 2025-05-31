@@ -129,8 +129,8 @@ export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [formattedSchoolName, setFormattedSchoolName] = useState("")
-  const [displayedSchoolName, setDisplayedSchoolName] = useState("")
+  const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
+  const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
   
@@ -191,10 +191,10 @@ export default function DashboardPage() {
   const [isProTipDismissed, setIsProTipDismissed] = useState(false)
   
   // Add new state to control animation start
-  const [isSchoolNameReadyToAnimate, setIsSchoolNameReadyToAnimate] = useState(false)
+  const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
 
-  // Define formatSchoolName function here
-  const formatSchoolName = (name: string): string => {
+  // Define formatOrganizationName function here
+  const formatOrganizationName = (name: string): string => {
     if (!name) return "Your Organization"; // Fallback for empty or null names
     return name
       .replace(/_/g, ' ')
@@ -242,7 +242,7 @@ export default function DashboardPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated");
             setIsDemoMode(true);
-            setFormattedSchoolName("Your Organization");
+            setFormattedOrganizationName("Your Organization");
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
@@ -276,10 +276,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (authState.isAuthenticated && !isDemoMode) {
       console.log("Dashboard: User authenticated, fetching data...")
-      const fetchSchoolName = async () => {
+      const fetchOrganizationName = async () => {
         if (isDemoMode) {
-          setFormattedSchoolName("Your Organization");
-          setIsSchoolNameReadyToAnimate(true); // Allow animation for demo
+          setFormattedOrganizationName("Your Organization");
+          setIsOrganizationNameReadyToAnimate(true); // Allow animation for demo
           setIsLoading(false);
           return;
         }
@@ -288,8 +288,8 @@ export default function DashboardPage() {
           const userEmail = await getUserEmail();
           if (!userEmail) {
             setError("Unable to retrieve user email.");
-            setFormattedSchoolName("Your Organization"); // Fallback
-            setIsSchoolNameReadyToAnimate(true);
+            setFormattedOrganizationName("Your Organization"); // Fallback
+            setIsOrganizationNameReadyToAnimate(true);
             setIsLoading(false);
             return;
           }
@@ -303,56 +303,56 @@ export default function DashboardPage() {
           console.log("[DEBUG] Raw data from customer_information:", data);
 
           if (error) {
-            console.error("Error fetching school name:", error);
+            console.error("Error fetching organization name:", error);
             setError("Failed to load school data.");
-            setFormattedSchoolName("Your Organization"); // Fallback
-            setIsSchoolNameReadyToAnimate(true);
+            setFormattedOrganizationName("Your Organization"); // Fallback
+            setIsOrganizationNameReadyToAnimate(true);
             setIsLoading(false);
             return;
           }
 
-          if (data && data.school_name) {
-            const rawSchoolName = data.school_name;
-            const formattedName = formatSchoolName(rawSchoolName);
-            console.log("[DEBUG] Result from formatSchoolName function:", formattedName);
-            setFormattedSchoolName(formattedName);
+          if (data && data.organization_name) {
+            const rawOrganizationName = data.organization_name;
+            const formattedName = formatOrganizationName(rawOrganizationName);
+            console.log("[DEBUG] Result from formatOrganizationName function:", formattedName);
+            setFormattedOrganizationName(formattedName);
             
             // Introduce a short delay before signaling animation readiness
             setTimeout(() => {
-              setIsSchoolNameReadyToAnimate(true);
+              setIsOrganizationNameReadyToAnimate(true);
             }, 100); // 100ms delay
 
              // Store the original school name in localStorage for the search engine
             if (typeof window !== 'undefined') {
-              localStorage.setItem('schoolName', rawSchoolName);
-              console.log(`[DEBUG] Stored original school name in localStorage: "${rawSchoolName}"`);
+              localStorage.setItem('organizationName', rawOrganizationName);
+              console.log(`[DEBUG] Stored original organization name in localStorage: "${rawOrganizationName}"`);
             }
           } else {
             setError("School name not found for this user.");
-            setFormattedSchoolName("Your Organization"); // Fallback
-            setIsSchoolNameReadyToAnimate(true);
+            setFormattedOrganizationName("Your Organization"); // Fallback
+            setIsOrganizationNameReadyToAnimate(true);
           }
         } catch (err) {
-          console.error("Exception in fetchSchoolName:", err);
+          console.error("Exception in fetchOrganizationName:", err);
           setError("An error occurred while fetching school data.");
-          setFormattedSchoolName("Your Organization"); // Fallback
-          setIsSchoolNameReadyToAnimate(true);
+          setFormattedOrganizationName("Your Organization"); // Fallback
+          setIsOrganizationNameReadyToAnimate(true);
         } finally {
           setIsLoading(false);
         }
       };
 
-      fetchSchoolName()
+      fetchOrganizationName()
     }
   }, [authState.isAuthenticated, isDemoMode]) // Removed router from dependencies as it might not be needed for just fetching school name
 
   // Add this useEffect to fetch the total count on component mount
   useEffect(() => {
     const fetchTotalAlumniCount = async () => {
-      if (formattedSchoolName) {
+      if (formattedOrganizationName) {
         setIsLoadingCount(true);
         try {
-          const tableName = `${formattedSchoolName.toLowerCase().replace(/ /g, '_')}_vector`;
+          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_vector`;
           const { count, error } = await supabase
             .from(tableName)
             .select('*', { count: 'exact', head: true });
@@ -370,10 +370,10 @@ export default function DashboardPage() {
       }
     };
     
-    if (formattedSchoolName) {
+    if (formattedOrganizationName) {
       fetchTotalAlumniCount();
     }
-  }, [formattedSchoolName]);
+  }, [formattedOrganizationName]);
 
   // Track page view when component mounts
   useEffect(() => {
@@ -423,7 +423,7 @@ export default function DashboardPage() {
               analytics.identifyUser(userEmail, {
                 email: userEmail,
                 isDemoUser: false,
-                school: formattedSchoolName
+                organization: formattedOrganizationName
               });
             }
           }
@@ -434,7 +434,7 @@ export default function DashboardPage() {
     };
 
     identifyUserInAnalytics();
-  }, [authState.isAuthenticated, isDemoMode, formattedSchoolName]);
+  }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
 
   // Add this helper function to simulate typewriter effect
   const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
@@ -498,8 +498,8 @@ export default function DashboardPage() {
     console.log(`[DEBUG ${new Date().toISOString()}] Starting API search request for: "${currentQuery}"`);
     
     // Get the original school name from localStorage for the API
-    const originalSchoolName = typeof window !== 'undefined' ? localStorage.getItem('schoolName') : null;
-    console.log(`[DEBUG ${new Date().toISOString()}] Original school name for API: "${originalSchoolName}"`);
+    const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
+    console.log(`[DEBUG ${new Date().toISOString()}] Original organization name for API: "${originalOrganizationName}"`);
     
     const searchPromise = fetch('/api/search', {
       method: 'POST',
@@ -509,7 +509,7 @@ export default function DashboardPage() {
       body: JSON.stringify({ 
         query: currentQuery, 
         top_k: 10,
-        schoolName: originalSchoolName,
+        organizationName: originalOrganizationName,
         isDemo: isDemoMode
       }),
     }).then(response => {
@@ -551,7 +551,7 @@ export default function DashboardPage() {
         }));
       } else {
         // Regular message for other users
-        await typewriterEffect(`Searching across our demo database of ${totalAlumniCount.toLocaleString()} ${formattedSchoolName} alumni profiles`, 
+        await typewriterEffect(`Searching across our demo database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
           (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
         );
       }
@@ -608,7 +608,7 @@ export default function DashboardPage() {
               searchPhase: 'complete',
               isAnalysisCollapsed: isAnalysisCollapsed,
               totalAlumniCount: totalAlumniCount,
-              formattedSchoolName: formattedSchoolName,
+              formattedOrganizationName: formattedOrganizationName,
               isDemoMode: isDemoMode,
               timestamp: new Date().toISOString()
             }
@@ -996,7 +996,7 @@ export default function DashboardPage() {
   };
 
   // Handle school name click in demo mode
-  const handleSchoolNameClick = () => {
+  const handleOrganizationNameClick = () => {
     if (isDemoMode) {
       setShowDemoSurvey(true);
     }
@@ -1089,24 +1089,24 @@ export default function DashboardPage() {
 
   // Refined Typewriter effect for school name
   useEffect(() => {
-    if (isSchoolNameReadyToAnimate && formattedSchoolName) {
-      setDisplayedSchoolName(""); // Initialize for animation
+    if (isOrganizationNameReadyToAnimate && formattedOrganizationName) {
+      setDisplayedOrganizationName(""); // Initialize for animation
       let i = 0;
-      const schoolNameToAnimate = formattedSchoolName;
+      const organizationNameToAnimate = formattedOrganizationName;
       
       const typingInterval = setInterval(() => {
-        if (i < schoolNameToAnimate.length) {
-          setDisplayedSchoolName(schoolNameToAnimate.substring(0, i + 1));
+        if (i < organizationNameToAnimate.length) {
+          setDisplayedOrganizationName(organizationNameToAnimate.substring(0, i + 1));
           i++;
         } else {
           clearInterval(typingInterval);
         }
       }, 70); // Speed of typing
       return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!formattedSchoolName) {
-      setDisplayedSchoolName(""); // Clear if no formatted name
+    } else if (!formattedOrganizationName) {
+      setDisplayedOrganizationName(""); // Clear if no formatted name
     }
-  }, [formattedSchoolName, isSchoolNameReadyToAnimate]); // Dependencies
+  }, [formattedOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -1146,21 +1146,21 @@ export default function DashboardPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
               Search
               {/* Conditional space, only if school name will be rendered */}
-              {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
-              {isSchoolNameReadyToAnimate && displayedSchoolName ? (
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
                 isDemoMode ? (
                   <span 
                     className="text-black cursor-pointer hover:underline"
-                    onClick={handleSchoolNameClick}
+                    onClick={handleOrganizationNameClick}
                   >
-                    {displayedSchoolName}
+                    {displayedOrganizationName}
                   </span>
                 ) : (
-                  <span className="text-black">{displayedSchoolName}</span>
+                  <span className="text-black">{displayedOrganizationName}</span>
                 )
               ) : null}
               {/* Conditional space, only if school name was rendered */}
-              {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
               Alumni
             </h1>
 
@@ -1702,14 +1702,14 @@ export default function DashboardPage() {
                   
                   // Get form data
                   const formData = new FormData(e.currentTarget);
-                  const schoolName = formData.get('school-name') as string;
+                  const organizationName = formData.get('organization-name') as string;
                   const email = formData.get('email') as string;
                   const features = Array.from(formData.getAll('features')) as string[];
                   const budget = formData.get('budget') as string;
                   
                   // Track form submission
                   analytics.trackFormSubmit('DemoSurvey', { 
-                    schoolName,
+                    organizationName,
                     email,
                     features,
                     budget
@@ -1720,7 +1720,7 @@ export default function DashboardPage() {
                     const { error } = await supabase
                       .from('demo_survey_responses')
                       .insert([{ 
-                        school_name: schoolName,
+                        organization_name: organizationName,
                         email: email,
                         features: features,
                         created_at: new Date().toISOString()
@@ -1731,7 +1731,7 @@ export default function DashboardPage() {
                     // Track successful submission
                     analytics.trackFormSubmit('DemoSurvey', { 
                       status: 'success',
-                      schoolName,
+                      organizationName,
                       email 
                     });
                     
@@ -1746,7 +1746,7 @@ export default function DashboardPage() {
                     console.error('Error submitting survey:', error);
                     // Track error
                     analytics.trackError('DemoSurveySubmission', 'Failed to submit survey', { 
-                      schoolName, 
+                      organizationName, 
                       email 
                     });
                     alert('There was an error submitting your information. Please try again.');
@@ -1764,7 +1764,7 @@ export default function DashboardPage() {
                       required
                       onChange={(e) => {
                         if (e.target.value.length > 0) {
-                          analytics.trackFormSubmit('DemoSurvey_SchoolNameInput', { 
+                          analytics.trackFormSubmit('DemoSurvey_OrganizationNameInput', { 
                             length: e.target.value.length 
                           });
                         }

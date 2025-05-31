@@ -9,7 +9,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
-import { useSchool } from "../contexts/OrganizationContext"
+import { useOrganization } from "../contexts/OrganizationContext"
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 import { AverageSalaryByIndustryBarChart } from "../../components/chart"
@@ -48,10 +48,10 @@ export default function DataInsightsPage() {
   const fromSignin = searchParams.get("fromSignin") === "true"
   
   // Get the school name from context
-  const { schoolName: contextSchoolName, setSchoolName: setContextSchoolName } = useSchool()
+  const { organizationName: contextOrganizationName, setOrganizationName: setContextOrganizationName } = useOrganization()
   
   // TEMPORARY: Override school name to always be 'lawrenceville'
-  const [schoolName, setSchoolName] = useState<string>("lawrenceville")
+  const [organizationName, setOrganizationName] = useState<string>("lawrenceville")
   
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<SchoolChartData[]>([])
@@ -175,9 +175,9 @@ export default function DataInsightsPage() {
   // Add this at the top of your component
   useEffect(() => {
     console.log("DEBUG: Component mounted, initial state:", {
-      schoolName,
+      organizationName,
       selectedYear,
-      isSchoolNameSet: Boolean(schoolName),
+      isOrganizationNameSet: Boolean(organizationName),
       isSelectedYearSet: Boolean(selectedYear),
     })
   }, [])
@@ -185,58 +185,56 @@ export default function DataInsightsPage() {
   // Override the school name when the component mounts
   useEffect(() => {
     // TEMPORARY: Force school name to be 'lawrenceville'
-    setSchoolName("lawrenceville")
+    setOrganizationName("lawrenceville")
     
     console.log("DEBUG: School name temporarily set to 'lawrenceville'")
   }, [])
 
-  // Modify the existing useEffect that depends on schoolName
   useEffect(() => {
-    console.log("DEBUG: schoolName changed:", {
-      schoolName,
-      schoolNameType: typeof schoolName,
+    console.log("DEBUG: organizationName changed:", {
+      organizationName,
+      organizationNameType: typeof organizationName,
       timestamp: new Date().toISOString(),
-      isHardcoded: schoolName === "lawrenceville" ? "yes (temporary override)" : "no"
+      isHardcoded: organizationName === "lawrenceville" ? "yes (temporary override)" : "no"
     })
 
-    // Force a data fetch when schoolName becomes available
-    if (schoolName) {
+
+    if (organizationName) {
       fetchSchoolData()
     }
-  }, [schoolName])
+  }, [organizationName])
 
-  // Modify your existing useEffect for schoolName/selectedYear
   useEffect(() => {
-    console.log("DEBUG: schoolName or selectedYear changed", {
-      schoolName,
+    console.log("DEBUG: organizationName or selectedYear changed", {
+      organizationName,
       selectedYear,
-      schoolNameType: typeof schoolName,
+      organizationNameType: typeof organizationName,
       selectedYearType: typeof selectedYear,
       timestamp: new Date().toISOString(),
     })
 
-    if (schoolName && selectedYear) {
-      console.log("DEBUG: Both schoolName and selectedYear available, calling fetchSchoolData")
+    if (organizationName && selectedYear) {
+      console.log("DEBUG: Both organizationName and selectedYear available, calling fetchSchoolData")
       fetchSchoolData()
     } else {
       console.log("DEBUG: Not fetching data because:", {
-        hasSchoolName: Boolean(schoolName),
+        hasOrganizationName: Boolean(organizationName),
         hasSelectedYear: Boolean(selectedYear),
       })
     }
-  }, [schoolName, selectedYear])
+  }, [organizationName, selectedYear])
 
   // Add this effect to trigger data loading when the component mounts
   useEffect(() => {
     const loadInitialData = async () => {
       // Wait a short moment to ensure all context providers are initialized
       setTimeout(async () => {
-        if (schoolName && selectedYear) {
+        if (organizationName && selectedYear) {
           console.log("DEBUG: Initial data load triggered");
           await fetchSchoolData();
         } else {
-          console.log("DEBUG: Waiting for schoolName and selectedYear before initial load", {
-            schoolName,
+          console.log("DEBUG: Waiting for organizationName and selectedYear before initial load", {
+            organizationName,
             selectedYear
           });
         }
@@ -557,15 +555,15 @@ export default function DataInsightsPage() {
   // Modify the beginning of fetchSchoolData to add more diagnostics
   const fetchSchoolData = async () => {
     console.log("DEBUG: fetchSchoolData called with:", {
-      schoolName,
+      organizationName,
       selectedYear,
       timestamp: new Date().toISOString(),
-      isHardcoded: schoolName === "lawrenceville" ? "yes (temporary override)" : "no"
+      isHardcoded: organizationName === "lawrenceville" ? "yes (temporary override)" : "no"
     })
 
-    if (!schoolName) {
-      console.error("DEBUG: No school name available, cannot fetch data")
-      setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: "No school name available" }))
+    if (!organizationName) {
+      console.error("DEBUG: No organization name available, cannot fetch data")
+      setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: "No organization name available" }))
       return
     }
 
@@ -584,7 +582,7 @@ export default function DataInsightsPage() {
         console.log("DEBUG: ❌ Not Chick-fil-A user, proceeding with database fetch")
       }
 
-      const tableName = schoolName.toLowerCase().replace(/\s+/g, "_") + "_distribution"
+      const tableName = organizationName.toLowerCase().replace(/\s+/g, "_") + "_distribution"
       console.log(`DEBUG: Will fetch from table: ${tableName} for year: ${selectedYear}`)
 
       // Add a check to see if the table exists
@@ -1398,7 +1396,7 @@ export default function DataInsightsPage() {
               
               // Get form data
               const formData = new FormData(e.currentTarget);
-              const schoolName = formData.get('school-name') as string;
+              const organizationName = formData.get('organization-name') as string;
               const email = formData.get('email') as string;
               const features = Array.from(formData.getAll('features')) as string[];
               const budget = formData.get('budget') as string;
@@ -1408,7 +1406,7 @@ export default function DataInsightsPage() {
                 const { error } = await supabase
                   .from('demo_survey_responses')
                   .insert([{ 
-                    school_name: schoolName,
+                    organization_name: organizationName,
                     email: email,
                     features: features,
                     created_at: new Date().toISOString()

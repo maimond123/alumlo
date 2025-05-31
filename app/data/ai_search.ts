@@ -300,15 +300,15 @@ export class LinkedInProfileSearchEngine {
     top_k: number = 10, 
     filters: SearchFilters = {}, 
     isDemo: boolean = false, 
-    schoolName?: string,
+    organizationName?: string,
     queryClassification?: any
   ): Promise<SearchResult[]> {
     try {
       console.log(`[AI_SEARCH DEBUG] 🔍 search called with classification:`, queryClassification);
       
       // Determine the organization name dynamically (same pattern as rest of file)
-      const storedOrganizationName = schoolName || (typeof window !== 'undefined' ? 
-        localStorage.getItem('schoolName') : null);
+      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('organizationName') : null);
       
       console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedOrganizationName: "${storedOrganizationName}"`);
       
@@ -541,17 +541,17 @@ export class LinkedInProfileSearchEngine {
     }
   }
   
-  async getProfileById(id: number, schoolName?: string): Promise<ProfileDetail> {
+  async getProfileById(id: number, organizationName?: string): Promise<ProfileDetail> {
     try {
       // Determine the table name using NEW naming convention
       let tableName: string;
       
-      if (schoolName) {
-        tableName = `${schoolName}_alumni_vector`;  // Updated naming convention
+      if (organizationName) {
+        tableName = `${organizationName}_alumni_vector`;  // Updated naming convention
       } else {
         // Try to get the organization name from localStorage if running in browser
         const storedOrganizationName = typeof window !== 'undefined' ? 
-          localStorage.getItem('schoolName') : null;
+          localStorage.getItem('organizationName') : null;
         
         if (!storedOrganizationName) {
           throw new Error('Organization name is required but not provided');

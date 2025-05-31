@@ -8,7 +8,7 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
 interface SignupData {
-  schoolName: string
+  organizationName: string
   state: string
   demoDate: string
 }
@@ -27,12 +27,12 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json() as SignupData
-    const { schoolName, state, demoDate } = body
+    const { organizationName, state, demoDate } = body
 
     const { data, error } = await supabase
       .from("signups")
       .insert([
-        { school_name: schoolName, state, demo_date: demoDate },
+        { organization_name: organizationName, state, demo_date: demoDate },
       ])
 
     if (error) {

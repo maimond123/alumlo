@@ -81,9 +81,9 @@ export default function LearnPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [formattedSchoolName, setFormattedSchoolName] = useState("")
-  const [displayedSchoolName, setDisplayedSchoolName] = useState("")
-  const [isSchoolNameReadyToAnimate, setIsSchoolNameReadyToAnimate] = useState(false)
+  const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
+  const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
+  const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
   const { isSidebarOpen } = useSidebar()
   
   // Add new state for demo mode
@@ -153,7 +153,7 @@ export default function LearnPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated");
             setIsDemoMode(true);
-            setFormattedSchoolName("Your School");
+            setFormattedOrganizationName("Your School");
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
@@ -212,11 +212,11 @@ export default function LearnPage() {
             .split(' ')
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
-          setFormattedSchoolName(formatted)
+          setFormattedOrganizationName(formatted)
           
           // Introduce a short delay before signaling animation readiness
           setTimeout(() => {
-            setIsSchoolNameReadyToAnimate(true);
+            setIsOrganizationNameReadyToAnimate(true);
           }, 100); // 100ms delay
           
           setIsLoading(false)
@@ -282,7 +282,7 @@ export default function LearnPage() {
               analytics.identifyUser(userEmail, {
                 email: userEmail,
                 isDemoUser: false,
-                school: formattedSchoolName
+                organization: formattedOrganizationName
               });
             }
           }
@@ -293,7 +293,7 @@ export default function LearnPage() {
     };
 
     identifyUserInAnalytics();
-  }, [authState.isAuthenticated, isDemoMode, formattedSchoolName]);
+  }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
 
   // Add the learn mode typewriter effect
   const learnTypewriterEffect = (text: string): Promise<void> => {
@@ -349,7 +349,7 @@ export default function LearnPage() {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          schoolName: formattedSchoolName || "Your School",
+          organizationName: formattedOrganizationName || "Your School",
           history: conversations
         }),
       });
@@ -445,24 +445,24 @@ export default function LearnPage() {
 
   // Refined Typewriter effect for school name (matches dashboard)
   useEffect(() => {
-    if (isSchoolNameReadyToAnimate && formattedSchoolName) {
-      setDisplayedSchoolName(""); // Initialize for animation
+    if (isOrganizationNameReadyToAnimate && formattedOrganizationName) {
+      setDisplayedOrganizationName(""); // Initialize for animation
       let i = 0;
-      const schoolNameToAnimate = formattedSchoolName;
+      const organizationNameToAnimate = formattedOrganizationName;
       
       const typingInterval = setInterval(() => {
-        if (i < schoolNameToAnimate.length) {
-          setDisplayedSchoolName(schoolNameToAnimate.substring(0, i + 1));
+        if (i < organizationNameToAnimate.length) {
+          setDisplayedOrganizationName(organizationNameToAnimate.substring(0, i + 1));
           i++;
         } else {
           clearInterval(typingInterval);
         }
       }, 70); // Speed of typing
       return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!formattedSchoolName) {
-      setDisplayedSchoolName(""); // Clear if no formatted name
+    } else if (!formattedOrganizationName) {
+      setDisplayedOrganizationName(""); // Clear if no formatted name
     }
-  }, [formattedSchoolName, isSchoolNameReadyToAnimate]); // Dependencies
+  }, [formattedOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
@@ -491,20 +491,20 @@ export default function LearnPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
             Learn
             {/* Conditional space, only if school name will be rendered */}
-            {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
-            {isSchoolNameReadyToAnimate && displayedSchoolName ? (
+            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
               isDemoMode ? (
                 <span 
                   className="text-black cursor-pointer hover:underline"
                 >
-                  {displayedSchoolName}
+                  {displayedOrganizationName}
                 </span>
               ) : (
-                <span className="text-black">{displayedSchoolName}</span>
+                <span className="text-black">{displayedOrganizationName}</span>
               )
             ) : null}
             {/* Conditional space, only if school name was rendered */}
-            {isSchoolNameReadyToAnimate && displayedSchoolName ? " " : ""}
+            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
             Alumni
           </h1>
 

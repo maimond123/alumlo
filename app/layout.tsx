@@ -3,7 +3,7 @@
 
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { SchoolProvider } from './contexts/OrganizationContext'
+import { OrganizationProvider } from './contexts/OrganizationContext'
 import { SidebarProvider } from '@/components/SidebarProvider'
 import SupabaseAuthListener from '@/components/SupabaseAuthListener'
 import { Analytics } from "@vercel/analytics/react"
@@ -29,11 +29,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={bodyClassName}>
         <SupabaseAuthListener>
-          <SchoolProvider>
+          <OrganizationProvider>
             <SidebarProvider>
               {children}
             </SidebarProvider>
-          </SchoolProvider>
+          </OrganizationProvider>
         </SupabaseAuthListener>
         <Analytics />
       </body>

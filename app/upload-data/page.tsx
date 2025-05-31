@@ -18,7 +18,7 @@ export default function UploadDataPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [recentUploads, setRecentUploads] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [schoolName, setSchoolName] = useState<string | null>(null)
+  const [organizationName, setOrganizationName] = useState<string | null>(null)
 
   const fetchRecentUploads = async () => {
     try {
@@ -90,7 +90,7 @@ export default function UploadDataPage() {
 
 
   useEffect(() => {
-    const fetchSchoolName = async () => {
+    const fetchOrganizationName = async () => {
       try {
         const userEmail = await getUserEmail()
 
@@ -111,14 +111,14 @@ export default function UploadDataPage() {
           throw error
         }
 
-        setSchoolName(data.organization_name)
+        setOrganizationName(data.organization_name)
       } catch (err) {
         console.error('Error fetching school name:', err)
         setErrorMessage('Failed to load school data')
       }
     }
 
-    fetchSchoolName()
+    fetchOrganizationName()
   }, [])
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -172,8 +172,8 @@ export default function UploadDataPage() {
 
   const handleUpload = async () => {
     if (!file) return
-    if (!schoolName) {
-      setErrorMessage('School information not found')
+    if (!organizationName) {
+      setErrorMessage('Organization information not found')
       setUploadStatus('error')
       return
     }
@@ -201,7 +201,7 @@ export default function UploadDataPage() {
           fileName: file.name,
           uploadId: newUploadId,
           userEmail,
-          schoolName
+          organizationName
         })
       })
   
@@ -246,8 +246,8 @@ export default function UploadDataPage() {
             status: 'queued',
             progress: 10, // Starting with 10%
             uploaded_by: userEmail,
-            school_name: schoolName
-          }
+            organization_name: organizationName
+          } 
         ])
       
       if (uploadError) {

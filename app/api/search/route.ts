@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[API] Request body parsed:', body);
     
-    const { query, top_k = 10, filters = {}, schoolName, isDemo = false } = body;
+    const { query, top_k = 10, filters = {}, organizationName, isDemo = false } = body;
     
     if (!query || typeof query !== 'string') {
       console.log('[API] Invalid query parameter');
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`[API DEBUG] Received parameters: query="${query}", schoolName="${schoolName}", isDemo=${isDemo}`);
+    console.log(`[API DEBUG] Received parameters: query="${query}", organizationName="${organizationName}", isDemo=${isDemo}`);
 
     // Try each step separately to identify where the error occurs
     console.log('[API] Creating search engine instance');
@@ -49,17 +49,17 @@ export async function POST(req: NextRequest) {
     });
     
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
-    console.log(`[API DEBUG] School context: "${schoolName}"`);
+    console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     
     // For company searches like chick_fil_a, we need to simulate the localStorage context
     // since the API doesn't have access to browser localStorage
-    if (!isDemo && schoolName === 'chick_fil_a') {
+    if (!isDemo && organizationName === 'chick_fil_a') {
       console.log(`[API DEBUG] ✅ Detected chick_fil_a company search context`);
-      // We'll need to modify the search method to accept schoolName as a parameter
+      // We'll need to modify the search method to accept organizationName as a parameter
       // For now, let's call search normally and the method will handle it
     }
     
-    const results = await search_engine.search(query, top_k, filters, isDemo, schoolName);
+    const results = await search_engine.search(query, top_k, filters, isDemo, organizationName);
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
     return NextResponse.json({ results });

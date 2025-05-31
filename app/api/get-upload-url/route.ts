@@ -27,7 +27,7 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
-    const { fileName, uploadId, userEmail, schoolName } = await request.json()
+    const { fileName, uploadId, userEmail, organizationName } = await request.json()
     
     // First get the signed URL
     const { data, error } = await supabase
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         status: 'queued',
         progress: 10,
         uploaded_by: userEmail,
-        school_name: schoolName,
+        organization_name: organizationName,
         created_at: new Date().toISOString()
       })
 

@@ -75,7 +75,7 @@ const openai = new OpenAI({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { chartId, chartType, chartTitle, chartData, message, schoolName, history } = body;
+    const { chartId, chartType, chartTitle, chartData, message, organizationName, history } = body;
 
     // Handle chart analysis request
     if (chartId && chartData) {
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     
     // Handle Learn mode chat request
     if (message) {
-      return handleLearnModeChat(message, schoolName, history || []);
+      return handleLearnModeChat(message, organizationName, history || []);
     }
 
     // If neither type of request is properly formatted
@@ -145,7 +145,7 @@ Provide insights, answer questions, and help users understand this specific data
 }
 
 // Handle Learn mode chat requests
-async function handleLearnModeChat(message: string, schoolName: string, history: any[]) {
+async function handleLearnModeChat(message: string, organizationName: string, history: any[]) {
   // Check if this is a first question (no history) and matches a preset answer
   const isFirstQuestion = history.length === 0;
   const presetAnswer = presetAnswers[message as keyof typeof presetAnswers];

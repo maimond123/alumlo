@@ -49,7 +49,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         console.log("DEBUG: OrganizationContext - querying Supabase for organization info")
         const { data, error } = await supabase
           .from('customer_information')
-          .select('school_name, table_name') // Assuming 'school_name' is the actual DB column name
+          .select('organization_name, table_name') 
           .eq('organization_email', userEmail)
           .single()
         
@@ -60,8 +60,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         console.log("DEBUG: OrganizationContext - Supabase response:", data)
         
         if (data) {
-          console.log("DEBUG: OrganizationContext - setting organization name to:", data.school_name)
-          setOrganizationName(data.school_name) // Value from DB column 'school_name'
+          console.log("DEBUG: OrganizationContext - setting organization name to:", data.organization_name)
+          setOrganizationName(data.organization_name) // Value from DB column 'organization_name'
           setTableId(data.table_name)
         } else {
           console.log("DEBUG: OrganizationContext - no data returned from Supabase")
