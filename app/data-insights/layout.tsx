@@ -19,10 +19,10 @@ export default function DataInsightsLayout({
 
   // When sidebar is open, it extends to 18.5rem (18rem width + 0.5rem left offset)
   // Set margin slightly beyond that but much less than before for tighter layout
-  const marginLeftOpen = "19rem"; // Just barely clears the sidebar for minimal gap
+  const marginLeftOpen = "19.5rem"; // Slightly increased for more space
 
   // When sidebar is closed, use small margin for minimal gap  
-  const marginLeftClosed = "3.5rem";
+  const marginLeftClosed = "4rem"; // Slightly increased for more space
 
   const currentMarginLeft = isSidebarOpen ? marginLeftOpen : marginLeftClosed;
 
