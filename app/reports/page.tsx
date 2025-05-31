@@ -1286,7 +1286,7 @@ function ReportsContent() {
   };
 
   return (
-    <main className={`flex-1 relative transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
+    <main className="flex-1 relative transition-all duration-300 ease-in-out">
       <div className="p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="text-3xl font-bold mb-6">Report Builder</h1>
