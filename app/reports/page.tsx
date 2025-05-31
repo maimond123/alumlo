@@ -50,7 +50,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       <div className="relative flex-1 transition-all duration-300 ease-in-out">
         <ReportsContent />
