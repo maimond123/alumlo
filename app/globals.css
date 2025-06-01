@@ -8,100 +8,57 @@
   --background-rgb: 255, 255, 255;
 }
 
-/* Safari-specific fixes for transform and viewport units */
-@supports (-webkit-appearance: none) {
-  body.default-scale {
-    /* Safari needs explicit box-sizing for transforms */
-    box-sizing: border-box;
-    /* Use more explicit transform calculations for Safari */
-    -webkit-transform: scale(0.82);
-    -webkit-transform-origin: top left;
-    /* Ensure Safari respects the transform bounds */
-    will-change: transform;
-  }
-  
-  .scaled-content-area {
-    /* Safari transform optimization */
-    -webkit-transform: scale(0.82);
-    -webkit-transform-origin: top left;
-    will-change: transform;
-    /* Force Safari to use hardware acceleration */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
+/* Cross-browser reset and consistent base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
-  overflow: hidden;
+  /* Set a consistent base font size across browsers */
+  font-size: 16px;
+  /* Remove default scaling issues */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Remove overflow hidden that might cause issues */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-body { /* Default body, unscaled, for home page or when .no-scale or .default-scale isn't applied */
+body {
+  margin: 0;
+  padding: 0;
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
-  overflow: auto;
-}
-
-body.no-scale { /* For routes that explicitly should not be scaled AT ALL */
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  /* Remove all custom scaling */
   transform: none !important;
   width: 100vw !important;
-  height: 100vh !important;
-  overflow: auto;
-}
-
-body.default-scale { /* For pages that should be scaled globally */
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
-  width: calc(100vw / 0.82);
-  height: calc(100vh / 0.82);
-  transform: scale(0.82);
-  -webkit-transform: scale(0.82);
-  transform-origin: top left;
-  -webkit-transform-origin: top left;
-  overflow: auto;
-  /* Safari-specific fixes */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform;
-}
-
-.scaled-content-wrapper { /* For home page content: Occupies viewport, clips scaled child. */
-  width: 100vw;
-  height: 100vh; 
-  overflow: hidden; 
-  position: relative; 
-}
-
-.scaled-content-area { /* For home page content: The actual content that is scaled */
-  background: rgb(var(--background-rgb)); 
-  transform: scale(0.82);
-  -webkit-transform: scale(0.82);
-  transform-origin: top left;
-  -webkit-transform-origin: top left;
-  width: calc(100% / 0.82); 
-  height: calc(100% / 0.82); 
-  overflow-y: auto; 
+  height: auto !important;
   overflow-x: hidden;
-  /* Safari-specific fixes */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform;
+  overflow-y: auto;
 }
 
-/* Your custom styles below */
+/* Remove all scaling classes - they're causing the inconsistencies */
+/* All pages will now use natural browser rendering */
 
+/* Custom styles below */
 @keyframes typing {
     0% { opacity: .2; }
     20% { opacity: 1; }
     100% { opacity: .2; }
-  }
+}
   
-  .typing-indicator {
+.typing-indicator {
     position: relative;
-  }
+}
   
-  .typing-indicator::after {
+.typing-indicator::after {
     content: '...';
     position: absolute;
     right: -12px;
     animation: typing 1.5s infinite;
-  }
+}

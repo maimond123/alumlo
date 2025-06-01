@@ -19,14 +19,8 @@ export default function RootLayout({
 }) {
   const pathname = usePathname()
 
-  let bodyClassName = inter.className
-
-  if (pathname === '/') {
-    // Home page: body is unscaled (uses default body style from globals.css)
-    // Scaling is handled by .scaled-content-area inside the page
-  } else {
-    bodyClassName += ' default-scale' // All other pages get the default global scaling
-  }
+  // Remove all scaling logic - use consistent styling across all pages
+  const bodyClassName = inter.className
 
   return (
     <html lang="en">
