@@ -49,8 +49,52 @@ export default function FeaturesSection() {
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
             <div className="order-1 lg:order-2 lg:col-span-3 h-full">
               {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
-              <div className="bg-black/5 backdrop-blur-lg rounded-2xl p-3 shadow-xl h-full">
-                {/* Inner container and its content previously here are now removed */}
+              <div className="bg-black/5 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex flex-col">
+                {/* Profile Section at the top */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <UserCircle className="w-10 h-10 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Sarah Chen</h3>
+                      <p className="text-gray-600">Product Builder</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata Checklist */}
+                <div className="space-y-4 flex-1">
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Location</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Job History</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Education History</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Professional Skills</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Industry Experience</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  
+                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
+                    <span className="text-gray-800 font-medium">Network Connections</span>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
