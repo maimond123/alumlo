@@ -73,7 +73,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
-              <p className="text-xl text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Alumlo gathers publicly available data on your alumni - no more losing track of the people that represent your organization.
               </p>
             </div>
@@ -101,7 +101,7 @@ export default function FeaturesSection() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">ICP Match</span>
+                        <span className="text-sm text-gray-600">Match Score</span>
                         <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">80%</span>
                       </div>
                     </div>
@@ -130,7 +130,7 @@ export default function FeaturesSection() {
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Network Connections</span>
+                      <span className="text-gray-600 font-medium text-sm">Salary</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
@@ -151,7 +151,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
-              <p className="text-lg text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
               </p>
             </div>
@@ -193,7 +193,7 @@ export default function FeaturesSection() {
                   </li>
                 </ul>
               </div>
-              <p className="text-lg text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
               </p>
             </div>
@@ -224,7 +224,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
               </div>
-              <p className="text-lg text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Placeholder description for this new feature. Please replace this with the actual content.
               </p>
             </div>
