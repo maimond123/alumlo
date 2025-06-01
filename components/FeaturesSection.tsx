@@ -110,32 +110,32 @@ export default function FeaturesSection() {
                   {/* Processing Steps - More compact */}
                   <div className="space-y-3">
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">AI Query Translator</span>
+                      <span className="text-gray-600 font-medium text-sm">Work Experience</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Data Retrieval from 100M prospects</span>
+                      <span className="text-gray-600 font-medium text-sm">Education History</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Data Refinery</span>
+                      <span className="text-gray-600 font-medium text-sm">Location</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Semantic Relevance Filter</span>
+                      <span className="text-gray-600 font-medium text-sm">Professional Skills</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Background Learning & Caching</span>
+                      <span className="text-gray-600 font-medium text-sm">Network Connections</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                     
                     <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
-                      <span className="text-gray-600 font-medium text-sm">Clear Results Delivered in 02s</span>
+                      <span className="text-gray-600 font-medium text-sm">LinkedIn Profile</span>
                       <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                   </div>
