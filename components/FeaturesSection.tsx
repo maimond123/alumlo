@@ -150,7 +150,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations - Image first, then border, then text */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px] min-w-[1250px]">
             {/* Visualization Demo with Search Interface (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-7">
               {/* Search Interface Container - matching first reference image */}
