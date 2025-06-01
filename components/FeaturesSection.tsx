@@ -164,10 +164,6 @@ export default function FeaturesSection() {
 
                 {/* Main Search Bar with enhanced glow - moved up */}
                 <div className="relative bg-white rounded-full px-6 py-4 shadow-2xl border-2 border-gray-300 mb-8 flex items-center justify-between z-10 mt-8">
-                  {/* Search bar glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-300/60 via-white to-emerald-300/60 rounded-full blur-sm -z-10"></div>
-                  <div className="absolute inset-0 shadow-[0_0_40px_rgba(5,150,105,0.4)] rounded-full -z-10"></div>
-                  
                   <span className="text-gray-400 text-lg">Search for people who...</span>
                   <div className="bg-gray-100 rounded-full p-2">
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
