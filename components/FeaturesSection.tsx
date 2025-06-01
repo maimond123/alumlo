@@ -159,19 +159,19 @@ export default function FeaturesSection() {
             {/* Visualization Demo with Static Image (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-3">
               {/* Search Interface Container - matching first reference image */}
-              <div className="relative bg-gradient-to-b from-gray-50 via-emerald-100 to-emerald-300 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center overflow-hidden">
+              <div className="relative bg-gradient-to-b from-gray-50 via-emerald-200 to-emerald-500 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center overflow-hidden">
                 
-                {/* Waterfall glow effect from search bar center */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
-                  <div className="absolute inset-0 bg-gradient-radial from-emerald-200/60 via-emerald-300/40 to-transparent rounded-2xl"></div>
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-200/30 to-emerald-400/50 rounded-2xl"></div>
+                {/* Waterfall glow effect from search bar center flowing to bottom */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/4 w-full h-full">
+                  <div className="absolute inset-0 bg-gradient-radial from-emerald-300/80 via-emerald-400/50 to-transparent rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-emerald-300/60 via-emerald-400/40 to-emerald-500/20 rounded-2xl"></div>
                 </div>
 
                 {/* Main Search Bar with enhanced glow */}
                 <div className="relative bg-white rounded-full px-6 py-4 shadow-2xl border-2 border-gray-300 mb-8 flex items-center justify-between z-10">
                   {/* Search bar glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/50 via-white to-emerald-200/50 rounded-full blur-sm -z-10"></div>
-                  <div className="absolute inset-0 shadow-[0_0_30px_rgba(16,185,129,0.3)] rounded-full -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-300/60 via-white to-emerald-300/60 rounded-full blur-sm -z-10"></div>
+                  <div className="absolute inset-0 shadow-[0_0_40px_rgba(5,150,105,0.4)] rounded-full -z-10"></div>
                   
                   <span className="text-gray-400 text-lg">Search for people who...</span>
                   <div className="bg-gray-100 rounded-full p-2">
@@ -196,8 +196,8 @@ export default function FeaturesSection() {
                   </div>
                 </div>
 
-                {/* Additional waterfall effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-100/20 via-emerald-200/30 to-emerald-400/40 rounded-2xl pointer-events-none"></div>
+                {/* Additional waterfall effect overlay - flowing to bottom with fading intensity */}
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-200/30 via-emerald-300/25 to-emerald-500/15 rounded-2xl pointer-events-none"></div>
               </div>
             </div>
           </div>
