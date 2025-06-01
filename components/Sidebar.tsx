@@ -234,16 +234,16 @@ export default function Sidebar() {
 
         {/* Navigation Links with more space between them */}
         <nav>
-          <SidebarLink href="/dashboard" icon={Search} isOpen={isSidebarOpen}>
+          <SidebarLink href="/dashboard" icon={Search} isOpen={isSidebarOpen} currentPath={pathname}>
             Search
           </SidebarLink>
-          <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen}>
+          <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen} currentPath={pathname}>
             Learn
           </SidebarLink>
-          <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen}>
+          <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen} currentPath={pathname}>
             Visualize
           </SidebarLink>
-          <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen}>
+          <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen} currentPath={pathname}>
             Enrich Data
           </SidebarLink>
         </nav>
@@ -331,21 +331,31 @@ function SidebarLink({
   icon: Icon,
   children,
   isOpen,
+  currentPath,
 }: {
   href: string
   icon: React.ElementType
   children: React.ReactNode
   isOpen: boolean
+  currentPath: string
 }) {
+  const isActive = currentPath === href
+  
   return (
     <Link
       href={href}
-      className="flex items-center text-black/90 hover:text-black mb-12 transition-transform duration-300 ease-in-out relative"
+      className={`flex items-center text-black/90 hover:text-black mb-12 transition-all duration-300 ease-in-out relative ${
+        isActive 
+          ? 'shadow-[0_0_20px_rgba(255,215,0,0.6)] bg-gradient-to-r from-yellow-50/30 to-amber-50/30 rounded-lg px-2 py-2' 
+          : ''
+      }`}
       style={{ transform: isOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
     >
-      <Icon className="w-8 h-8 shrink-0" />
+      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-amber-600' : ''}`} />
       <span
-        className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
+        className={`ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap ${
+          isActive ? 'text-amber-700 font-semibold' : ''
+        }`}
         style={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
       >
         {children}
