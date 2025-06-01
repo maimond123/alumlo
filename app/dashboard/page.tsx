@@ -12,6 +12,7 @@ import { motion } from "framer-motion"
 import analytics from "../utils/analytics"
 import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
+import OAuthHandler from "../../components/OAuthHandler"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -328,6 +329,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
   
+  // Add OAuth handling state
+  const [isOAuthCallback, setIsOAuthCallback] = useState(false)
   
   // Add new states for search functionality
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -418,10 +421,16 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Check auth state on component mount
+  // Check for OAuth callback and auth state on component mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check if this is an OAuth callback (has hash in URL)
+        if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('code'))) {
+          setIsOAuthCallback(true)
+          return
+        }
+
         const authenticated = await isAuthenticated();
         setAuthState({
           isLoading: false,
@@ -465,6 +474,18 @@ export default function DashboardPage() {
     
     checkAuth()
   }, [router])
+
+  // Handle OAuth completion
+  const handleOAuthComplete = () => {
+    setIsOAuthCallback(false)
+    // Re-check auth state after OAuth completion
+    window.location.reload()
+  }
+
+  // Show OAuth handler if this is an OAuth callback
+  if (isOAuthCallback) {
+    return <OAuthHandler onComplete={handleOAuthComplete} />
+  }
 
   // Only fetch school name for non-demo users
   useEffect(() => {
