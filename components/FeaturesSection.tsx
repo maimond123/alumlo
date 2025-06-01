@@ -240,48 +240,60 @@ export default function FeaturesSection() {
         </div>
       </section>
 
-      {/* Section 4: "We handle the hard data work..." - NOW LAST & SPACING ADJUSTED */}
+      {/* Section 4: "Your alumni are succeeding..." - NOW WITH LEFT-RIGHT LAYOUT */}
       <section 
-        ref={reportsRef} // reportsRef might need to be re-evaluated if it was for the original last section
-        className={`pb-32 bg-white transition-all duration-1000 ease-in-out ${ // Removed top padding, kept bottom
-          reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10' // Animation trigger might need adjustment
+        ref={reportsRef}
+        className={`pb-32 bg-white transition-all duration-1000 ease-in-out ${
+          reportsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="container mx-auto px-2 text-center">
-          {/* AlumIntel Logo */}
-          <div className="flex justify-center mb-10">
-            <Image 
-              src="/assets/icons8-atom-48.png"
-              alt="AlumIntel Logo"
-              width={72} 
-              height={72}
-            />
+        <div className="container mx-auto px-1">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px]">
+            {/* Text Column (Left on lg screens) */}
+            <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-6">Your alumni are succeeding. Stop losing track. Start marketing their outcomes with our data.</h2>
+              </div>
+              <div className="mt-auto">
+                <motion.button
+                  onClick={handleDemoAccess}
+                  disabled={isLoading}
+                  whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="animate-spin mr-2">⟳</span>
+                      Loading...
+                    </>
+                  ) : (
+                    "Try Demo"
+                  )}
+                </motion.button>
+              </div>
+            </div>
+            
+            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:flex lg:col-span-1 items-center justify-center order-2">
+              <div className="h-full w-px bg-gray-300"></div>
+            </div>
+            
+            {/* Visual Column (Right on lg screens) */}
+            <div className="order-3 lg:order-3 lg:col-span-7 flex items-center justify-center">
+              {/* AlumIntel Logo - Now on the right side */}
+              <div className="flex justify-center">
+                <Image 
+                  src="/assets/icons8-atom-48.png"
+                  alt="AlumIntel Logo"
+                  width={144} 
+                  height={144}
+                />
+              </div>
+            </div>
           </div>
-          
-          {/* Headline */}
-          <h2 className="text-5xl md:text-6xl font-bold text-black mb-12 max-w-4xl mx-auto leading-tight">
-          Your alumni are succeeding. Stop losing track. <br />  Start marketing their outcomes with our data.
-          </h2>
-
-          {/* Get a demo button */}
-          <motion.button
-            onClick={handleDemoAccess}
-            disabled={isLoading}
-            whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
-          >
-            {isLoading ? (
-              <>
-                <span className="animate-spin mr-2">⟳</span>
-                Loading...
-              </>
-            ) : (
-              "Try Demo"
-            )}
-          </motion.button>
           {/* Added spacing at the bottom of this now last section */}
-          <div className="pb-48"></div> 
+          <div className="pb-48"></div>
         </div>
       </section>
     </>
