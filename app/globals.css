@@ -36,40 +36,12 @@ body {
   line-height: 1.5;
   /* Remove all custom scaling */
   transform: none !important;
-  width: 100vw !important;
+  /* Use the real viewport width across browsers. Safari & Chrome treat 100vw slightly differently when scroll-bars are present, so we rely on the default auto behaviour instead of forcing 100vw. */
+  width: 100%;
   height: auto !important;
   overflow-x: hidden;
   overflow-y:  auto;
 }
-
-/* Chrome-specific adjustments to match Safari rendering */
-@media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm) {
-  /* This targets Chrome specifically */
-  .text-7xl {
-    font-size: 3.5rem !important; /* Smaller than default 4.5rem */
-  }
-  .text-6xl {
-    font-size: 2.75rem !important; /* Smaller than default 3.75rem */
-  }
-  .text-5xl {
-    font-size: 2.25rem !important; /* Smaller than default 3rem */
-  }
-  .text-4xl {
-    font-size: 1.875rem !important; /* Smaller than default 2.25rem */
-  }
-  .text-3xl {
-    font-size: 1.5rem !important; /* Smaller than default 1.875rem */
-  }
-  .text-2xl {
-    font-size: 1.25rem !important; /* Smaller than default 1.5rem */
-  }
-  .text-xl {
-    font-size: 1.125rem !important; /* Smaller than default 1.25rem */
-  }
-}
-
-/* Remove all scaling classes - they're causing the inconsistencies */
-/* All pages will now use natural browser rendering */
 
 /* Custom styles below */
 @keyframes typing {
