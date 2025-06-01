@@ -217,27 +217,7 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Discover deep alumni insights to solve business problems and market your organization </h2>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>AI-powered analysis explains what the data means for your specific institution</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>Natural language interface for asking questions</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-1 mr-3 mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <span>School-specific insights and recommendations</span>
-                  </li>
-                </ul>
+                <h2 className="text-5xl font-bold text-black mb-4">Discover deep aggregated alumni insights to solve business problems and market your organization </h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
                 Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
@@ -250,50 +230,17 @@ export default function FeaturesSection() {
             </div>
             
             {/* AI Insights Image (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-7">
+            <div className="order-3 lg:order-3 lg:col-span-7 flex items-stretch">
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
-                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-gray-300"
+                className="w-full h-full object-cover shadow-lg rounded-lg border border-gray-300"
               />
             </div>
           </div>
           
           {/* Added padding at the end of the section */}
           <div className="pb-20"></div>
-        </div>
-      </section>
-
-      {/* Section 5: New Feature Section (Formatted like Section 2) - MOVED UP & SPACING ADJUSTED */}
-      <section 
-        className="pb-24 bg-white opacity-100 translate-y-0" // Removed top padding, kept bottom
-      >
-        <div className="container mx-auto px-2">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-black rounded-xl shadow-lg p-8 min-h-[700px]">
-            {/* Visual Column (Left on lg screens) */}
-            <div className="order-1 lg:order-1 lg:col-span-7">
-              <img 
-                src="/try.png" // Using existing image as a placeholder
-                alt="Placeholder visual for new section" 
-                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-black"
-              />
-            </div>
-            
-            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
-            <div className="hidden lg:flex lg:col-span-1 items-center justify-center order-2">
-              <div className="h-full w-px bg-black"></div>
-            </div>
-            
-            {/* Text Column (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-4 flex flex-col">
-              <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
-              </div>
-              <p className="text-2xl text-gray-700 mt-auto">
-                Placeholder description for this new feature. Please replace this with the actual content.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
