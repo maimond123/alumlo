@@ -158,11 +158,37 @@ export default function FeaturesSection() {
             
             {/* Visualization Demo with Static Image (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-3">
-              <img 
-                src="/try.png" 
-                alt="Data visualization dashboard" 
-                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-black"
-              />
+              {/* Search Interface Container - matching first reference image */}
+              <div className="relative bg-gradient-to-br from-green-700 via-green-600 to-green-800 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center">
+                
+                {/* Main Search Bar */}
+                <div className="bg-white rounded-full px-6 py-4 shadow-lg border-2 border-gray-300 mb-8 flex items-center justify-between">
+                  <span className="text-gray-400 text-lg">Search for people who...</span>
+                  <div className="bg-gray-100 rounded-full p-2">
+                    <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Three Search Options */}
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Global People Search</span>
+                  </div>
+                  
+                  <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Alumni Discovery</span>
+                  </div>
+                  
+                  <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
+                    <span className="text-gray-700 font-medium">Deep People Research</span>
+                  </div>
+                </div>
+
+                {/* Forest green gradient background overlay for depth */}
+                <div className="absolute inset-0 bg-gradient-to-br from-green-600/30 to-green-800/40 rounded-2xl pointer-events-none"></div>
+              </div>
             </div>
           </div>
           
