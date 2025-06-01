@@ -1,3 +1,4 @@
+@import 'normalize.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,6 +6,29 @@
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 255, 255, 255;
+}
+
+/* Safari-specific fixes for transform and viewport units */
+@supports (-webkit-appearance: none) {
+  body.default-scale {
+    /* Safari needs explicit box-sizing for transforms */
+    box-sizing: border-box;
+    /* Use more explicit transform calculations for Safari */
+    -webkit-transform: scale(0.82);
+    -webkit-transform-origin: top left;
+    /* Ensure Safari respects the transform bounds */
+    will-change: transform;
+  }
+  
+  .scaled-content-area {
+    /* Safari transform optimization */
+    -webkit-transform: scale(0.82);
+    -webkit-transform-origin: top left;
+    will-change: transform;
+    /* Force Safari to use hardware acceleration */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
 }
 
 html {
@@ -30,8 +54,14 @@ body.default-scale { /* For pages that should be scaled globally */
   width: calc(100vw / 0.82);
   height: calc(100vh / 0.82);
   transform: scale(0.82);
+  -webkit-transform: scale(0.82);
   transform-origin: top left;
+  -webkit-transform-origin: top left;
   overflow: auto;
+  /* Safari-specific fixes */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .scaled-content-wrapper { /* For home page content: Occupies viewport, clips scaled child. */
@@ -44,11 +74,17 @@ body.default-scale { /* For pages that should be scaled globally */
 .scaled-content-area { /* For home page content: The actual content that is scaled */
   background: rgb(var(--background-rgb)); 
   transform: scale(0.82);
+  -webkit-transform: scale(0.82);
   transform-origin: top left;
+  -webkit-transform-origin: top left;
   width: calc(100% / 0.82); 
   height: calc(100% / 0.82); 
   overflow-y: auto; 
   overflow-x: hidden;
+  /* Safari-specific fixes */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 /* Your custom styles below */
