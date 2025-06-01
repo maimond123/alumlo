@@ -344,17 +344,13 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className={`flex items-center text-black/90 hover:text-black mb-12 transition-all duration-300 ease-in-out relative ${
-        isActive 
-          ? 'shadow-[0_0_20px_rgba(255,215,0,0.6)] bg-gradient-to-r from-yellow-50/30 to-amber-50/30 rounded-lg px-2 py-2' 
-          : ''
-      }`}
+      className="flex items-center text-black/90 hover:text-black mb-12 transition-all duration-300 ease-in-out relative"
       style={{ transform: isOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
     >
-      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-amber-600' : ''}`} />
+      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-yellow-500' : ''}`} />
       <span
         className={`ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap ${
-          isActive ? 'text-amber-700 font-semibold' : ''
+          isActive ? 'text-yellow-600 font-semibold' : ''
         }`}
         style={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
       >
