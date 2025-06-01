@@ -54,7 +54,7 @@ body {
     position: relative;
 }
   
-.typing-indicator::after {
+.typing-indicator::after  {
     content: '...';
     position: absolute;
     right: -12px;
