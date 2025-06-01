@@ -213,10 +213,10 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Uncover actionable alumni insights—cohorted, visualized & business-ready</h2>
+                <h2 className="text-4xl font-bold text-black mb-4">Uncover actionable alumni insights—cohorted, visualized & business-ready</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-              Our AI breaks down alumni data into rich, aggregated insights—based on any natural language query you provide. Ask questions, visualize trends, and instantly surface patterns that help you market smarter, support advancement, and showcase alumni success with clarity.
+              Our AI breaks down alumni data into rich, aggregated insights—based on any natural language query you provide. Ask questions, visualize trends, and instantly surface patterns that helps you showcase alumni success with clarity.
               </p>
             </div>
             
@@ -260,7 +260,7 @@ export default function FeaturesSection() {
           
           {/* Headline */}
           <h2 className="text-5xl md:text-6xl font-bold text-black mb-12 max-w-4xl mx-auto leading-tight">
-            We handle the hard data work <br /> so you can focus on your business.
+          Your alumni are succeeding. Stop losing track. <br />  Start marketing their outcomes with our data.
           </h2>
 
           {/* Get a demo button */}
