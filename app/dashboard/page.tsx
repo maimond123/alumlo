@@ -162,27 +162,45 @@ const getEducationDisplay = (result: SearchResult): string => {
 
 // Helper function to get standard profile info
 const getStandardProfileInfo = (result: SearchResult) => {
+  // Add debugging to see what data is actually available
+  console.log('[DEBUG] Profile data available:', {
+    name: result.name,
+    current_company: result.current_company,
+    post_company_current_company: result.post_company_current_company,
+    current_title: result.current_title,
+    post_company_current_title: result.post_company_current_title,
+    current_job_location: result.current_job_location,
+    post_company_current_location: result.post_company_current_location,
+    natural_language_geographic_profile: result.natural_language_geographic_profile,
+    undergraduate_school: result.undergraduate_school,
+    graduate_school: result.graduate_school
+  });
+
   return {
-    location: extractLocationFromText(result.natural_language_geographic_profile),
-    currentRole: result.post_company_current_title || result.current_title || '',
-    currentCompany: result.post_company_current_company || result.current_company || '',
+    location: extractLocationFromText(result.natural_language_geographic_profile) || 
+              result.current_job_location || 
+              result.post_company_current_location || '',
+    currentRole: result.current_title || 
+                 result.post_company_current_title || '',
+    currentCompany: result.current_company || 
+                    result.post_company_current_company || '',
     education: getEducationDisplay(result)
   };
 };
 
 // Helper function to map extracted filters to database fields and get matching values
 const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: string]: string[]}) => {
-  const matches: {category: string, value: string, icon: string}[] = [];
+  const matches: {category: string, value: string}[] = [];
   
-  // Map filter categories to database fields
-  const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string), icon: string}} = {
-    'Job Functions': { field: 'current_job_function', icon: '💼' },
-    'Job Levels': { field: 'current_job_level', icon: '📊' },
-    'Industries': { field: (r) => r.post_company_current_industry || r.industry || r.current_industry || '', icon: '🏢' },
-    'Company Names': { field: (r) => r.post_company_current_company || r.current_company || '', icon: '🏬' },
-    'Locations': { field: (r) => extractLocationFromText(r.natural_language_geographic_profile), icon: '📍' },
-    'Degree Levels': { field: 'highest_degree_level', icon: '🎓' },
-    'Major Categories': { field: 'major_category', icon: '📚' }
+  // Map filter categories to database fields (removed icons)
+  const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string)}} = {
+    'Job Functions': { field: 'current_job_function' },
+    'Job Levels': { field: 'current_job_level' },
+    'Industries': { field: (r) => r.post_company_current_industry || r.industry || r.current_industry || '' },
+    'Company Names': { field: (r) => r.post_company_current_company || r.current_company || '' },
+    'Locations': { field: (r) => extractLocationFromText(r.natural_language_geographic_profile) || r.current_job_location || '' },
+    'Degree Levels': { field: 'highest_degree_level' },
+    'Major Categories': { field: 'major_category' }
   };
   
   // Check each extracted filter category
@@ -206,8 +224,7 @@ const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: strin
       if (hasMatch && resultValue) {
         matches.push({
           category,
-          value: resultValue,
-          icon: mapping.icon
+          value: resultValue
         });
       }
     }
@@ -1406,7 +1423,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Analysis and Search Results */}
-          <div className="w-full max-w-4xl flex flex-col gap-4 mt-8">
+          <div className="w-full max-w-6xl flex flex-col gap-4 mt-8">
             {/* Analysis Section - Only show if there's content to display */}
             {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
@@ -1472,7 +1489,7 @@ export default function DashboardPage() {
                   </div>
                 )}
                 
-                <div className="grid gap-4">
+                <div className="grid gap-6">
                   {searchResults.map((result, index) => {
                     // Get standard profile info
                     const standardInfo = getStandardProfileInfo(result);
@@ -1487,10 +1504,10 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={result.id || index}
-                        className="block p-6 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500"
+                        className="block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500"
                       >
                         {/* 4-Column Layout */}
-                        <div className="grid grid-cols-4 gap-6 items-start">
+                        <div className="grid grid-cols-4 gap-8 items-start">
                           
                           {/* Column 1: Profile Identity */}
                           <div className="flex flex-col items-center text-center">
@@ -1521,17 +1538,14 @@ export default function DashboardPage() {
                           {/* Column 2: Match Criteria (Dynamic) */}
                           <div className="space-y-3">
                             <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wider border-b border-gray-200 pb-1">
-                              🎯 Match Highlights
+                              MATCH HIGHLIGHTS
                             </h4>
                             {matchingFilters.length > 0 ? (
                               <div className="space-y-2">
                                 {matchingFilters.map((match, matchIndex) => (
-                                  <div key={matchIndex} className="flex items-start space-x-2">
-                                    <span className="text-lg">{match.icon}</span>
-                                    <div>
-                                      <div className="text-xs text-gray-500 uppercase tracking-wide">{match.category.replace(/s$/, '')}</div>
-                                      <div className="text-sm font-medium text-emerald-700">{match.value}</div>
-                                    </div>
+                                  <div key={matchIndex} className="space-y-1">
+                                    <div className="text-xs text-gray-500 uppercase tracking-wide">{match.category.replace(/s$/, '')}</div>
+                                    <div className="text-sm font-medium text-emerald-700">{match.value}</div>
                                   </div>
                                 ))}
                               </div>
@@ -1545,50 +1559,38 @@ export default function DashboardPage() {
                           {/* Column 3: Standard Profile Info (Static) */}
                           <div className="space-y-3">
                             <h4 className="font-semibold text-gray-800 text-sm uppercase tracking-wider border-b border-gray-200 pb-1">
-                              📋 Profile Details
+                              PROFILE DETAILS
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {/* Location */}
-                              <div className="flex items-start space-x-2">
-                                <span className="text-lg">📍</span>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
-                                  <div className="text-sm font-medium text-gray-700">
-                                    {standardInfo.location || 'Not specified'}
-                                  </div>
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Location</div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {standardInfo.location || 'Not specified'}
                                 </div>
                               </div>
                               
                               {/* Current Role */}
-                              <div className="flex items-start space-x-2">
-                                <span className="text-lg">💼</span>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Current Role</div>
-                                  <div className="text-sm font-medium text-gray-700">
-                                    {standardInfo.currentRole || 'Not specified'}
-                                  </div>
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Current Role</div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {standardInfo.currentRole || 'Not specified'}
                                 </div>
                               </div>
                               
                               {/* Current Company */}
-                              <div className="flex items-start space-x-2">
-                                <span className="text-lg">🏢</span>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Current Company</div>
-                                  <div className="text-sm font-medium text-gray-700">
-                                    {standardInfo.currentCompany || 'Not specified'}
-                                  </div>
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Current Company</div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {standardInfo.currentCompany || 'Not specified'}
                                 </div>
                               </div>
                               
                               {/* Education */}
-                              <div className="flex items-start space-x-2">
-                                <span className="text-lg">🎓</span>
-                                <div>
-                                  <div className="text-xs text-gray-500 uppercase tracking-wide">Education</div>
-                                  <div className="text-sm font-medium text-gray-700">
-                                    {standardInfo.education || 'Not specified'}
-                                  </div>
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Education</div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {standardInfo.education || 'Not specified'}
                                 </div>
                               </div>
                             </div>
