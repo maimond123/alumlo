@@ -425,23 +425,41 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check if this is an OAuth callback (has hash in URL)
-        if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('code'))) {
+        console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback')
+        console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
+        console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
+        
+        // Check if this is an OAuth callback
+        // OAuth callbacks can have various hash parameters
+        const isOAuthCallback = window.location.hash && (
+          window.location.hash.includes('access_token') || 
+          window.location.hash.includes('refresh_token') ||
+          window.location.hash.includes('type=recovery') ||
+          window.location.search.includes('code=')
+        )
+        
+        if (isOAuthCallback) {
+          console.log('[DEBUG] Dashboard: OAuth callback detected')
           setIsOAuthCallback(true)
           return
         }
 
         const authenticated = await isAuthenticated();
+        console.log('[DEBUG] Dashboard: Authentication check result:', authenticated)
+        
         setAuthState({
           isLoading: false,
           isAuthenticated: authenticated
         })
         
         if (!authenticated) {
+          console.log('[DEBUG] Dashboard: Not authenticated, redirecting to signin')
           router.push('/signin')
         } else {
           // Check if this is a demo user
           const userEmail = await getUserEmail();
+          console.log('[DEBUG] Dashboard: User email:', userEmail)
+          
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated");
             setIsDemoMode(true);
@@ -449,12 +467,9 @@ export default function DashboardPage() {
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
-            // This ensures each visitor has a unique ID in Mixpanel
-            // while still using the demo account data
             const visitorId = analytics.getVisitorId();
             console.log(`Demo visitor identified with unique ID: ${visitorId}`);
             
-            // Use visitor ID for analytics but keep demo email for data retrieval
             analytics.identifyUser("maimondavid553@gmail.com", {
               isDemoUser: true,
               visitorId: visitorId,

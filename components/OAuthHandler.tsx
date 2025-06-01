@@ -20,20 +20,28 @@ export default function OAuthHandler({ onComplete }: OAuthHandlerProps) {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // Get session from URL hash
+        console.log('[DEBUG] OAuth Handler: Starting callback handling')
+        
+        // Handle the OAuth callback by getting session from URL
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
+        console.log('[DEBUG] OAuth Handler: Session data:', session)
+        console.log('[DEBUG] OAuth Handler: Session error:', sessionError)
+        
         if (sessionError) {
+          console.error('[DEBUG] OAuth Handler: Session error:', sessionError)
           setError('Authentication failed. Please try again.')
           setIsLoading(false)
           return
         }
 
-        if (!session) {
-          // No session found, redirect to signin
+        if (!session || !session.user) {
+          console.log('[DEBUG] OAuth Handler: No session found, redirecting to signin')
           router.push('/signin')
           return
         }
+
+        console.log('[DEBUG] OAuth Handler: Valid session found, checking user status')
 
         // Check if this is a new user by calling our API
         const response = await fetch('/api/oauth-callback', {
@@ -48,6 +56,7 @@ export default function OAuthHandler({ onComplete }: OAuthHandlerProps) {
         })
 
         const result = await response.json()
+        console.log('[DEBUG] OAuth Handler: API response:', result)
 
         if (!response.ok) {
           setError(result.error || 'Failed to complete authentication setup')
@@ -57,9 +66,11 @@ export default function OAuthHandler({ onComplete }: OAuthHandlerProps) {
 
         // If this is a new user, show Calendly
         if (result.isNewUser) {
+          console.log('[DEBUG] OAuth Handler: New user detected, showing Calendly')
           setShowCalendly(true)
           setIsLoading(false)
         } else {
+          console.log('[DEBUG] OAuth Handler: Existing user, redirecting to dashboard')
           // Existing user, redirect to dashboard
           if (onComplete) onComplete()
           router.push('/dashboard')

@@ -78,22 +78,24 @@ export default function SignInPage() {
     setError(null)
     
     try {
+      console.log(`[DEBUG] Attempting OAuth with provider: ${provider}`)
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
         }
       })
       
       if (error) {
-        setError(`Failed to sign in with ${provider}. Please try again.`)
+        console.error(`[DEBUG] OAuth error:`, error)
+        setError(`Failed to sign in with ${provider}: ${error.message}`)
+      } else {
+        console.log(`[DEBUG] OAuth initiated successfully:`, data)
+        // User will be redirected to OAuth provider
       }
-      // Note: The user will be redirected to the OAuth provider, so no further action needed here
     } catch (err: any) {
+      console.error(`[DEBUG] OAuth exception:`, err)
       setError(err.message || "An unexpected error occurred.")
     } finally {
       setIsLoading(false)
