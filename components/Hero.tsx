@@ -76,7 +76,7 @@ export default function Hero() {
             disabled={isLoading}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-white text-black border-2 border-black px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center"
+            className="bg-white text-black border border-gray-300 px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center"
           >
             {isLoading ? (
               <>

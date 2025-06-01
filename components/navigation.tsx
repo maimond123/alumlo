@@ -60,7 +60,7 @@ export default function Navigation() {
             onClick={() => router.push('/signin')}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-white text-black border-2 border-black px-9 py-2.5 text-lg rounded-full hover:bg-gray-100 transition-colors duration-300"
+            className="bg-white text-black border border-gray-300 px-9 py-2.5 text-lg rounded-full hover:bg-gray-100 transition-colors duration-300"
           >
             Sign In
           </motion.button>
@@ -68,7 +68,7 @@ export default function Navigation() {
             onClick={handleGetStarted}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-yellow-400/30 text-black border-[3px] border-yellow-500 px-9 py-2.5 text-lg rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40"
+            className="bg-yellow-400/30 text-black border border-gray-300 px-9 py-2.5 text-lg rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40"
           >
             Book Demo
           </motion.button>

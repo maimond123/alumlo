@@ -111,16 +111,16 @@ export default function SignInPage() {
     }
   }
 
-  const inputClasses = "w-full px-4 py-[11px] border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-[15px]"
+  const inputClasses = "w-full px-4 py-[11px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-[15px]"
   const labelClasses = "block text-[13px] font-medium text-gray-600 mb-1"
 
   // Styles for the "Verify Email & Schedule Demo" button
-  const verifyAndBookButtonClasses = "w-full py-[11px] px-[38px] text-[19px] rounded-full bg-yellow-400/30 text-black border-[3px] border-yellow-500 hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40 flex items-center justify-center"
+  const verifyAndBookButtonClasses = "w-full py-[11px] px-[38px] text-[19px] rounded-full bg-yellow-400/30 text-black border border-gray-300 hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40 flex items-center justify-center"
   
   // Styles for the main "Sign In" button on the form
-  const formSignInButtonClasses = "w-full py-[11px] px-[38px] text-[19px] rounded-full bg-emerald-500/30 text-black border-[3px] border-emerald-600 hover:bg-emerald-500/40 transition-colors duration-300 font-semibold shadow-md shadow-emerald-600/30 hover:shadow-emerald-500/40 flex items-center justify-center"
+  const formSignInButtonClasses = "w-full py-[11px] px-[38px] text-[19px] rounded-full bg-emerald-500/30 text-black border border-gray-300 hover:bg-emerald-500/40 transition-colors duration-300 font-semibold shadow-md shadow-emerald-600/30 hover:shadow-emerald-500/40 flex items-center justify-center"
   
-  const oAuthButtonClasses = "w-full py-[13px] px-4 rounded-md font-semibold text-[15px] flex items-center justify-center transition-colors duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
+  const oAuthButtonClasses = "w-full py-[13px] px-4 rounded-md font-semibold text-[15px] flex items-center justify-center transition-colors duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
 
   const gradientCenterColor = activeTab === 'signin' 
     ? 'rgba(16, 185, 129, 0.35)'  // Emerald for Sign In
@@ -175,12 +175,12 @@ export default function SignInPage() {
         </div>
 
         <div className="flex items-center my-6">
-          <hr className="flex-grow border-t border-black" />
+          <hr className="flex-grow border-t border-gray-300" />
           <span className="mx-3 text-[13px] text-gray-400 uppercase">OR CONTINUE WITH</span>
-          <hr className="flex-grow border-t border-black" />
+          <hr className="flex-grow border-t border-gray-300" />
         </div>
 
-        <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border-2 border-black">
+        <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border border-gray-300">
           <button
             onClick={() => setActiveTab('signin')}
             className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
@@ -277,12 +277,12 @@ export default function SignInPage() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative border-2 border-black"
+            className="bg-white rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative border border-gray-300"
             onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={() => setShowCalendly(false)} 
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10 p-1 bg-white rounded-full border-2 border-black"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10 p-1 bg-white rounded-full border border-gray-300"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
