@@ -150,13 +150,37 @@ const extractLocationFromText = (text: string): string => {
 
 // Helper function to get education display
 const getEducationDisplay = (result: SearchResult): string => {
-  // Prioritize graduate school, then undergraduate
-  if (result.graduate_school && result.graduate_school.length > 0) {
-    return result.graduate_school[0];
+  // Add debugging for education fields
+  console.log('[DEBUG] Education fields:', {
+    graduate_school: result.graduate_school,
+    undergraduate_school: result.undergraduate_school,
+    natural_language_educational_profile: result.natural_language_educational_profile
+  });
+
+  // Check if graduate_school exists and has data
+  if (result.graduate_school) {
+    if (Array.isArray(result.graduate_school) && result.graduate_school.length > 0) {
+      return result.graduate_school[0];
+    } else if (typeof result.graduate_school === 'string' && result.graduate_school) {
+      return result.graduate_school;
+    }
   }
-  if (result.undergraduate_school && result.undergraduate_school.length > 0) {
-    return result.undergraduate_school[0];
+  
+  // Check if undergraduate_school exists and has data
+  if (result.undergraduate_school) {
+    if (Array.isArray(result.undergraduate_school) && result.undergraduate_school.length > 0) {
+      return result.undergraduate_school[0];
+    } else if (typeof result.undergraduate_school === 'string' && result.undergraduate_school) {
+      return result.undergraduate_school;
+    }
   }
+  
+  // Fallback to natural language education profile
+  if (result.natural_language_educational_profile && 
+      typeof result.natural_language_educational_profile === 'string') {
+    return result.natural_language_educational_profile;
+  }
+  
   return '';
 };
 
@@ -1497,6 +1521,13 @@ export default function DashboardPage() {
                     // Get matching filters for this result
                     const matchingFilters = getMatchingFilters(result, extractedFilters);
                     
+                    // Add debugging for match highlights
+                    console.log('[DEBUG] Match highlights for', result.name, ':', {
+                      extractedFilters,
+                      matchingFilters,
+                      filterCount: matchingFilters.length
+                    });
+                    
                     // Use compatible field access
                     const profileUrl = result.profile_url || result.linkedin_url || '';
                     const profilePhotoUrl = result.picture_url || result.profile_photo_url;
@@ -1504,7 +1535,8 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={result.id || index}
-                        className="block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500"
+                        className="block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
+                        onClick={() => handleSearchResultClick(profileUrl, index, result.name)}
                       >
                         {/* 4-Column Layout */}
                         <div className="grid grid-cols-4 gap-8 items-start">
@@ -1600,7 +1632,10 @@ export default function DashboardPage() {
                           <div className="flex flex-col space-y-3">
                             {/* LinkedIn Button */}
                             <button
-                              onClick={() => handleSearchResultClick(profileUrl, index, result.name)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent card click
+                                handleSearchResultClick(profileUrl, index, result.name);
+                              }}
                               className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                             >
                               <img 
@@ -1614,7 +1649,7 @@ export default function DashboardPage() {
                             {/* Save Button */}
                             <button
                               onClick={(e) => {
-                                e.stopPropagation();
+                                e.stopPropagation(); // Prevent card click
                                 // Add save functionality here
                                 console.log('Save profile:', result.name);
                               }}
