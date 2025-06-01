@@ -79,8 +79,8 @@ export default function FeaturesSection() {
             </div>
             
             {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            <div className="hidden lg:flex lg:col-span-1 items-center justify-center px-4">
+              <div className="h-full w-px bg-gray-300"></div>
             </div>
             
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
@@ -197,8 +197,8 @@ export default function FeaturesSection() {
             </div>
             
             {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            <div className="hidden lg:flex lg:col-span-1 items-center justify-center px-4">
+              <div className="h-full w-px bg-gray-300"></div>
             </div>
             
             {/* Text Column (Right on lg screens) */}
@@ -245,8 +245,8 @@ export default function FeaturesSection() {
             </div>
             
             {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            <div className="hidden lg:flex lg:col-span-1 items-center justify-center px-4">
+              <div className="h-full w-px bg-gray-300"></div>
             </div>
             
             {/* AI Insights Image (Right on lg screens) */}
@@ -269,7 +269,7 @@ export default function FeaturesSection() {
         className="pb-24 bg-white opacity-100 translate-y-0" // Removed top padding, kept bottom
       >
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -280,8 +280,13 @@ export default function FeaturesSection() {
               </p>
             </div>
             
+            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:flex lg:col-span-1 items-center justify-center px-4">
+              <div className="h-full w-px bg-black"></div>
+            </div>
+            
             {/* Visual Column (Left on lg screens) */}
-            <div className="order-2 lg:order-1 lg:col-span-3">
+            <div className="order-2 lg:order-1 lg:col-span-4">
               <img 
                 src="/try.png" // Using existing image as a placeholder
                 alt="Placeholder visual for new section" 
