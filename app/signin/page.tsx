@@ -137,7 +137,7 @@ export default function SignInPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg"
+        className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg border border-gray-300"
       >
         <div className="text-center mb-8">
           <h1 className="text-[42px] font-bold text-black">Alumlo</h1>
