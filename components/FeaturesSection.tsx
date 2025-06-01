@@ -154,12 +154,12 @@ export default function FeaturesSection() {
             {/* Visualization Demo with Search Interface (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-4">
               {/* Search Interface Container - matching first reference image */}
-              <div className="relative bg-gradient-to-b from-gray-50 via-emerald-200 to-emerald-500 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center overflow-hidden">
+              <div className="relative bg-gradient-to-b from-gray-50 via-emerald-200 via-emerald-300 to-emerald-600 rounded-2xl p-8 shadow-lg border border-gray-200 h-full flex flex-col justify-center overflow-hidden">
                 
                 {/* Waterfall glow effect from search bar center flowing to bottom */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/4 w-full h-full">
-                  <div className="absolute inset-0 bg-gradient-radial from-emerald-300/80 via-emerald-400/50 to-transparent rounded-2xl"></div>
-                  <div className="absolute inset-0 bg-gradient-to-b from-emerald-300/60 via-emerald-400/40 to-emerald-500/20 rounded-2xl"></div>
+                <div className="absolute inset-0 w-full h-full">
+                  <div className="absolute inset-0 bg-gradient-radial from-emerald-300/80 via-emerald-400/50 to-emerald-500/30 rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-emerald-300/60 via-emerald-400/50 via-emerald-500/40 to-emerald-600/60 rounded-2xl"></div>
                 </div>
 
                 {/* Main Search Bar with enhanced glow */}
@@ -191,8 +191,8 @@ export default function FeaturesSection() {
                   </div>
                 </div>
 
-                {/* Additional waterfall effect overlay - flowing to bottom with fading intensity */}
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-200/30 via-emerald-300/25 to-emerald-500/15 rounded-2xl pointer-events-none"></div>
+                {/* Additional waterfall effect overlay - flowing to bottom edge */}
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-200/20 via-emerald-300/30 via-emerald-400/35 to-emerald-600/50 rounded-2xl pointer-events-none"></div>
               </div>
             </div>
             
