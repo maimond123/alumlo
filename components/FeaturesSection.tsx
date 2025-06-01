@@ -230,11 +230,11 @@ export default function FeaturesSection() {
             </div>
             
             {/* AI Insights Image (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-7 flex items-stretch">
+            <div className="order-3 lg:order-3 lg:col-span-7 flex items-center justify-center">
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
-                className="w-full h-full object-cover shadow-lg rounded-lg border border-gray-300"
+                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-gray-300"
               />
             </div>
           </div>
