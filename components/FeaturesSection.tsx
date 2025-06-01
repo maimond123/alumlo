@@ -73,7 +73,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
-              <p className="text-3xl text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Alumlo gathers publicly available data on your alumni - no more losing track of the people that represent your organization.
               </p>
             </div>
@@ -151,7 +151,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
-              <p className="text-3xl text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
               </p>
             </div>
@@ -159,10 +159,20 @@ export default function FeaturesSection() {
             {/* Visualization Demo with Static Image (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-3">
               {/* Search Interface Container - matching first reference image */}
-              <div className="relative bg-gradient-to-br from-green-700 via-green-600 to-green-800 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center">
+              <div className="relative bg-gradient-to-b from-gray-50 via-emerald-100 to-emerald-300 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center overflow-hidden">
                 
-                {/* Main Search Bar */}
-                <div className="bg-white rounded-full px-6 py-4 shadow-lg border-2 border-gray-300 mb-8 flex items-center justify-between">
+                {/* Waterfall glow effect from search bar center */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
+                  <div className="absolute inset-0 bg-gradient-radial from-emerald-200/60 via-emerald-300/40 to-transparent rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-200/30 to-emerald-400/50 rounded-2xl"></div>
+                </div>
+
+                {/* Main Search Bar with enhanced glow */}
+                <div className="relative bg-white rounded-full px-6 py-4 shadow-2xl border-2 border-gray-300 mb-8 flex items-center justify-between z-10">
+                  {/* Search bar glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-200/50 via-white to-emerald-200/50 rounded-full blur-sm -z-10"></div>
+                  <div className="absolute inset-0 shadow-[0_0_30px_rgba(16,185,129,0.3)] rounded-full -z-10"></div>
+                  
                   <span className="text-gray-400 text-lg">Search for people who...</span>
                   <div className="bg-gray-100 rounded-full p-2">
                     <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +182,7 @@ export default function FeaturesSection() {
                 </div>
 
                 {/* Three Search Options */}
-                <div className="flex flex-wrap gap-4 justify-center">
+                <div className="flex flex-wrap gap-4 justify-center relative z-10">
                   <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
                     <span className="text-gray-700 font-medium">Global People Search</span>
                   </div>
@@ -186,8 +196,8 @@ export default function FeaturesSection() {
                   </div>
                 </div>
 
-                {/* Forest green gradient background overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-br from-green-600/30 to-green-800/40 rounded-2xl pointer-events-none"></div>
+                {/* Additional waterfall effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-emerald-100/20 via-emerald-200/30 to-emerald-400/40 rounded-2xl pointer-events-none"></div>
               </div>
             </div>
           </div>
@@ -219,7 +229,7 @@ export default function FeaturesSection() {
                   </li>
                 </ul>
               </div>
-              <p className="text-3xl text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
               </p>
             </div>
@@ -250,7 +260,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
               </div>
-              <p className="text-3xl text-gray-700 mt-auto">
+              <p className="text-2xl text-gray-700 mt-auto">
                 Placeholder description for this new feature. Please replace this with the actual content.
               </p>
             </div>
