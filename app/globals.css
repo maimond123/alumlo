@@ -39,7 +39,7 @@ body {
   width: 100vw !important;
   height: auto !important;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y:  auto;
 }
 
 /* Chrome-specific adjustments to match Safari rendering */
