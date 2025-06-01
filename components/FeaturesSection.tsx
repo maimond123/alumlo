@@ -1,12 +1,16 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
 import Image from 'next/image'
+import { supabase } from '../app/data/supabase'
 
 export default function FeaturesSection() {
+  const router = useRouter()
+  
   // Create separate refs for each section
   const { ref: visualizationsRef, inView: visualizationsInView } = useInView({
     threshold: 0.1,
@@ -23,6 +27,34 @@ export default function FeaturesSection() {
   
   // Demo state for reports feature
   const [reportPage, setReportPage] = useState(0)
+
+  // Demo access loading state
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleDemoAccess = async () => {
+    setIsLoading(true)
+    
+    try {
+      // Sign in as the demo account
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "maimondavid553@gmail.com",
+        password: "Tryme12!" // Replace with your actual demo password
+      });
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard after successful login
+      router.push('/dashboard')
+    } catch (err) {
+      console.error('Demo login error:', err)
+      
+      // Fallback - if login fails, still redirect to dashboard
+      // The dashboard has logic to detect demo mode
+      router.push('/dashboard')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <>
@@ -221,11 +253,20 @@ export default function FeaturesSection() {
 
           {/* Get a demo button */}
           <motion.button
+            onClick={handleDemoAccess}
+            disabled={isLoading}
             whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
             whileTap={{ scale: 0.95 }}
             className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
           >
-            Get a demo
+            {isLoading ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Loading...
+              </>
+            ) : (
+              "Try Demo"
+            )}
           </motion.button>
           {/* Added spacing at the bottom of this now last section */}
           <div className="pb-48"></div> 
