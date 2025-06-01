@@ -81,66 +81,62 @@ export default function FeaturesSection() {
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
             <div className="order-1 lg:order-2 lg:col-span-3 h-full">
               {/* Outer container with exact beige/yellow background from reference */}
-              <div className="bg-gradient-to-br from-yellow-200/40 to-orange-200/40 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex flex-col">
+              <div className="bg-gradient-to-br from-yellow-200/40 to-orange-200/40 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex items-center justify-center">
                 
-                {/* Search Query Box - Top dashed container */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
-                  <div className="flex items-center gap-3">
-                    <Search className="w-5 h-5 text-gray-500" />
-                    <span className="text-orange-600 font-medium text-lg">People who work as Site Supervisor & are in NewYork</span>
-                  </div>
-                </div>
-
-                {/* Processing Steps - Middle section */}
-                <div className="space-y-4 flex-1 mb-6">
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">AI Query Translator</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
+                {/* Inner transparent container - more defined like in second image */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/50 w-full max-w-2xl">
                   
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">Data Retrieval from 100M prospects</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">Data Refinery</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">Semantic Relevance Filter</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">Background Learning & Caching</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  
-                  <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">Clear Results Delivered in 02s</span>
-                    <Check className="w-5 h-5 text-emerald-500" />
-                  </div>
-                </div>
-
-                {/* Profile Result - Bottom dashed container */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 border-dashed border-gray-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <img 
-                        src="https://media.licdn.com/dms/image/v2/D4E03AQH3Y3XkSH_Lpw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1723857605737?e=1754524800&v=beta&t=rv-Xp7KZMF6xBI_MVnZ9O0DjXKojE7W8ZnSw5pkr84M"
-                        alt="David Maimon"
-                        className="w-16 h-16 rounded-full object-cover"
-                      />
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">David Maimon</h3>
-                        <p className="text-gray-600">Builder</p>
+                  {/* Profile Section - Top */}
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src="https://media.licdn.com/dms/image/v2/D4E03AQH3Y3XkSH_Lpw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1723857605737?e=1754524800&v=beta&t=rv-Xp7KZMF6xBI_MVnZ9O0DjXKojE7W8ZnSw5pkr84M"
+                          alt="David Maimon"
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900">David Maimon</h3>
+                          <p className="text-gray-600">Builder</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">ICP Match</span>
+                        <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">80%</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">ICP Match</span>
-                      <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">80%</span>
+                  </div>
+
+                  {/* Processing Steps - More compact */}
+                  <div className="space-y-3">
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">AI Query Translator</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">Data Retrieval from 100M prospects</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">Data Refinery</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">Semantic Relevance Filter</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">Background Learning & Caching</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    
+                    <div className="bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-gray-200 flex items-center justify-between">
+                      <span className="text-gray-600 font-medium text-sm">Clear Results Delivered in 02s</span>
+                      <Check className="w-4 h-4 text-emerald-500" />
                     </div>
                   </div>
                 </div>
@@ -153,7 +149,7 @@ export default function FeaturesSection() {
             {/* Text Column (Right on lg screens) */}
             <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Find your alumni, with natural language</h2>
+                <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
               <p className="text-lg text-gray-700 mt-auto">
                 Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
