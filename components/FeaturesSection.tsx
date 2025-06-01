@@ -67,7 +67,7 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - REVISED based on image */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens, or top on mobile) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -78,8 +78,13 @@ export default function FeaturesSection() {
               </p>
             </div>
             
+            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            </div>
+            
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
-            <div className="order-1 lg:order-2 lg:col-span-3 h-full">
+            <div className="order-1 lg:order-2 lg:col-span-4 h-full">
               {/* Outer container with exact beige/yellow background from reference */}
               <div className="bg-gradient-to-br from-yellow-200/40 to-orange-200/40 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex items-center justify-center">
                 
@@ -145,19 +150,9 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
-            {/* Text Column (Right on lg screens) */}
-            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
-              <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
-              </div>
-              <p className="text-2xl text-gray-700 mt-auto">
-                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
-              </p>
-            </div>
-            
-            {/* Visualization Demo with Static Image (Left on lg screens) */}
-            <div className="order-2 lg:order-1 lg:col-span-3">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
+            {/* Visualization Demo with Search Interface (Left on lg screens) */}
+            <div className="order-2 lg:order-1 lg:col-span-4">
               {/* Search Interface Container - matching first reference image */}
               <div className="relative bg-gradient-to-b from-gray-50 via-emerald-200 to-emerald-500 rounded-2xl p-8 shadow-lg border border-gray-200 min-h-[400px] flex flex-col justify-center overflow-hidden">
                 
@@ -200,10 +195,25 @@ export default function FeaturesSection() {
                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-200/30 via-emerald-300/25 to-emerald-500/15 rounded-2xl pointer-events-none"></div>
               </div>
             </div>
+            
+            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            </div>
+            
+            {/* Text Column (Right on lg screens) */}
+            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col">
+              <div> {/* Wrapper for top content */}
+                <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
+              </div>
+              <p className="text-2xl text-gray-700 mt-auto">
+                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
+              </p>
+            </div>
           </div>
           
           {/* Part 3: AI Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-8 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens) */}
             <div className="order-2 lg:order-1 lg:col-span-2 flex flex-col">
               <div> {/* Wrapper for top content */}
@@ -234,12 +244,17 @@ export default function FeaturesSection() {
               </p>
             </div>
             
+            {/* Vertical Divider - Hidden on mobile, visible on lg+ */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="h-full w-px bg-gray-300 mx-auto"></div>
+            </div>
+            
             {/* AI Insights Image (Right on lg screens) */}
-            <div className="order-1 lg:order-2 lg:col-span-3">
+            <div className="order-1 lg:order-2 lg:col-span-4">
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
-                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-black"
+                className="w-full h-auto max-h-[1200px] shadow-lg rounded-lg border border-gray-300"
               />
             </div>
           </div>
