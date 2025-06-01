@@ -74,7 +74,7 @@ export default function FeaturesSection() {
                 <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-                Alumlo gathers publicly available data on your alumni - no more losing track of the people that represent your organization.
+                Alumlo gathers publicly available data on your alumni—no more losing track of the people that represent your organization.
               </p>
             </div>
             
@@ -207,7 +207,7 @@ export default function FeaturesSection() {
                 <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data, and complex filters for alumni outreach.
+                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data and complex filters for alumni outreach.
               </p>
             </div>
           </div>
@@ -217,10 +217,10 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Discover deep aggregated alumni insights to solve business problems and market your organization </h2>
+                <h2 className="text-5xl font-bold text-black mb-4">Discover deep alumni insights to solve business problems and market your organization</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-                Our AI analyzes the data to uncover meaningful insights, answering your questions and highlighting trends you might miss.
+                Our AI analyzes your data to uncover meaningful insights, answering your questions and highlighting trends you might otherwise miss.
               </p>
             </div>
             
