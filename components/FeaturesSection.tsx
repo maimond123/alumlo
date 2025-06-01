@@ -179,15 +179,15 @@ export default function FeaturesSection() {
                 {/* Three Search Options */}
                 <div className="flex flex-wrap gap-4 justify-center relative z-10">
                   <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Global People Search</span>
+                    <span className="text-gray-700 font-medium">Alumni Outreach</span>
                   </div>
                   
                   <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Alumni Discovery</span>
+                    <span className="text-gray-700 font-medium">Spot Standout Stories</span>
                   </div>
                   
                   <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-md border border-gray-200">
-                    <span className="text-gray-700 font-medium">Deep People Research</span>
+                    <span className="text-gray-700 font-medium">Fuel Better Campaigns</span>
                   </div>
                 </div>
 
@@ -217,10 +217,10 @@ export default function FeaturesSection() {
             {/* Text Column (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
-                <h2 className="text-5xl font-bold text-black mb-4">Discover deep alumni insights to solve business problems and market your organization</h2>
+                <h2 className="text-5xl font-bold text-black mb-4">Uncover actionable alumni insights—cohorted, visualized & business-ready</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-                Our AI analyzes your data to uncover meaningful insights, answering your questions and highlighting trends you might otherwise miss.
+              Our AI breaks down alumni data into rich, aggregated insights—based on any natural language query you provide. Ask questions, visualize trends, and instantly surface patterns that help you market smarter, support advancement, and showcase alumni success with clarity.
               </p>
             </div>
             
