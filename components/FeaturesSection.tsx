@@ -67,9 +67,9 @@ export default function FeaturesSection() {
       >
         <div className="container mx-auto px-6">
           {/* Part 1: Data Collection - Text first, then border, then image */}
-          <div className="grid grid-cols-1 lg:grid-cols-11 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-13 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens, top on mobile) */}
-            <div className="order-1 lg:order-1 lg:col-span-5 flex flex-col">
+            <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
@@ -84,7 +84,7 @@ export default function FeaturesSection() {
             </div>
             
             {/* Visual Column (Right on lg screens, bottom on mobile) */}
-            <div className="order-3 lg:order-3 lg:col-span-5 h-full">
+            <div className="order-3 lg:order-3 lg:col-span-8 h-full">
               {/* Outer container with exact beige/yellow background from reference */}
               <div className="bg-gradient-to-br from-yellow-200/40 to-orange-200/40 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex items-center justify-center">
                 
@@ -150,9 +150,9 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations - Image first, then border, then text */}
-          <div className="grid grid-cols-1 lg:grid-cols-11 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-13 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Visualization Demo with Search Interface (Left on lg screens) */}
-            <div className="order-1 lg:order-1 lg:col-span-5">
+            <div className="order-1 lg:order-1 lg:col-span-8">
               {/* Search Interface Container - matching first reference image */}
               <div className="relative bg-gradient-to-b from-emerald-500 via-emerald-400 via-emerald-300 to-white rounded-2xl p-8 shadow-lg border border-gray-200 h-full flex flex-col justify-start overflow-hidden">
                 
@@ -202,7 +202,7 @@ export default function FeaturesSection() {
             </div>
             
             {/* Text Column (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-5 flex flex-col">
+            <div className="order-3 lg:order-3 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
@@ -213,9 +213,9 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 3: AI Insights - Text first, then border, then image */}
-          <div className="grid grid-cols-1 lg:grid-cols-11 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-13 gap-2 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Text Column (Left on lg screens) */}
-            <div className="order-1 lg:order-1 lg:col-span-5 flex flex-col">
+            <div className="order-1 lg:order-1 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Discover deep alumni insights to solve business problems and market your organization </h2>
                 <ul className="space-y-3 mb-8">
@@ -250,7 +250,7 @@ export default function FeaturesSection() {
             </div>
             
             {/* AI Insights Image (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-5">
+            <div className="order-3 lg:order-3 lg:col-span-8">
               <img 
                 src="/assets/3.png" 
                 alt="AI insights dashboard" 
@@ -269,9 +269,9 @@ export default function FeaturesSection() {
         className="pb-24 bg-white opacity-100 translate-y-0" // Removed top padding, kept bottom
       >
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-11 gap-2 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-13 gap-2 items-stretch mb-48 border border-black rounded-xl shadow-lg p-6 min-h-[700px]">
             {/* Visual Column (Left on lg screens) */}
-            <div className="order-1 lg:order-1 lg:col-span-5">
+            <div className="order-1 lg:order-1 lg:col-span-8">
               <img 
                 src="/try.png" // Using existing image as a placeholder
                 alt="Placeholder visual for new section" 
@@ -285,7 +285,7 @@ export default function FeaturesSection() {
             </div>
             
             {/* Text Column (Right on lg screens) */}
-            <div className="order-3 lg:order-3 lg:col-span-5 flex flex-col">
+            <div className="order-3 lg:order-3 lg:col-span-4 flex flex-col">
               <div> {/* Wrapper for top content */}
                 <h2 className="text-5xl font-bold text-black mb-4">Placeholder New Section Title</h2>
               </div>
