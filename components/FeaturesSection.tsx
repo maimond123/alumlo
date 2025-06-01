@@ -74,7 +74,7 @@ export default function FeaturesSection() {
                 <h2 className="text-5xl font-bold text-black mb-6">Comprehensive Alumni Data, all in one place</h2>
               </div>
               <p className="text-2xl text-gray-700 mt-auto">
-                Alumlo gathers publicly available data on your alumni—no more losing track of the people that represent your organization.
+                Alumlo gathers publicly available data on your alumni — no more losing track of the people that represent your organization.
               </p>
             </div>
             
