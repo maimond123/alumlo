@@ -262,7 +262,7 @@ export default function FeaturesSection() {
           <div className="text-5xl md:text-6xl font-bold text-black mb-12 max-w-4xl mx-auto text-center">
             <div className="mb-4">Your alumni are succeeding.</div>
             <div className="mb-4">Stop losing track.</div>
-            <div>Start marketing their outcomes with our data.</div>
+            <div>Market their outcomes with our data.</div>
           </div>
 
           {/* Get a demo button */}
