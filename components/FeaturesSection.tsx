@@ -80,51 +80,68 @@ export default function FeaturesSection() {
             
             {/* Visual Column (Right on lg screens, or bottom on mobile) */}
             <div className="order-1 lg:order-2 lg:col-span-3 h-full">
-              {/* Outer blurred container (mimics the large yellowish blurred rectangle) */}
-              <div className="bg-black/5 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex flex-col">
-                {/* Profile Section at the top */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <UserCircle className="w-10 h-10 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">Sarah Chen</h3>
-                      <p className="text-gray-600">Product Builder</p>
-                    </div>
+              {/* Outer container with exact beige/yellow background from reference */}
+              <div className="bg-gradient-to-br from-yellow-200/40 to-orange-200/40 backdrop-blur-lg rounded-2xl p-8 shadow-xl h-full flex flex-col">
+                
+                {/* Search Query Box - Top dashed container */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
+                  <div className="flex items-center gap-3">
+                    <Search className="w-5 h-5 text-gray-500" />
+                    <span className="text-orange-600 font-medium text-lg">People who work as Site Supervisor & are in NewYork</span>
                   </div>
                 </div>
 
-                {/* Metadata Checklist */}
-                <div className="space-y-4 flex-1">
+                {/* Processing Steps - Middle section */}
+                <div className="space-y-4 flex-1 mb-6">
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Location</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">AI Query Translator</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
                   </div>
                   
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Job History</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">Data Retrieval from 100M prospects</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
                   </div>
                   
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Education History</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">Data Refinery</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
                   </div>
                   
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Professional Skills</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">Semantic Relevance Filter</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
                   </div>
                   
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Industry Experience</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">Background Learning & Caching</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
                   </div>
                   
                   <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 border border-gray-200 flex items-center justify-between">
-                    <span className="text-gray-800 font-medium">Network Connections</span>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600 font-medium">Clear Results Delivered in 02s</span>
+                    <Check className="w-5 h-5 text-emerald-500" />
+                  </div>
+                </div>
+
+                {/* Profile Result - Bottom dashed container */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border-2 border-dashed border-gray-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src="https://media.licdn.com/dms/image/v2/D4E03AQH3Y3XkSH_Lpw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1723857605737?e=1754524800&v=beta&t=rv-Xp7KZMF6xBI_MVnZ9O0DjXKojE7W8ZnSw5pkr84M"
+                        alt="David Maimon"
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900">David Maimon</h3>
+                        <p className="text-gray-600">Builder</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">ICP Match</span>
+                      <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">80%</span>
+                    </div>
                   </div>
                 </div>
               </div>
