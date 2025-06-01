@@ -25,6 +25,8 @@ html {
   /* Remove overflow hidden that might cause issues */
   overflow-x: hidden;
   overflow-y: auto;
+  /* Global 95% visual scale for Chrome/Safari */
+  zoom: .95;
 }
 
 body {
