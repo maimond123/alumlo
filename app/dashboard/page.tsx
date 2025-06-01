@@ -259,34 +259,64 @@ const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: strin
 
 // Helper function to ensure search result compatibility
 const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
-  return results.map(result => ({
-    ...result,
-    // Ensure new fields exist with fallbacks to legacy fields
-    profile_url: result.profile_url || result.linkedin_url || '',
-    picture_url: result.picture_url || result.profile_photo_url,
-    industry: result.industry || result.current_industry || '',
-    post_company_current_company: result.post_company_current_company || result.current_company || '',
-    post_company_current_title: result.post_company_current_title || result.current_title || '',
-    post_company_current_industry: result.post_company_current_industry || result.current_industry || '',
-    post_company_current_location: result.post_company_current_location || result.current_job_location || '',
-    current_job_level: result.current_job_level || '',
-    current_job_function: result.current_job_function || '',
-    undergraduate_school: result.undergraduate_school || [],
-    graduate_school: result.graduate_school || [],
-    natural_language_geographic_profile: result.natural_language_geographic_profile || '',
-    natural_language_educational_profile: result.natural_language_educational_profile || '',
-    highest_degree_level: result.highest_degree_level || '',
-    major_category: result.major_category || '',
-    // Keep legacy fields for backward compatibility
-    linkedin_url: result.linkedin_url || result.profile_url || '',
-    current_company: result.current_company || result.post_company_current_company || '',
-    current_title: result.current_title || result.post_company_current_title || '',
-    current_industry: result.current_industry || result.post_company_current_industry || result.industry || '',
-    current_general_industry: result.current_general_industry || '',
-    current_job_location: result.current_job_location || result.post_company_current_location || '',
-    years_experience: result.years_experience || 0,
-    profile_photo_url: result.profile_photo_url || result.picture_url
-  }));
+  console.log('[DEBUG COMPATIBILITY] Raw results from API:', results);
+  console.log('[DEBUG COMPATIBILITY] Number of results:', results.length);
+  
+  const mappedResults = results.map((result, index) => {
+    console.log(`[DEBUG COMPATIBILITY] Processing result ${index}:`, {
+      id: result.id,
+      name: result.name,
+      rawResult: result
+    });
+    
+    const mapped = {
+      ...result,
+      // Ensure new fields exist with fallbacks to legacy fields
+      profile_url: result.profile_url || result.linkedin_url || '',
+      picture_url: result.picture_url || result.profile_photo_url,
+      industry: result.industry || result.current_industry || '',
+      post_company_current_company: result.post_company_current_company || result.current_company || '',
+      post_company_current_title: result.post_company_current_title || result.current_title || '',
+      post_company_current_industry: result.post_company_current_industry || result.current_industry || '',
+      post_company_current_location: result.post_company_current_location || result.current_job_location || '',
+      current_job_level: result.current_job_level || '',
+      current_job_function: result.current_job_function || '',
+      undergraduate_school: result.undergraduate_school || [],
+      graduate_school: result.graduate_school || [],
+      natural_language_geographic_profile: result.natural_language_geographic_profile || '',
+      natural_language_educational_profile: result.natural_language_educational_profile || '',
+      highest_degree_level: result.highest_degree_level || '',
+      major_category: result.major_category || '',
+      // Keep legacy fields for backward compatibility
+      linkedin_url: result.linkedin_url || result.profile_url || '',
+      current_company: result.current_company || result.post_company_current_company || '',
+      current_title: result.current_title || result.post_company_current_title || '',
+      current_industry: result.current_industry || result.post_company_current_industry || result.industry || '',
+      current_general_industry: result.current_general_industry || '',
+      current_job_location: result.current_job_location || result.post_company_current_location || '',
+      years_experience: result.years_experience || 0,
+      profile_photo_url: result.profile_photo_url || result.picture_url
+    };
+    
+    console.log(`[DEBUG COMPATIBILITY] Mapped result ${index}:`, {
+      id: mapped.id,
+      name: mapped.name,
+      current_company: mapped.current_company,
+      post_company_current_company: mapped.post_company_current_company,
+      current_title: mapped.current_title,
+      post_company_current_title: mapped.post_company_current_title,
+      current_job_location: mapped.current_job_location,
+      post_company_current_location: mapped.post_company_current_location,
+      natural_language_geographic_profile: mapped.natural_language_geographic_profile,
+      undergraduate_school: mapped.undergraduate_school,
+      graduate_school: mapped.graduate_school
+    });
+    
+    return mapped;
+  });
+  
+  console.log('[DEBUG COMPATIBILITY] Final mapped results:', mappedResults);
+  return mappedResults;
 };
 
 export default function DashboardPage() {
@@ -747,7 +777,14 @@ export default function DashboardPage() {
       
       console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
       console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
-      setSearchResults(ensureSearchResultCompatibility(searchResultsData));
+      console.log(`[DEBUG TIMING] About to call ensureSearchResultCompatibility with ${searchResultsData.length} results`);
+      
+      const compatibleResults = ensureSearchResultCompatibility(searchResultsData);
+      console.log(`[DEBUG TIMING] After compatibility mapping, got ${compatibleResults.length} results`);
+      console.log(`[DEBUG TIMING] Setting search results state now...`);
+      
+      setSearchResults(compatibleResults);
+      console.log(`[DEBUG TIMING] Search results state has been set`);
       
       // Automatically collapse the search analysis when results are presented
       if (searchResultsData && searchResultsData.length > 0) {
@@ -1515,8 +1552,25 @@ export default function DashboardPage() {
                 
                 <div className="grid gap-6">
                   {searchResults.map((result, index) => {
+                    console.log(`[DEBUG RENDER] Rendering result ${index}:`, {
+                      id: result.id,
+                      name: result.name,
+                      hasCurrentCompany: !!result.current_company,
+                      hasPostCurrentCompany: !!result.post_company_current_company,
+                      hasCurrentTitle: !!result.current_title,
+                      hasPostCurrentTitle: !!result.post_company_current_title,
+                      hasCurrentJobLocation: !!result.current_job_location,
+                      hasPostCurrentLocation: !!result.post_company_current_location,
+                      hasNaturalLanguageGeo: !!result.natural_language_geographic_profile,
+                      hasUndergraduateSchool: !!result.undergraduate_school,
+                      hasGraduateSchool: !!result.graduate_school,
+                      fullResult: result
+                    });
+                    
                     // Get standard profile info
                     const standardInfo = getStandardProfileInfo(result);
+                    
+                    console.log(`[DEBUG RENDER] Standard info for ${result.name}:`, standardInfo);
                     
                     // Get matching filters for this result
                     const matchingFilters = getMatchingFilters(result, extractedFilters);
@@ -1662,13 +1716,6 @@ export default function DashboardPage() {
                             </button>
                           </div>
                         </div>
-                        
-                        {/* Headline (if available) - spans full width below the 4 columns */}
-                        {result.headline && (
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-gray-600 text-sm italic text-center">"{result.headline}"</p>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
