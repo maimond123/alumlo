@@ -65,7 +65,7 @@ export default function FeaturesSection() {
           visualizationsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="container mx-auto px-2">
+        <div className="container mx-auto px-1">
           {/* Part 1: Data Collection - Text first, then border, then image */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px]">
             {/* Text Column (Left on lg screens, top on mobile) */}
@@ -150,7 +150,7 @@ export default function FeaturesSection() {
           </div>
           
           {/* Part 2: Visualizations - Image first, then border, then text */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px] min-w-[1250px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch mb-48 border border-gray-300 rounded-xl shadow-lg p-8 min-h-[700px]">
             {/* Visualization Demo with Search Interface (Left on lg screens) */}
             <div className="order-1 lg:order-1 lg:col-span-7">
               {/* Search Interface Container - matching first reference image */}
