@@ -215,7 +215,7 @@ export default function FeaturesSection() {
               <div> {/* Wrapper for top content */}
                 <h2 className="text-4xl font-bold text-black mb-4">Uncover actionable alumni insights—cohorted, visualized & business-ready</h2>
               </div>
-              <p className="text-1xl text-gray-700 mt-auto">
+              <p className="text-1.5xl text-gray-700 mt-auto">
               Our AI breaks down alumni data into rich, aggregated insights—based on any natural language query you provide. Ask questions, visualize trends, and instantly surface patterns that helps you showcase alumni success with clarity.
               </p>
             </div>
