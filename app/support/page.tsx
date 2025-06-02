@@ -55,7 +55,7 @@ export default function SupportPage() {
               >
                 <h2 className="text-2xl font-semibold mb-6 text-black">Schedule a Call</h2>
                 <div className="rounded-lg overflow-hidden border border-gray-200">
-                  <InlineWidget url="https://calendly.com/maimondavid553/alumlo-support" styles={{ height: '600px' }} />
+                  <InlineWidget url="https://.com/maimondavid553/alumlo-support" styles={{ height: '600px' }} />
                 </div>
               </motion.div>
 

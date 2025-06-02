@@ -196,7 +196,7 @@ export default function Signup() {
                   Close
                 </button>
                 <div className="w-full h-[650px]">
-                  <InlineWidget url="https://calendly.com/david-alumlo/alumlo-demo" />
+                  <InlineWidget url="https://calendly.com/david-alumlo/30min" />
                 </div>
               </div>
             </motion.div>

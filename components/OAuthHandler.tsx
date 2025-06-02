@@ -159,7 +159,7 @@ export default function OAuthHandler({ onComplete }: OAuthHandlerProps) {
             </button>
             <div className="pt-16">
               <InlineWidget 
-                url="https://calendly.com/david-alumlo/alumlo-demo"
+                url="https://calendly.com/david-alumlo/30min"
                 styles={{ height: 'calc(100% - 4rem)', width: '100%' }}
               />
             </div>
