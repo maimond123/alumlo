@@ -270,19 +270,19 @@ export default function SignInPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4"
           onClick={() => setShowCalendly(false)}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative border border-gray-300"
+            className="bg-white/30 backdrop-blur-xl rounded-lg w-full max-w-2xl h-[700px] overflow-hidden relative border border-white/20 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button 
               onClick={() => setShowCalendly(false)} 
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10 p-1 bg-white rounded-full border border-gray-300"
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-800 z-10 p-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/30"
               aria-label="Close"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
