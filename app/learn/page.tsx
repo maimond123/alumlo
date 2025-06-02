@@ -312,25 +312,6 @@ export default function LearnPage() {
     identifyUserInAnalytics();
   }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
 
-  // Add the learn mode typewriter effect
-  const learnTypewriterEffect = (text: string): Promise<void> => {
-    return new Promise((resolve) => {
-      setCurrentAnswer('');
-      let i = 0;
-      const speed = 20; // slightly faster than the search typewriter
-      
-      const typing = setInterval(() => {
-        if (i <= text.length) {
-          setCurrentAnswer(text.substring(0, i));
-          i++;
-        } else {
-          clearInterval(typing);
-          resolve();
-        }
-      }, speed);
-    });
-  };
-
   // Add handleLearnSubmit function to handle questions in learn mode
   const handleLearnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -401,9 +382,7 @@ export default function LearnPage() {
       
       await processStream();
       
-      // Use the typewriter effect for a smoother appearance
-      await learnTypewriterEffect(responseText);
-      
+      // Remove the typewriter effect - just add the response directly
       // Add the AI's answer to the conversation history
       setConversations(prev => [...prev, { role: 'assistant', content: responseText }]);
       setCurrentAnswer('');
