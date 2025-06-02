@@ -95,7 +95,9 @@ export default function LearnPage() {
   })
 
   // Add these new states for the Learn mode
-  const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
+  const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([
+    { role: 'assistant', content: 'What would you like to know about your alumni data?' }
+  ]);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
@@ -509,8 +511,15 @@ export default function LearnPage() {
           </h1>
 
           {/* Learn mode interface */}
-          {conversations.length === 0 ? (
+          {conversations.length === 1 && conversations[0].role === 'assistant' ? (
             <>
+              {/* Initial welcome message */}
+              <div className="w-full max-w-2xl mb-8">
+                <div className="bg-green-800/10 text-gray-700 p-3 rounded-lg inline-block">
+                  {conversations[0].content}
+                </div>
+              </div>
+
               <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
                   <input
@@ -529,7 +538,8 @@ export default function LearnPage() {
                       type="button" 
                       onClick={() => {
                         setCurrentQuestion('');
-                        setConversations([]);
+                        setConversations([{ role: 'assistant', content: 'What would you like to know about your alumni data?' }]);
+                        setCurrentConversationId(null);
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Clear"
@@ -619,36 +629,36 @@ export default function LearnPage() {
           ) : (
             <>
               {/* Conversation history container  - Only show if there's content to display */}
-              <div className="w-full max-w-4xl flex flex-col gap-4">
+              <div className="w-full max-w-4xl flex flex-col gap-4 pb-32">
                 {/* Conversation messages without border */}
-                <div className="w-full space-y-6 mb-6">
+                <div className="w-full space-y-4 mb-6">
                   {conversations.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                       <div 
-                        className={`max-w-[80%] p-4 rounded-2xl ${
+                        className={`inline-block p-3 rounded-lg max-w-[85%] ${
                           msg.role === 'user' 
-                            ? 'bg-emerald-600 text-white rounded-tr-none' 
-                            : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                            ? 'bg-golden-yellow/30 text-gray-900' 
+                            : 'bg-green-800/10 text-gray-700'
                         }`}
                       >
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        {msg.content}
                       </div>
                     </div>
                   ))}
                   
                   {/* Show the in-progress answer */}
                   {currentAnswer && (
-                    <div className="flex justify-start">
-                      <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
-                        <p className="whitespace-pre-wrap">{currentAnswer}</p>
+                    <div className="mb-4 text-left">
+                      <div className="inline-block p-3 rounded-lg max-w-[85%] bg-green-800/10 text-gray-700">
+                        {currentAnswer}
                       </div>
                     </div>
                   )}
                   
                   {/* Show typing indicator when processing */}
                   {isProcessing && !currentAnswer && (
-                    <div className="flex justify-start">
-                      <div className="max-w-[80%] p-4 rounded-2xl bg-gray-100 text-gray-800 rounded-tl-none">
+                    <div className="mb-4 text-left">
+                      <div className="inline-block p-3 rounded-lg max-w-[85%] bg-green-800/10 text-gray-700">
                         <div className="flex space-x-2">
                           <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
                           <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -665,51 +675,45 @@ export default function LearnPage() {
 
               {/* Fixed input form at bottom when there's conversation history */}
               <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-4xl mx-auto">
                   <form onSubmit={handleLearnSubmit} className="w-full">
-                    <div className="relative">
+                    <div className="flex gap-2 border border-black rounded-lg p-2">
                       <input
                         type="text"
                         value={currentQuestion}
                         onChange={(e) => setCurrentQuestion(e.target.value)}
-                        placeholder="Ask about your alumni data (e.g., What's the average salary?)"
-                        className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                        onKeyDown={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
+                        placeholder="Ask about your alumni data..."
+                        className="flex-1 px-3 py-2 border-none text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                        disabled={isProcessing}
                       />
                       
-                      {/* Buttons inside the input field, positioned at the bottom right */}
-                      <div className="absolute bottom-3 right-4 flex space-x-2">
-                        {/* Refresh button */}
-                        <button
-                          type="button" 
-                          onClick={() => {
-                            setCurrentQuestion('');
-                            setConversations([]);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                          aria-label="Clear"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        
-                        {/* Search/Send button */}
-                        <button
-                          onClick={(e) => handleLearnSubmit(e)}
-                          disabled={isProcessing}
-                          className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                          aria-label="Send"
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
+                      {/* Clear button */}
+                      <button
+                        type="button" 
+                        onClick={() => {
+                          setCurrentQuestion('');
+                          setConversations([{ role: 'assistant', content: 'What would you like to know about your alumni data?' }]);
+                          setCurrentConversationId(null);
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"
+                        aria-label="Clear"
+                      >
+                        Clear
+                      </button>
+                      
+                      {/* Send button */}
+                      <button
+                        type="submit"
+                        disabled={isProcessing || !currentQuestion.trim()}
+                        className="px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transform transition-transform duration-300 disabled:opacity-50"
+                      >
+                        {isProcessing ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <span>Send</span>
+                        )}
+                      </button>
                     </div>
                   </form>
                 </div>
