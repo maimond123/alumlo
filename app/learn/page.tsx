@@ -114,6 +114,23 @@ export default function LearnPage() {
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
+  // Load conversation ID from sessionStorage on mount
+  useEffect(() => {
+    const savedConversationId = sessionStorage.getItem('currentLearnConversationId');
+    if (savedConversationId) {
+      setCurrentConversationId(savedConversationId);
+    }
+  }, []);
+
+  // Save conversation ID to sessionStorage whenever it changes
+  useEffect(() => {
+    if (currentConversationId) {
+      sessionStorage.setItem('currentLearnConversationId', currentConversationId);
+    } else {
+      sessionStorage.removeItem('currentLearnConversationId');
+    }
+  }, [currentConversationId]);
+
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -329,9 +346,9 @@ export default function LearnPage() {
     // Track the question in analytics
     analytics.trackLearnModeQuestion(userQuestion);
     
-    // Create conversation if this is the first message and not in demo mode
+    // Create conversation only if this is truly the first message (no existing conversations) and not in demo mode
     let conversationId = currentConversationId;
-    if (!conversationId && !isDemoMode) {
+    if (!conversationId && conversations.length === 0 && !isDemoMode) {
       const title = generateConversationTitle(userQuestion);
       conversationId = await createConversation({
         title,
@@ -531,6 +548,7 @@ export default function LearnPage() {
                         setCurrentQuestion('');
                         setConversations([]);
                         setCurrentConversationId(null);
+                        sessionStorage.removeItem('currentLearnConversationId');
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Clear"
@@ -686,6 +704,7 @@ export default function LearnPage() {
                           setCurrentQuestion('');
                           setConversations([]);
                           setCurrentConversationId(null);
+                          sessionStorage.removeItem('currentLearnConversationId');
                         }}
                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"
                         aria-label="Clear"
