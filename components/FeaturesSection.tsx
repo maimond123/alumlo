@@ -282,7 +282,7 @@ export default function FeaturesSection() {
               "Try Demo"
             )}
           </motion.button>
-          {/* Added spacing at the bottom of this now last section */}
+          {/* Added spacing at the bottom of  this now last section */}
           <div className="pb-48"></div> 
         </div>
       </section>
