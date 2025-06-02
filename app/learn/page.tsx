@@ -95,9 +95,7 @@ export default function LearnPage() {
   })
 
   // Add these new states for the Learn mode
-  const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([
-    { role: 'assistant', content: 'What would you like to know about your alumni data?' }
-  ]);
+  const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
@@ -511,15 +509,8 @@ export default function LearnPage() {
           </h1>
 
           {/* Learn mode interface */}
-          {conversations.length === 1 && conversations[0].role === 'assistant' ? (
+          {conversations.length === 0 ? (
             <>
-              {/* Initial welcome message */}
-              <div className="w-full max-w-2xl mb-8">
-                <div className="bg-green-800/10 text-gray-700 p-3 rounded-lg inline-block">
-                  {conversations[0].content}
-                </div>
-              </div>
-
               <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
                   <input
@@ -538,7 +529,7 @@ export default function LearnPage() {
                       type="button" 
                       onClick={() => {
                         setCurrentQuestion('');
-                        setConversations([{ role: 'assistant', content: 'What would you like to know about your alumni data?' }]);
+                        setConversations([]);
                         setCurrentConversationId(null);
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
@@ -693,7 +684,7 @@ export default function LearnPage() {
                         type="button" 
                         onClick={() => {
                           setCurrentQuestion('');
-                          setConversations([{ role: 'assistant', content: 'What would you like to know about your alumni data?' }]);
+                          setConversations([]);
                           setCurrentConversationId(null);
                         }}
                         className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"

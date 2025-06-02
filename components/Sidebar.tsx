@@ -104,10 +104,27 @@ export default function Sidebar() {
         .select('id, title, updated_at')
         .eq('user_email', userEmail)
         .order('updated_at', { ascending: false })
-        .limit(5)
+        .limit(10) // Get more initially to allow for deduplication
 
       if (error) throw error
-      setRecentConversations(data || [])
+      
+      // Deduplicate by title - keep only the most recent conversation for each unique title
+      const uniqueConversations = data?.reduce((acc: any[], current) => {
+        const existingIndex = acc.findIndex(item => item.title === current.title)
+        if (existingIndex === -1) {
+          // Title not found, add to accumulator
+          acc.push(current)
+        } else {
+          // Title exists, keep the one with more recent updated_at
+          if (new Date(current.updated_at) > new Date(acc[existingIndex].updated_at)) {
+            acc[existingIndex] = current
+          }
+        }
+        return acc
+      }, []) || []
+      
+      // Take only the first 5 unique conversations
+      setRecentConversations(uniqueConversations.slice(0, 5))
     } catch (error) {
       console.error('Error loading recent conversations:', error)
       setRecentConversations([])
