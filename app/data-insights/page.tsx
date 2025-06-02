@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, RefreshCw } from "lucide-react"
+import { Search, RefreshCw, Plus } from "lucide-react"
 import { BarChart, PieChart } from "../../components/chart"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
@@ -82,6 +82,15 @@ export default function DataInsightsPage() {
   // Add state for the one-time prompt modal
   const [showPromptModal, setShowPromptModal] = useState(false)
   const [promptModalShown, setPromptModalShown] = useState(false)
+  // Add state for custom widget request modal
+  const [showCustomWidgetModal, setShowCustomWidgetModal] = useState(false)
+  const [customWidgetRequest, setCustomWidgetRequest] = useState({
+    title: '',
+    description: '',
+    chartType: 'bar',
+    dataPoints: ''
+  })
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
 
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
@@ -1063,6 +1072,61 @@ export default function DataInsightsPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  // Handler for submitting custom widget request
+  const handleSubmitCustomWidgetRequest = async () => {
+    try {
+      setIsSubmittingRequest(true);
+      
+      // Get user email
+      const userEmail = await getUserEmail();
+      
+      if (!userEmail) {
+        throw new Error('User email not found');
+      }
+      
+      // Create table name based on organization
+      const tableName = `${organizationName}_custom_widgets`;
+      
+      // Prepare data for submission
+      const requestData = {
+        user_email: userEmail,
+        widget_title: customWidgetRequest.title,
+        widget_description: customWidgetRequest.description,
+        chart_type: customWidgetRequest.chartType,
+        data_points: customWidgetRequest.dataPoints,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      
+      // Insert into Supabase
+      const { error } = await supabase
+        .from(tableName)
+        .insert([requestData]);
+      
+      if (error) {
+        console.error('Error submitting custom widget request:', error);
+        alert('Failed to submit request. Please try again.');
+        return;
+      }
+      
+      // Success - reset form and close modal
+      alert('Your custom widget request has been submitted successfully! We\'ll notify you when it\'s ready.');
+      setCustomWidgetRequest({
+        title: '',
+        description: '',
+        chartType: 'bar',
+        dataPoints: ''
+      });
+      setShowCustomWidgetModal(false);
+      
+    } catch (error) {
+      console.error('Error submitting custom widget request:', error);
+      alert('An error occurred while submitting your request. Please try again.');
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
+
   const renderExpandedWidget = () => {
     if (!selectedChart) return null;
 
@@ -1345,6 +1409,14 @@ export default function DataInsightsPage() {
         </div>
 
         <div className="fixed top-4 right-4 flex space-x-4">
+          <button
+            onClick={() => setShowCustomWidgetModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            title="Request Custom Widget"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Request Widget</span>
+          </button>
           <div className="relative">
             <input
               type="text"
@@ -1531,6 +1603,129 @@ export default function DataInsightsPage() {
                 Got it
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Custom Widget Request Modal */}
+      {showCustomWidgetModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCustomWidgetModal(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Request Custom Widget</h2>
+              <button 
+                onClick={() => setShowCustomWidgetModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form className="space-y-6" onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmitCustomWidgetRequest();
+            }}>
+              <div>
+                <label htmlFor="widget-title" className="block text-sm font-medium text-gray-700 mb-1">
+                  Widget Title *
+                </label>
+                <input
+                  type="text"
+                  id="widget-title"
+                  required
+                  value={customWidgetRequest.title}
+                  onChange={(e) => setCustomWidgetRequest({...customWidgetRequest, title: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="e.g., Alumni by Major Field of Study"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="widget-description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <textarea
+                  id="widget-description"
+                  required
+                  rows={4}
+                  value={customWidgetRequest.description}
+                  onChange={(e) => setCustomWidgetRequest({...customWidgetRequest, description: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Describe what data you want to visualize and any specific requirements..."
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="chart-type" className="block text-sm font-medium text-gray-700 mb-1">
+                  Chart Type *
+                </label>
+                <select
+                  id="chart-type"
+                  required
+                  value={customWidgetRequest.chartType}
+                  onChange={(e) => setCustomWidgetRequest({...customWidgetRequest, chartType: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                  <option value="bar">Bar Chart</option>
+                  <option value="pie">Pie Chart</option>
+                  <option value="line">Line Chart</option>
+                  <option value="scatter">Scatter Plot</option>
+                  <option value="heatmap">Heat Map</option>
+                  <option value="stacked-bar">Stacked Bar Chart</option>
+                  <option value="donut">Donut Chart</option>
+                  <option value="other">Other (please specify in description)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="data-points" className="block text-sm font-medium text-gray-700 mb-1">
+                  Specific Data Points (Optional)
+                </label>
+                <textarea
+                  id="data-points"
+                  rows={3}
+                  value={customWidgetRequest.dataPoints}
+                  onChange={(e) => setCustomWidgetRequest({...customWidgetRequest, dataPoints: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="List any specific data fields, filters, or categories you want included..."
+                />
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomWidgetModal(false)}
+                    className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingRequest}
+                    className="flex-1 bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingRequest ? (
+                      <span className="flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Submitting...
+                      </span>
+                    ) : (
+                      'Submit Request'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
