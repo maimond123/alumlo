@@ -1411,7 +1411,7 @@ export default function DataInsightsPage() {
         <div className="fixed top-4 right-4 flex space-x-4">
           <button
             onClick={() => setShowCustomWidgetModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-colors"
             title="Request Custom Widget"
           >
             <Plus className="w-4 h-4" />
@@ -1610,7 +1610,7 @@ export default function DataInsightsPage() {
       {/* Custom Widget Request Modal */}
       {showCustomWidgetModal && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowCustomWidgetModal(false);

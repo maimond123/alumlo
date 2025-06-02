@@ -2,7 +2,7 @@
 -- This table will track custom widget requests from users
 -- Table name format: {organization_name}_custom_widgets
 
--- Example for lawrenceville organization
+-- Example for chick_fil_a organization
 CREATE TABLE IF NOT EXISTS chick_fil_a_custom_widgets (
   id SERIAL PRIMARY KEY,
   user_email VARCHAR(255) NOT NULL,
@@ -24,25 +24,25 @@ CREATE TABLE IF NOT EXISTS chick_fil_a_custom_widgets (
 );
 
 -- Create index for faster queries
-CREATE INDEX idx_lawrenceville_custom_widgets_user_email ON lawrenceville_custom_widgets(user_email);
-CREATE INDEX idx_lawrenceville_custom_widgets_status ON lawrenceville_custom_widgets(status);
-CREATE INDEX idx_lawrenceville_custom_widgets_created_at ON lawrenceville_custom_widgets(created_at DESC);
+CREATE INDEX idx_chick_fil_a_custom_widgets_user_email ON chick_fil_a_custom_widgets(user_email);
+CREATE INDEX idx_chick_fil_a_custom_widgets_status ON chick_fil_a_custom_widgets(status);
+CREATE INDEX idx_chick_fil_a_custom_widgets_created_at ON chick_fil_a_custom_widgets(created_at DESC);
 
 -- Add row level security
-ALTER TABLE lawrenceville_custom_widgets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chick_fil_a_custom_widgets ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow users to view their own requests
-CREATE POLICY "Users can view own requests" ON lawrenceville_custom_widgets
+CREATE POLICY "Users can view own requests" ON chick_fil_a_custom_widgets
   FOR SELECT
   USING (auth.email() = user_email);
 
 -- Create policy to allow users to insert their own requests
-CREATE POLICY "Users can create requests" ON lawrenceville_custom_widgets
+CREATE POLICY "Users can create requests" ON chick_fil_a_custom_widgets
   FOR INSERT
   WITH CHECK (auth.email() = user_email);
 
 -- Create policy to allow admins to view and update all requests
-CREATE POLICY "Admins can manage all requests" ON lawrenceville_custom_widgets
+CREATE POLICY "Admins can manage all requests" ON chick_fil_a_custom_widgets
   FOR ALL
   USING (
     EXISTS (
