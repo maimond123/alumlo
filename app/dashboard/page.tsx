@@ -8,7 +8,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import { getUserEmail, isAuthenticated } from "../utils/auth"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import analytics from "../utils/analytics"
 import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
@@ -148,6 +148,9 @@ const secondRowSuggestionTags = [
   "Former crew members in professional sports",
   "People who transitioned to healthcare innovation"
 ]
+
+// Combine all suggestion tags for rotating placeholder
+const allSuggestionTags = [...suggestionTags, ...secondRowSuggestionTags];
 
 // Remove the module-level useEffect
 // This is causing the error - hooks can only be used inside components
@@ -445,6 +448,17 @@ export default function DashboardPage() {
 
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
+  
+  // Rotating placeholder suggestion index
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  
+  // Cycle through suggestions every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSuggestionIndex(prev => (prev + 1) % allSuggestionTags.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Add new state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -1495,10 +1509,27 @@ export default function DashboardPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Begin typing to search through your alumni network..."
+                placeholder=""
                 className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
+              {/* Rotating placeholder suggestions */}
+              {searchQuery === '' && (
+                <div className="absolute left-6 top-4 pointer-events-none overflow-hidden h-6">
+                  <AnimatePresence>
+                    <motion.span
+                      key={currentSuggestionIndex}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -20, opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="text-gray-400"
+                    >
+                      {allSuggestionTags[currentSuggestionIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                </div>
+              )}
               
               {/* Buttons inside the input field, positioned at the bottom right */}
               <div className="absolute bottom-3 right-4 flex space-x-2">
