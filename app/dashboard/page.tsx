@@ -98,6 +98,57 @@ const suggestionTags = [
   "Digital marketing in food brands"
 ]
 
+// Add second row of suggestion tags with different content
+const secondRowSuggestionTags = [
+  "Executive chefs at upscale restaurants",
+  "Alumni now leading Fortune 500 teams",
+  "Former crew members turned entrepreneurs",
+  "People who transitioned to investment banking",
+  "Regional managers across multiple states",
+  "Alumni working at Google, Apple, Microsoft",
+  "Former employees now in private equity",
+  "People who became restaurant franchise owners",
+  "Alumni working in sustainable food initiatives",
+  "Former team leads now in executive coaching",
+  "People who pivoted to venture capital",
+  "Alumni running their own consulting firms",
+  "Former employees in pharmaceutical sales",
+  "People who became celebrity chefs",
+  "Alumni working at top consulting firms",
+  "Former managers now in hospitality tech",
+  "People who transitioned to luxury brands",
+  "Alumni leading social media agencies",
+  "Former employees in corporate training",
+  "People who became food industry analysts",
+  "Alumni working in sports management",
+  "Former crew members now in film production",
+  "People who transitioned to renewable energy",
+  "Alumni leading diversity and inclusion",
+  "Former employees in government relations",
+  "People who became professional speakers",
+  "Alumni working at entertainment companies",
+  "Former managers in supply chain optimization",
+  "People who transitioned to biotech startups",
+  "Alumni leading customer experience teams",
+  "Former employees now travel industry executives",
+  "People who became food network personalities",
+  "Alumni working in artificial intelligence",
+  "Former team members in aerospace",
+  "People who transitioned to fashion retail",
+  "Alumni leading nonprofit organizations",
+  "Former employees in financial planning",
+  "People who became wellness industry leaders",
+  "Alumni working in cybersecurity",
+  "Former managers now in e-commerce",
+  "People who transitioned to music industry",
+  "Alumni leading automotive innovation",
+  "Former employees in real estate development",
+  "People who became lifestyle brand founders",
+  "Alumni working in clean technology",
+  "Former crew members in professional sports",
+  "People who transitioned to healthcare innovation"
+]
+
 // Remove the module-level useEffect
 // This is causing the error - hooks can only be used inside components
 const tagScrollAnimation = `
@@ -117,6 +168,11 @@ const tagScrollAnimation = `
     display: inline-flex;
     animation: scroll 110s linear infinite;
   }
+
+  .scrolling-tags-content-slow {
+    display: inline-flex;
+    animation: scroll-slow 150s linear infinite;
+  }
   
   .tag-item {
     display: inline-block;
@@ -130,13 +186,36 @@ const tagScrollAnimation = `
     font-size: 1rem;
     white-space: nowrap;
   }
+
+  .tag-item-yellow {
+    display: inline-block;
+    background-color: rgba(251, 191, 36, 0.1);
+    color: rgb(146, 64, 14);
+    padding: 0.6rem 1.2rem;
+    margin: 0 0.5rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
   
   .tag-item:hover {
     background-color: rgba(16, 185, 129, 0.2);
     transform: translateY(-2px);
   }
+
+  .tag-item-yellow:hover {
+    background-color: rgba(251, 191, 36, 0.2);
+    transform: translateY(-2px);
+  }
   
   @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  @keyframes scroll-slow {
     0% { transform: translateX(0); }
     100% { transform: translateX(-100%); }
   }
@@ -1464,6 +1543,7 @@ export default function DashboardPage() {
           <style jsx>{tagScrollAnimation}</style>
           
           <div className="w-full max-w-2xl">
+            {/* First row of tags - Green */}
             <div className="scrolling-tags-container">
               <div className="scrolling-tags">
                 {/* First copy of tags */}
@@ -1514,6 +1594,37 @@ export default function DashboardPage() {
                       </span>
                     ))
                   }
+                </div>
+              </div>
+            </div>
+
+            {/* Second row of tags - Golden Yellow */}
+            <div className="scrolling-tags-container">
+              <div className="scrolling-tags">
+                {/* First copy of second row tags */}
+                <div className="scrolling-tags-content-slow">
+                  {secondRowSuggestionTags.map((tag, index) => (
+                    <span 
+                      key={`yellow-first-${index}`}
+                      onClick={() => handleTagClick(tag)}
+                      className="tag-item-yellow"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Second copy of second row tags to create the infinite loop effect */}
+                <div className="scrolling-tags-content-slow">
+                  {secondRowSuggestionTags.map((tag, index) => (
+                    <span 
+                      key={`yellow-second-${index}`}
+                      onClick={() => handleTagClick(tag)}
+                      className="tag-item-yellow"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
