@@ -467,9 +467,6 @@ export default function DashboardPage() {
   // Add new state for the Want More modal
   const [showWantMoreModal, setShowWantMoreModal] = useState(false)
   
-  // Add new state for feature spotlight
-  const [showFeatureSpotlight, setShowFeatureSpotlight] = useState(true)
-  
   // Add state for Pro Tip visibility
   const [showProTip, setShowProTip] = useState(true)
   
@@ -482,6 +479,10 @@ export default function DashboardPage() {
   
   // Add new state to control animation start
   const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
+
+  // Add new state for demo onboarding flow
+  const [showDemoOnboarding, setShowDemoOnboarding] = useState(false)
+  const [demoStep, setDemoStep] = useState(0)
 
   // Define formatOrganizationName function here
   const formatOrganizationName = (name: string): string => {
@@ -558,6 +559,9 @@ export default function DashboardPage() {
             setIsDemoMode(true);
             setFormattedOrganizationName("Your Organization");
             setIsLoading(false);
+            
+            // Show demo onboarding instead of feature spotlight
+            setShowDemoOnboarding(true);
             
             // Track as a unique visitor while maintaining demo status
             const visitorId = analytics.getVisitorId();
@@ -2065,66 +2069,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Demo Feature Spotlight */}
-          {isDemoMode && showFeatureSpotlight && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md">
-                <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-emerald-600">Welcome to the Alumlo Demo!</h3>
-                </div>
-                
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Try the Search</h4>
-                      <p className="text-sm text-gray-600">Search for alumni by job titles, companies, locations, or click the suggested searches below the search box.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Interactive Results</h4>
-                      <p className="text-sm text-gray-600">Click on search results to view LinkedIn profiles and explore alumni connections.</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">AI-Powered Analytics</h4>
-                      <p className="text-sm text-gray-600">Visit the Analytics section to see data visualizations that you can click on to chat with our AI assistant about the insights.</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    setShowFeatureSpotlight(false);
-                    analytics.trackFeatureSpotlight('dismiss');
-                  }}
-                  className="w-full bg-emerald-600 text-white py-2 rounded-md hover:bg-emerald-700 transition-colors"
-                >
-                  Got it, let's explore
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Demo Survey Modal with analytics */}
           {isDemoMode && showDemoSurvey && (
             <div 
@@ -2296,6 +2240,377 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* New Multi-Step Demo Onboarding Flow */}
+          {isDemoMode && showDemoOnboarding && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                
+                {/* Progress indicators */}
+                <div className="flex justify-center py-4 bg-gray-50 border-b">
+                  <div className="flex space-x-2">
+                    {[0, 1, 2, 3, 4].map((step) => (
+                      <div
+                        key={step}
+                        className={`h-2 w-12 rounded-full transition-all duration-300 ${
+                          step === demoStep 
+                            ? 'bg-purple-600' 
+                            : step < demoStep 
+                              ? 'bg-purple-300' 
+                              : 'bg-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 p-8 text-center overflow-y-auto">
+                  
+                  {/* Step 0: Welcome */}
+                  {demoStep === 0 && (
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold text-gray-900">Welcome to Alumlo!</h1>
+                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Your tool to perform deep research on people data.
+                      </p>
+                      
+                      {/* Preview mockup */}
+                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
+                        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                          {/* Mock browser header */}
+                          <div className="bg-gray-200 p-3 flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                            <div className="flex-1 bg-white rounded mx-4 px-3 py-1 text-sm text-gray-600">
+                              alumlo.ai/search
+                            </div>
+                          </div>
+                          
+                          {/* Mock Alumlo interface */}
+                          <div className="p-8">
+                            <h2 className="text-2xl font-bold mb-4">The People Search Engine for<br/>Your Organization</h2>
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                              <div className="flex items-center justify-between bg-white rounded-full px-4 py-3 shadow">
+                                <span className="text-gray-400">Search for people who...</span>
+                                <div className="bg-gray-100 rounded-full p-2">
+                                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">CS grads</span>
+                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">Founders offering open source developer tools</span>
+                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">People currently based in Europe</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Video placeholder */}
+                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
+                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 1: School Filtering */}
+                  {demoStep === 1 && (
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold text-gray-900">School filtering.</h1>
+                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Find the right people based on specific criteria like schools, companies, and roles.
+                      </p>
+                      
+                      {/* School selection mockup */}
+                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
+                        <div className="bg-white rounded-lg shadow-lg p-8">
+                          <div className="mb-6">
+                            <h2 className="text-3xl font-bold mb-2">Your Organization ↗</h2>
+                            <div className="relative">
+                              <input 
+                                type="text" 
+                                className="w-full p-4 border-2 border-gray-300 rounded-lg text-lg"
+                                placeholder="Search..."
+                                value="northwestern"
+                                readOnly
+                              />
+                              <div className="absolute top-full left-0 right-0 bg-white border-2 border-t-0 border-gray-300 rounded-b-lg">
+                                <div className="p-4 hover:bg-gray-50 border-b border-gray-200 cursor-pointer">
+                                  <div className="font-semibold text-lg">Northwestern College</div>
+                                  <div className="text-gray-600">Orange City, IA</div>
+                                </div>
+                                <div className="p-4 hover:bg-gray-50 cursor-pointer">
+                                  <div className="font-semibold text-lg">Northwestern Health Sciences University</div>
+                                  <div className="text-gray-600">Bloomington, MN</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Video placeholder */}
+                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
+                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Natural Language Queries */}
+                  {demoStep === 2 && (
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold text-gray-900">Natural language queries.</h1>
+                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        Utilize natural language to describe who you're looking for — we'll find the best matches.
+                      </p>
+                      
+                      {/* Natural language search mockup */}
+                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
+                        <div className="bg-white rounded-lg shadow-lg p-8">
+                          <div className="mb-6">
+                            <h2 className="text-3xl font-bold mb-6">Northwestern U...</h2>
+                            <div className="bg-gray-50 rounded-lg p-6">
+                              <div className="flex items-center justify-between bg-white rounded-full px-6 py-4 shadow-md mb-4">
+                                <span className="text-gray-600 text-lg">Search for people who...</span>
+                                <div className="bg-gray-100 rounded-full p-2">
+                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                              
+                              <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full inline-block mb-4">
+                                🧠 Deep Research
+                              </div>
+                              
+                              <div className="text-left space-y-2">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                  <span className="text-gray-700">People who started companies in 2019...</span>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                  <span className="text-gray-700">Founders building fintech or electronic startups</span>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                  <span className="text-gray-700">People working in A.I. agent generation</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Video placeholder */}
+                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
+                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Advanced Search Algorithms */}
+                  {demoStep === 3 && (
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold text-gray-900">Advanced search algorithms.</h1>
+                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        We deploy 100,000+ AI agents along with our search algorithms to find the best matches.
+                      </p>
+                      
+                      {/* Advanced algorithms mockup */}
+                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                          <div className="mb-4">
+                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                              <span className="text-gray-600">Biology, chemistry, and cog-sci undergraduates working on alzheimer's research</span>
+                              <button className="ml-2 bg-gray-200 rounded-full p-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </button>
+                            </div>
+                            
+                            <div className="text-left">
+                              <div className="text-purple-600 mb-2">Researching & Analyzing</div>
+                              <div className="text-sm text-gray-600 mb-4">
+                                Indexing through our database of 275,504,384 alumni profiles
+                              </div>
+                              
+                              <div className="mb-4">
+                                <div className="text-sm font-medium mb-2">🔍 Search Criteria</div>
+                                <div className="bg-gray-50 p-3 rounded text-xs">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a biology undergraduate</span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a chemistry undergraduate</span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a cognitive science undergraduate</span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Works on Alzheimer's research</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mb-4">
+                                <div className="text-sm font-medium mb-2">💻 SQL Query</div>
+                                <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
+                                  SELECT<br/>
+                                  &nbsp;&nbsp;r.name, r.location, r.headline, r.title,<br/>
+                                  &nbsp;&nbsp;profile_picture_url, headline_picture_url,<br/>
+                                  &nbsp;&nbsp;r.summary,<br/>
+                                  &nbsp;&nbsp;r.twitter_handle, r.website,<br/>
+                                  &nbsp;&nbsp;r.location_country,<br/>
+                                  &nbsp;&nbsp;r.current_company
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Video placeholder */}
+                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
+                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Profile Enrichment */}
+                  {demoStep === 4 && (
+                    <div className="space-y-6">
+                      <h1 className="text-4xl font-bold text-gray-900">Profile enrichment.</h1>
+                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                        View profiles, enrich emails, and export your results as CSV.
+                      </p>
+                      
+                      {/* Profile enrichment mockup */}
+                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                          <div className="text-left">
+                            <div className="border-b border-gray-200 pb-4 mb-4">
+                              <h3 className="font-bold text-lg">Northwestern University</h3>
+                            </div>
+                            
+                            {/* Profile results */}
+                            <div className="space-y-4">
+                              {/* Profile 1 */}
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    GT
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold">Giuseppe Terracina</div>
+                                    <div className="text-sm text-gray-600">Senior Research Associate at Keypoint</div>
+                                    <div className="text-xs text-gray-500">Kenilworth, New Jersey, United States</div>
+                                  </div>
+                                </div>
+                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
+                              </div>
+                              
+                              {/* Profile details popup */}
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-8">
+                                <div className="mb-3">
+                                  <h4 className="font-semibold mb-2">Giuseppe Terracina</h4>
+                                  <p className="text-sm text-gray-600 mb-3">Senior Research Associate at Keypoint Intelligence • Kenilworth, New Jersey, United States</p>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                  <div>
+                                    <h5 className="font-medium text-sm mb-1">📈 Experience</h5>
+                                    <div className="text-xs text-gray-600 space-y-1">
+                                      <div>Senior Research Associate at Keypoint Intelligence • March 2017 - Present</div>
+                                      <div>Scientist 2 at Amyris • June 2018 - November 2020</div>
+                                      <div>Scientist at Amyris Group • September 2017 - May 2018</div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <h5 className="font-medium text-sm mb-1">🎓 Education</h5>
+                                    <div className="text-xs text-gray-600">
+                                      <div>Purdue University</div>
+                                      <div>Masters of Sciences in genetics</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* More profiles */}
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    HX
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold">Hannah Xu</div>
+                                    <div className="text-sm text-gray-600">Research Scientist</div>
+                                    <div className="text-xs text-gray-500">Phoenix, Arizona, United States</div>
+                                  </div>
+                                </div>
+                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
+                              </div>
+                              
+                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    MM
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold">Melissa McFarland</div>
+                                    <div className="text-sm text-gray-600">Research Scientist</div>
+                                    <div className="text-xs text-gray-500">Chicago, Illinois</div>
+                                  </div>
+                                </div>
+                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Video placeholder */}
+                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
+                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation buttons */}
+                <div className="flex justify-between items-center p-6 bg-gray-50 border-t">
+                  <button
+                    onClick={() => {
+                      if (demoStep > 0) {
+                        setDemoStep(demoStep - 1);
+                      } else {
+                        setShowDemoOnboarding(false);
+                        analytics.trackButtonClick('DemoOnboarding_ExitEarly', { step: demoStep });
+                      }
+                    }}
+                    className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Go back
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      if (demoStep < 4) {
+                        setDemoStep(demoStep + 1);
+                        analytics.trackButtonClick('DemoOnboarding_StepAdvance', { step: demoStep + 1 });
+                      } else {
+                        setShowDemoOnboarding(false);
+                        analytics.trackButtonClick('DemoOnboarding_Complete', { totalSteps: 5 });
+                      }
+                    }}
+                    className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    {demoStep === 4 ? 'Start Exploring' : 'Next'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
