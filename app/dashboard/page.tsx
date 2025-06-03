@@ -169,12 +169,12 @@ const tagScrollAnimation = `
   
   .scrolling-tags-content {
     display: inline-flex;
-    animation: scroll 110s linear infinite;
+    animation: scroll 300s linear infinite;
   }
 
   .scrolling-tags-content-slow {
     display: inline-flex;
-    animation: scroll-slow 150s linear infinite;
+    animation: scroll-slow 450s linear infinite;
   }
   
   .tag-item {
@@ -452,13 +452,41 @@ export default function DashboardPage() {
   // Rotating placeholder suggestion index
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   
+  // Create combined array with "begin typing to search" every 4 items
+  const [combinedSuggestions, setCombinedSuggestions] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const createCombinedSuggestions = () => {
+      const combined: string[] = [];
+      const originalPlaceholder = "begin typing to search";
+      
+      // Create a shuffled copy of all suggestion tags
+      const shuffledTags = [...allSuggestionTags].sort(() => Math.random() - 0.5);
+      
+      // Insert original placeholder every 4 items
+      let tagIndex = 0;
+      for (let i = 0; i < 40; i++) { // Create a reasonable cycle length
+        if (i % 4 === 3) { // Every 4th item (0-indexed, so 3, 7, 11, etc.)
+          combined.push(originalPlaceholder);
+        } else {
+          combined.push(shuffledTags[tagIndex % shuffledTags.length]);
+          tagIndex++;
+        }
+      }
+      
+      setCombinedSuggestions(combined);
+    };
+    
+    createCombinedSuggestions();
+  }, []);
+  
   // Cycle through suggestions every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSuggestionIndex(prev => (prev + 1) % allSuggestionTags.length);
+      setCurrentSuggestionIndex(prev => (prev + 1) % combinedSuggestions.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [combinedSuggestions.length]);
   
   // Add new state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -1529,7 +1557,7 @@ export default function DashboardPage() {
                       transition={{ duration: 0.4 }}
                       className="text-gray-400"
                     >
-                      {allSuggestionTags[currentSuggestionIndex]}
+                      {combinedSuggestions.length > 0 ? combinedSuggestions[currentSuggestionIndex] : allSuggestionTags[currentSuggestionIndex]}
                     </motion.span>
                   </AnimatePresence>
                 </div>
