@@ -220,6 +220,11 @@ export default function Sidebar() {
     }
   }
 
+  // Function to navigate to settings
+  const navigateToSettings = () => {
+    router.push('/settings')
+  }
+
   return (
     <motion.div
       className={`fixed top-0 left-2 h-full bg-transparent flex flex-col border-r border-black z-20 overflow-hidden transition-[width] duration-300 ease-in-out`}
@@ -328,11 +333,11 @@ export default function Sidebar() {
           
           {isSidebarOpen && (
             <button 
-              onClick={handleSignOut}
+              onClick={navigateToSettings}
               onMouseEnter={() => setIsSpinning(true)}
               onMouseLeave={() => setIsSpinning(false)}
               className={`p-2 rounded-full hover:bg-gray-200 transition-colors duration-200`}
-              aria-label="Settings and Sign Out"
+              aria-label="Settings"
             >
               <Settings className={`w-6 h-6 text-black ${isSpinning ? "animate-spin" : ""}`} />
             </button>
