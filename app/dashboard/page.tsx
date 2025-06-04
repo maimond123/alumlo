@@ -277,15 +277,29 @@ const getEducationDisplay = (result: SearchResult): string => {
     }
   }
   
-  // Fallback to natural language education profiles
+  // Helper function to extract education from natural language text
+  const extractEducationFromNaturalLanguage = (text: string): string => {
+    if (!text) return '';
+    
+    // Look for "Educational Background:" prefix
+    const educationalBackgroundMatch = text.match(/Educational Background:\s*(.+)/i);
+    if (educationalBackgroundMatch) {
+      return educationalBackgroundMatch[1].trim();
+    }
+    
+    // If no "Educational Background:" prefix, return the full text
+    return text;
+  };
+  
+  // Fallback to natural language education profiles with extraction
   if (result.natural_language_educational_profile && 
       typeof result.natural_language_educational_profile === 'string') {
-    return result.natural_language_educational_profile;
+    return extractEducationFromNaturalLanguage(result.natural_language_educational_profile);
   }
   
   if (result.natural_language_education && 
       typeof result.natural_language_education === 'string') {
-    return result.natural_language_education;
+    return extractEducationFromNaturalLanguage(result.natural_language_education);
   }
   
   return '';
