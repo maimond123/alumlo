@@ -128,7 +128,7 @@ export default function SignInPage() {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-white"
+      className="min-h-screen w-full flex items-center justify-center p-4 bg-white/20 backdrop-blur-xl"
       style={{
         backgroundImage: `radial-gradient(ellipse at center, ${gradientCenterColor} 0%, rgba(255,255,255,0) 70%)`
       }}
@@ -137,7 +137,7 @@ export default function SignInPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/20 backdrop-blur-xl p-11 rounded-xl w-full max-w-lg shadow-lg border border-white/30"
+        className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg border border-gray-300"
       >
         <div className="text-center mb-8">
           <h1 className="text-[42px] font-bold text-black">Alumlo</h1>
