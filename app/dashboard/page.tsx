@@ -1802,6 +1802,39 @@ export default function DashboardPage() {
                         className="block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
                         onClick={() => handleSearchResultClick(profileUrl, index, result.name)}
                       >
+                        {/* Action Buttons - Top Right Corner */}
+                        <div className="absolute top-4 right-4 flex items-center space-x-2">
+                          {/* LinkedIn Button - Square with logo only */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleSearchResultClick(profileUrl, index, result.name);
+                            }}
+                            className="w-8 h-8 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                            title="View LinkedIn Profile"
+                          >
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                          </button>
+                          
+                          {/* Save Button - Pill shaped */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              // Add save functionality here
+                              console.log('Save profile:', result.name);
+                            }}
+                            className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors flex items-center space-x-1"
+                            title="Save Profile"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                            <span>Save</span>
+                          </button>
+                        </div>
+
                         {/* 4-Column Layout */}
                         <div className="grid grid-cols-4 gap-8 items-start">
                           
@@ -1892,38 +1925,9 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           
-                          {/* Column 4: Actions */}
+                          {/* Column 4: Now Empty - Actions moved to top right */}
                           <div className="flex flex-col space-y-3">
-                            {/* LinkedIn Button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent card click
-                                handleSearchResultClick(profileUrl, index, result.name);
-                              }}
-                              className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                            >
-                              <img 
-                                src="/assets/linkedin_gray.png" 
-                                alt="LinkedIn" 
-                                className="w-4 h-4 filter invert brightness-0"
-                              />
-                              <span>LinkedIn</span>
-                            </button>
-                            
-                            {/* Save Button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent card click
-                                // Add save functionality here
-                                console.log('Save profile:', result.name);
-                              }}
-                              className="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                              </svg>
-                              <span>Save</span>
-                            </button>
+                            {/* Column 4 content can be used for additional info if needed */}
                           </div>
                         </div>
                       </div>
