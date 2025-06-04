@@ -159,6 +159,15 @@ export default function SettingsPage() {
     return time.toLocaleDateString()
   }
 
+  const formatOrganizationName = (name: string): string => {
+    if (!name) return "Your Organization"; // Fallback for empty or null names
+    return name
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
@@ -186,7 +195,7 @@ export default function SettingsPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
               <p className="text-gray-600 mt-1">
-                {userInfo ? `${userInfo.first_name} ${userInfo.last_name} • ${userInfo.organization_name}` : ''}
+                {userInfo ? `${userInfo.first_name} ${userInfo.last_name} • ${formatOrganizationName(userInfo.organization_name)}` : ''}
               </p>
             </div>
           </div>
@@ -202,8 +211,8 @@ export default function SettingsPage() {
           >
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Bookmark className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <Bookmark className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Saved Leads</h2>
@@ -261,8 +270,8 @@ export default function SettingsPage() {
           >
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <Search className="w-5 h-5 text-green-600" />
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <Search className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Search History</h2>
@@ -307,8 +316,8 @@ export default function SettingsPage() {
           >
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <Brain className="w-5 h-5 text-purple-600" />
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <Brain className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Learn Conversations</h2>
