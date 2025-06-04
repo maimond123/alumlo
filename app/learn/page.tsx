@@ -491,9 +491,9 @@ export default function LearnPage() {
             {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
               isDemoMode ? (
                 <span 
-                  className="text-black cursor-pointer hover:underline"
+                  className="text-black"
                 >
-                  {displayedOrganizationName}
+                  {"Your Organization"}
                 </span>
               ) : (
                 <span className="text-black">{displayedOrganizationName}</span>
