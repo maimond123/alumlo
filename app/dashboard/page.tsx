@@ -537,7 +537,6 @@ export default function DashboardPage() {
   
   // Add new state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
-  const [showDemoSurvey, setShowDemoSurvey] = useState(false)
   
   // Add new state for the Want More modal
   const [showWantMoreModal, setShowWantMoreModal] = useState(false)
@@ -634,9 +633,6 @@ export default function DashboardPage() {
             setIsDemoMode(true);
             setFormattedOrganizationName("Your Organization");
             setIsLoading(false);
-            
-            // Show demo onboarding instead of feature spotlight
-            setShowDemoOnboarding(true);
             
             // Track as a unique visitor while maintaining demo status
             const visitorId = analytics.getVisitorId();
@@ -945,15 +941,9 @@ export default function DashboardPage() {
       
       // Custom message for demo account
       if (isDemoMode) {
-        await typewriterEffect(`Searching across our database, `, 
+        await typewriterEffect(`Searching across our database of sample alumni profiles`, 
           (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
         );
-        // After the first part is typed, add the clickable part
-        setDisplayedText(prev => ({ 
-          ...prev, 
-          searching: prev.searching + 
-            '<span class="text-emerald-600 underline cursor-pointer" onclick="document.getElementById(\'demo-trigger\').click()">want this for your alumni data?</span>' 
-        }));
       } else {
         // Regular message for other users
         await typewriterEffect(`Searching across our demo database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
@@ -1413,13 +1403,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle school name click in demo mode
-  const handleOrganizationNameClick = () => {
-    if (isDemoMode) {
-      setShowDemoSurvey(true);
-    }
-  }
-
   // Update handleSearchResultClick to capture snapshots
   const handleSearchResultClick = (url: string, resultIndex: number, resultName: string) => {
     // Track search result click and capture replay snapshot
@@ -1613,16 +1596,6 @@ export default function DashboardPage() {
   return (
     <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
-      {/* Hidden button to trigger demo survey */}
-      <button 
-        id="demo-trigger" 
-        className="hidden" 
-        onClick={() => {
-          setShowDemoSurvey(true);
-          analytics.trackModalOpen('DemoSurvey', { source: 'want_more_link' });
-        }}
-        aria-hidden="true"
-      />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className={`min-h-screen flex flex-col items-center px-4 ${
           (searchPhase === 'idle' && !displayedText.analyzing && !displayedText.searching && !displayedText.profiling && 
@@ -1635,10 +1608,7 @@ export default function DashboardPage() {
               {isDemoMode ? (
                 <>
                   {" "}
-                  <span 
-                    className="text-emerald-600 cursor-pointer hover:underline"
-                    onClick={handleOrganizationNameClick}
-                  >
+                  <span className="text-emerald-600">
                     {"{Your Organization}"}
                   </span>
                   {" "}
@@ -1940,7 +1910,7 @@ export default function DashboardPage() {
                       case 'already_saved':
                         saveButtonContent = (
                           <>
-                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            <CheckCircle className="h-4 w-4 text-white" />
                             <span>Saved</span>
                           </>
                         );
@@ -2283,181 +2253,6 @@ export default function DashboardPage() {
                     No
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Demo Survey Modal with analytics */}
-          {isDemoMode && showDemoSurvey && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={(e) => {
-                // Close the modal when clicking the backdrop (outside the modal)
-                if (e.target === e.currentTarget) {
-                  setShowDemoSurvey(false);
-                  analytics.trackModalClose('DemoSurvey', { userAction: 'backdrop_click' });
-                }
-              }}
-            >
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 w-full text-center">Are you interested in using Alumlo for your school?</h2>
-                  <button 
-                    onClick={() => {
-                      setShowDemoSurvey(false);
-                      analytics.trackModalClose('DemoSurvey', { userAction: 'x_button_click' });
-                    }}
-                    className="text-gray-500 hover:text-gray-700 absolute right-6 top-6"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <form className="space-y-6" onSubmit={async (e) => {
-                  e.preventDefault();
-                  
-                  // Get form data
-                  const formData = new FormData(e.currentTarget);
-                  const organizationName = formData.get('organization-name') as string;
-                  const email = formData.get('email') as string;
-                  const features = Array.from(formData.getAll('features')) as string[];
-                  const budget = formData.get('budget') as string;
-                  
-                  // Track form submission
-                  analytics.trackFormSubmit('DemoSurvey', { 
-                    organizationName,
-                    email,
-                    features,
-                    budget
-                  });
-                  
-                  try {
-                    // Save to Supabase
-                    const { error } = await supabase
-                      .from('demo_survey_responses')
-                      .insert([{ 
-                        organization_name: organizationName,
-                        email: email,
-                        features: features,
-                        created_at: new Date().toISOString()
-                      }]);
-                      
-                    if (error) throw error;
-                    
-                    // Track successful submission
-                    analytics.trackFormSubmit('DemoSurvey', { 
-                      status: 'success',
-                      organizationName,
-                      email 
-                    });
-                    
-                    // Show confirmation message
-                    setShowDemoSurvey(false);
-                    analytics.trackModalClose('DemoSurvey', { userAction: 'form_submit' });
-                    
-                    // Show confirmation modal
-                    alert("Thank you for your interest! We'll contact you within 24 hours with more information about how Alumlo can work for your institution.");
-                    
-                  } catch (error) {
-                    console.error('Error submitting survey:', error);
-                    // Track error
-                    analytics.trackError('DemoSurveySubmission', 'Failed to submit survey', { 
-                      organizationName, 
-                      email 
-                    });
-                    alert('There was an error submitting your information. Please try again.');
-                  }
-                }}>
-                  {/* Form fields with input tracking */}
-                  <div>
-                    <label htmlFor="school-name" className="block text-sm font-medium text-gray-700 mb-1">
-                      What's your school's name?
-                    </label>
-                    <input
-                      type="text"
-                      id="school-name"
-                      name="school-name"
-                      required
-                      onChange={(e) => {
-                        if (e.target.value.length > 0) {
-                          analytics.trackFormSubmit('DemoSurvey_OrganizationNameInput', { 
-                            length: e.target.value.length 
-                          });
-                        }
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="e.g., Westfield High School"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your work email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      required
-                      onChange={(e) => {
-                        if (e.target.value && e.target.value.includes('@')) {
-                          analytics.trackFormSubmit('DemoSurvey_EmailInput', { 
-                            hasDomain: e.target.value.includes('@') && e.target.value.split('@')[1].length > 0 
-                          });
-                        }
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="name@work.edu"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Which features would be most valuable to your institution?
-                    </label>
-                    <div className="space-y-2">
-                      {[
-                        "Marketing Insights",
-                        "Alumni Search and Discovery",
-                        "Aggregate Alumni Analytics",
-                        "Customizable School Insights Report",
-                        "Student Mentorship Connections",
-                        "Fundraising Insights",
-                        "New Alumni Database",
-                        "Networking Opportunities"
-                      ].map((feature, index) => (
-                        <div key={index} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`feature-${index}`}
-                            name="features"
-                            value={feature}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                analytics.trackButtonClick('DemoSurvey_FeatureSelected', { feature });
-                              }
-                            }}
-                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`feature-${index}`} className="ml-2 text-gray-700">
-                            {feature}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      className="w-full bg-emerald-600 text-white py-3 px-4 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
-                    >
-                      Submit & Continue Exploring
-                    </button>
-                  </div>
-                </form>
               </div>
             </div>
           )}
