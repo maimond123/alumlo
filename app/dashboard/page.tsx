@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2 } from "lucide-react"
+import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -449,6 +449,9 @@ export default function DashboardPage() {
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
+  // Add state for save status of each result
+  const [savedStatusMap, setSavedStatusMap] = useState<{[key: string]: 'idle' | 'saving' | 'saved' | 'error' | 'already_saved' | 'demo_no_save'}>({});
+  
   // Rotating placeholder suggestion index
   // const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   // const [combinedSuggestions, setCombinedSuggestions] = useState<string[]>([]);
@@ -834,6 +837,7 @@ export default function DashboardPage() {
     setSearchResults([]);
     setIsSearching(true);
     setSearchPhase('analyzing');
+    setSavedStatusMap({}); // Reset saved statuses on new search
     
     // Reset analysis collapsed state when starting a new search
     setIsAnalysisCollapsed(false);
@@ -1477,6 +1481,74 @@ export default function DashboardPage() {
     }
   }, [formattedOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
+  // Add this new function to handle saving leads
+  const handleSaveLead = async (result: SearchResult) => {
+    if (isDemoMode) {
+      setSavedStatusMap(prev => ({ ...prev, [result.id.toString()]: 'demo_no_save' }));
+      console.log('Save functionality disabled in demo mode.');
+      // Optionally, show a toast or notification to the user
+      return;
+    }
+
+    const resultIdStr = result.id.toString();
+    setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'saving' }));
+
+    try {
+      const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
+
+      if (!originalOrganizationName) {
+        console.error("Organization name not found in localStorage. Cannot save lead.");
+        setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
+        return;
+      }
+      
+      // Construct table name like 'some_organization_alumni_saved_leads'
+      const tableName = `${originalOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_saved_leads`;
+      console.log(`[DEBUG] Attempting to save lead to table: ${tableName}`);
+
+      // Need to get standardInfo for the specific result within this function's scope
+      const standardInfo = getStandardProfileInfo(result);
+
+      const leadData = {
+        name: result.name,
+        current_position: standardInfo.currentRole || 'Not specified', // Use standardInfo
+        current_company: standardInfo.currentCompany || 'Not specified', // Use standardInfo
+        linkedin_url: result.profile_url || result.linkedin_url || '',
+        // saved_at will be handled by Supabase default now()
+      };
+
+      const { error } = await supabase
+        .from(tableName)
+        .insert([leadData]); // Use leadData which is correctly defined now
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          console.warn(`Lead already saved: ${leadData.linkedin_url}`);
+          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'already_saved' }));
+        } else if (error.code === '42P01') { // Undefined table
+          console.error(`Table ${tableName} does not exist. Please ensure it's created.`);
+          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
+          // Potentially alert the user or log this more visibly
+        } else {
+          console.error('Error saving lead:', error);
+          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
+        }
+      } else {
+        console.log('Lead saved successfully:', leadData);
+        setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'saved' }));
+        // TODO: Replace with appropriate analytics tracking if a generic trackEvent is not available
+        // For example: analytics.trackButtonClick('LeadSaved', { leadName: leadData.name, organization: originalOrganizationName });
+        console.log('Analytics Event: Lead Saved', { 
+          leadName: leadData.name, 
+          organization: originalOrganizationName 
+        });
+      }
+    } catch (err) {
+      console.error('Exception while saving lead:', err);
+      setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
+    }
+  };
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -1795,6 +1867,57 @@ export default function DashboardPage() {
                     const profileUrl = result.profile_url || result.linkedin_url || '';
                     const profilePhotoUrl = result.picture_url || result.profile_photo_url;
                     
+                    const currentSaveStatus = savedStatusMap[result.id.toString()] || 'idle';
+                    const isButtonDisabled = 
+                      isDemoMode ||
+                      currentSaveStatus === 'saving' ||
+                      currentSaveStatus === 'saved' ||
+                      currentSaveStatus === 'already_saved';
+
+                    let saveButtonContent;
+                    switch (currentSaveStatus) {
+                      case 'saving':
+                        saveButtonContent = (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        );
+                        break;
+                      case 'saved':
+                      case 'already_saved':
+                        saveButtonContent = (
+                          <>
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            <span>Saved</span>
+                          </>
+                        );
+                        break;
+                      case 'error':
+                        saveButtonContent = (
+                          <>
+                            <AlertCircle className="h-4 w-4 text-red-500" />
+                            <span>Error</span>
+                          </>
+                        );
+                        break;
+                      case 'demo_no_save':
+                         saveButtonContent = (
+                          <>
+                            <BookmarkIcon className="h-4 w-4" />
+                            <span>Save (Demo)</span>
+                          </>
+                        );
+                        break;
+                      default: // idle
+                        saveButtonContent = (
+                          <>
+                            <BookmarkIcon className="h-4 w-4" />
+                            <span>Save</span>
+                          </>
+                        );
+                    }
+
                     return (
                       <div
                         key={result.id || index}
@@ -1821,16 +1944,28 @@ export default function DashboardPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent card click
-                              // Add save functionality here
-                              console.log('Save profile:', result.name);
+                              handleSaveLead(result);
                             }}
-                            className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors flex items-center space-x-1"
-                            title="Save Profile"
+                            disabled={isButtonDisabled}
+                            className={`px-4 py-1.5 text-sm font-medium rounded-full flex items-center space-x-1.5 transition-colors
+                              ${
+                                isButtonDisabled && (currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved')
+                                  ? 'bg-emerald-500 text-white cursor-not-allowed'
+                                  : isButtonDisabled && currentSaveStatus === 'saving'
+                                  ? 'bg-gray-200 text-gray-500 cursor-wait'
+                                  : isButtonDisabled || currentSaveStatus === 'demo_no_save'
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-800'
+                              }
+                            `}
+                            title={
+                              isDemoMode ? "Save feature disabled in demo" 
+                              : currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved' ? "Profile saved" 
+                              : currentSaveStatus === 'saving' ? "Saving profile..."
+                              : "Save Profile"
+                            }
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                            </svg>
-                            <span>Save</span>
+                            {saveButtonContent}
                           </button>
                         </div>
 
