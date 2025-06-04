@@ -15,6 +15,14 @@ export interface SearchResult {
   similarity: number;
   profile_photo_url?: string;
   headline: string;
+  current_job_level?: string;
+  current_job_function?: string;
+  undergraduate_school?: string[];
+  graduate_school?: string[];
+  natural_language_geographic_profile?: string;
+  natural_language_educational_profile?: string;
+  highest_degree_level?: string;
+  major_category?: string;
 }
 
 export interface SearchHistoryItem {

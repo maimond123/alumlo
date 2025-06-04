@@ -34,6 +34,15 @@ export interface SearchResult {
   similarity: number;
   profile_photo_url?: string;
   headline: string;
+  // Add enriched fields from the database schema
+  current_job_level?: string;
+  current_job_function?: string;
+  undergraduate_school?: string[];
+  graduate_school?: string[];
+  natural_language_geographic_profile?: string;
+  natural_language_educational_profile?: string;
+  highest_degree_level?: string;
+  major_category?: string;
 }
 
 // Add new interface for company search results
@@ -400,21 +409,36 @@ export class LinkedInProfileSearchEngine {
               let linkedinUrl = '';
               let headline = '';
               let industry = '';
+              let profileData: any = null; // Declare outside try block for proper scope
               
               try {
                 // NEW naming convention: organizationName_alumni_vector
                 const vectorTableName = `${storedOrganizationName}_alumni_vector`;
                 
-                const { data: profileData, error } = await this.supabase
+                const { data: fetchedProfileData, error } = await this.supabase
                   .from(vectorTableName)
-                  .select('profile_url, headline, industry')
+                  .select(`
+                    profile_url, 
+                    headline, 
+                    industry,
+                    current_general_industry,
+                    current_job_level,
+                    current_job_function,
+                    undergraduate_school,
+                    graduate_school,
+                    natural_language_geographic_profile,
+                    natural_language_educational_profile,
+                    highest_degree_level,
+                    major_category
+                  `)
                   .eq('profile_id', item.profile_id)
                   .single();
                 
-                if (!error && profileData) {
-                  linkedinUrl = profileData.profile_url || '';
-                  headline = profileData.headline || '';
-                  industry = profileData.industry || '';
+                if (!error && fetchedProfileData) {
+                  profileData = fetchedProfileData; // Assign to outer scope variable
+                  linkedinUrl = fetchedProfileData.profile_url || '';
+                  headline = fetchedProfileData.headline || '';
+                  industry = fetchedProfileData.industry || fetchedProfileData.current_general_industry || '';
                 }
               } catch (error) {
                 console.warn(`[AI_SEARCH DEBUG] Could not fetch additional data for profile ${item.profile_id}`);
@@ -436,7 +460,16 @@ export class LinkedInProfileSearchEngine {
                 current_job_location: '',
                 years_experience: 0,
                 similarity: item.similarity,
-                headline: headline
+                headline: headline,
+                // Add enriched fields from temporal search
+                current_job_level: profileData?.current_job_level || '',
+                current_job_function: profileData?.current_job_function || '',
+                undergraduate_school: profileData?.undergraduate_school || [],
+                graduate_school: profileData?.graduate_school || [],
+                natural_language_geographic_profile: profileData?.natural_language_geographic_profile || '',
+                natural_language_educational_profile: profileData?.natural_language_educational_profile || '',
+                highest_degree_level: profileData?.highest_degree_level || '',
+                major_category: profileData?.major_category || ''
               };
             }));
             
@@ -484,26 +517,48 @@ export class LinkedInProfileSearchEngine {
             
             const { data: profileData, error } = await this.supabase
               .from(vectorTableName)  // Updated to use new naming convention
-              .select('current_general_industry')
-              .eq('id', item.profile_id)
+              .select(`
+                current_general_industry,
+                current_job_level,
+                current_job_function,
+                undergraduate_school,
+                graduate_school,
+                natural_language_geographic_profile,
+                natural_language_educational_profile,
+                highest_degree_level,
+                major_category,
+                industry,
+                headline
+              `)
+              .eq('profile_id', item.profile_id)  // FIXED: Changed from 'id' to 'profile_id'
               .single();
             
             if (error) {
-              console.warn(`[AI_SEARCH DEBUG] Could not fetch profile data for ID ${item.profile_id}:`, error);
+              console.warn(`[AI_SEARCH DEBUG] Could not fetch profile data for profile_id ${item.profile_id}:`, error);
             }
             
-            // Construct headline from title and company
-            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
-              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
-              : '';
+            // Construct headline from title and company if not available from database
+            const constructedHeadline = profileData?.headline || 
+              (item.post_company_current_title && item.post_company_current_company 
+                ? `${item.post_company_current_title} • ${item.post_company_current_company}`
+                : '');
             
             return {
               ...item,
-              industry: profileData?.current_general_industry || item.post_company_current_industry || '',
-              headline: constructedHeadline
+              industry: profileData?.current_general_industry || profileData?.industry || item.post_company_current_industry || '',
+              headline: constructedHeadline,
+              // Add the new fields to the result
+              current_job_level: profileData?.current_job_level || '',
+              current_job_function: profileData?.current_job_function || '',
+              undergraduate_school: profileData?.undergraduate_school || [],
+              graduate_school: profileData?.graduate_school || [],
+              natural_language_geographic_profile: profileData?.natural_language_geographic_profile || '',
+              natural_language_educational_profile: profileData?.natural_language_educational_profile || '',
+              highest_degree_level: profileData?.highest_degree_level || '',
+              major_category: profileData?.major_category || ''
             };
           } catch (error) {
-            console.warn(`[AI_SEARCH DEBUG] Error enriching result for ID ${item.profile_id}:`, error);
+            console.warn(`[AI_SEARCH DEBUG] Error enriching result for profile_id ${item.profile_id}:`, error);
             // Fallback to constructed headline
             const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
               ? `${item.post_company_current_title} • ${item.post_company_current_company}`
@@ -512,7 +567,16 @@ export class LinkedInProfileSearchEngine {
             return {
               ...item,
               industry: item.post_company_current_industry || '',
-              headline: constructedHeadline
+              headline: constructedHeadline,
+              // Add empty fallback values for new fields
+              current_job_level: '',
+              current_job_function: '',
+              undergraduate_school: [],
+              graduate_school: [],
+              natural_language_geographic_profile: '',
+              natural_language_educational_profile: '',
+              highest_degree_level: '',
+              major_category: ''
             };
           }
         }));
@@ -533,7 +597,16 @@ export class LinkedInProfileSearchEngine {
             years_experience: 0, // Not applicable for company data
             profile_photo_url: item.picture_url,
             similarity: item.similarity,
-            headline: item.headline
+            headline: item.headline,
+            // Add the enriched fields to the SearchResult
+            current_job_level: (item as any).current_job_level || '',
+            current_job_function: (item as any).current_job_function || '',
+            undergraduate_school: (item as any).undergraduate_school || [],
+            graduate_school: (item as any).graduate_school || [],
+            natural_language_geographic_profile: (item as any).natural_language_geographic_profile || '',
+            natural_language_educational_profile: (item as any).natural_language_educational_profile || '',
+            highest_degree_level: (item as any).highest_degree_level || '',
+            major_category: (item as any).major_category || ''
           };
         });
         
