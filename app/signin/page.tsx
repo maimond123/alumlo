@@ -130,7 +130,7 @@ export default function SignInPage() {
     <div 
       className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center backdrop-blur-xl"
       style={{
-        backgroundImage: url('dashboard.png')
+        backgroundImage: 'url(/dashboard.png)'
       }}
     >
       <motion.div
