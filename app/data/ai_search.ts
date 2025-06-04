@@ -55,7 +55,6 @@ export interface CompanySearchResult {
   post_company_current_title: string;
   post_company_current_industry: string;
   post_company_current_location: string;
-  company_exit_year: number;
   picture_url?: string;
   similarity: number;
   industry: string;
@@ -107,11 +106,20 @@ interface HybridSearchCompanyResult {
   post_company_current_title: string;
   post_company_current_industry: string;
   post_company_current_location: string;
-  company_exit_year: number;
-  picture_url?: string;
-  similarity: number;
-  industry: string;
+  current_company: string;
+  current_title: string;
+  current_job_location: string;
+  // Dynamic exit year field - will be accessed as [organizationName]_exit_year
+  [key: string]: any; // Allow dynamic field access
   headline: string;
+  picture_url: string;
+  current_job_level: string;
+  current_job_function: string;
+  career_stage: string;
+  highest_degree_level: string;
+  school_ranking_tier: string;
+  major_metro_area: string;
+  similarity: number;
 }
 
 // Add temporal interfaces at the top:
@@ -210,9 +218,21 @@ export class LinkedInProfileSearchEngine {
   }
   
   // Company search method for any organization with alumni data
-  async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}): Promise<CompanySearchResult[]> {
+  async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}, organizationName?: string): Promise<CompanySearchResult[]> {
     try {
       console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with query: "${query}", filters:`, filters);
+      
+      // Get the organization name for dynamic RPC function naming
+      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('organizationName') : null);
+      
+      if (!storedOrganizationName) {
+        throw new Error('Organization name is required for company search');
+      }
+      
+      // Construct dynamic RPC function name
+      const rpcFunctionName = `enhanced_hybrid_search_${storedOrganizationName}`;
+      console.log(`[AI_SEARCH DEBUG] 🏢 Using dynamic RPC function: ${rpcFunctionName}`);
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -228,16 +248,14 @@ export class LinkedInProfileSearchEngine {
         industry, 
         title, 
         location, 
-        school,
-        exit_year_min,
-        exit_year_max
+        school
       } = filters;
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 Calling hybrid_search_company RPC function`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 Calling ${rpcFunctionName} RPC function`);
       
-      // Call the hybrid_search_company function with higher limit for gap-based filtering
+      // Call the dynamic RPC function with higher limit for gap-based filtering
       const { data, error } = await this.supabase
-        .rpc('hybrid_search_company', {
+        .rpc(rpcFunctionName, {
           query_embedding: embeddingArray,
           similarity_threshold: 0.3, // Keep lower threshold for more candidates
           company_filter: company || null,
@@ -245,41 +263,62 @@ export class LinkedInProfileSearchEngine {
           title_filter: title || null,
           location_filter: location || null,
           school_filter: school || null,
-          exit_year_min: exit_year_min || null,
-          exit_year_max: exit_year_max || null,
           limit_count: 50 // Increase limit to get more candidates for gap-based filtering
         })
         .returns<HybridSearchCompanyResult[]>();
       
       if (error) {
-        console.error(`[AI_SEARCH DEBUG] 🏢 Error from hybrid_search_company:`, error);
+        console.error(`[AI_SEARCH DEBUG] 🏢 Error from ${rpcFunctionName}:`, error);
         throw new Error(`Company vector search failed: ${error.message}`);
       }
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 hybrid_search_company returned ${data?.length || 0} results`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 ${rpcFunctionName} returned ${data?.length || 0} results`);
       
       // Format the results for company search
-      const formattedResults = data.map((item: HybridSearchCompanyResult): CompanySearchResult => ({
-        id: Number(item.id),
-        profile_id: Number(item.profile_id),
-        name: item.name,
-        profile_url: item.profile_url,
-        post_company_current_company: item.post_company_current_company,
-        post_company_current_title: item.post_company_current_title,
-        post_company_current_industry: item.post_company_current_industry,
-        post_company_current_location: item.post_company_current_location,
-        company_exit_year: item.company_exit_year,
-        picture_url: item.picture_url,
-        similarity: item.similarity,
-        industry: '', // Will be enriched later
-        headline: '' // Will be enriched later
-      }));
+      const formattedResults = data.map((item: HybridSearchCompanyResult): CompanySearchResult => {
+        return {
+          id: Number(item.id),
+          profile_id: Number(item.profile_id),
+          name: item.name,
+          profile_url: item.profile_url,
+          post_company_current_company: item.post_company_current_company,
+          post_company_current_title: item.post_company_current_title,
+          post_company_current_industry: item.post_company_current_industry,
+          post_company_current_location: item.post_company_current_location,
+          picture_url: item.picture_url,
+          similarity: item.similarity,
+          industry: item.post_company_current_industry || '',
+          headline: item.headline || ''
+        };
+      });
 
       // Apply gap-based filtering
       const filteredResults = this.applyGapBasedFiltering(formattedResults);
       console.log(`[AI_SEARCH DEBUG] 🏢 Gap-based filtering reduced results from ${formattedResults.length} to ${filteredResults.length}`);
       
-      return filteredResults;
+      // The enhanced RPC function already returns enriched data, so no need for additional fetching
+      const enrichedResults = filteredResults.map((item: CompanySearchResult) => {
+        // Access the full data from the RPC result
+        const rpcItem = data.find(d => Number(d.id) === item.id);
+        
+        return {
+          ...item,
+          // The RPC already provides the enriched industry and headline
+          industry: item.industry,
+          headline: item.headline,
+          // Use the enriched data from the RPC function
+          current_job_level: rpcItem?.current_job_level || '',
+          current_job_function: rpcItem?.current_job_function || '',
+          undergraduate_school: [], // Not returned by current RPC
+          graduate_school: [], // Not returned by current RPC
+          natural_language_geographic_profile: '', // Not returned by current RPC
+          natural_language_educational_profile: '', // Not returned by current RPC
+          highest_degree_level: rpcItem?.highest_degree_level || '',
+          major_category: '' // Not returned by current RPC
+        };
+      });
+      
+      return enrichedResults;
     } catch (error) {
       throw error;
     }
@@ -500,7 +539,7 @@ export class LinkedInProfileSearchEngine {
         };
         
         console.log(`[AI_SEARCH DEBUG] Calling searchCompany with filters:`, companyFilters);
-        const companyResults = await this.searchCompany(query, top_k, companyFilters);
+        const companyResults = await this.searchCompany(query, top_k, companyFilters, storedOrganizationName);
         
         console.log(`[AI_SEARCH DEBUG] 🏢 Company results before conversion:`, companyResults.map(r => ({
           id: r.id,
@@ -509,80 +548,8 @@ export class LinkedInProfileSearchEngine {
           headline: r.headline
         })));
         
-        // Fetch additional data for each result from the main table using NEW naming convention
-        const enrichedResults = await Promise.all(companyResults.map(async (item: CompanySearchResult) => {
-          try {
-            // NEW naming convention: organizationName_alumni_vector
-            const vectorTableName = `${storedOrganizationName}_alumni_vector`;
-            
-            const { data: profileData, error } = await this.supabase
-              .from(vectorTableName)  // Updated to use new naming convention
-              .select(`
-                current_general_industry,
-                current_job_level,
-                current_job_function,
-                undergraduate_school,
-                graduate_school,
-                natural_language_geographic_profile,
-                natural_language_educational_profile,
-                highest_degree_level,
-                major_category,
-                industry,
-                headline
-              `)
-              .eq('profile_id', item.profile_id)  // FIXED: Changed from 'id' to 'profile_id'
-              .single();
-            
-            if (error) {
-              console.warn(`[AI_SEARCH DEBUG] Could not fetch profile data for profile_id ${item.profile_id}:`, error);
-            }
-            
-            // Construct headline from title and company if not available from database
-            const constructedHeadline = profileData?.headline || 
-              (item.post_company_current_title && item.post_company_current_company 
-                ? `${item.post_company_current_title} • ${item.post_company_current_company}`
-                : '');
-            
-            return {
-              ...item,
-              industry: profileData?.current_general_industry || profileData?.industry || item.post_company_current_industry || '',
-              headline: constructedHeadline,
-              // Add the new fields to the result
-              current_job_level: profileData?.current_job_level || '',
-              current_job_function: profileData?.current_job_function || '',
-              undergraduate_school: profileData?.undergraduate_school || [],
-              graduate_school: profileData?.graduate_school || [],
-              natural_language_geographic_profile: profileData?.natural_language_geographic_profile || '',
-              natural_language_educational_profile: profileData?.natural_language_educational_profile || '',
-              highest_degree_level: profileData?.highest_degree_level || '',
-              major_category: profileData?.major_category || ''
-            };
-          } catch (error) {
-            console.warn(`[AI_SEARCH DEBUG] Error enriching result for profile_id ${item.profile_id}:`, error);
-            // Fallback to constructed headline
-            const constructedHeadline = item.post_company_current_title && item.post_company_current_company 
-              ? `${item.post_company_current_title} • ${item.post_company_current_company}`
-              : '';
-            
-            return {
-              ...item,
-              industry: item.post_company_current_industry || '',
-              headline: constructedHeadline,
-              // Add empty fallback values for new fields
-              current_job_level: '',
-              current_job_function: '',
-              undergraduate_school: [],
-              graduate_school: [],
-              natural_language_geographic_profile: '',
-              natural_language_educational_profile: '',
-              highest_degree_level: '',
-              major_category: ''
-            };
-          }
-        }));
-        
         // Convert company results to regular search results format for compatibility
-        const convertedResults = enrichedResults.map((item: CompanySearchResult): SearchResult => {
+        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => {
           console.log(`[AI_SEARCH DEBUG] 🏢 Converting enriched item - industry: "${item.industry}", headline: "${item.headline}"`);
           
           return {

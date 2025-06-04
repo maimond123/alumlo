@@ -299,7 +299,7 @@ const getStandardProfileInfo = (result: SearchResult) => {
 const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: string]: string[]}) => {
   const matches: {category: string, value: string}[] = [];
   
-  // Map filter categories to database fields (removed icons)
+  // Map filter categories to database fields - expanded with more mappings
   const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string)}} = {
     'Job Functions': { field: 'current_job_function' },
     'Job Levels': { field: 'current_job_level' },
