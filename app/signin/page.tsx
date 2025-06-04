@@ -137,7 +137,7 @@ export default function SignInPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg border border-gray-300"
+        className="bg-white/20 backdrop-blur-xl p-11 rounded-xl w-full max-w-lg shadow-lg border border-white/30"
       >
         <div className="text-center mb-8">
           <h1 className="text-[42px] font-bold text-black">Alumlo</h1>
@@ -184,7 +184,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signin')}
             className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signin' ? 'bg-white/20 backdrop-blur-sm text-black shadow-sm border border-white/30' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signin' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign In
@@ -192,7 +192,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signup' ? 'bg-white/20 backdrop-blur-sm text-black shadow-sm border border-white/30' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signup' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign Up
