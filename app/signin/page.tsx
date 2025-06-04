@@ -184,7 +184,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signin')}
             className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signin' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signin' ? 'bg-white/20 backdrop-blur-sm text-black shadow-sm border border-white/30' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign In
@@ -192,7 +192,7 @@ export default function SignInPage() {
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signup' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              activeTab === 'signup' ? 'bg-white/20 backdrop-blur-sm text-black shadow-sm border border-white/30' : 'text-gray-500 hover:bg-gray-200/50'
             }`}
           >
             Sign Up
