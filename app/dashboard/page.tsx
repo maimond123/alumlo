@@ -450,43 +450,42 @@ export default function DashboardPage() {
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
   // Rotating placeholder suggestion index
-  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  // const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  // const [combinedSuggestions, setCombinedSuggestions] = useState<string[]>([]);
   
   // Create combined array with "begin typing to search" every 4 items
-  const [combinedSuggestions, setCombinedSuggestions] = useState<string[]>([]);
-  
-  useEffect(() => {
-    const createCombinedSuggestions = () => {
-      const combined: string[] = [];
-      const originalPlaceholder = "begin typing to search";
-      
-      // Create a shuffled copy of all suggestion tags
-      const shuffledTags = [...allSuggestionTags].sort(() => Math.random() - 0.5);
-      
-      // Insert original placeholder every 4 items
-      let tagIndex = 0;
-      for (let i = 0; i < 40; i++) { // Create a reasonable cycle length
-        if (i % 4 === 3) { // Every 4th item (0-indexed, so 3, 7, 11, etc.)
-          combined.push(originalPlaceholder);
-        } else {
-          combined.push(shuffledTags[tagIndex % shuffledTags.length]);
-          tagIndex++;
-        }
-      }
-      
-      setCombinedSuggestions(combined);
-    };
-    
-    createCombinedSuggestions();
-  }, []);
+  // useEffect(() => {
+  //   const createCombinedSuggestions = () => {
+  //     const combined: string[] = [];
+  //     const originalPlaceholder = "begin typing to search";
+  //     
+  //     // Create a shuffled copy of all suggestion tags
+  //     const shuffledTags = [...allSuggestionTags].sort(() => Math.random() - 0.5);
+  //     
+  //     // Insert original placeholder every 4 items
+  //     let tagIndex = 0;
+  //     for (let i = 0; i < 40; i++) { // Create a reasonable cycle length
+  //       if (i % 4 === 3) { // Every 4th item (0-indexed, so 3, 7, 11, etc.)
+  //         combined.push(originalPlaceholder);
+  //       } else {
+  //         combined.push(shuffledTags[tagIndex % shuffledTags.length]);
+  //         tagIndex++;
+  //       }
+  //     }
+  //     
+  //     setCombinedSuggestions(combined);
+  //   };
+  //   
+  //   createCombinedSuggestions();
+  // }, []);
   
   // Cycle through suggestions every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSuggestionIndex(prev => (prev + 1) % combinedSuggestions.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [combinedSuggestions.length]);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setCurrentSuggestionIndex(prev => (prev + 1) % combinedSuggestions.length);
+  //   }, 3000);
+  //   return () => clearInterval(interval);
+  // }, [combinedSuggestions.length]);
   
   // Add new state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -1541,12 +1540,12 @@ export default function DashboardPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder=""
+                placeholder="Begin typing to search across your alumni"
                 className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
-              {/* Rotating placeholder suggestions */}
-              {searchQuery === '' && (
+              {/* Remove the rotating placeholder suggestions */}
+              {/* {searchQuery === '' && (
                 <div className="absolute left-6 top-4 pointer-events-none overflow-hidden h-6">
                   <AnimatePresence>
                     <motion.span
@@ -1561,7 +1560,7 @@ export default function DashboardPage() {
                     </motion.span>
                   </AnimatePresence>
                 </div>
-              )}
+              )} */}
               
               {/* Buttons inside the input field, positioned at the bottom right */}
               <div className="absolute bottom-3 right-4 flex space-x-2">
