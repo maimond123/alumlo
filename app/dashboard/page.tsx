@@ -1631,22 +1631,29 @@ export default function DashboardPage() {
         }`}>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
               Search
-              {/* Conditional space, only if school name will be rendered */}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-                isDemoMode ? (
+              {/* Conditional rendering based on demo mode */}
+              {isDemoMode ? (
+                <>
+                  {" "}
                   <span 
-                    className="text-black cursor-pointer hover:underline"
+                    className="text-emerald-600 cursor-pointer hover:underline"
                     onClick={handleOrganizationNameClick}
                   >
-                    {displayedOrganizationName}
+                    {"{Your Organization}"}
                   </span>
-                ) : (
-                  <span className="text-black">{displayedOrganizationName}</span>
-                )
-              ) : null}
-              {/* Conditional space, only if school name was rendered */}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                  {" "}
+                </>
+              ) : (
+                <>
+                  {/* Conditional space, only if school name will be rendered */}
+                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
+                    <span className="text-black">{displayedOrganizationName}</span>
+                  ) : null}
+                  {/* Conditional space, only if school name was rendered */}
+                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                </>
+              )}
               Alumni
             </h1>
 
@@ -1657,7 +1664,7 @@ export default function DashboardPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Begin typing to search across your alumni"
+                placeholder="Begin typing to search across your alumni..."
                 className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
               />
