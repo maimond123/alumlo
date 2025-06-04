@@ -711,4 +711,4 @@ export interface Profile {
   uncategorized_school?: string[];
   graduation_year?: number;
   [key: string]: any;
-}git
+}
