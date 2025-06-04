@@ -1608,7 +1608,7 @@ export default function DashboardPage() {
               {isDemoMode ? (
                 <>
                   {" "}
-                  <span className="text-emerald-600">
+                  <span className="text-black">
                     {"{Your Organization}"}
                   </span>
                   {" "}

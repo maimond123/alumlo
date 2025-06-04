@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Search, Upload, Brain, MessageCircle, Settings } from "lucide-react"
+import { BarChart2, FileText, Search, Upload, Brain, MessageCircle, Settings, Calendar } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
@@ -311,6 +311,25 @@ export default function Sidebar() {
 
         {/* Spacer to push profile to bottom */}
         <div className="flex-1"></div>
+
+        {/* Book Demo Button - positioned above profile */}
+        <div className="mb-8">
+          <a
+            href="https://calendly.com/david-alumlo/30min"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-black/90 hover:text-black transition-all duration-300 ease-in-out relative"
+            style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
+          >
+            <Calendar className="w-8 h-8 shrink-0" />
+            <span
+              className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
+              style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+            >
+              Book Demo
+            </span>
+          </a>
+        </div>
 
         {/* Profile Section moved to bottom */}
         <div
