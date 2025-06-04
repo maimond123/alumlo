@@ -119,7 +119,7 @@ async function handleChartAnalysis(chartId: string, chartType: string, chartTitl
 
   // Use the OpenAI client for chart analysis
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       stream: true,
       messages: [
         {
@@ -196,7 +196,7 @@ async function handleLearnModeChat(message: string, organizationName: string, hi
 
   // Use the OpenAI client for other questions
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: '-4o-mini',
     stream: true,
     messages: [
       {

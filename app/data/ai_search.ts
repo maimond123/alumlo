@@ -39,6 +39,11 @@ export interface SearchResult {
   current_job_function?: string;
   undergraduate_school?: string[];
   graduate_school?: string[];
+  high_school?: string[];
+  pre_company_education?: string[];
+  during_company_education?: string[];
+  post_company_education?: string[];
+  natural_language_education?: string;
   natural_language_geographic_profile?: string;
   natural_language_educational_profile?: string;
   highest_degree_level?: string;
@@ -119,6 +124,21 @@ interface HybridSearchCompanyResult {
   highest_degree_level: string;
   school_ranking_tier: string;
   major_metro_area: string;
+  // Add missing education fields
+  undergraduate_school: string[];
+  graduate_school: string[];
+  high_school: string[];
+  pre_company_education: string[];
+  during_company_education: string[];
+  post_company_education: string[];
+  natural_language_education: string;
+  // Add other useful fields
+  post_company_companies: string[];
+  post_company_titles: string[];
+  post_company_industries: string[];
+  post_company_locations: string[];
+  functional_expertise: string[];
+  industry_expertise: string[];
   similarity: number;
 }
 
@@ -309,12 +329,17 @@ export class LinkedInProfileSearchEngine {
           // Use the enriched data from the RPC function
           current_job_level: rpcItem?.current_job_level || '',
           current_job_function: rpcItem?.current_job_function || '',
-          undergraduate_school: [], // Not returned by current RPC
-          graduate_school: [], // Not returned by current RPC
-          natural_language_geographic_profile: '', // Not returned by current RPC
-          natural_language_educational_profile: '', // Not returned by current RPC
+          undergraduate_school: rpcItem?.undergraduate_school || [],
+          graduate_school: rpcItem?.graduate_school || [],
+          high_school: rpcItem?.high_school || [],
+          pre_company_education: rpcItem?.pre_company_education || [],
+          during_company_education: rpcItem?.during_company_education || [],
+          post_company_education: rpcItem?.post_company_education || [],
+          natural_language_education: rpcItem?.natural_language_education || '',
+          natural_language_geographic_profile: rpcItem?.natural_language_geographic_profile || '',
+          natural_language_educational_profile: rpcItem?.natural_language_education || '', // Map to legacy field name
           highest_degree_level: rpcItem?.highest_degree_level || '',
-          major_category: '' // Not returned by current RPC
+          major_category: rpcItem?.major_category || ''
         };
       });
       

@@ -30,8 +30,13 @@ interface SearchResult {
   current_job_function: string;
   undergraduate_school: string[];
   graduate_school: string[];
+  high_school: string[];
+  pre_company_education: string[];
+  during_company_education: string[];
+  post_company_education: string[];
   natural_language_geographic_profile: string;
   natural_language_educational_profile: string;
+  natural_language_education: string;
   highest_degree_level: string;
   major_category: string;
   similarity: number;
@@ -237,7 +242,12 @@ const getEducationDisplay = (result: SearchResult): string => {
   console.log('[DEBUG] Education fields:', {
     graduate_school: result.graduate_school,
     undergraduate_school: result.undergraduate_school,
-    natural_language_educational_profile: result.natural_language_educational_profile
+    high_school: result.high_school,
+    pre_company_education: result.pre_company_education,
+    during_company_education: result.during_company_education,
+    post_company_education: result.post_company_education,
+    natural_language_educational_profile: result.natural_language_educational_profile,
+    natural_language_education: result.natural_language_education
   });
 
   // Check if graduate_school exists and has data
@@ -258,10 +268,24 @@ const getEducationDisplay = (result: SearchResult): string => {
     }
   }
   
-  // Fallback to natural language education profile
+  // Check if high_school exists and has data
+  if (result.high_school) {
+    if (Array.isArray(result.high_school) && result.high_school.length > 0) {
+      return result.high_school[0];
+    } else if (typeof result.high_school === 'string' && result.high_school) {
+      return result.high_school;
+    }
+  }
+  
+  // Fallback to natural language education profiles
   if (result.natural_language_educational_profile && 
       typeof result.natural_language_educational_profile === 'string') {
     return result.natural_language_educational_profile;
+  }
+  
+  if (result.natural_language_education && 
+      typeof result.natural_language_education === 'string') {
+    return result.natural_language_education;
   }
   
   return '';
@@ -366,8 +390,13 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
       current_job_function: result.current_job_function || '',
       undergraduate_school: result.undergraduate_school || [],
       graduate_school: result.graduate_school || [],
+      high_school: result.high_school || [],
+      pre_company_education: result.pre_company_education || [],
+      during_company_education: result.during_company_education || [],
+      post_company_education: result.post_company_education || [],
       natural_language_geographic_profile: result.natural_language_geographic_profile || '',
       natural_language_educational_profile: result.natural_language_educational_profile || '',
+      natural_language_education: result.natural_language_education || '',
       highest_degree_level: result.highest_degree_level || '',
       major_category: result.major_category || '',
       // Keep legacy fields for backward compatibility
@@ -392,7 +421,9 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
       post_company_current_location: mapped.post_company_current_location,
       natural_language_geographic_profile: mapped.natural_language_geographic_profile,
       undergraduate_school: mapped.undergraduate_school,
-      graduate_school: mapped.graduate_school
+      graduate_school: mapped.graduate_school,
+      high_school: mapped.high_school,
+      natural_language_education: mapped.natural_language_education
     });
     
     return mapped;

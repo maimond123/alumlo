@@ -5,15 +5,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-interface QueryClassification {
-  type: 'temporal' | 'standard';
-  temporal_elements?: {
-    years?: number[];
-    sequence?: string;
-    companies?: string[];
-    functions?: string[];
-    time_indicators?: string[];
-  };
+interface QueryMetadata {
+  core_topic: string;
+  key_attributes: string[];
+  search_dimensions: string[];
+  context_level: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -27,43 +23,45 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // First, classify the query type and extract temporal elements
-    const classificationResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // First, dynamically analyze the query to understand its topic and metadata
+    const metadataResponse = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini',
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant analyzing search queries for a comprehensive Chick-fil-A alumni database to determine if they require temporal (timeline-based) or standard search.
+          content: `You are analyzing a search query for an alumni database to understand its core topic and metadata.
 
-Classify the query and return a JSON object with:
-1. "type": "temporal" or "standard"
-2. "temporal_elements": if temporal, extract:
-   - "years": array of years mentioned (e.g., [2018, 2019])
-   - "sequence": description of the temporal sequence (e.g., "CFA then consulting")
-   - "companies": companies mentioned with timeline context
-   - "functions": job functions mentioned with timeline context
-   - "time_indicators": temporal words found (then, after, before, etc.)
+Analyze the query and return a JSON object with:
+1. "core_topic": the main subject/focus of the search (what the user is fundamentally looking for)
+2. "key_attributes": array of specific characteristics, qualifiers, or filters mentioned
+3. "search_dimensions": array of different aspects or dimensions that could be explored related to this topic
+4. "context_level": description of how broad or specific the query is
 
-TEMPORAL queries involve:
-- Career transitions over time ("worked at X then went to Y")
-- Specific years or time periods ("in 2018", "after 2020")
-- Sequential events ("then", "after", "before", "since", "until")
-- Career progression patterns ("moved from X to Y", "transitioned")
-
-STANDARD queries are about:
-- Current state ("senior engineers", "MBA graduates")
-- General characteristics ("tech background", "from top schools")
-- Simple filtering without time relationships
+Be dynamic and adaptive - don't force queries into predefined categories. Instead, understand what the user is actually seeking and identify the natural dimensions for expansion.
 
 Examples:
-- "Find alumni who worked at Chick-fil-A in 2018 and then consulting in 2019" 
-  → {"type": "temporal", "temporal_elements": {"years": [2018, 2019], "sequence": "CFA then consulting", "companies": ["Chick-fil-A"], "functions": ["consulting"], "time_indicators": ["then"]}}
-- "Senior software engineers from top universities"
-  → {"type": "standard", "temporal_elements": null}
-- "People who left CFA after 2020 and joined startups"
-  → {"type": "temporal", "temporal_elements": {"years": [2020], "sequence": "left CFA after 2020 then startups", "companies": ["CFA"], "time_indicators": ["after"]}}
+- "People who went to college" → {
+    "core_topic": "educational background", 
+    "key_attributes": ["college education", "degree holders"], 
+    "search_dimensions": ["degree level", "institution type", "field of study", "graduation timing", "academic achievement"], 
+    "context_level": "broad educational filter"
+  }
 
-Return only the JSON object, no additional text.`,
+- "Senior engineers at tech startups" → {
+    "core_topic": "professional role and company context", 
+    "key_attributes": ["senior level", "engineering function", "technology sector", "startup environment"], 
+    "search_dimensions": ["seniority variations", "technical specializations", "company stages", "industry focus", "team leadership"], 
+    "context_level": "specific career and company profile"
+  }
+
+- "Alumni living in California" → {
+    "core_topic": "geographic location", 
+    "key_attributes": ["California residence", "geographic mobility"], 
+    "search_dimensions": ["specific cities", "regional preferences", "work arrangements", "relocation patterns", "proximity factors"], 
+    "context_level": "broad geographic filter"
+  }
+
+Return only the JSON object.`,
         },
         {
           role: 'user',
@@ -72,48 +70,37 @@ Return only the JSON object, no additional text.`,
       ],
     });
 
-    const classificationResult = JSON.parse(classificationResponse.choices[0].message.content || '{}');
+    const metadataResult = JSON.parse(metadataResponse.choices[0].message.content || '{}');
 
-    // Generate sophisticated expansions based on your rich atomic data
-    let expansionPrompt: string;
-    
-    if (classificationResult.type === 'temporal') {
-      expansionPrompt = `You are helping explore temporal career patterns in a sophisticated Chick-fil-A alumni database.
-
-The original query involves career transitions: "${query}"
-
-Generate 3 expanded temporal search queries exploring related career progression patterns. Consider the rich data available:
-- Career transitions between company sizes (startup to enterprise, etc.)
-- Function transitions (operations to tech, restaurant to consulting)
-- Leadership progression over time
-- Geographic mobility patterns
-- Education pursued during career phases
-
-Keep each suggestion concise (under 12 words) and focused on temporal career patterns.
-Just provide the 3 expansions separated by "•" characters, no numbering or additional text.`;
-    } else {
-      expansionPrompt = `You are helping explore a sophisticated Chick-fil-A alumni database with rich career intelligence.
+    // Generate dynamic expansions based on the identified metadata and dimensions
+    const expansionPrompt = `You are generating related search queries for an alumni database.
 
 Original query: "${query}"
 
-The database contains detailed insights including:
-- Career progression: job levels, leadership roles, management responsibility, revenue responsibility
-- Company intelligence: sizes (startup to enterprise), industries, salary ranges
-- Functional expertise: restaurant operations, tech, consulting, sales, finance
-- Work styles: remote work, customer-facing roles, travel requirements
-- Education depth: school rankings, degree levels, major categories, timing patterns
-- Geographic patterns: major metros, mobility, university locations
+Query analysis:
+- Core topic: ${metadataResult.core_topic}
+- Key attributes: ${metadataResult.key_attributes?.join(', ')}
+- Searchable dimensions: ${metadataResult.search_dimensions?.join(', ')}
+- Context: ${metadataResult.context_level}
 
-Generate 3 expanded queries that discover additional relevant alumni using this rich data. Focus on:
-- Different career levels or leadership patterns
-- Various company types, sizes, or industries  
-- Functional expertise variations
-- Educational background depth
-- Work style or geographic preferences
+Generate 3 related search queries that explore different aspects of the same core topic. Use the identified search dimensions to create variations that would find similar but complementary profiles.
 
-Keep each suggestion concise (under 10 words) and highly relevant.
+The database contains rich information about:
+- Educational background (schools, degrees, majors, academic achievements, timing)
+- Career progression (job levels, functions, industries, company types, leadership roles)
+- Geographic patterns (locations, mobility, work arrangements)
+- Professional experience (skills, expertise areas, career transitions)
+- Company context (sizes, industries, stages, cultures)
+- Temporal elements (career timing, progression patterns, transitions)
+
+Guidelines:
+- Build naturally from the core topic and key attributes identified
+- Explore the search dimensions in different ways
+- Keep each expansion relevant but distinct from the original
+- Make them specific enough to be useful but broad enough to find results
+- Keep each suggestion under 12 words
+
 Just provide the 3 expansions separated by "•" characters, no numbering or additional text.`;
-    }
 
     const expansionResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -130,13 +117,13 @@ Just provide the 3 expansions separated by "•" characters, no numbering or add
       ],
     });
 
-    // Create a new stream that includes classification data
+    // Create a stream that includes metadata
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // First, send the classification data
+          // First, send the metadata
           controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ 
-            classification: classificationResult 
+            metadata: metadataResult 
           })}\n\n`));
 
           // Then stream the expansions
