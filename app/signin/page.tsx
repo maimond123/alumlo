@@ -128,9 +128,9 @@ export default function SignInPage() {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center backdrop-blur-xl"
+      className="min-h-screen w-full flex items-center justify-center p-4 bg-white/20 backdrop-blur-xl"
       style={{
-        backgroundImage: 'url(/dashboard.png)'
+        backgroundImage: `radial-gradient(ellipse at center, ${gradientCenterColor} 0%, rgba(255,255,255,0) 70%)`
       }}
     >
       <motion.div
