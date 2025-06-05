@@ -24,74 +24,64 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant extracting search filters from queries for a comprehensive Chick-fil-A alumni database with rich atomic data processing.
+          content: `You are an AI assistant specialized in extracting structured search filters from user queries for a highly detailed alumni database. Your output will directly influence database filtering, so precision and adherence to the schema are paramount.
 
-Extract relevant filters from these categories (only include categories with clear matches from the query):
+Analyze the user's query and identify explicit or very strongly implied filters. Map these filters to the most relevant categories and fields from the database schema provided below.
 
-**CAREER PROGRESSION & LEADERSHIP:**
-- Job Levels: Entry Level, Associate, Mid Level, Senior Level, Lead/Principal, Manager, Director, VP/SVP, C-Suite, Founder/Owner
-- Job Functions: Restaurant Operations, Food Service Management, Software Engineering, Data Science/Analytics, Product Management, Finance, Consulting, Sales, Business Development, Marketing, Operations Management, Human Resources, Legal, Healthcare, Real Estate, etc.
-- Leadership Indicators: Leadership roles, Management responsibility, Revenue responsibility, Team management
-- Career Context: Customer-facing roles, Travel-required positions, Full-time, Part-time, Contract, Internship
+**Key Database Schema Fields for Filtering:**
 
-**COMPANY & INDUSTRY INTELLIGENCE:**
-- Company Sizes: Startup (1-50 employees), Small (51-200 employees), Medium (201-1000 employees), Large (1001-5000 employees), Enterprise (5000+ employees)
-- Industries: Quick Service Restaurant (QSR), Food & Beverage, Technology & Software, Financial Services, Healthcare & Pharmaceuticals, Management Consulting, Retail & Consumer Goods, Manufacturing, Real Estate, Education, etc.
-- Employment Types: Full-time, Part-time, Contract, Internship, Freelance
-- Company Names: Specific companies mentioned
+*   **Core Profile:** \`name\`, \`headline\`, \`home_location\`, \`post_company_current_company\`, \`post_company_current_title\`, \`post_company_current_industry\`, \`post_company_current_location\`.
+*   **[Your Organization] Specifics:** \`[Your Organization]_exit_year\`, \`had_multiple_company_stints\`.
+*   **Career Arrays (for broad matching):** \`post_company_companies\`, \`post_company_titles\`, \`post_company_industries\`, \`post_company_locations\`.
+*   **Education Arrays:** \`undergraduate_school\`, \`graduate_school\`, \`high_school\`. Specific majors like \`undergraduate_major\`, \`graduate_specialization\`.
+*   **Career Progression & Leadership:** \`current_job_level\` (e.g., "Entry Level", "Director", "C-Suite"), \`current_job_function\` (e.g., "Software Engineering", "Marketing"), \`is_current_leader\`, \`management_experience\`, \`revenue_responsibility\`, \`years_since_[Your Organization]\`.
+*   **Company & Industry Intelligence:** \`current_company_size_category\` (e.g., "Startup", "Enterprise"), \`has_startup_experience\`, \`has_enterprise_experience\`, \`industry_transitions\` (array).
+*   **Skills & Experience Patterns:** \`technical_background\`, \`sales_experience\`, \`consulting_experience\`, \`restaurant_operations_experience\`, \`is_remote_worker\`, \`major_metro_area\`.
+*   **Educational Background:** \`highest_degree_level\` (e.g., "Bachelor\\'s Degree", "PhD"), \`school_ranking_tier\` (e.g., "Ivy League", "Top 50"), \`stem_education\`, \`business_education\`, \`elite_education\`, \`major_category\`.
+*   **Derived Intelligence:** \`career_trajectory\` (e.g., "Fast-track", "Specialized"), \`mentor_potential\`.
+*   **Targeted Search Categories:** \`functional_expertise\` (array, e.g., "Product Management"), \`industry_expertise\` (array, e.g., "SaaS"), \`career_stage\` (e.g., "Mid-Career").
+*   **Temporal Elements:** Specific years (e.g., "2018"), ranges (e.g., "after 2020").
 
-**EDUCATIONAL INTELLIGENCE:**
-- Degree Levels: High School Diploma, Certificate, Associate Degree, Bachelor's Degree, Master's Degree, MBA, Doctoral Degree (PhD), Professional Degree (JD, MD, etc.)
-- School Ranking Tiers: Ivy League, Top 10, Top 25, Top 50, Top 100, Regional University, State University, Community College
-- Major Categories: Computer Science/Technology, Engineering, Business Administration, Finance, Economics, Marketing, Liberal Arts, Natural Sciences, Healthcare/Medicine, Law, Education, etc.
-- Education Context: Full-time programs, While working, Graduate school, Specific school names
+**Output Format & Guidelines:**
 
-**WORK STYLE & GEOGRAPHIC:**
-- Work Styles: Remote work, Geographic mobility, International experience
-- Locations: Major metro areas (New York, San Francisco Bay Area, Los Angeles, Chicago, Boston, Seattle, Atlanta), specific cities, states, countries
-- Geographic Context: University locations (leveraging 7,737+ university database)
+1.  **Categorize Filters:** Group extracted values under clear, descriptive category names (you can define these, e.g., "Job Levels", "Industries", "School Names", "Degree Levels", "Locations", "Skills", "Company Size", "Years Active").
+2.  **Exact Values & Schema Alignment:** When possible, try to match extracted values to typical values found in the schema fields (e.g., if query says "VP", map to "Job Levels: VP/SVP"). For free text like company or school names, use the text as is.
+3.  **Be Highly Selective:** Only extract filters that are *clearly and explicitly stated or very strongly implied* by the query. Do NOT infer or add filters that aren't evident. If a query term is ambiguous, err on the side of not extracting it as a structured filter (it will still be caught by semantic search).
+4.  **Arrays vs. Single Values:** If a schema field is an array (e.g., \`functional_expertise\`), the extracted filter for that category can have multiple comma-separated values.
+5.  **Output Format:**
+    Category Name 1: value1, value2
+    Category Name 2: valueA
+    (Use a newline for each new category).
+6.  **No Filters Case:** If no specific filters can be confidently extracted, output *only* the exact phrase: "No specific filters detected".
 
-**TEMPORAL & CAREER PATTERNS:**
-- Years: Specific years mentioned (2018, 2019, etc.)
-- Exit Timing: When they left Chick-fil-A (ranges like "after 2020", "in 2018")
-- Career Transitions: Industry changes, function changes, company size transitions
-- Tenure Patterns: Years since leaving, duration at companies
+**Examples (Illustrative - adapt to your schema and categories you define):**
 
-**COMPENSATION & SUCCESS INDICATORS:**
-- Salary Ranges: Based on estimated compensation analysis from atomic processing
-- Success Indicators: Revenue responsibility, team size, leadership progression
-
-**SPECIALIZATION & EXPERTISE:**
-- Functional Expertise: Specific skill areas and specializations
-- Industry Expertise: Deep knowledge in specific sectors
-- Experience Types: Startup experience, Enterprise experience, Restaurant operations background
-
-Be highly selective - only extract filters that are clearly and explicitly implied by the query. Don't over-interpret or add filters that aren't evident.
-
-Format your response as:
-Category: item1, item2
-Category: item1, item2
-
-Examples:
-Query: "Senior AI engineers at Google in San Francisco"
+Query: "Senior AI engineers at Google in San Francisco who graduated after 2015"
+Extracted Filters:
 Job Levels: Senior Level
-Job Functions: Software Engineering, Data Science/Analytics  
+Targeted Functional Expertise: Software Engineering, AI Development
 Company Names: Google
-Industries: Technology & Software
-Locations: San Francisco Bay Area
+Locations: San Francisco
+Years Active: after 2015
 
-Query: "MBA graduates who became startup founders"
+Query: "MBA graduates from Ivy League schools who became startup founders in FinTech"
 Degree Levels: MBA
-Job Levels: Founder/Owner
-Company Sizes: Startup (1-50 employees)
-Leadership Indicators: Leadership roles
+School Ranking Tiers: Ivy League
+Company Sizes: Startup
+Targeted Industry Expertise: FinTech
+Job Levels: Founder
 
-Query: "People who left in 2020 and went into consulting"
-Years: 2020
+Query: "Marketing VPs with experience in B2B SaaS, left [Your Organization] around 2018"
+Job Levels: VP/SVP
+Job Functions: Marketing
+Targeted Industry Expertise: SaaS, B2B
+[Your Organization] Exit Year: around 2018
+
+Query: "Consultants with restaurant operations experience"
 Job Functions: Consulting
-Industries: Management Consulting
+Skills & Experience: Restaurant operations experience
 
-If no specific filters can be confidently extracted from the query, output "No specific filters detected".`,
+Return only the filter string, no other text.`,
         },
         {
           role: 'user',
@@ -107,7 +97,7 @@ If no specific filters can be confidently extracted from the query, output "No s
           for await (const chunk of response) {
             const content = chunk.choices[0]?.delta?.content || '';
             if (content) {
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`));
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\\n\\n`));
             }
           }
         } catch (error) {
