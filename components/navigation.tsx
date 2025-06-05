@@ -32,6 +32,10 @@ export default function Navigation() {
     }
   }
 
+  const handleBookDemo = () => {
+    window.open("https://calendly.com/david-alumlo/30min", "_blank");
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-3 bg-white">
       <div className="w-full flex justify-between items-center">
@@ -65,7 +69,7 @@ export default function Navigation() {
             Sign In
           </motion.button>
           <motion.button
-            onClick={handleGetStarted}
+            onClick={handleBookDemo}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-yellow-400/30 text-black border-[3px] border-yellow-500 px-9 py-2.5 text-lg rounded-full hover:bg-yellow-400/40 transition-colors duration-300 font-semibold shadow-md shadow-yellow-500/30 hover:shadow-yellow-400/40"
