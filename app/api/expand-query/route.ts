@@ -73,34 +73,50 @@ Return only the JSON object.`,
     const metadataResult = JSON.parse(metadataResponse.choices[0].message.content || '{}');
 
     // Generate dynamic expansions based on the identified metadata and dimensions
-    const expansionPrompt = `You are generating related search queries for an alumni database.
+    const expansionPrompt = `You are an expert in crafting advanced search queries for a rich alumni database. Your goal is to help users explore the database thoroughly by generating diverse and insightful related search queries.
 
 Original query: "${query}"
 
-Query analysis:
+Query analysis from a previous step:
 - Core topic: ${metadataResult.core_topic}
 - Key attributes: ${metadataResult.key_attributes?.join(', ')}
 - Searchable dimensions: ${metadataResult.search_dimensions?.join(', ')}
 - Context: ${metadataResult.context_level}
 
-Generate 3 related search queries that explore different aspects of the same core topic. Use the identified search dimensions to create variations that would find similar but complementary profiles.
+Based on this analysis and the detailed database schema below, generate 3 related search queries. These queries should be **significantly more thorough** and explore different facets of the original query by leveraging the specific data points available.
 
-The database contains rich information about:
-- Educational background (schools, degrees, majors, academic achievements, timing)
-- Career progression (job levels, functions, industries, company types, leadership roles)
-- Geographic patterns (locations, mobility, work arrangements)
-- Professional experience (skills, expertise areas, career transitions)
-- Company context (sizes, industries, stages, cultures)
-- Temporal elements (career timing, progression patterns, transitions)
+**Detailed Database Schema Highlights:**
 
-Guidelines:
-- Build naturally from the core topic and key attributes identified
-- Explore the search dimensions in different ways
-- Keep each expansion relevant but distinct from the original
-- Make them specific enough to be useful but broad enough to find results
-- Keep each suggestion under 12 words
+Our alumni database contains comprehensive information, including but not limited to:
 
-Just provide the 3 expansions separated by "•" characters, no numbering or additional text.`;
+1.  **Core Profile:** Name, headline, location, current company, current title, current industry.
+2.  **[Your Organization] Specifics:** Exit year from [Your Organization], multiple stints at [Your Organization].
+3.  **Career History:** Detailed lists of post-[Your Organization] companies, titles, industries, and locations.
+4.  **Education History:** Undergraduate, graduate, high school, and education pursued pre, during, or post-[Your Organization]. Specifics like majors, specializations, and school rankings.
+5.  **Career Progression & Leadership:** Job levels (e.g., entry, mid, senior, executive), job functions (e.g., engineering, marketing, operations), leadership indicators (e.g., \`is_current_leader\`, \`management_experience\`), revenue responsibility, years since leaving [Your Organization].
+6.  **Company & Industry Intelligence:** Current company size (e.g., startup, SME, enterprise), experience in startups vs. enterprise, patterns of industry transitions.
+7.  **Skills & Experience:** Indicators for technical backgrounds, sales, consulting, or specific operational experience (e.g., restaurant operations), remote work status, location in major metro areas, total number of positions held, average job tenure.
+8.  **Advanced Education Details:** Highest degree obtained, school ranking tiers (e.g., elite, top-tier), STEM vs. business education, continued learning (e.g., executive education, technical certifications).
+9.  **Derived Insights:** Career trajectory assessments (e.g., fast-track, specialized), mentor potential, post-[Your Organization] success level, how [Your Organization] experience was leveraged.
+10. **[Your Organization]-Specific Career Metrics:** Salary growth post-[Your Organization], career acceleration scores, time to achieve specific salary milestones or management roles, percentages of roles in different functions (operations, management), C-suite achievements.
+11. **Targeted Search Categories:** Pre-defined \`functional_expertise\` (e.g., "Product Management", "Data Science"), \`industry_expertise\` (e.g., "SaaS", "Healthcare"), current \`career_stage\` (e.g., "Early Career", "Mid-Career", "Executive"), \`likely_job_seeking\` status.
+12. **Temporal Analysis:** Detailed career timelines, lists of years at [Your Organization], post-[Your Organization] career paths with functions and companies over time.
+13. **Natural Language Fields:** Rich text descriptions of career progression, expertise, education, company experience, and geographic profiles, suitable for semantic matching.
+
+**Guidelines for Generating Expansions:**
+
+-   **Be Thorough & Specific:** Leverage the detailed fields above to make your suggested queries highly specific and nuanced. Don\\'t just list broad categories; think about how these fields can be combined.
+-   **Explore Dimensions Creatively:** Use the "Searchable dimensions" from the analysis and the schema details to create variations that find similar yet complementary profiles. Think about what a user trying to understand the alumni pool deeply would want to explore next.
+-   **Distinct & Complementary:** Each of the 3 expansions should be relevant to the original query\\'s core topic but offer a unique angle or a deeper dive into one of the available data dimensions.
+-   **Actionable Queries:** Phrase them as if a user would type them into a search bar.
+-   **Conciseness:** Keep each suggested expansion under 15 words if possible, but prioritize clarity and specificity.
+-   **Focus on Variety:** Try to touch upon different categories from the schema in your suggestions if appropriate for the original query.
+
+**Output Format:**
+Provide exactly 3 expansions, separated by "•" characters. No numbering, no intro/outro text, just the queries.
+
+Example Input: "Alumni in tech leadership"
+Example Output: "Tech leaders with startup experience • Alumni in C-suite roles at enterprise tech companies • Engineering VPs with 10+ years since [Your Organization]"`;
 
     const expansionResponse = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
