@@ -21,6 +21,7 @@ interface UserInfo {
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [isDemoUser, setIsDemoUser] = useState(false); // Add new state for demo mode
   const router = useRouter()
   const pathname = usePathname()
   
@@ -34,13 +35,18 @@ export default function Sidebar() {
   const [isSpinning, setIsSpinning] = useState(false); // State for gear icon spin
 
   useEffect(() => {
-    const getUserInfo = async () => {
+    const getUserInfoAndDemoStatus = async () => {
       try {
         // Get user email from Supabase
         const userEmail = await getUserEmail()
         
         if (!userEmail) {
           return
+        }
+
+        // Check for demo user
+        if (userEmail === "maimondavid553@gmail.com") {
+          setIsDemoUser(true);
         }
         
         // Get user info from database
@@ -66,7 +72,7 @@ export default function Sidebar() {
       }
     }
     
-    getUserInfo()
+    getUserInfoAndDemoStatus()
   }, [])
 
   // Load page-specific recent data
@@ -313,23 +319,25 @@ export default function Sidebar() {
         <div className="flex-1"></div>
 
         {/* Book Demo Button - positioned above profile */}
-        <div className="mb-8">
-          <a
-            href="https://calendly.com/david-alumlo/30min"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center text-black/90 hover:text-black transition-all duration-300 ease-in-out relative"
-            style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
-          >
-            <Calendar className="w-8 h-8 shrink-0" />
-            <span
-              className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
-              style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+        {isDemoUser && (
+          <div className="mb-8">
+            <a
+              href="https://calendly.com/david-alumlo/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-black/90 hover:text-black transition-all duration-300 ease-in-out relative"
+              style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
             >
-              Book Demo
-            </span>
-          </a>
-        </div>
+              <Calendar className="w-8 h-8 shrink-0" />
+              <span
+                className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
+                style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+              >
+                Book Demo
+              </span>
+            </a>
+          </div>
+        )}
 
         {/* Profile Section moved to bottom */}
         <div
