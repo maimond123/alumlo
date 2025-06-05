@@ -558,6 +558,9 @@ export default function DashboardPage() {
   const [showDemoOnboarding, setShowDemoOnboarding] = useState(false)
   const [demoStep, setDemoStep] = useState(0)
 
+  // Add ref for the textarea
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   // Define formatOrganizationName function here
   const formatOrganizationName = (name: string): string => {
     if (!name) return "Your Organization"; // Fallback for empty or null names
@@ -848,6 +851,57 @@ export default function DashboardPage() {
         }
       }, speed);
     });
+  };
+
+  // Add new handler for textarea changes and dynamic height adjustment
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSearchQuery(e.target.value);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Temporarily reset height to auto to get the natural scrollHeight
+      textarea.style.height = 'auto';
+      const scrollHeight = textarea.scrollHeight;
+
+      // Calculate the height of a single line (approximate)
+      // Get current computed styles
+      const computedStyle = window.getComputedStyle(textarea);
+      const lineHeight = parseFloat(computedStyle.lineHeight);
+      const paddingTop = parseFloat(computedStyle.paddingTop);
+      const paddingBottom = parseFloat(computedStyle.paddingBottom);
+      const borderTop = parseFloat(computedStyle.borderTopWidth);
+      const borderBottom = parseFloat(computedStyle.borderBottomWidth);
+
+      // Rough calculation for content height of one line
+      const singleRowContentHeight = lineHeight;
+      
+      // Calculate number of lines (minimum 1, maximum 3)
+      let numLines = Math.max(1, Math.min(3, Math.round((scrollHeight - paddingTop - paddingBottom - borderTop - borderBottom) / singleRowContentHeight)));
+      
+      // If scrollHeight is very small (empty input), ensure numLines is 1
+      if (e.target.value === '') {
+          numLines = 1;
+      }
+
+      // Set new height based on lines, but not exceeding 3 lines worth of height.
+      // Use minHeight for 1 line, and calculate height for 2 or 3 lines.
+      if (numLines === 1) {
+          textarea.style.height = 'auto'; // Let it take its initial single-line height or shrink
+          textarea.rows = 1;
+      } else {
+          // Calculate height for numLines
+          const newHeight = (singleRowContentHeight * numLines) + paddingTop + paddingBottom + borderTop + borderBottom;
+          textarea.style.height = `${newHeight}px`;
+          textarea.rows = numLines; // Also update rows attribute for semantics
+      }
+    }
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent newline on Enter
+      handleSearch(e as unknown as React.FormEvent); // Trigger search
+    }
+    // Allow Shift+Enter for newlines (default textarea behavior)
   };
 
   // Update handleSearch to include replay snapshot on search
@@ -1630,31 +1684,17 @@ export default function DashboardPage() {
           <form onSubmit={handleSearch} className="w-full max-w-2xl mb-2">
             <div className="relative mb-6">
                   
-              <input
-                type="text"
+              {/* Changed from input to textarea */}
+              <textarea
+                ref={textareaRef} // Added ref for dynamic height
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleTextareaChange} // New handler for textarea
+                onKeyDown={handleTextareaKeyDown} // Handle Enter key
                 placeholder="Begin typing to search across your alumni..."
-                className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch(e)}
+                className="w-full px-6 pt-4 pb-14 text-lg text-gray-900 placeholder-gray-400 bg-white border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200 shadow-lg overflow-y-hidden resize-none"
+                rows={1} // Start with a single row
+                style={{ minHeight: 'calc(1.5em * 1 + 44px + 1rem)' }} // Initial height matching input + padding
               />
-              {/* Remove the rotating placeholder suggestions */}
-              {/* {searchQuery === '' && (
-                <div className="absolute left-6 top-4 pointer-events-none overflow-hidden h-6">
-                  <AnimatePresence>
-                    <motion.span
-                      key={currentSuggestionIndex}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -20, opacity: 0 }}
-                      transition={{ duration: 0.4 }}
-                      className="text-gray-400"
-                    >
-                      {combinedSuggestions.length > 0 ? combinedSuggestions[currentSuggestionIndex] : allSuggestionTags[currentSuggestionIndex]}
-                    </motion.span>
-                  </AnimatePresence>
-                </div>
-              )} */}
               
               {/* Buttons inside the input field, positioned at the bottom right */}
               <div className="absolute bottom-3 right-4 flex space-x-2">
