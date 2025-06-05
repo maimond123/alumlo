@@ -41,6 +41,7 @@ export default function SettingsPage() {
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([])
   const [learnConversations, setLearnConversations] = useState<LearnConversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {
     loadUserData()
@@ -56,7 +57,25 @@ export default function SettingsPage() {
         return
       }
 
-      // Get user info
+      // Check if this is a demo user
+      if (userEmail === "maimondavid553@gmail.com") {
+        setIsDemoMode(true)
+        setUserInfo({
+          first_name: "Demo",
+          last_name: "Account",
+          organization_name: "Your Organization"
+        })
+        // Load demo data
+        await Promise.all([
+          loadSavedLeads("demo"),
+          loadSearchHistory(userEmail),
+          loadLearnConversations(userEmail)
+        ])
+        setIsLoading(false)
+        return
+      }
+
+      // Get user info for non-demo users
       const { data: userInfoData, error: userInfoError } = await supabase
         .from('customer_information')
         .select('first_name, last_name, organization_name')
@@ -195,7 +214,7 @@ export default function SettingsPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
               <p className="text-gray-600 mt-1">
-                {userInfo ? `${userInfo.first_name} ${userInfo.last_name} • ${formatOrganizationName(userInfo.organization_name)}` : ''}
+                {isDemoMode ? "Demo Account • Your Organization" : userInfo ? `${userInfo.first_name} ${userInfo.last_name} • ${formatOrganizationName(userInfo.organization_name)}` : ''}
               </p>
             </div>
           </div>

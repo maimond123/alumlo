@@ -331,11 +331,10 @@ export default function UploadDataPage() {
           <div className="mb-6 p-6 bg-white rounded-lg shadow-md border border-black">
             <h2 className="text-xl font-bold mb-4">Upload Instructions</h2>
             <ol className="list-decimal pl-5 space-y-2">
-              <li>Please upload a CSV or Excel file containing student information with the following columns:</li>
-              <li>Student First Name (Column 1)</li>
-              <li>Student Last Name (Column 2)</li>
-              <li>College/University they are attending (Column 3)</li>
-              <li>Graduation Year (Column 4)</li>
+              <li>Please upload a CSV or Excel file containing alumni information with the following columns:</li>
+              <li>Alumni Full Name (Column 1)</li>
+              <li>College/University they are attending (Column 2)</li>
+              <li>Exit Year (Column 3)</li>
             </ol>
             <p>Your file will be processed within a few days, and the data will be added to your analytics and search data base.</p>
           </div>
