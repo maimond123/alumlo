@@ -396,10 +396,10 @@ function SidebarLink({
       className="flex items-center text-black/90 hover:text-black mb-12 transition-all duration-300 ease-in-out relative"
       style={{ transform: isOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
     >
-      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-yellow-450' : ''}`} />
+      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-yellow-400' : ''}`} />
       <span
         className={`ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap ${
-          isActive ? 'text-yellow-450 font-semibold' : ''
+          isActive ? 'text-yellow-400 font-semibold' : ''
         }`}
         style={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
       >

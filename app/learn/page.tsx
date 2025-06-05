@@ -493,7 +493,7 @@ export default function LearnPage() {
                 <span 
                   className="text-black"
                 >
-                  {"Your Organization"}
+                  {"{Your Organization}"}
                 </span>
               ) : (
                 <span className="text-black">{displayedOrganizationName}</span>
