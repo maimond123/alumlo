@@ -446,16 +446,22 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] 🔍 search called with classification:`, queryClassification);
       
       // Determine the organization name dynamically (same pattern as rest of file)
-      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+      let storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
         localStorage.getItem('organizationName') : null);
+
+      // In demo mode, we now search against the Chick-fil-A dataset
+      if (isDemo) {
+        storedOrganizationName = 'chick_fil_a';
+        console.log(`[AI_SEARCH DEBUG] 🏃 Demo mode is true. Forcing organization to '${storedOrganizationName}'`);
+      }
       
-      console.log(`[AI_SEARCH DEBUG] isDemo: ${isDemo}, storedOrganizationName: "${storedOrganizationName}"`);
+      console.log(`[AI_SEARCH DEBUG] Effective organization: "${storedOrganizationName}"`);
       
       // TEMPORAL ROUTING - Check for temporal classification first (NON-DEMO ONLY)
       if (queryClassification?.type === 'temporal' && 
           queryClassification?.temporal_elements && 
           !isDemo && 
-          storedOrganizationName) {  // Remove specific chick_fil_a check
+          storedOrganizationName) {  // This logic remains specific to non-demo use cases for now.
         
         console.log(`[AI_SEARCH DEBUG] 🕐 Temporal query detected for ${storedOrganizationName}, routing to temporal search`);
         
@@ -547,14 +553,13 @@ export class LinkedInProfileSearchEngine {
         }
       }
       
-      // STANDARD SEARCH - Updated to use new naming convention
+      // STANDARD SEARCH - Updated to use company search for both demo and non-demo
       console.log(`[AI_SEARCH DEBUG] 📊 Using standard search`);
       
-      // Check if this is a non-demo search (updated logic)
-      if (!isDemo && storedOrganizationName) {  // Removed specific chick_fil_a check
+      if (storedOrganizationName) {
         console.log(`[AI_SEARCH DEBUG] ✅ USING COMPANY SEARCH for ${storedOrganizationName}`);
         
-        // Use company search for any organization (not just chick_fil_a)
+        // Use company search for any organization
         const companyFilters: CompanySearchFilters = {
           company: filters.company,
           industry: filters.industry,
@@ -606,8 +611,8 @@ export class LinkedInProfileSearchEngine {
         return convertedResults;
       }
       
-      console.log(`[AI_SEARCH DEBUG] ❌ NOT using company search, falling back to regular search`);
-      console.log(`[AI_SEARCH DEBUG] Reason: isDemo=${isDemo}, storedOrganizationName="${storedOrganizationName}"`);
+      // FALLBACK - This should now be rarely used, as demo mode is handled above.
+      console.log(`[AI_SEARCH DEBUG] ❌ No organization name, falling back to generic hybrid_search`);
       
       // Generate embedding using OpenAI API
       const response = await this.openai.embeddings.create({
@@ -626,8 +631,8 @@ export class LinkedInProfileSearchEngine {
         school 
       } = filters;
       
-      // Determine the RPC function to call based on whether it's a demo search
-      const rpcFunction = isDemo ? 'hybrid_search_demo' : 'hybrid_search';
+      // The 'hybrid_search_demo' RPC is no longer needed as demo mode uses the company search path.
+      const rpcFunction = 'hybrid_search'; // Always use the standard hybrid_search as a fallback
       console.log(`[AI_SEARCH DEBUG] Using RPC function: ${rpcFunction}`);
       
       // Call the appropriate hybrid_search function with the embedding and filters

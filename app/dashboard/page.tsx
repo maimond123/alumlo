@@ -554,7 +554,7 @@ export default function DashboardPage() {
   // Add new state to control animation start
   const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
 
-  // Add new state for demo onboarding flow
+  // Add new state for  onboarding flow
   const [showDemoOnboarding, setShowDemoOnboarding] = useState(false)
   const [demoStep, setDemoStep] = useState(0)
 
@@ -635,6 +635,9 @@ export default function DashboardPage() {
             console.log("Demo mode activated");
             setIsDemoMode(true);
             setFormattedOrganizationName("Your Organization");
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('organizationName', 'chick_fil_a');
+            }
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
@@ -1000,7 +1003,7 @@ export default function DashboardPage() {
         );
       } else {
         // Regular message for other users
-        await typewriterEffect(`Searching across our demo database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
+        await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
           (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
         );
       }
