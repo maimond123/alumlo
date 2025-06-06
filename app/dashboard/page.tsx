@@ -1463,53 +1463,6 @@ export default function DashboardPage() {
     window.open(url, '_blank');
   };
 
-  // Update handleSurveySubmit to capture survey completion
-  const handleSurveySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Track form submission
-    analytics.trackFormSubmit('LinkedInClickSurvey', { email: surveyEmail });
-    
-    // Capture a replay snapshot for survey submission
-    analytics.captureReplaySnapshot('survey_submitted');
-    
-    try {
-      // Save email to Supabase - updated table name
-      const { error } = await supabase
-        .from('linkedin_click_survey')
-        .insert([{ 
-          email: surveyEmail,
-          interested: true,
-          created_at: new Date().toISOString(),
-          source: 'first_click_survey'
-        }]);
-        
-      if (error) throw error;
-      
-      // Close the email collection modal
-      setShowEmailCollection(false);
-      
-      // Navigate to the pending LinkedIn URL
-      if (pendingLinkedInUrl) {
-        window.open(pendingLinkedInUrl, '_blank');
-      }
-      
-      // Clear the pending URL
-      setPendingLinkedInUrl("");
-      
-      // Track successful submission
-      analytics.trackFormSubmit('LinkedInClickSurvey', { 
-        status: 'success',
-        email: surveyEmail 
-      });
-      
-    } catch (error) {
-      console.error('Error submitting survey:', error);
-      // Track error
-      analytics.trackError('SurveySubmission', 'Failed to submit survey', { email: surveyEmail });
-      alert('There was an error submitting your information. Please try again.');
-    }
-  };
 
   // Refined Typewriter effect for school name
   useEffect(() => {
