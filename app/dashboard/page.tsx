@@ -544,13 +544,6 @@ export default function DashboardPage() {
   // Add state for Pro Tip visibility
   const [showProTip, setShowProTip] = useState(true)
   
-  // Add states for the first-click survey
-  const [showFirstClickSurvey, setShowFirstClickSurvey] = useState(false)
-  const [showEmailCollection, setShowEmailCollection] = useState(false)
-  const [surveyEmail, setSurveyEmail] = useState("")
-  const [pendingLinkedInUrl, setPendingLinkedInUrl] = useState("")
-  const [isProTipDismissed, setIsProTipDismissed] = useState(false)
-  
   // Add new state to control animation start
   const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
 
@@ -1466,33 +1459,6 @@ export default function DashboardPage() {
     analytics.trackSearchResultClick(resultIndex, resultName, url);
     analytics.captureReplaySnapshot('search_result_click');
     
-    // Check if this is demo mode
-    if (isDemoMode) {
-      // Check if we're in a browser environment
-      const isBrowser = typeof window !== 'undefined';
-      // Check if user has already seen the first-click survey
-      const hasSeenSurvey = isBrowser ? localStorage.getItem('hasSeenAlumloSurvey') === 'true' : false;
-      
-      if (!hasSeenSurvey) {
-        // Track first-time survey shown
-        analytics.trackModalOpen('FirstClickSurvey', { isFirstTime: true });
-        analytics.captureReplaySnapshot('first_click_survey_shown');
-        
-        // If not seen, show the survey and store the URL to navigate to later
-        setPendingLinkedInUrl(url);
-        setShowFirstClickSurvey(true);
-        // Mark as seen for future clicks
-        if (isBrowser) {
-          try {
-            localStorage.setItem('hasSeenAlumloSurvey', 'true');
-          } catch (e) {
-            console.error('Failed to set localStorage item:', e);
-          }
-        }
-        return;
-      }
-    }
-    
     // If not demo mode or already seen survey, navigate directly
     window.open(url, '_blank');
   };
@@ -2151,110 +2117,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-
-          {/* First Click Survey Modal */}
-          {showFirstClickSurvey && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={(e) => {
-                // Close the modal when clicking the backdrop
-                if (e.target === e.currentTarget) {
-                  setShowFirstClickSurvey(false);
-                  analytics.trackModalClose('FirstClickSurvey', { userAction: 'backdrop_click' });
-                  // Navigate to LinkedIn if there's a pending URL
-                  if (pendingLinkedInUrl) {
-                    window.open(pendingLinkedInUrl, '_blank');
-                    setPendingLinkedInUrl("");
-                  }
-                }
-              }}
-            >
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                <h2 className="text-xl font-bold text-center mb-4">Are you interested in using Alumlo for your Organization?</h2>
-                
-                <div className="flex justify-center space-x-4 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowFirstClickSurvey(false);
-                      setShowEmailCollection(true);
-                      analytics.trackButtonClick('FirstClickSurvey_Yes');
-                      analytics.trackModalClose('FirstClickSurvey', { userAction: 'yes_click' });
-                      analytics.trackModalOpen('EmailCollection');
-                    }}
-                    className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-                  >
-                    Yes
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setShowFirstClickSurvey(false);
-                      analytics.trackButtonClick('FirstClickSurvey_No');
-                      analytics.trackModalClose('FirstClickSurvey', { userAction: 'no_click' });
-                      // Navigate to LinkedIn if there's a pending URL
-                      if (pendingLinkedInUrl) {
-                        window.open(pendingLinkedInUrl, '_blank');
-                        setPendingLinkedInUrl("");
-                      }
-                    }}
-                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Email Collection Modal with analytics */}
-          {showEmailCollection && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={(e) => {
-                // Prevent closing by clicking backdrop
-                e.stopPropagation();
-              }}
-            >
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-                <h2 className="text-xl font-bold text-center mb-4">Great! Please share your work email</h2>
-                <p className="text-gray-600 mb-4 text-center">We'll reach out with more information about Alumlo for your institution.</p>
-                
-                <form onSubmit={handleSurveySubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="work-email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Work Email
-                    </label>
-                    <input
-                      type="email"
-                      id="work-email"
-                      value={surveyEmail}
-                      onChange={(e) => {
-                        setSurveyEmail(e.target.value);
-                        // Track email input change
-                        if (e.target.value && e.target.value.includes('@')) {
-                          analytics.trackFormSubmit('EmailCollection_Input', { 
-                            hasDomain: e.target.value.includes('@') && e.target.value.split('@')[1].length > 0
-                          });
-                        }
-                      }}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="name@work.edu"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-center">
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors w-full"
-                    >
-                      Continue to LinkedIn
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
 
           {/* Want More Modal with analytics */}
           {showWantMoreModal && (

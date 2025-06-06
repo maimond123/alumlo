@@ -170,7 +170,8 @@ export default function LearnPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated");
             setIsDemoMode(true);
-            setFormattedOrganizationName("Your School");
+            setFormattedOrganizationName("{Your Organization}");
+            setIsOrganizationNameReadyToAnimate(true);
             setIsLoading(false);
             
             // Track as a unique visitor while maintaining demo status
@@ -183,7 +184,7 @@ export default function LearnPage() {
             analytics.identifyUser("maimondavid553@gmail.com", {
               isDemoUser: true,
               visitorId: visitorId,
-              school: "Your School"
+              school: "{Your Organization}"
             });
           }
         }
@@ -489,15 +490,7 @@ export default function LearnPage() {
             {/* Conditional space, only if school name will be rendered */}
             {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
             {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-              isDemoMode ? (
-                <span 
-                  className="text-black"
-                >
-                  {"{Your Organization}"}
-                </span>
-              ) : (
-                <span className="text-black">{displayedOrganizationName}</span>
-              )
+              <span className="text-black">{displayedOrganizationName}</span>
             ) : null}
             {/* Conditional space, only if school name was rendered */}
             {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
