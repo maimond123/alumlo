@@ -169,7 +169,7 @@ export default function LearnPage() {
         if (userEmail === "maimondavid553@gmail.com") {
           console.log("Demo mode activated")
           setIsDemoMode(true)
-          setFormattedOrganizationName("Your Organization")
+          setFormattedOrganizationName("{Your Organization}")
           setIsOrganizationNameReadyToAnimate(true)
           setIsLoading(false)
 
