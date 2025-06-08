@@ -998,9 +998,14 @@ export default function DashboardPage() {
       
       // Custom message for demo account
       if (isDemoMode) {
-        await typewriterEffect(`Searching across our database of sample alumni profiles`, 
+        const baseText = "Searching across our database of sample alumni profiles. ";
+        const calendlyLink = `<a href="https://calendly.com/david-alumlo/30min" target="_blank" rel="noopener noreferrer" class="text-emerald-600 font-semibold hover:underline">Want alumni search for your organization?</a>`;
+
+        await typewriterEffect(baseText, 
           (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
         );
+        
+        setDisplayedText(prev => ({ ...prev, searching: prev.searching + calendlyLink }));
       } else {
         // Regular message for other users
         await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
