@@ -109,6 +109,7 @@ export default function DataInsightsPage() {
     dataPoints: ''
   })
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   // NEW: Auth context
   const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
@@ -203,9 +204,11 @@ export default function DataInsightsPage() {
         
         if (progressInterval) clearInterval(progressInterval)
         setIsLoading(false)
+        setIsInitialized(true)
       } catch (error) {
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, initError: error }))
         setIsLoading(false)
+        setIsInitialized(true)
       }
     }
 
@@ -330,7 +333,7 @@ export default function DataInsightsPage() {
       salaryDistributionWeights = [0.01, 0.12, 0.30, 0.30, 0.15, 0.07, 0.03, 0.02]
     } else if (yearsExperience <= 10) {
       // Mid career - more balanced but still right-skewed
-      salaryDistributionWeights = [0.01, 0.08, 0.20, 0.28, 0.22, 0.12, 0.06, 0.03]
+      salaryDistributionWeights = [0.01, 0.08, 0.20, 0.28, 0.22, 0.08, 0.06, 0.03]
     } else if (yearsExperience <= 15) {
       // Experienced - significant shift toward higher salaries
       salaryDistributionWeights = [0.00, 0.03, 0.12, 0.22, 0.25, 0.20, 0.12, 0.06]
@@ -608,40 +611,23 @@ export default function DataInsightsPage() {
     }
 
     try {
-      // Check if this is the Chick-fil-A demo user and generate dummy data
       const userEmail = await getUserEmail()
+      const isDemo = checkIsDemoMode()
+
       console.log("DEBUG: User email retrieved:", userEmail)
-      console.log("DEBUG: Email type:", typeof userEmail)
-      console.log("DEBUG: Email === 'davod@alumintel.co':", userEmail === "davod@alumintel.co")
-      
-      if (userEmail === "davod@alumintel.co" || true) {
-        console.log("DEBUG: ✅ CHICK-FIL-A USER DETECTED - Generating dummy data for year:", selectedYear)
+      console.log("DEBUG: Is Demo Mode:", isDemo)
+
+      if (userEmail === "davod@alumintel.co" || isDemo) {
+        console.log("DEBUG: ✅ CHICK-FIL-A USER OR DEMO MODE DETECTED - Generating dummy data for year:", selectedYear)
         generateChickFilADummyData(selectedYear)
         return
-      } else {
-        console.log("DEBUG: ❌ Not Chick-fil-A user, proceeding with database fetch")
-      }
+      } 
+      
+      console.log("DEBUG: ❌ Not a demo user, proceeding with database fetch")
 
       const tableName = organizationName!.toLowerCase().replace(/\s+/g, "_") + "_distribution"
       console.log(`DEBUG: Will fetch from table: ${tableName} for year: ${selectedYear}`)
 
-      // Add a check to see if the table exists
-      try {
-        const { count, error: tableCheckError } = await supabase
-          .from(tableName)
-          .select("*", { count: "exact", head: true })
-
-        console.log(`DEBUG: Table check result for ${tableName}:`, { count, tableCheckError })
-
-        if (tableCheckError) {
-          console.error(`DEBUG: Table ${tableName} check error:`, tableCheckError)
-          setDebugInfo((prev: Record<string, any>) => ({ ...prev, tableError: tableCheckError }))
-        }
-      } catch (tableError) {
-        console.error(`DEBUG: Error checking table ${tableName}:`, tableError)
-      }
-
-      // Continue with your existing code...
       // Fetch salary data
       console.log("DEBUG: Fetching salary data...")
       const { data: salaryData, error: salaryError } = await supabase
@@ -658,14 +644,12 @@ export default function DataInsightsPage() {
         if (salaryData && salaryData!.length > 0 && salaryData![0]?.current_salary_distribution) {
           console.log("DEBUG: Raw salary data:", salaryData![0].current_salary_distribution);
           
-          // Transform the object format into the array format expected by BarChart
           const chartData = Object.entries(salaryData![0].current_salary_distribution)
             .map(([range, count]) => ({ 
               name: range, 
               value: typeof count === 'number' ? count : Number(count) 
             }))
             .sort((a, b) => {
-              // Sort by salary range
               const aStart = parseInt(a.name.split('-')[0].replace(/\D/g, ''));
               const bStart = parseInt(b.name.split('-')[0].replace(/\D/g, ''));
               return !isNaN(aStart) && !isNaN(bStart) ? aStart - bStart : 0;
@@ -719,42 +703,30 @@ export default function DataInsightsPage() {
       } else {
         console.log("DEBUG: Location data response:", locationData)
         
-        // Add detailed debugging for the raw location distribution data
         if (locationData && locationData!.length > 0 && locationData![0]?.current_job_location_distribution) {
           console.log("DEBUG: Raw current_job_location_distribution object:", 
             JSON.stringify(locationData![0].current_job_location_distribution, null, 2));
           
-          // Log each location entry individually for clarity
           console.log("DEBUG: Location entries (name: count):");
           Object.entries(locationData![0].current_job_location_distribution).forEach(([location, count]) => {
             console.log(`  "${location}": ${count}`);
           });
-        }
-        
-        setDebugInfo((prev: Record<string, any>) => ({ ...prev, locationData }))
-        if (locationData && locationData!.length > 0) {
-          console.log("DEBUG: Processing location data...")
-          // Process location data
+          
           const locationCounts: { [key: string]: number } = {}
+          Object.entries(locationData![0].current_job_location_distribution).forEach(([city, count]) => {
+            locationCounts[city] = Number(count)
+          })
 
-          if (locationData![0]?.current_job_location_distribution) {
-            Object.entries(locationData![0].current_job_location_distribution).forEach(([city, count]) => {
-              locationCounts[city] = Number(count)
-            })
+          const chartData = Object.entries(locationCounts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10)
 
-            // Convert to chart format and sort by value
-            const chartData = Object.entries(locationCounts)
-              .map(([name, value]) => ({ name, value }))
-              .sort((a, b) => b.value - a.value)
-              .slice(0, 10) // Take top 10 cities
-
-            console.log("DEBUG: Setting location data:", chartData)
-            setLocationData(chartData)
-          } else {
-            console.warn("DEBUG: Location distribution data is null or undefined")
-          }
+          console.log("DEBUG: Setting location data:", chartData)
+          setLocationData(chartData)
         } else {
           console.warn("DEBUG: No location data found for year:", selectedYear)
+          setLocationData([])
         }
       }
 
@@ -801,18 +773,16 @@ export default function DataInsightsPage() {
         if (industrySalaryData && industrySalaryData!.length > 0 && industrySalaryData![0]?.average_salary_by_industry_distribution) {
           console.log("DEBUG: Raw industry salary data:", industrySalaryData![0].average_salary_by_industry_distribution);
           
-          // Transform the object format into the array format expected by BarChart
           const chartData = Object.entries(industrySalaryData![0].average_salary_by_industry_distribution)
             .map(([industry, salary]) => ({ 
               name: industry, 
               value: typeof salary === 'number' ? salary : Number(salary) 
             }))
-            .sort((a, b) => b.value - a.value); // Sort by salary (highest first)
+            .sort((a, b) => b.value - a.value);
           
           console.log("DEBUG: Transformed industry salary data:", chartData);
           setIndustrySalaryData(chartData);
         } else {
-          // If no real data, use sample data for demonstration
           const sampleIndustrySalaryData = [
             { name: "Technology & Software", value: 110000 },
             { name: "Financial Services", value: 95000 },
@@ -842,7 +812,6 @@ export default function DataInsightsPage() {
           console.log("DEBUG: Raw industry progression data:", industryProgressionData![0].career_progression_distribution);
           setIndustryProgressionData(industryProgressionData![0].career_progression_distribution);
         } else {
-          // Sample data if no real data is available
           const sampleData = [
             {
               "industries": {
@@ -1409,7 +1378,8 @@ export default function DataInsightsPage() {
         <div className="p-8 pt-20">
 
           {/* Check if searchResults exists before mapping */}
-          {searchResults && searchResults.length > 0 ? (
+          {isInitialized ? (
+            searchResults && searchResults.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {searchResults.map((chart) => (
                 <motion.div
@@ -1436,7 +1406,12 @@ export default function DataInsightsPage() {
             <div className="flex items-center justify-center h-64 bg-white rounded-lg shadow p-6">
               <p className="text-gray-500">No charts available. Please check your data or try a different year.</p>
             </div>
-          )}
+          )
+        ) : (
+          <div className="flex items-center justify-center h-64 bg-white rounded-lg shadow p-6">
+            <p className="text-gray-500">Initializing...</p>
+          </div>
+        )}
         </div>
 
         <div className="fixed top-4 right-4 flex space-x-4">
