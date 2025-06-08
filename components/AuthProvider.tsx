@@ -20,13 +20,21 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [lastAuthEvent, setLastAuthEvent] = useState<{ event: string, timestamp: number } | null>(null)
 
   useEffect(() => {
     // Get initial session first
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setIsLoading(false)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('Initial session retrieved:', session?.user?.email || 'no user')
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error('Error getting initial session:', error)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
     }
     
     getInitialSession()
@@ -35,7 +43,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      const now = Date.now()
+      console.log('Auth state changed:', event, session?.user?.email || 'no user', {
+        timestamp: new Date().toISOString(),
+        previousEvent: lastAuthEvent
+      })
+      
+      // Ignore rapid SIGNED_OUT events that happen within 500ms of a SIGNED_IN
+      if (event === 'SIGNED_OUT' && lastAuthEvent && 
+          lastAuthEvent.event === 'SIGNED_IN' && 
+          (now - lastAuthEvent.timestamp) < 500) {
+        console.log('Ignoring rapid SIGNED_OUT event after SIGNED_IN')
+        return
+      }
+      
+      setLastAuthEvent({ event, timestamp: now })
       setUser(session?.user ?? null)
+      // Don't set loading here since initial load is handled above
     })
 
     // Cleanup subscription on unmount

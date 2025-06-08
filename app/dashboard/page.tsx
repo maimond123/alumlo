@@ -451,6 +451,7 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
 export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [mountTime] = useState(Date.now())
   const [error, setError] = useState<string | null>(null)
   const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
   const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
@@ -601,7 +602,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback')
+        console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback', {
+          authLoading,
+          contextAuthenticated,
+          timestamp: new Date().toISOString()
+        })
         console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
         console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
         
@@ -622,10 +627,21 @@ export default function DashboardPage() {
 
         // Wait until global auth loading finishes
         if (authLoading) {
+          console.log('[DEBUG] Dashboard: Auth still loading, waiting...')
           return;
         }
 
-        console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated)
+        console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated, {
+          authLoading,
+          timestamp: new Date().toISOString()
+        })
+
+        // Don't redirect immediately after mount to allow auth to stabilize
+        const timeSinceMount = Date.now() - mountTime
+        if (timeSinceMount < 300) {
+          console.log('[DEBUG] Dashboard: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
+          return
+        }
 
         if (!contextAuthenticated) {
           console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
@@ -678,7 +694,7 @@ export default function DashboardPage() {
     }
     
     checkAuth()
-  }, [router, authLoading, contextAuthenticated])
+  }, [router, authLoading, contextAuthenticated, mountTime])
 
   // Handle OAuth completion
   const handleOAuthComplete = () => {

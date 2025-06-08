@@ -81,6 +81,7 @@ const tagScrollAnimation = `
 export default function LearnPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [mountTime] = useState(Date.now())
   const [error, setError] = useState<string | null>(null)
   const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
   const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
@@ -172,6 +173,13 @@ export default function LearnPage() {
           return;
         }
 
+        // Don't redirect immediately after mount to allow auth to stabilize
+        const timeSinceMount = Date.now() - mountTime
+        if (timeSinceMount < 300) {
+          console.log('[DEBUG] Learn: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
+          return
+        }
+
         if (!contextAuthenticated) {
           setAuthState({ isLoading: false, isAuthenticated: false })
           router.push("/signin")
@@ -211,7 +219,7 @@ export default function LearnPage() {
     }
 
     checkAuth()
-  }, [router, authLoading, contextAuthenticated])
+  }, [router, authLoading, contextAuthenticated, mountTime])
 
   // Only fetch school name for non-demo users
   useEffect(() => {

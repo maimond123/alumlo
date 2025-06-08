@@ -43,41 +43,57 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
 }
 
 export default function DataInsightsPage() {
-  const { isSidebarOpen } = useSidebar()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const fromSignin = searchParams.get("fromSignin") === "true"
-  
-  // Get the school name from context
-  const { organizationName: contextOrganizationName, setOrganizationName: setContextOrganizationName } = useOrganization()
-  
-  // TEMPORARY: Override school name to always be 'lawrenceville'
-  const [organizationName, setOrganizationName] = useState<string>("lawrenceville")
-  
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<SchoolChartData[]>([])
-  const [charts, setCharts] = useState<SchoolChartData[]>([])
-  const [selectedChart, setSelectedChart] = useState<SchoolChartData | null>(null)
+  const fromSignin = searchParams?.get('from') === 'signin'
+  const { organizationName, setOrganizationName } = useOrganization()
+  const [mountTime] = useState(Date.now())
+  const [selectedYear, setSelectedYear] = useState("2024")
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [progress, setProgress] = useState(0)
-  const [selectedYear, setSelectedYear] = useState("2018")
-  const [expandedYear, setExpandedYear] = useState(selectedYear)
-  const [salaryData, setSalaryData] = useState<any>(null)
-  const [industryData, setIndustryData] = useState<any>(null)
-  const [locationData, setLocationData] = useState<Array<{ name: string; value: number }>>([])
-  const [graduateSchoolData, setGraduateSchoolData] = useState<any>(null)
-  const [industrySalaryData, setIndustrySalaryData] = useState<Array<{ name: string; value: number }>>([])
-  const [industryProgressionData, setIndustryProgressionData] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Chart data states
+  const [salaryData, setSalaryData] = useState<any[]>([])
+  const [industryData, setIndustryData] = useState<any[]>([])
+  const [locationData, setLocationData] = useState<any[]>([])
+  const [graduateSchoolData, setGraduateSchoolData] = useState<any[]>([])
+  const [industrySalaryData, setIndustrySalaryData] = useState<any[]>([])
+  const [industryProgressionData, setIndustryProgressionData] = useState<any[]>([])
+  
+  // New state for charts and search
+  const [charts, setCharts] = useState<SchoolChartData[]>([])
+  const [searchResults, setSearchResults] = useState<SchoolChartData[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [expandedWidget, setExpandedWidget] = useState<SchoolChartData | null>(null)
+  const [selectedChart, setSelectedChart] = useState<SchoolChartData | null>(null)
+  const [expandedYear, setExpandedYear] = useState(selectedYear)
+  const [widgetMessages, setWidgetMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([])
+  const [currentMessage, setCurrentMessage] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  
+  // Chat-related state variables
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     { role: 'assistant', content: 'What would you like to know about this data? ' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
-  // Add state for demo mode
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Loading progress states
+  const [progress, setProgress] = useState(0)
+  const [currentStage, setCurrentStage] = useState("Initializing...")
+  const [stages] = useState([
+    "Initializing...",
+    "Loading alumni data...",
+    "Processing salary information...",
+    "Analyzing career paths...",
+    "Generating insights...",
+    "Almost ready!"
+  ])
+  
+  // New states for additional features
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [showDemoSurvey, setShowDemoSurvey] = useState(false)
   // Add state for the one-time prompt modal
@@ -125,6 +141,13 @@ export default function DataInsightsPage() {
         // Wait until auth context ready
         if (authLoading) {
           return;
+        }
+
+        // Don't redirect immediately after mount to allow auth to stabilize
+        const timeSinceMount = Date.now() - mountTime
+        if (timeSinceMount < 300) {
+          console.log('[DEBUG] DataInsights: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
+          return
         }
 
         if (!contextAuthenticated) {
@@ -186,7 +209,7 @@ export default function DataInsightsPage() {
     }
 
     initializePage()
-  }, [fromSignin, contextAuthenticated, authLoading])
+  }, [fromSignin, contextAuthenticated, authLoading, mountTime])
 
   // Add this at the top of your component
   useEffect(() => {
@@ -598,7 +621,7 @@ export default function DataInsightsPage() {
         console.log("DEBUG: ❌ Not Chick-fil-A user, proceeding with database fetch")
       }
 
-      const tableName = organizationName.toLowerCase().replace(/\s+/g, "_") + "_distribution"
+      const tableName = organizationName!.toLowerCase().replace(/\s+/g, "_") + "_distribution"
       console.log(`DEBUG: Will fetch from table: ${tableName} for year: ${selectedYear}`)
 
       // Add a check to see if the table exists
@@ -651,7 +674,7 @@ export default function DataInsightsPage() {
           setSalaryData(chartData);
         } else {
           console.warn("DEBUG: No salary data found for year:", selectedYear);
-          setSalaryData(null);
+          setSalaryData([]);
         }
       }
 
