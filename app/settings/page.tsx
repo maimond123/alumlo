@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, LogOut, Bookmark, Search, Brain, MessageCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
-import { isDemoMode as checkIsDemoMode } from '../utils/demo'
+import { isDemoMode as checkIsDemoMode } from "../utils/demo"
+import Sidebar from "../../components/Sidebar"
+import { useAuth } from "../../components/AuthProvider"
+import analytics from "../utils/analytics"
 
 interface SavedLead {
   id: string;
@@ -37,83 +40,96 @@ interface UserInfo {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth()
+  
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [email, setEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  
   const [savedLeads, setSavedLeads] = useState<SavedLead[]>([])
   const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([])
   const [learnConversations, setLearnConversations] = useState<LearnConversation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {
-    loadUserData()
-  }, [])
-
-  const loadUserData = async () => {
-    try {
-      setIsLoading(true)
-      const userEmail = await getUserEmail()
+    const loadUserData = async () => {
+      setIsLoading(true);
       
-      if (!userEmail) {
-        router.push('/auth/signin')
-        return
-      }
-
-      // Check if this is a demo user
       if (checkIsDemoMode()) {
-        setIsDemoMode(true)
+        setIsDemoMode(true);
         setUserInfo({
           first_name: "Demo",
           last_name: "Account",
           organization_name: "Your Organization"
-        })
-        // Load demo data
-        await Promise.all([
-          loadSavedLeads("demo"),
-          loadSearchHistory(userEmail),
-          loadLearnConversations(userEmail)
-        ])
-        setIsLoading(false)
-        return
+        });
+        // In demo mode, we don't load any user-specific data
+        setSavedLeads([]);
+        setSearchHistory([]);
+        setLearnConversations([]);
+        setIsLoading(false);
+        return;
       }
+      
+      // Regular user flow
+      if (!isAuthLoading && !isAuthenticated) {
+        router.push('/signin');
+        return;
+      }
+      
+      if (isAuthenticated && user?.email) {
+        const userEmail = user.email;
+        setEmail(userEmail);
 
-      // Get user info for non-demo users
-      const { data: userInfoData, error: userInfoError } = await supabase
-        .from('customer_information')
-        .select('first_name, last_name, organization_name')
-        .eq('organization_email', userEmail)
-        .single()
+        try {
+          const { data, error } = await supabase
+            .from('customer_information')
+            .select('first_name, last_name, organization_name')
+            .eq('organization_email', userEmail)
+            .single();
 
-      if (userInfoError) throw userInfoError
-      setUserInfo(userInfoData)
+          if (error) throw error;
+          
+          if (data) {
+            setUserInfo(data);
+            // Load user-specific data
+            await Promise.all([
+              loadSavedLeads(data.organization_name),
+              loadSearchHistory(userEmail),
+              loadLearnConversations(userEmail)
+            ]);
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
 
-      // Load all data in parallel
-      await Promise.all([
-        loadSavedLeads(userInfoData.organization_name),
-        loadSearchHistory(userEmail),
-        loadLearnConversations(userEmail)
-      ])
-    } catch (error) {
-      console.error('Error loading user data:', error)
-    } finally {
-      setIsLoading(false)
+    if (!isAuthLoading) {
+      loadUserData();
     }
-  }
+  }, [isAuthLoading, isAuthenticated, user, router]);
 
   const loadSavedLeads = async (organizationName: string) => {
+    // For demo mode, we shouldn't fetch real data.
+    if (organizationName === 'demo') {
+        setSavedLeads([]);
+        return;
+    }
+    const tableName = `${organizationName.toLowerCase().replace(/ /g, '_')}_alumni_saved_leads`;
     try {
-      const tableName = `${organizationName.toLowerCase()}_alumni_saved_leads`
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
-        .order('saved_at', { ascending: false })
-
-      if (error) throw error
-      setSavedLeads(data || [])
+        .order('saved_at', { ascending: false });
+      if (error) throw error;
+      setSavedLeads(data || []);
     } catch (error) {
-      console.error('Error loading saved leads:', error)
-      setSavedLeads([])
+      console.error('Error loading saved leads:', error);
+      setSavedLeads([]);
     }
-  }
+  };
 
   const loadSearchHistory = async (userEmail: string) => {
     try {
@@ -122,15 +138,14 @@ export default function SettingsPage() {
         .select('id, query, created_at')
         .eq('user_email', userEmail)
         .order('created_at', { ascending: false })
-        .limit(50)
-
-      if (error) throw error
-      setSearchHistory(data || [])
+        .limit(50);
+      if (error) throw error;
+      setSearchHistory(data || []);
     } catch (error) {
-      console.error('Error loading search history:', error)
-      setSearchHistory([])
+      console.error('Error loading search history:', error);
+      setSearchHistory([]);
     }
-  }
+  };
 
   const loadLearnConversations = async (userEmail: string) => {
     try {
@@ -139,61 +154,52 @@ export default function SettingsPage() {
         .select('id, title, updated_at')
         .eq('user_email', userEmail)
         .order('updated_at', { ascending: false })
-        .limit(50)
-
-      if (error) throw error
-      setLearnConversations(data || [])
+        .limit(50);
+      if (error) throw error;
+      setLearnConversations(data || []);
     } catch (error) {
-      console.error('Error loading learn conversations:', error)
-      setLearnConversations([])
+      console.error('Error loading learn conversations:', error);
+      setLearnConversations([]);
     }
-  }
+  };
 
   const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error("Error signing out:", error)
-        return
-      }
-      window.location.href = 'https://www.alumlo.com'
-    } catch (error) {
-      console.error("Error during sign out process:", error)
-    }
-  }
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   const formatTime = (timestamp: string) => {
-    const now = new Date()
-    const time = new Date(timestamp)
-    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
 
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
     
-    const diffInDays = Math.floor(diffInHours / 24)
+    const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`
     
     return time.toLocaleDateString()
-  }
+  };
 
   const formatOrganizationName = (name: string): string => {
-    if (!name) return "Your Organization"; // Fallback for empty or null names
+    if (!name) return "";
     return name
       .replace(/_/g, ' ')
       .split(' ')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
 
-  if (isLoading) {
+  if (isLoading || isAuthLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+      <div className="flex h-screen items-center justify-center">
+        <div>Loading settings...</div>
       </div>
-    )
+    );
   }
 
   return (

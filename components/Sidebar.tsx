@@ -38,17 +38,17 @@ export default function Sidebar() {
   useEffect(() => {
     const getUserInfoAndDemoStatus = async () => {
       try {
-        // Get user email from Supabase
+        // Check for demo user first
+        if (checkIsDemoMode()) {
+          setIsDemoUser(true);
+          return; // Stop further execution for demo users
+        }
+
+        // Get user email from Supabase for real users
         const userEmail = await getUserEmail()
         
         if (!userEmail) {
           return
-        }
-
-        // Check for demo user
-        if (checkIsDemoMode()) {
-          
-          setIsDemoUser(true);
         }
         
         // Get user info from database
@@ -154,12 +154,14 @@ export default function Sidebar() {
 
   // Get initials from full name
   const getInitials = () => {
+    if (isDemoUser) return 'DA';
     if (!userInfo) return '??'
     return `${userInfo.first_name[0]}${userInfo.last_name[0]}`.toUpperCase()
   }
 
   // Get full name
   const getFullName = () => {
+    if (isDemoUser) return 'Demo Account';
     if (!userInfo) return 'Loading...'
     return `${userInfo.first_name} ${userInfo.last_name}`
   }
