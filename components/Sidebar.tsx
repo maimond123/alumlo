@@ -47,6 +47,7 @@ export default function Sidebar() {
 
         // Check for demo user
         if (checkIsDemoMode()) {
+          
           setIsDemoUser(true);
         }
         
