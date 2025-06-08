@@ -84,6 +84,7 @@ export default function LearnPage() {
   const [mountTime] = useState(Date.now())
   const [error, setError] = useState<string | null>(null)
   const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
+  const [displayOrganizationName, setDisplayOrganizationName] = useState("")
   const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
   const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
   const { isSidebarOpen } = useSidebar()
@@ -193,7 +194,8 @@ export default function LearnPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated")
             setIsDemoMode(true)
-            setFormattedOrganizationName("{Your Organization}")
+            setFormattedOrganizationName("chick_fil_a") // Keep internal name for API calls
+            setDisplayOrganizationName("{Your Organization}") // Display name for UI
             setIsOrganizationNameReadyToAnimate(true)
             setIsLoading(false)
 
@@ -261,6 +263,7 @@ export default function LearnPage() {
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ")
           setFormattedOrganizationName(formatted)
+          setDisplayOrganizationName(formatted) // Use same name for display for real users
 
           // Introduce a short delay before signaling animation readiness
           setTimeout(() => {
@@ -475,10 +478,10 @@ export default function LearnPage() {
 
   // Refined Typewriter effect for school name (matches dashboard)
   useEffect(() => {
-    if (isOrganizationNameReadyToAnimate && formattedOrganizationName) {
+    if (isOrganizationNameReadyToAnimate && displayOrganizationName) {
       setDisplayedOrganizationName(""); // Initialize for animation
       let i = 0;
-      const organizationNameToAnimate = formattedOrganizationName;
+      const organizationNameToAnimate = displayOrganizationName;
       
       const typingInterval = setInterval(() => {
         if (i < organizationNameToAnimate.length) {
@@ -489,10 +492,10 @@ export default function LearnPage() {
         }
       }, 70); // Speed of typing
       return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!formattedOrganizationName) {
+    } else if (!displayOrganizationName) {
       setDisplayedOrganizationName(""); // Clear if no formatted name
     }
-  }, [formattedOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
+  }, [displayOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>

@@ -454,6 +454,7 @@ export default function DashboardPage() {
   const [mountTime] = useState(Date.now())
   const [error, setError] = useState<string | null>(null)
   const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
+  const [displayOrganizationName, setDisplayOrganizationName] = useState("")
   const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
@@ -662,7 +663,8 @@ export default function DashboardPage() {
           if (userEmail === "maimondavid553@gmail.com") {
             console.log("Demo mode activated")
             setIsDemoMode(true)
-            setFormattedOrganizationName("{Your Organization}")
+            setFormattedOrganizationName("chick_fil_a") // Keep internal name for API calls
+            setDisplayOrganizationName("{Your Organization}") // Display name for UI
             setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
             if (typeof window !== "undefined") {
               localStorage.setItem("organizationName", "chick_fil_a")
@@ -762,6 +764,7 @@ export default function DashboardPage() {
             const formattedName = formatOrganizationName(rawOrganizationName);
             console.log("[DEBUG] Result from formatOrganizationName function:", formattedName);
             setFormattedOrganizationName(formattedName);
+            setDisplayOrganizationName(formattedName); // Use same name for display for real users
             
             // Introduce a short delay before signaling animation readiness
             setTimeout(() => {
@@ -775,13 +778,15 @@ export default function DashboardPage() {
             }
           } else {
             setError("School name not found for this user.");
-            setFormattedOrganizationName("Your Organization"); // Fallback
+            setFormattedOrganizationName("Your Organization"); // Fallback for internal
+            setDisplayOrganizationName("Your Organization"); // Fallback for display
             setIsOrganizationNameReadyToAnimate(true);
           }
         } catch (err) {
           console.error("Exception in fetchOrganizationName:", err);
           setError("An error occurred while fetching school data.");
-          setFormattedOrganizationName("Your Organization"); // Fallback
+          setFormattedOrganizationName("Your Organization"); // Fallback for internal
+          setDisplayOrganizationName("Your Organization"); // Fallback for display
           setIsOrganizationNameReadyToAnimate(true);
         } finally {
           setIsLoading(false);
@@ -1520,10 +1525,10 @@ export default function DashboardPage() {
 
   // Refined Typewriter effect for school name
   useEffect(() => {
-    if (isOrganizationNameReadyToAnimate && formattedOrganizationName) {
+    if (isOrganizationNameReadyToAnimate && displayOrganizationName) {
       setDisplayedOrganizationName(""); // Initialize for animation
       let i = 0;
-      const organizationNameToAnimate = formattedOrganizationName;
+      const organizationNameToAnimate = displayOrganizationName;
       
       const typingInterval = setInterval(() => {
         if (i < organizationNameToAnimate.length) {
@@ -1534,10 +1539,10 @@ export default function DashboardPage() {
         }
       }, 70); // Speed of typing
       return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!formattedOrganizationName) {
+    } else if (!displayOrganizationName) {
       setDisplayedOrganizationName(""); // Clear if no formatted name
     }
-  }, [formattedOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
+  }, [displayOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
   // Add this new function to handle saving leads
   const handleSaveLead = async (result: SearchResult) => {
