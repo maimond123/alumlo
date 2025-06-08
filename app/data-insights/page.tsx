@@ -114,6 +114,18 @@ export default function DataInsightsPage() {
   // NEW: Auth context
   const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
 
+  // Debug log to track state
+  console.log("DEBUG: Component render state:", {
+    isInitialized,
+    searchResultsLength: searchResults.length,
+    chartsLength: charts.length,
+    organizationName,
+    selectedYear,
+    salaryDataLength: salaryData.length,
+    industryDataLength: industryData.length,
+    locationDataLength: locationData.length
+  })
+
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
     { id: "salary", title: "Salary Distribution", type: "salary" },
@@ -194,6 +206,10 @@ export default function DataInsightsPage() {
         setSearchResults(schoolCharts)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, chartsSet: true, schoolCharts }))
 
+        // Set organization name and trigger data loading
+        setOrganizationName("lawrenceville")
+        console.log("DEBUG: School name set to 'lawrenceville', will trigger data fetch")
+
         if (fromSignin) {
           const startTime = Date.now()
           const duration = 2500
@@ -228,45 +244,17 @@ export default function DataInsightsPage() {
     })
   }, [])
 
-  // Override the school name when the component mounts
-  useEffect(() => {
-    // TEMPORARY: Force school name to be 'lawrenceville'
-    setOrganizationName("lawrenceville")
-    
-    console.log("DEBUG: School name temporarily set to 'lawrenceville'")
-  }, [])
-
+  // Simplified effect to handle data fetching when organization name is set
   useEffect(() => {
     console.log("DEBUG: organizationName changed:", {
       organizationName,
       organizationNameType: typeof organizationName,
-      timestamp: new Date().toISOString(),
-      isHardcoded: organizationName === "lawrenceville" ? "yes (temporary override)" : "no"
-    })
-
-
-    if (organizationName) {
-      fetchSchoolData()
-    }
-  }, [organizationName])
-
-  useEffect(() => {
-    console.log("DEBUG: organizationName or selectedYear changed", {
-      organizationName,
-      selectedYear,
-      organizationNameType: typeof organizationName,
-      selectedYearType: typeof selectedYear,
       timestamp: new Date().toISOString(),
     })
 
     if (organizationName && selectedYear) {
       console.log("DEBUG: Both organizationName and selectedYear available, calling fetchSchoolData")
       fetchSchoolData()
-    } else {
-      console.log("DEBUG: Not fetching data because:", {
-        hasOrganizationName: Boolean(organizationName),
-        hasSelectedYear: Boolean(selectedYear),
-      })
     }
   }, [organizationName, selectedYear])
 
@@ -555,6 +543,14 @@ export default function DataInsightsPage() {
     setLocationData(locationData)
     setGraduateSchoolData(gradSchoolData)
     setIndustrySalaryData(industrySalaryData)
+    
+    console.log("DEBUG: Data set in generateChickFilADummyData:", {
+      salaryDataLength: salaryData.length,
+      industryDataLength: industryData.length,
+      locationDataLength: locationData.length,
+      gradSchoolDataLength: gradSchoolData.length,
+      industrySalaryDataLength: industrySalaryData.length
+    })
     
     // Enhanced industry progression data with more variation
     const progressionYears = [1, 3, 5].filter(y => y <= yearsExperience + 1)
