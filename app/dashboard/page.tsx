@@ -14,6 +14,7 @@ import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
 import OAuthHandler from "../../components/OAuthHandler"
 import { useAuth } from "../../components/AuthProvider"
+import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -613,6 +614,36 @@ export default function DashboardPage() {
           console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
           console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
           
+          // Check for demo mode from URL parameters first
+          initDemoFromUrl()
+          
+          // Check if this is demo mode (session-based)
+          if (checkIsDemoMode()) {
+            console.log("Demo mode activated from session")
+            setIsDemoMode(true)
+            setFormattedOrganizationName(getDemoOrganization()) // Get from session
+            setDisplayOrganizationName(getDemoDisplayName()) // Get from session
+            setIsOrganizationNameReadyToAnimate(true)
+            setIsLoading(false)
+
+            // Track as a unique visitor while maintaining demo status
+            const visitorId = analytics.getVisitorId()
+            console.log(`Demo visitor identified with unique ID: ${visitorId}`)
+
+            analytics.identifyUser("demo_user", {
+              isDemoUser: true,
+              visitorId: visitorId,
+              school: "Your Organization"
+            })
+
+            // Set auth state for demo mode
+            setAuthState({
+              isLoading: false,
+              isAuthenticated: true
+            })
+            return
+          }
+          
           // Check if this is an OAuth callback
           // OAuth callbacks can have various hash parameters
           const isOAuthCallback = window.location.hash && (
@@ -656,31 +687,8 @@ export default function DashboardPage() {
             return
           }
 
-          // If authenticated, check if it's a demo user before proceeding
-          const userEmail = await getUserEmail()
-          console.log("[DEBUG] Dashboard: User email:", userEmail)
-
-          if (userEmail === "maimondavid553@gmail.com") {
-            console.log("Demo mode activated")
-            setIsDemoMode(true)
-            setFormattedOrganizationName("chick_fil_a") // Keep internal name for API calls
-            setDisplayOrganizationName("{Your Organization}") // Display name for UI
-            setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
-            if (typeof window !== "undefined") {
-              localStorage.setItem("organizationName", "chick_fil_a")
-            }
-            setIsLoading(false)
-
-            // Track as a unique visitor while maintaining demo status
-            const visitorId = analytics.getVisitorId()
-            console.log(`Demo visitor identified with unique ID: ${visitorId}`)
-
-            analytics.identifyUser("maimondavid553@gmail.com", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your Organization"
-            })
-          }
+          // For authenticated real users, proceed with normal flow
+          console.log("[DEBUG] Dashboard: Real user authenticated")
 
           // Finally, update the auth state
           setAuthState({

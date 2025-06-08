@@ -6,7 +6,7 @@ import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
 import Image from 'next/image'
-import { supabase } from '../app/data/supabase'
+import { setDemoMode } from '../app/utils/demo'
 
 export default function FeaturesSection() {
   const router = useRouter()
@@ -35,21 +35,14 @@ export default function FeaturesSection() {
     setIsLoading(true)
     
     try {
-      // Sign in as the demo account
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: "maimondavid553@gmail.com",
-        password: "Tryme12!" // Replace with your actual demo password
-      });
+      // Set demo mode in session storage
+      setDemoMode('chick_fil_a', '{Your Organization}')
       
-      if (error) throw error;
-      
-      // Redirect to dashboard after successful login
+      // Redirect to dashboard - no authentication needed!
       router.push('/dashboard')
     } catch (err) {
-      console.error('Demo login error:', err)
-      
-      // Fallback - if login fails, still redirect to dashboard
-      // The dashboard has logic to detect demo mode
+      console.error('Demo setup error:', err)
+      // Still redirect to dashboard as demo mode is set
       router.push('/dashboard')
     } finally {
       setIsLoading(false)

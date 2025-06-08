@@ -15,6 +15,7 @@ import { useAuth } from "../../components/AuthProvider"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 import { AverageSalaryByIndustryBarChart } from "../../components/chart"
 import { IndustryStackedBarChart } from "../../components/chart"
+import { isDemoMode as checkIsDemoMode } from "../utils/demo"
 
 interface UserInfo {
   first_name: string
@@ -162,7 +163,7 @@ export default function DataInsightsPage() {
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, userEmail }))
 
         // Check if this is a demo user
-        if (userEmail === "maimondavid553@gmail.com") {
+        if (checkIsDemoMode()) {
           setIsDemoMode(true);
         }
 

@@ -3,31 +3,24 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { supabase } from '../app/data/supabase'
+import { useRouter } from 'next/navigation'
+import { setDemoMode } from '../app/utils/demo'
 
 // ... existing code ...
-import { useRouter } from 'next/navigation'
-
 
 export default function Navigation() {
   const router = useRouter()
 
   const handleGetStarted = async () => {
     try {
-      // Sign in as the demo account
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: "maimondavid553@gmail.com",
-        password: "Tryme12!" // Replace with your actual demo password
-      });
+      // Set demo mode in session storage
+      setDemoMode('chick_fil_a', '{Your Organization}')
       
-      if (error) throw error;
-      
-      // Redirect to dashboard after successful login
+      // Redirect to dashboard - no authentication needed!
       router.push('/dashboard')
     } catch (err) {
-      console.error('Get Started login error:', err)
-      
-      // Fallback - if login fails, still redirect to dashboard
+      console.error('Demo setup error:', err)
+      // Still redirect to dashboard as demo mode is set
       router.push('/dashboard')
     }
   }

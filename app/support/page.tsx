@@ -5,8 +5,8 @@ import { motion } from 'framer-motion'
 import { InlineWidget } from 'react-calendly'
 import Sidebar from '../../components/Sidebar'
 import Footer from '../../components/footer'
-import { getUserEmail } from '../utils/auth'
 import { supabase } from '../data/supabase'
+import { isDemoMode as checkIsDemoMode } from '../utils/demo'
 
 export default function SupportPage() {
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -15,11 +15,8 @@ export default function SupportPage() {
   useEffect(() => {
     const checkIfDemoAccount = async () => {
       try {
-        // Get user email
-        const userEmail = await getUserEmail()
-        
-        // Check if this is a demo user
-        if (userEmail === "maimondavid553@gmail.com") {
+        // Check if this is demo mode (session-based)
+        if (checkIsDemoMode()) {
           setIsDemoMode(true);
         }
       } catch (error) {

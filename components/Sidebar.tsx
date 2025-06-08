@@ -8,7 +8,8 @@ import { BarChart2, FileText, Search, Upload, Brain, MessageCircle, Settings, Ca
 import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
-import { getUserEmail, getCurrentUser } from '../app/utils/auth'
+import { getUserEmail } from "../app/utils/auth"
+import { isDemoMode as checkIsDemoMode } from "../app/utils/demo"
 import { useRecentActivity } from '../hooks/useRecentActivity'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -45,7 +46,7 @@ export default function Sidebar() {
         }
 
         // Check for demo user
-        if (userEmail === "maimondavid553@gmail.com") {
+        if (checkIsDemoMode()) {
           setIsDemoUser(true);
         }
         

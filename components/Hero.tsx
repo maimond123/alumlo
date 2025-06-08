@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../app/data/supabase'
 import { motion } from 'framer-motion'
+import { setDemoMode } from '../app/utils/demo'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
@@ -18,21 +18,14 @@ export default function Hero() {
     setIsLoading(true)
     
     try {
-      // Sign in as the demo account
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: "maimondavid553@gmail.com",
-        password: "Tryme12!" // Replace with your actual demo password
-      });
+      // Set demo mode in session storage
+      setDemoMode('chick_fil_a', '{Your Organization}')
       
-      if (error) throw error;
-      
-      // Redirect to dashboard after successful login
+      // Redirect to dashboard - no authentication needed!
       router.push('/dashboard')
     } catch (err) {
-      console.error('Demo login error:', err)
-      
-      // Fallback - if login fails, still redirect to dashboard
-      // The dashboard has logic to detect demo mode
+      console.error('Demo setup error:', err)
+      // Still redirect to dashboard as demo mode is set
       router.push('/dashboard')
     } finally {
       setIsLoading(false)
@@ -67,7 +60,7 @@ export default function Hero() {
         </h1>
         
         <p className="text-xl text-emerald-700 mb-8 max-w-2xl">
-        Search. Learn. Visualize. Unparalleled access and insight to market your alumni’s success.
+        Search. Learn. Visualize. Unparalleled access and insight to market your alumni's success.
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">

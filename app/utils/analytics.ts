@@ -1,4 +1,5 @@
 import mixpanel from 'mixpanel-browser';
+import { isDemoMode as checkIsDemoMode } from './demo'
 
 // Initialize Mixpanel with your project token
 const MIXPANEL_TOKEN = '734da60febbf101dd204ef6d430dbfeb';
@@ -530,36 +531,32 @@ export const setUserProperties = (properties = {}) => {
 };
 
 // Identify user with custom ID while maintaining the visitor tracking
-export const identifyUser = (userId: string, properties = {}) => {
-  if (!isBrowser) return;
-  
-  // For demo users, we want to track them as unique visitors
-  // but still associate them with the demo account
-  
-  // Store original ID for database queries
-  const originalUserId = userId;
-  
-  // Use visitor ID for tracking but associate with demo status
-  if (userId === "maimondavid553@gmail.com") {
-    // Don't identify as the demo email - keep the unique visitor ID
-    // But set properties to indicate this is a demo user
+export const identifyUser = (userId: string, properties: Record<string, any> = {}) => {
+  try {
+    // Check if this is demo mode
+    if (checkIsDemoMode()) {
+      // For demo users, use a generic identifier with visitor ID
+      const visitorId = getVisitorId()
+      console.log(`Analytics: Demo user identified with visitor ID: ${visitorId}`)
+      
+      mixpanel.identify(visitorId)
+      mixpanel.people.set({
+        $name: "Demo User",
+        isDemoUser: true,
+        visitorId: visitorId,
+        ...properties
+      })
+      return
+    }
+
+    // For regular users, use their actual user ID
+    mixpanel.identify(userId)
     mixpanel.people.set({
-      visitor_id: visitorId,
-      is_demo_user: true,
-      demo_email: originalUserId,
-      original_id: originalUserId,
+      $email: userId,
       ...properties
-    });
-    
-    console.log(`Demo user identified as unique visitor: ${visitorId}`);
-  } else {
-    // For non-demo users, use their actual email as identifier
-    mixpanel.identify(userId);
-    mixpanel.people.set({
-      visitor_id: visitorId,
-      email: userId,
-      ...properties
-    });
+    })
+  } catch (error) {
+    console.error('Error identifying user:', error)
   }
 };
 

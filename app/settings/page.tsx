@@ -6,6 +6,7 @@ import { ArrowLeft, LogOut, Bookmark, Search, Brain, MessageCircle } from "lucid
 import { useRouter } from "next/navigation"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
+import { isDemoMode as checkIsDemoMode } from '../utils/demo'
 
 interface SavedLead {
   id: string;
@@ -58,7 +59,7 @@ export default function SettingsPage() {
       }
 
       // Check if this is a demo user
-      if (userEmail === "maimondavid553@gmail.com") {
+      if (checkIsDemoMode()) {
         setIsDemoMode(true)
         setUserInfo({
           first_name: "Demo",

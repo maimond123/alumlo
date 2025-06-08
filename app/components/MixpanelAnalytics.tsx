@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import analytics from '../utils/analytics'
 import { getUserEmail } from '../utils/auth'
 import { useAuth } from '../../components/AuthProvider'
+import { isDemoMode as checkIsDemoMode } from '../utils/demo'
 
 export default function MixpanelAnalytics() {
   const pathname = usePathname()
@@ -28,20 +29,17 @@ export default function MixpanelAnalytics() {
         if (contextAuthenticated) {
           const userEmail = await getUserEmail()
           
-          // If this is the demo user, use the unique visitor ID in analytics
-          // while still associating with the demo account data
-          if (userEmail === "maimondavid553@gmail.com") {
-            const visitorId = analytics.getVisitorId()
-            console.log(`MixpanelAnalytics: Demo visitor identified with ID: ${visitorId}`)
-            
-            // Use the demo email for data queries but the visitor ID for analytics
-            analytics.identifyUser("maimondavid553@gmail.com", {
+          // Check if this is a demo user
+          if (checkIsDemoMode()) {
+            // For demo users, use a generic identifier
+            analytics.identifyUser("demo_user", {
               isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your School", 
-              appSection: pathname ? pathname : 'unknown'
-            })
-          } else if (userEmail) {
+              school: "Your Organization"
+            });
+            return;
+          }
+          
+          if (userEmail) {
             // For non-demo users, use their actual email
             analytics.identifyUser(userEmail, {
               isDemoUser: false,

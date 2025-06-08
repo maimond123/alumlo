@@ -11,6 +11,7 @@ import analytics from "../utils/analytics"
 import { supabase } from "../data/supabase"
 import { useLearnConversations } from "../../hooks/useLearnConversations"
 import { useAuth } from "../../components/AuthProvider"
+import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
 
 // Add realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
@@ -172,6 +173,33 @@ export default function LearnPage() {
     const timeoutId = setTimeout(() => {
       const checkAuth = async () => {
         try {
+          // Check for demo mode from URL parameters first
+          initDemoFromUrl()
+          
+          // Check if this is demo mode (session-based)
+          if (checkIsDemoMode()) {
+            console.log("Demo mode activated from session")
+            setIsDemoMode(true)
+            setFormattedOrganizationName(getDemoOrganization()) // Get from session
+            setDisplayOrganizationName(getDemoDisplayName()) // Get from session
+            setIsOrganizationNameReadyToAnimate(true)
+            setIsLoading(false)
+
+            const visitorId = analytics.getVisitorId()
+            analytics.identifyUser("demo_user", {
+              isDemoUser: true,
+              visitorId: visitorId,
+              school: "Your Organization"
+            })
+
+            // Set auth state for demo mode
+            setAuthState({
+              isLoading: false,
+              isAuthenticated: true
+            })
+            return
+          }
+
           if (authLoading) {
             return;
           }
@@ -189,23 +217,8 @@ export default function LearnPage() {
             return
           }
 
-          // If authenticated, check for demo user before setting auth state
-          const userEmail = await getUserEmail()
-          if (userEmail === "maimondavid553@gmail.com") {
-            console.log("Demo mode activated")
-            setIsDemoMode(true)
-            setFormattedOrganizationName("chick_fil_a") // Keep internal name for API calls
-            setDisplayOrganizationName("{Your Organization}") // Display name for UI
-            setIsOrganizationNameReadyToAnimate(true)
-            setIsLoading(false)
-
-            const visitorId = analytics.getVisitorId()
-            analytics.identifyUser("maimondavid553@gmail.com", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your Organization"
-            })
-          }
+          // For authenticated real users, proceed with normal flow
+          console.log("[DEBUG] Learn: Real user authenticated")
 
           // Set auth state after handling demo mode check
           setAuthState({
