@@ -629,6 +629,7 @@ export default function DashboardPage() {
           console.log("Demo mode activated")
           setIsDemoMode(true)
           setFormattedOrganizationName("Your Organization")
+          setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
           if (typeof window !== "undefined") {
             localStorage.setItem("organizationName", "chick_fil_a")
           }
