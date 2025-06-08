@@ -31,7 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
       } catch (error) {
         console.error('Error getting initial session:', error)
-        setUser(null)
+        // Don't set user to null on API errors - keep existing state
+        if (!(error as Error)?.message?.includes('429') && !(error as Error)?.message?.includes('API key')) {
+          setUser(null)
+        }
       } finally {
         setIsLoading(false)
       }
@@ -49,12 +52,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         previousEvent: lastAuthEvent
       })
       
-      // Ignore rapid SIGNED_OUT events that happen within 500ms of a SIGNED_IN
-      if (event === 'SIGNED_OUT' && lastAuthEvent && 
-          lastAuthEvent.event === 'SIGNED_IN' && 
-          (now - lastAuthEvent.timestamp) < 500) {
-        console.log('Ignoring rapid SIGNED_OUT event after SIGNED_IN')
-        return
+      // Ignore rapid SIGNED_OUT events and rate limiting related sign-outs
+      if (event === 'SIGNED_OUT') {
+        // Ignore if it happened too quickly after SIGNED_IN
+        if (lastAuthEvent && lastAuthEvent.event === 'SIGNED_IN' && 
+            (now - lastAuthEvent.timestamp) < 500) {
+          console.log('Ignoring rapid SIGNED_OUT event after SIGNED_IN')
+          return
+        }
+        
+        // Ignore if we recently had a user and this might be due to API errors
+        if (user && lastAuthEvent && (now - lastAuthEvent.timestamp) < 2000) {
+          console.log('Ignoring potential API error related SIGNED_OUT event')
+          return
+        }
       }
       
       setLastAuthEvent({ event, timestamp: now })

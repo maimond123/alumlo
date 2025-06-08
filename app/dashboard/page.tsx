@@ -600,100 +600,110 @@ export default function DashboardPage() {
 
   // Check for OAuth callback and auth state on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback', {
-          authLoading,
-          contextAuthenticated,
-          timestamp: new Date().toISOString()
-        })
-        console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
-        console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
-        
-        // Check if this is an OAuth callback
-        // OAuth callbacks can have various hash parameters
-        const isOAuthCallback = window.location.hash && (
-          window.location.hash.includes('access_token') || 
-          window.location.hash.includes('refresh_token') ||
-          window.location.hash.includes('type=recovery') ||
-          window.location.search.includes('code=')
-        )
-        
-        if (isOAuthCallback) {
-          console.log('[DEBUG] Dashboard: OAuth callback detected')
-          setIsOAuthCallback(true)
-          return
-        }
+    // Debounce rapid auth checks
+    const timeoutId = setTimeout(() => {
+      const checkAuth = async () => {
+        try {
+          console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback', {
+            authLoading,
+            contextAuthenticated,
+            timestamp: new Date().toISOString()
+          })
+          console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
+          console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
+          
+          // Check if this is an OAuth callback
+          // OAuth callbacks can have various hash parameters
+          const isOAuthCallback = window.location.hash && (
+            window.location.hash.includes('access_token') || 
+            window.location.hash.includes('refresh_token') ||
+            window.location.hash.includes('type=recovery') ||
+            window.location.search.includes('code=')
+          )
+          
+          if (isOAuthCallback) {
+            console.log('[DEBUG] Dashboard: OAuth callback detected')
+            setIsOAuthCallback(true)
+            return
+          }
 
-        // Wait until global auth loading finishes
-        if (authLoading) {
-          console.log('[DEBUG] Dashboard: Auth still loading, waiting...')
-          return;
-        }
+          // Wait until global auth loading finishes
+          if (authLoading) {
+            console.log('[DEBUG] Dashboard: Auth still loading, waiting...')
+            return;
+          }
 
-        console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated, {
-          authLoading,
-          timestamp: new Date().toISOString()
-        })
+          // Don't redirect immediately after mount to allow auth to stabilize
+          const timeSinceMount = Date.now() - mountTime
+          if (timeSinceMount < 300) {
+            console.log('[DEBUG] Dashboard: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
+            return
+          }
 
-        // Don't redirect immediately after mount to allow auth to stabilize
-        const timeSinceMount = Date.now() - mountTime
-        if (timeSinceMount < 300) {
-          console.log('[DEBUG] Dashboard: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
-          return
-        }
+          console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated, {
+            authLoading,
+            timestamp: new Date().toISOString()
+          })
 
-        if (!contextAuthenticated) {
-          console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
+          if (!contextAuthenticated) {
+            console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
+            setAuthState({
+              isLoading: false,
+              isAuthenticated: false
+            })
+            router.push("/signin")
+            return
+          }
+
+          // If authenticated, check if it's a demo user before proceeding
+          const userEmail = await getUserEmail()
+          console.log("[DEBUG] Dashboard: User email:", userEmail)
+
+          if (userEmail === "maimondavid553@gmail.com") {
+            console.log("Demo mode activated")
+            setIsDemoMode(true)
+            setFormattedOrganizationName("{Your Organization}")
+            setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
+            if (typeof window !== "undefined") {
+              localStorage.setItem("organizationName", "chick_fil_a")
+            }
+            setIsLoading(false)
+
+            // Track as a unique visitor while maintaining demo status
+            const visitorId = analytics.getVisitorId()
+            console.log(`Demo visitor identified with unique ID: ${visitorId}`)
+
+            analytics.identifyUser("maimondavid553@gmail.com", {
+              isDemoUser: true,
+              visitorId: visitorId,
+              school: "Your Organization"
+            })
+          }
+
+          // Finally, update the auth state
+          setAuthState({
+            isLoading: false,
+            isAuthenticated: true
+          })
+        } catch (error) {
+          console.error("Auth check error:", error)
+          // Don't sign out on API rate limiting errors
+          if ((error as Error)?.message?.includes('429') || (error as Error)?.message?.includes('API key')) {
+            console.log('API rate limiting detected, not signing out')
+            return
+          }
           setAuthState({
             isLoading: false,
             isAuthenticated: false
           })
-          router.push("/signin")
-          return
+          router.push('/signin')
         }
-
-        // If authenticated, check if it's a demo user before proceeding
-        const userEmail = await getUserEmail()
-        console.log("[DEBUG] Dashboard: User email:", userEmail)
-
-        if (userEmail === "maimondavid553@gmail.com") {
-          console.log("Demo mode activated")
-          setIsDemoMode(true)
-          setFormattedOrganizationName("{Your Organization}")
-          setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
-          if (typeof window !== "undefined") {
-            localStorage.setItem("organizationName", "chick_fil_a")
-          }
-          setIsLoading(false)
-
-          // Track as a unique visitor while maintaining demo status
-          const visitorId = analytics.getVisitorId()
-          console.log(`Demo visitor identified with unique ID: ${visitorId}`)
-
-          analytics.identifyUser("maimondavid553@gmail.com", {
-            isDemoUser: true,
-            visitorId: visitorId,
-            school: "Your Organization"
-          })
-        }
-
-        // Finally, update the auth state
-        setAuthState({
-          isLoading: false,
-          isAuthenticated: true
-        })
-      } catch (error) {
-        console.error("Auth check error:", error)
-        setAuthState({
-          isLoading: false,
-          isAuthenticated: false
-        })
-        router.push('/signin')
       }
-    }
+      
+      checkAuth()
+    }, 100) // 100ms debounce
     
-    checkAuth()
+    return () => clearTimeout(timeoutId)
   }, [router, authLoading, contextAuthenticated, mountTime])
 
   // Handle OAuth completion

@@ -167,58 +167,68 @@ export default function LearnPage() {
 
   // Check auth state on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (authLoading) {
-          return;
-        }
+    // Debounce rapid auth checks
+    const timeoutId = setTimeout(() => {
+      const checkAuth = async () => {
+        try {
+          if (authLoading) {
+            return;
+          }
 
-        // Don't redirect immediately after mount to allow auth to stabilize
-        const timeSinceMount = Date.now() - mountTime
-        if (timeSinceMount < 300) {
-          console.log('[DEBUG] Learn: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
-          return
-        }
+          // Don't redirect immediately after mount to allow auth to stabilize
+          const timeSinceMount = Date.now() - mountTime
+          if (timeSinceMount < 300) {
+            console.log('[DEBUG] Learn: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
+            return
+          }
 
-        if (!contextAuthenticated) {
-          setAuthState({ isLoading: false, isAuthenticated: false })
-          router.push("/signin")
-          return
-        }
+          if (!contextAuthenticated) {
+            setAuthState({ isLoading: false, isAuthenticated: false })
+            router.push("/signin")
+            return
+          }
 
-        // If authenticated, check for demo user before setting auth state
-        const userEmail = await getUserEmail()
-        if (userEmail === "maimondavid553@gmail.com") {
-          console.log("Demo mode activated")
-          setIsDemoMode(true)
-          setFormattedOrganizationName("{Your Organization}")
-          setIsOrganizationNameReadyToAnimate(true)
-          setIsLoading(false)
+          // If authenticated, check for demo user before setting auth state
+          const userEmail = await getUserEmail()
+          if (userEmail === "maimondavid553@gmail.com") {
+            console.log("Demo mode activated")
+            setIsDemoMode(true)
+            setFormattedOrganizationName("{Your Organization}")
+            setIsOrganizationNameReadyToAnimate(true)
+            setIsLoading(false)
 
-          const visitorId = analytics.getVisitorId()
-          analytics.identifyUser("maimondavid553@gmail.com", {
-            isDemoUser: true,
-            visitorId: visitorId,
-            school: "Your Organization"
+            const visitorId = analytics.getVisitorId()
+            analytics.identifyUser("maimondavid553@gmail.com", {
+              isDemoUser: true,
+              visitorId: visitorId,
+              school: "Your Organization"
+            })
+          }
+
+          // Set auth state after handling demo mode check
+          setAuthState({
+            isLoading: false,
+            isAuthenticated: contextAuthenticated
           })
+        } catch (error) {
+          console.error("Auth check error:", error)
+          // Don't sign out on API rate limiting errors
+          if ((error as Error)?.message?.includes('429') || (error as Error)?.message?.includes('API key')) {
+            console.log('API rate limiting detected, not signing out')
+            return
+          }
+          setAuthState({
+            isLoading: false,
+            isAuthenticated: false
+          })
+          router.push('/signin')
         }
-
-        // Set auth state after handling demo mode check
-        setAuthState({
-          isLoading: false,
-          isAuthenticated: contextAuthenticated
-        })
-      } catch (error) {
-        console.error("Auth check error:", error)
-        setAuthState({
-          isLoading: false,
-          isAuthenticated: false
-        })
-        router.push('/signin')
       }
-    }
 
-    checkAuth()
+      checkAuth()
+    }, 100) // 100ms debounce
+    
+    return () => clearTimeout(timeoutId)
   }, [router, authLoading, contextAuthenticated, mountTime])
 
   // Only fetch school name for non-demo users
