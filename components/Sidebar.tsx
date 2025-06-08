@@ -9,7 +9,7 @@ import { useSidebar } from "./SidebarProvider"
 import { supabase } from "../app/data/supabase"
 import type React from "react"
 import { getUserEmail } from "../app/utils/auth"
-import { isDemoMode as checkIsDemoMode } from "../app/utils/demo"
+import { isDemoMode as checkIsDemoMode, clearDemoMode } from "../app/utils/demo"
 import { useRecentActivity } from '../hooks/useRecentActivity'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -38,44 +38,41 @@ export default function Sidebar() {
   useEffect(() => {
     const getUserInfoAndDemoStatus = async () => {
       try {
-        // Check for demo user first
-        if (checkIsDemoMode()) {
-          setIsDemoUser(true);
-          return; // Stop further execution for demo users
-        }
+        const userEmail = await getUserEmail();
 
-        // Get user email from Supabase for real users
-        const userEmail = await getUserEmail()
-        
-        if (!userEmail) {
-          return
-        }
-        
-        // Get user info from database
-        const { data, error } = await supabase
-          .from('customer_information')
-          .select('first_name, last_name, organization_name')
-          .eq('organization_email', userEmail)
-          .single()
-        
-        if (error) {
-          return
-        }
-        
-        if (data) {
-          setUserInfo({
-            first_name: data.first_name,
-            last_name: data.last_name,
-            organization_name: data.organization_name
-          })
+        if (userEmail) {
+          // User is authenticated, so not in demo mode.
+          setIsDemoUser(false);
+          
+          // Get user info from database
+          const { data, error } = await supabase
+            .from('customer_information')
+            .select('first_name, last_name, organization_name')
+            .eq('organization_email', userEmail)
+            .single();
+          
+          if (error) {
+            return;
+          }
+          
+          if (data) {
+            setUserInfo(data);
+          }
+        } else {
+          // No authenticated user, now we check for demo mode.
+          if (checkIsDemoMode()) {
+            setIsDemoUser(true);
+          } else {
+            setIsDemoUser(false);
+          }
         }
       } catch (error) {
         // Silently handle error
       }
-    }
+    };
     
-    getUserInfoAndDemoStatus()
-  }, [])
+    getUserInfoAndDemoStatus();
+  }, []);
 
   // Load page-specific recent data
   const loadRecentSearches = async () => {
@@ -216,6 +213,7 @@ export default function Sidebar() {
   // Add sign out function
   const handleSignOut = async () => {
     try {
+      clearDemoMode();
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error("Error signing out:", error)

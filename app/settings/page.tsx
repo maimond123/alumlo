@@ -6,7 +6,7 @@ import { ArrowLeft, LogOut, Bookmark, Search, Brain, MessageCircle } from "lucid
 import { useRouter } from "next/navigation"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
-import { isDemoMode as checkIsDemoMode } from "../utils/demo"
+import { isDemoMode as checkIsDemoMode, clearDemoMode } from "../utils/demo"
 import Sidebar from "../../components/Sidebar"
 import { useAuth } from "../../components/AuthProvider"
 import analytics from "../utils/analytics"
@@ -55,61 +55,60 @@ export default function SettingsPage() {
     const loadUserData = async () => {
       setIsLoading(true);
       
-      if (checkIsDemoMode()) {
-        setIsDemoMode(true);
-        setUserInfo({
-          first_name: "Demo",
-          last_name: "Account",
-          organization_name: "Your Organization"
-        });
-        // In demo mode, we don't load any user-specific data
-        setSavedLeads([]);
-        setSearchHistory([]);
-        setLearnConversations([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Regular user flow
-      if (!isAuthLoading && !isAuthenticated) {
-        router.push('/signin');
-        return;
-      }
-      
-      if (isAuthenticated && user?.email) {
-        const userEmail = user.email;
-        setEmail(userEmail);
+      // Auth state is the source of truth
+      if (!isAuthLoading) {
+        if (isAuthenticated && user?.email) {
+          // User is authenticated.
+          setIsDemoMode(false);
+          const userEmail = user.email;
+          setEmail(userEmail);
 
-        try {
-          const { data, error } = await supabase
-            .from('customer_information')
-            .select('first_name, last_name, organization_name')
-            .eq('organization_email', userEmail)
-            .single();
+          try {
+            const { data, error } = await supabase
+              .from('customer_information')
+              .select('first_name, last_name, organization_name')
+              .eq('organization_email', userEmail)
+              .single();
 
-          if (error) throw error;
-          
-          if (data) {
-            setUserInfo(data);
-            // Load user-specific data
-            await Promise.all([
-              loadSavedLeads(data.organization_name),
-              loadSearchHistory(userEmail),
-              loadLearnConversations(userEmail)
-            ]);
+            if (error) throw error;
+            
+            if (data) {
+              setUserInfo(data);
+              await Promise.all([
+                loadSavedLeads(data.organization_name),
+                loadSearchHistory(userEmail),
+                loadLearnConversations(userEmail)
+              ]);
+            }
+          } catch (error) {
+            console.error('Error loading user data:', error);
+          } finally {
+            setIsLoading(false);
           }
-        } catch (error) {
-          console.error('Error loading user data:', error);
-        } finally {
-          setIsLoading(false);
+        } else {
+          // Not authenticated, check for demo mode.
+          if (checkIsDemoMode()) {
+            setIsDemoMode(true);
+            setUserInfo({
+              first_name: "Demo",
+              last_name: "Account",
+              organization_name: "Your Organization"
+            });
+            setSavedLeads([]);
+            setSearchHistory([]);
+            setLearnConversations([]);
+            setIsLoading(false);
+          } else {
+            router.push('/signin');
+          }
         }
       }
     };
 
     if (!isAuthLoading) {
-      loadUserData();
+        loadUserData();
     }
-  }, [isAuthLoading, isAuthenticated, user, router]);
+}, [isAuthLoading, isAuthenticated, user, router]);
 
   const loadSavedLeads = async (organizationName: string) => {
     // For demo mode, we shouldn't fetch real data.
@@ -164,6 +163,7 @@ export default function SettingsPage() {
   };
 
   const handleSignOut = async () => {
+    clearDemoMode();
     await supabase.auth.signOut();
     router.push('/');
   };
@@ -251,157 +251,4 @@ export default function SettingsPage() {
                 savedLeads.map((lead, index) => (
                   <div
                     key={lead.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors duration-200 ${
-                      index !== savedLeads.length - 1 ? 'border-b border-gray-100' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{lead.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {lead.current_position} at {lead.current_company}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          Saved {formatTime(lead.saved_at)}
-                        </p>
-                      </div>
-                      {lead.linkedin_url && (
-                        <a
-                          href={lead.linkedin_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          View Profile
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <Bookmark className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No saved leads yet</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Search History Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border border-gray-200/60 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
-          >
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-amber-50 rounded-lg">
-                  <Search className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Search History</h2>
-                  <p className="text-sm text-gray-500">{searchHistory.length} searches</p>
-                </div>
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {searchHistory.length > 0 ? (
-                searchHistory.map((search, index) => (
-                  <div
-                    key={search.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors duration-200 ${
-                      index !== searchHistory.length - 1 ? 'border-b border-gray-100' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{search.query}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatTime(search.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No search history yet</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Learn Conversations Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl border border-gray-200/60 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden lg:col-span-2"
-          >
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-amber-50 rounded-lg">
-                  <Brain className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Learn Conversations</h2>
-                  <p className="text-sm text-gray-500">{learnConversations.length} conversations</p>
-                </div>
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {learnConversations.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                  {learnConversations.map((conversation, index) => (
-                    <div
-                      key={conversation.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors duration-200 ${
-                        index % 2 === 0 ? 'md:border-r border-gray-100' : ''
-                      } ${
-                        index < learnConversations.length - 2 ? 'border-b border-gray-100' : ''
-                      } ${
-                        index === learnConversations.length - 1 && learnConversations.length % 2 === 1 ? 'md:border-b-0' : ''
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{conversation.title}</p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {formatTime(conversation.updated_at)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p>No conversations yet</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Sign Out Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 flex justify-center"
-        >
-          <button
-            onClick={handleSignOut}
-            className="flex items-center space-x-3 px-8 py-4 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl border border-red-200 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </motion.div>
-      </div>
-    </div>
-  )
-} 
+                    className={`
