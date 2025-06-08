@@ -608,42 +608,48 @@ export default function DashboardPage() {
           return
         }
 
-        const authenticated = await isAuthenticated();
-        console.log('[DEBUG] Dashboard: Authentication check result:', authenticated)
-        
+        const authenticated = await isAuthenticated()
+        console.log("[DEBUG] Dashboard: Authentication check result:", authenticated)
+
+        if (!authenticated) {
+          console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
+          setAuthState({
+            isLoading: false,
+            isAuthenticated: false
+          })
+          router.push("/signin")
+          return
+        }
+
+        // If authenticated, check if it's a demo user before proceeding
+        const userEmail = await getUserEmail()
+        console.log("[DEBUG] Dashboard: User email:", userEmail)
+
+        if (userEmail === "maimondavid553@gmail.com") {
+          console.log("Demo mode activated")
+          setIsDemoMode(true)
+          setFormattedOrganizationName("Your Organization")
+          if (typeof window !== "undefined") {
+            localStorage.setItem("organizationName", "chick_fil_a")
+          }
+          setIsLoading(false)
+
+          // Track as a unique visitor while maintaining demo status
+          const visitorId = analytics.getVisitorId()
+          console.log(`Demo visitor identified with unique ID: ${visitorId}`)
+
+          analytics.identifyUser("maimondavid553@gmail.com", {
+            isDemoUser: true,
+            visitorId: visitorId,
+            school: "Your Organization"
+          })
+        }
+
+        // Finally, update the auth state
         setAuthState({
           isLoading: false,
-          isAuthenticated: authenticated
+          isAuthenticated: true
         })
-        
-        if (!authenticated) {
-          console.log('[DEBUG] Dashboard: Not authenticated, redirecting to signin')
-          router.push('/signin')
-        } else {
-          // Check if this is a demo user
-          const userEmail = await getUserEmail();
-          console.log('[DEBUG] Dashboard: User email:', userEmail)
-          
-          if (userEmail === "maimondavid553@gmail.com") {
-            console.log("Demo mode activated");
-            setIsDemoMode(true);
-            setFormattedOrganizationName("Your Organization");
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('organizationName', 'chick_fil_a');
-            }
-            setIsLoading(false);
-            
-            // Track as a unique visitor while maintaining demo status
-            const visitorId = analytics.getVisitorId();
-            console.log(`Demo visitor identified with unique ID: ${visitorId}`);
-            
-            analytics.identifyUser("maimondavid553@gmail.com", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your Organization"
-            });
-          }
-        }
       } catch (error) {
         console.error("Auth check error:", error)
         setAuthState({
