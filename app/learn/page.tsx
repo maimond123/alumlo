@@ -156,38 +156,36 @@ export default function LearnPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const authenticated = await isAuthenticated();
+        const authenticated = await isAuthenticated()
+
+        if (!authenticated) {
+          setAuthState({ isLoading: false, isAuthenticated: false })
+          router.push("/signin")
+          return
+        }
+
+        // If authenticated, check for demo user before setting auth state
+        const userEmail = await getUserEmail()
+        if (userEmail === "maimondavid553@gmail.com") {
+          console.log("Demo mode activated")
+          setIsDemoMode(true)
+          setFormattedOrganizationName("Your Organization")
+          setIsOrganizationNameReadyToAnimate(true)
+          setIsLoading(false)
+
+          const visitorId = analytics.getVisitorId()
+          analytics.identifyUser("maimondavid553@gmail.com", {
+            isDemoUser: true,
+            visitorId: visitorId,
+            school: "Your Organization"
+          })
+        }
+
+        // Set auth state after handling demo mode check
         setAuthState({
           isLoading: false,
           isAuthenticated: authenticated
         })
-        
-        if (!authenticated) {
-          router.push('/signin')
-        } else {
-          // Check if this is a demo user
-          const userEmail = await getUserEmail();
-          if (userEmail === "maimondavid553@gmail.com") {
-            console.log("Demo mode activated");
-            setIsDemoMode(true);
-            setFormattedOrganizationName("{Your Organization}");
-            setIsOrganizationNameReadyToAnimate(true);
-            setIsLoading(false);
-            
-            // Track as a unique visitor while maintaining demo status
-            // This ensures each visitor has a unique ID in Mixpanel
-            // while still using the demo account data
-            const visitorId = analytics.getVisitorId();
-            console.log(`Demo visitor identified with unique ID: ${visitorId}`);
-            
-            // Use visitor ID for analytics but keep demo email for data retrieval
-            analytics.identifyUser("maimondavid553@gmail.com", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "{Your Organization}"
-            });
-          }
-        }
       } catch (error) {
         console.error("Auth check error:", error)
         setAuthState({
@@ -197,7 +195,7 @@ export default function LearnPage() {
         router.push('/signin')
       }
     }
-    
+
     checkAuth()
   }, [router])
 
@@ -210,45 +208,48 @@ export default function LearnPage() {
           const userEmail = await getUserEmail()
 
           if (!userEmail) {
-            console.error('No email found in user data:', userEmail)
-            throw new Error('No user email found')
+            console.error("No email found in user data:", userEmail)
+            throw new Error("No user email found")
           }
 
           const { data, error } = await supabase
-            .from('customer_information')
-            .select('organization_name')
-            .eq('organization_email', userEmail)
+            .from("customer_information")
+            .select("organization_name")
+            .eq("organization_email", userEmail)
             .single()
 
           if (error) {
-            console.error('Supabase query error:', error)
+            console.error("Supabase query error:", error)
             throw error
           }
 
           const formatted = data.organization_name
-            .replace(/_/g, ' ')
-            .split(' ')
+            .replace(/_/g, " ")
+            .split(" ")
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+            .join(" ")
           setFormattedOrganizationName(formatted)
-          
+
           // Introduce a short delay before signaling animation readiness
           setTimeout(() => {
-            setIsOrganizationNameReadyToAnimate(true);
-          }, 100); // 100ms delay
-          
+            setIsOrganizationNameReadyToAnimate(true)
+          }, 100) // 100ms delay
+
           setIsLoading(false)
         } catch (err: any) {
-          if (err.message?.includes('not authenticated')) {
-            router.push('/signin')
+          if (err.message?.includes("not authenticated")) {
+            router.push("/signin")
             return
           }
-          setError('Failed to load school data')
+          setError("Failed to load school data")
           setIsLoading(false)
         }
       }
 
       fetchSchoolName()
+    } else if (isDemoMode) {
+      // If in demo mode, ensure loading is complete
+      setIsLoading(false)
     }
   }, [authState.isAuthenticated, router, isDemoMode])
 
