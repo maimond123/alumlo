@@ -152,23 +152,27 @@ export default function DataInsightsPage() {
           return
         }
 
-        if (!contextAuthenticated) {
+        // Check if this is demo mode first, before checking authentication
+        const isDemoModeActive = checkIsDemoMode();
+        if (isDemoModeActive) {
+          setIsDemoMode(true);
+          console.log('[DEBUG] DataInsights: Demo mode detected, proceeding without authentication check');
+        }
+
+        // Only redirect to signin if not authenticated AND not in demo mode
+        if (!contextAuthenticated && !isDemoModeActive) {
           router.push('/signin')
           return
         }
 
-        setDebugInfo({ authChecked: true, isAuthenticated: contextAuthenticated })
+        setDebugInfo({ authChecked: true, isAuthenticated: contextAuthenticated, isDemoMode: isDemoModeActive })
         
-        // Get user email
+        // Get user email (will be null for demo mode)
         const userEmail = await getUserEmail()
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, userEmail }))
 
-        // Check if this is a demo user
-        if (checkIsDemoMode()) {
-          setIsDemoMode(true);
-        }
-
-        if (userEmail) {
+        // Only fetch user info if authenticated (not needed for demo mode)
+        if (userEmail && contextAuthenticated) {
           const { data, error } = await supabase
             .from("customer_information")
             .select("first_name, last_name")
@@ -185,7 +189,7 @@ export default function DataInsightsPage() {
           }
         }
 
-        // Set the charts to our predefined school charts
+        // Set the charts to our predefined school charts (for both authenticated and demo users)
         setCharts(schoolCharts)
         setSearchResults(schoolCharts)
         setDebugInfo((prev: Record<string, any>) => ({ ...prev, chartsSet: true, schoolCharts }))
