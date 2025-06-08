@@ -36,43 +36,57 @@ export default function Sidebar() {
   const [isSpinning, setIsSpinning] = useState(false); // State for gear icon spin
 
   useEffect(() => {
-    const getUserInfoAndDemoStatus = async () => {
-      try {
-        const userEmail = await getUserEmail();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setIsDemoUser(false);
+        getUserInfo(session.user.email);
+      } else {
+        setIsDemoUser(checkIsDemoMode());
+        setUserInfo(null);
+      }
+    });
 
-        if (userEmail) {
-          // User is authenticated, so not in demo mode.
-          setIsDemoUser(false);
-          
-          // Get user info from database
-          const { data, error } = await supabase
-            .from('customer_information')
-            .select('first_name, last_name, organization_name')
-            .eq('organization_email', userEmail)
-            .single();
-          
-          if (error) {
-            return;
-          }
-          
-          if (data) {
-            setUserInfo(data);
-          }
-        } else {
-          // No authenticated user, now we check for demo mode.
-          if (checkIsDemoMode()) {
-            setIsDemoUser(true);
-          } else {
-            setIsDemoUser(false);
-          }
-        }
-      } catch (error) {
-        // Silently handle error
+    // Initial check in case the event listener is slow
+    const checkInitialAuth = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data.user) {
+        setIsDemoUser(false);
+        getUserInfo(data.user.email);
+      } else {
+        setIsDemoUser(checkIsDemoMode());
       }
     };
-    
-    getUserInfoAndDemoStatus();
+    checkInitialAuth();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
+
+  const getUserInfo = async (userEmail: string | undefined) => {
+    if (!userEmail) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('customer_information')
+        .select('first_name, last_name, organization_name')
+        .eq('organization_email', userEmail)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching user info in Sidebar:", error);
+        return;
+      }
+      
+      if (data) {
+        setUserInfo(data);
+      }
+    } catch (error) {
+      console.error("Exception fetching user info in Sidebar:", error);
+    }
+  };
 
   // Load page-specific recent data
   const loadRecentSearches = async () => {
