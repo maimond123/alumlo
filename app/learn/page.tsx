@@ -5,11 +5,12 @@ import { useState, useEffect, useRef } from "react"
 import { Loader2, Search } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
-import { getUserEmail, isAuthenticated } from "../utils/auth"
+import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import analytics from "../utils/analytics"
 import { supabase } from "../data/supabase"
 import { useLearnConversations } from "../../hooks/useLearnConversations"
+import { useAuth } from "../../components/AuthProvider"
 
 // Add realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
@@ -94,6 +95,17 @@ export default function LearnPage() {
     isAuthenticated: false
   })
 
+  // NEW: Auth context
+  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Sync local authState with context
+  useEffect(() => {
+    setAuthState({
+      isLoading: authLoading,
+      isAuthenticated: contextAuthenticated
+    });
+  }, [authLoading, contextAuthenticated]);
+
   // Add these new states for the Learn mode
   const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -156,9 +168,11 @@ export default function LearnPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const authenticated = await isAuthenticated()
+        if (authLoading) {
+          return;
+        }
 
-        if (!authenticated) {
+        if (!contextAuthenticated) {
           setAuthState({ isLoading: false, isAuthenticated: false })
           router.push("/signin")
           return
@@ -184,7 +198,7 @@ export default function LearnPage() {
         // Set auth state after handling demo mode check
         setAuthState({
           isLoading: false,
-          isAuthenticated: authenticated
+          isAuthenticated: contextAuthenticated
         })
       } catch (error) {
         console.error("Auth check error:", error)
@@ -197,7 +211,7 @@ export default function LearnPage() {
     }
 
     checkAuth()
-  }, [router])
+  }, [router, authLoading, contextAuthenticated])
 
   // Only fetch school name for non-demo users
   useEffect(() => {

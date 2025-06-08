@@ -6,13 +6,14 @@ import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon } f
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
-import { getUserEmail, isAuthenticated } from "../utils/auth"
+import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import analytics from "../utils/analytics"
 import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
 import OAuthHandler from "../../components/OAuthHandler"
+import { useAuth } from "../../components/AuthProvider"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -471,6 +472,17 @@ export default function DashboardPage() {
     isAuthenticated: false
   })
 
+  // NEW: Pull auth status from global AuthProvider
+  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Sync local authState with context
+  useEffect(() => {
+    setAuthState({
+      isLoading: authLoading,
+      isAuthenticated: contextAuthenticated
+    });
+  }, [authLoading, contextAuthenticated]);
+
   // Add these new states near the top with your other state declarations
   const [totalAlumniCount, setTotalAlumniCount] = useState(0);
   const [isLoadingCount, setIsLoadingCount] = useState(false);
@@ -608,10 +620,14 @@ export default function DashboardPage() {
           return
         }
 
-        const authenticated = await isAuthenticated()
-        console.log("[DEBUG] Dashboard: Authentication check result:", authenticated)
+        // Wait until global auth loading finishes
+        if (authLoading) {
+          return;
+        }
 
-        if (!authenticated) {
+        console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated)
+
+        if (!contextAuthenticated) {
           console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
           setAuthState({
             isLoading: false,
@@ -662,7 +678,7 @@ export default function DashboardPage() {
     }
     
     checkAuth()
-  }, [router])
+  }, [router, authLoading, contextAuthenticated])
 
   // Handle OAuth completion
   const handleOAuthComplete = () => {

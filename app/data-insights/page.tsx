@@ -10,7 +10,8 @@ import { supabase } from "../data/supabase"
 import Image from "next/image"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useOrganization } from "../contexts/OrganizationContext"
-import { getUserEmail, isAuthenticated } from "../utils/auth"
+import { getUserEmail } from "../utils/auth"
+import { useAuth } from "../../components/AuthProvider"
 import { SalaryBarChart, GeographyBarChart } from "../../components/chart"
 import { AverageSalaryByIndustryBarChart } from "../../components/chart"
 import { IndustryStackedBarChart } from "../../components/chart"
@@ -92,6 +93,9 @@ export default function DataInsightsPage() {
   })
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false)
 
+  // NEW: Auth context
+  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
+
   // Define the five specific charts we want to show (added industry salary chart)
   const schoolCharts: SchoolChartData[] = [
     { id: "salary", title: "Salary Distribution", type: "salary" },
@@ -118,14 +122,17 @@ export default function DataInsightsPage() {
       let progressInterval: NodeJS.Timeout | null = null;
       
       try {
-        // Check if user is authenticated
-        const authenticated = await isAuthenticated()
-        if (!authenticated) {
+        // Wait until auth context ready
+        if (authLoading) {
+          return;
+        }
+
+        if (!contextAuthenticated) {
           router.push('/signin')
           return
         }
 
-        setDebugInfo({ authChecked: true, isAuthenticated: authenticated })
+        setDebugInfo({ authChecked: true, isAuthenticated: contextAuthenticated })
         
         // Get user email
         const userEmail = await getUserEmail()
@@ -179,7 +186,7 @@ export default function DataInsightsPage() {
     }
 
     initializePage()
-  }, [fromSignin])
+  }, [fromSignin, contextAuthenticated, authLoading])
 
   // Add this at the top of your component
   useEffect(() => {

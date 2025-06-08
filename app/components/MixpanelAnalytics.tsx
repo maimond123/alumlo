@@ -3,11 +3,15 @@
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import analytics from '../utils/analytics'
-import { getUserEmail, isAuthenticated } from '../utils/auth'
+import { getUserEmail } from '../utils/auth'
+import { useAuth } from '../../components/AuthProvider'
 
 export default function MixpanelAnalytics() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+
+  // Get auth status from context
+  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
 
   // Initialize session recording on mount and identify visitor
   useEffect(() => {
@@ -16,9 +20,12 @@ export default function MixpanelAnalytics() {
     // Handle user identification properly to ensure unique visitor tracking
     const setupVisitorTracking = async () => {
       try {
-        // Check if user is authenticated
-        const authenticated = await isAuthenticated()
-        if (authenticated) {
+        // Wait for auth to finish loading
+        if (authLoading) {
+          return;
+        }
+        
+        if (contextAuthenticated) {
           const userEmail = await getUserEmail()
           
           // If this is the demo user, use the unique visitor ID in analytics
@@ -52,7 +59,7 @@ export default function MixpanelAnalytics() {
     }
     
     setupVisitorTracking()
-  }, [pathname])
+  }, [pathname, authLoading, contextAuthenticated])
 
   // Track page views and route changes
   useEffect(() => {

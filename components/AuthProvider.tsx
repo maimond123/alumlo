@@ -22,11 +22,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Get initial session first
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+      setIsLoading(false)
+    }
+    
+    getInitialSession()
+    
+    // Then listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
-      setIsLoading(false)
     })
 
     // Cleanup subscription on unmount

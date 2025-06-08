@@ -9,6 +9,7 @@ import SupabaseAuthListener from '@/components/SupabaseAuthListener'
 import { Analytics } from "@vercel/analytics/react"
 import { usePathname } from 'next/navigation'
 import Head from 'next/head'
+import { AuthProvider } from "../components/AuthProvider"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,11 +30,13 @@ export default function RootLayout({
       </head>
       <body className={bodyClassName}>
         <SupabaseAuthListener>
-          <OrganizationProvider>
-            <SidebarProvider>
-              {children}
-            </SidebarProvider>
-          </OrganizationProvider>
+          <AuthProvider>
+            <OrganizationProvider>
+              <SidebarProvider>
+                {children}
+              </SidebarProvider>
+            </OrganizationProvider>
+          </AuthProvider>
         </SupabaseAuthListener>
         <Analytics />
       </body>
