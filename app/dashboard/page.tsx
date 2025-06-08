@@ -628,7 +628,7 @@ export default function DashboardPage() {
         if (userEmail === "maimondavid553@gmail.com") {
           console.log("Demo mode activated")
           setIsDemoMode(true)
-          setFormattedOrganizationName("Your Organization")
+          setFormattedOrganizationName("{Your Organization}")
           setIsOrganizationNameReadyToAnimate(true) // Ensure animation is triggered for demo
           if (typeof window !== "undefined") {
             localStorage.setItem("organizationName", "chick_fil_a")
@@ -1587,26 +1587,13 @@ export default function DashboardPage() {
         }`}>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
               Search
-              {/* Conditional rendering based on demo mode */}
-              {isDemoMode ? (
-                <>
-                  {" "}
-                  <span className="text-black">
-                    {"{Your Organization}"}
-                  </span>
-                  {" "}
-                </>
-              ) : (
-                <>
-                  {/* Conditional space, only if school name will be rendered */}
-                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-                    <span className="text-black">{displayedOrganizationName}</span>
-                  ) : null}
-                  {/* Conditional space, only if school name was rendered */}
-                  {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-                </>
-              )}
+              {/* Conditional space, only if school name will be rendered */}
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
+                <span className="text-black">{displayedOrganizationName}</span>
+              ) : null}
+              {/* Conditional space, only if school name was rendered */}
+              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
               Alumni
             </h1>
 
