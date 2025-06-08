@@ -592,6 +592,9 @@ export default function DataInsightsPage() {
       topLocations: locationData.slice(0, 3).map(l => l.name),
       avgSalaryByTopIndustry: industrySalaryData.slice(0, 3).map(i => `${i.name}: $${i.value.toLocaleString()}`)
     })
+    
+    // Set initialized to true after generating dummy data
+    setIsInitialized(true)
   }
 
   // Modify the beginning of fetchSchoolData to add more diagnostics
@@ -616,7 +619,7 @@ export default function DataInsightsPage() {
       console.log("DEBUG: User email retrieved:", userEmail)
       console.log("DEBUG: Is Demo Mode:", isDemo)
 
-      if (userEmail === "davod@alumintel.co" || isDemo) {
+      if (userEmail === "david@alulo.com" || isDemo) {
         console.log("DEBUG: ✅ CHICK-FIL-A USER OR DEMO MODE DETECTED - Generating dummy data for year:", selectedYear)
         generateChickFilADummyData(selectedYear)
         return
