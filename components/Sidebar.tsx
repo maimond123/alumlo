@@ -234,8 +234,8 @@ export default function Sidebar() {
         // Optionally, show an error message to the user
         return;
       }
-      // Redirect to the main website instead of signin page
-      window.location.href = 'https://www.alumlo.com'; 
+      // Redirect to the first page instead of external website
+      router.push('/'); 
     } catch (error) {
       console.error("Error during sign out process:", error)
       // Optionally, show an error message to the user
