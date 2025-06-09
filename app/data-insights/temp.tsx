@@ -1,5 +1,6 @@
 "use client"
 
+
 import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, RefreshCw, Plus } from "lucide-react"
@@ -1692,13 +1693,13 @@ export default function DataInsightsPage() {
                   <option value="other">Other (please specify in description)</option>
                 </select>
               </div>
-              
+               
               <div>
                 <label htmlFor="data-points" className="block text-sm font-medium text-gray-700 mb-1">
                   Specific Data Points (Optional)
                 </label>
                 <textarea
-                  id="data-points"
+                  id="data-points" 
                   rows={3}
                   value={customWidgetRequest.dataPoints}
                   onChange={(e) => setCustomWidgetRequest({...customWidgetRequest, dataPoints: e.target.value})}
