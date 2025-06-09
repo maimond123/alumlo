@@ -363,13 +363,14 @@ export default function LearnPage() {
   }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
 
   // Add handleLearnSubmit function to handle questions in learn mode
-  const handleLearnSubmit = async (e: React.FormEvent) => {
+  const handleLearnSubmit = async (e: React.FormEvent, questionOverride?: string) => {
     e.preventDefault();
     
-    if (!currentQuestion.trim()) return;
+    const questionToUse = questionOverride || currentQuestion.trim();
+    if (!questionToUse) return;
     
     // Add the user's question to the conversation
-    const userQuestion = currentQuestion.trim();
+    const userQuestion = questionToUse;
     setConversations(prev => [...prev, { role: 'user', content: userQuestion }]);
     setCurrentQuestion('');
     setIsProcessing(true);
@@ -464,7 +465,7 @@ export default function LearnPage() {
     // Track tag click
     analytics.trackTagClick(question);
     
-    // Set the question and immediately submit
+    // Set the question in the input (for visual feedback)
     setCurrentQuestion(question);
     
     // Create a proper synthetic event for the form submission
@@ -474,8 +475,8 @@ export default function LearnPage() {
       currentTarget: { value: question }
     } as unknown as React.FormEvent;
     
-    // Immediately call the submit function
-    handleLearnSubmit(fakeEvent);
+    // Immediately call the submit function with the question directly
+    handleLearnSubmit(fakeEvent, question);
   };
 
   // Add a function to scroll to the bottom of the chat
@@ -542,7 +543,7 @@ export default function LearnPage() {
           {/* Learn mode interface */}
           {conversations.length === 0 ? (
             <>
-              <form onSubmit={handleLearnSubmit} className="w-full max-w-2xl mb-2">
+              <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
                   <input
                     type="text"
@@ -558,7 +559,8 @@ export default function LearnPage() {
                     {/* Refresh button */}
                     <button
                       type="button" 
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setCurrentQuestion('');
                         setConversations([]);
                         setCurrentConversationId(null);
@@ -574,7 +576,7 @@ export default function LearnPage() {
                     
                     {/* Search/Send button */}
                     <button
-                      onClick={(e) => handleLearnSubmit(e)}
+                      type="submit"
                       disabled={isProcessing}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Send"
@@ -602,7 +604,7 @@ export default function LearnPage() {
                         randomizedTags.map((question, index) => (
                           <span 
                             key={`first-learn-${index}`}
-                            onClick={() => handleTagClick(question)}
+                            onClick={(e) => handleTagClick(question)}
                             className="tag-item"
                           >
                             {question}
@@ -612,7 +614,7 @@ export default function LearnPage() {
                         learnSuggestionTags.map((question, index) => (
                           <span 
                             key={`first-learn-${index}`}
-                            onClick={() => handleTagClick(question)}
+                            onClick={(e) => handleTagClick(question)}
                             className="tag-item"
                           >
                             {question}
@@ -627,7 +629,7 @@ export default function LearnPage() {
                         randomizedTags.map((question, index) => (
                           <span 
                             key={`second-learn-${index}`}
-                            onClick={() => handleTagClick(question)}
+                            onClick={(e) => handleTagClick(question)}
                             className="tag-item"
                           >
                             {question}
@@ -637,7 +639,7 @@ export default function LearnPage() {
                         learnSuggestionTags.map((question, index) => (
                           <span 
                             key={`second-learn-${index}`}
-                            onClick={() => handleTagClick(question)}
+                            onClick={(e) => handleTagClick(question)}
                             className="tag-item"
                           >
                             {question}
@@ -699,7 +701,7 @@ export default function LearnPage() {
               {/* Fixed input form at bottom when there's conversation history */}
               <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
                 <div className="max-w-4xl mx-auto">
-                  <form onSubmit={handleLearnSubmit} className="w-full">
+                  <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full">
                     <div className="flex gap-2 border border-black rounded-lg p-2">
                       <input
                         type="text"
@@ -714,7 +716,8 @@ export default function LearnPage() {
                       {/* Clear button */}
                       <button
                         type="button" 
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           setCurrentQuestion('');
                           setConversations([]);
                           setCurrentConversationId(null);
