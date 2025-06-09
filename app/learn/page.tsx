@@ -464,22 +464,18 @@ export default function LearnPage() {
     // Track tag click
     analytics.trackTagClick(question);
     
-    // Set the question first
+    // Set the question and immediately submit
     setCurrentQuestion(question);
     
-    // Use setTimeout to ensure state update has completed
-    setTimeout(() => {
-      console.log(`[DEBUG ${new Date().toISOString()}] Executing learn submit after tag click for: "${question}"`);
-      // Create a proper synthetic event
-      const fakeEvent = {
-        preventDefault: () => {},
-        target: { value: question },
-        currentTarget: { value: question }
-      } as unknown as React.FormEvent;
-      
-      // Call the submit function
-      handleLearnSubmit(fakeEvent);
-    }, 50);
+    // Create a proper synthetic event for the form submission
+    const fakeEvent = {
+      preventDefault: () => {},
+      target: { value: question },
+      currentTarget: { value: question }
+    } as unknown as React.FormEvent;
+    
+    // Immediately call the submit function
+    handleLearnSubmit(fakeEvent);
   };
 
   // Add a function to scroll to the bottom of the chat
@@ -530,10 +526,7 @@ export default function LearnPage() {
     <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
-        <div className={`min-h-screen flex flex-col items-center px-4 ${
-          (conversations.length === 0 && !currentQuestion && !currentAnswer) 
-            ? 'justify-center' : 'pt-24'
-        }`}>
+        <div className="min-h-screen flex flex-col items-center justify-center px-4">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
             Learn
             {/* Conditional space, only if school name will be rendered */}

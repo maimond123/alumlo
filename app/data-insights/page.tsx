@@ -74,7 +74,7 @@ export default function DataInsightsPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   
   // Chat-related state variables
-  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; content: string; isDemo?: boolean; calendlyLink?: string }[]>([
     { role: 'assistant', content: 'What would you like to know about this data? ' }
   ]);
   const [chatInput, setChatInput] = useState('');
@@ -995,7 +995,9 @@ export default function DataInsightsPage() {
       setTimeout(() => {
         setChatMessages(prev => [...prev, { 
           role: 'assistant', 
-          content: 'This functionality is available only for paid users. Want Alumlo for your organization?' 
+          content: 'This functionality is available only for paid users.',
+          isDemo: true,
+          calendlyLink: 'https://calendly.com/david-alumlo/30min'
         }]);
         setIsSending(false);
       }, 1000); // Add a small delay to simulate processing
@@ -1263,6 +1265,16 @@ export default function DataInsightsPage() {
                         }`}
                       >
                         {msg.content}
+                        {msg.isDemo && msg.calendlyLink && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => window.open(msg.calendlyLink, '_blank')}
+                              className="text-emerald-600 underline hover:text-emerald-700 font-medium transition-colors"
+                            >
+                              Want Alumlo for your organization?
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
