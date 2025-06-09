@@ -1216,10 +1216,8 @@ export default function DashboardPage() {
       setSearchPhase('profiling');
       await generateExpandedQueries(currentQuery);
       
-      // Phase 4: Extract metadata filters using the CURRENT query
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 4: Filtering using query: "${currentQuery}"`);
-      setSearchPhase('filtering');
-      await extractMetadataFilters(currentQuery);
+      // Phase 4: Extract filters and prepare search request  
+      const currentExtractedFilters = await extractMetadataFilters(currentQuery);
       
       // Get query classification that was running in parallel
       console.log(`[DEBUG ${new Date().toISOString()}] Getting query classification for: "${currentQuery}"`);
@@ -1228,11 +1226,11 @@ export default function DashboardPage() {
       
       console.log(`🔍🔍🔍 [DASHBOARD] CLASSIFICATION RESULT:`, classification);
       
-      // Convert extracted filters to API format
-      const apiFilters = convertFiltersToAPI(extractedFilters);
+      // Convert extracted filters to API format using the fresh filters
+      const apiFilters = convertFiltersToAPI(currentExtractedFilters);
       
       console.log(`🎯🎯🎯 [DASHBOARD] CONVERTED FILTERS:`, {
-        extractedFilters,
+        extractedFilters: currentExtractedFilters,
         apiFilters,
         filterCount: Object.keys(apiFilters).length
       });
@@ -1506,7 +1504,7 @@ export default function DashboardPage() {
   };
 
   // Replace the existing extractMetadataFilters function with this AI-powered version
-  const extractMetadataFilters = async (query: string): Promise<void> => {
+  const extractMetadataFilters = async (query: string): Promise<{[key: string]: string[]}> => {
     console.log(`[DEBUG ${new Date().toISOString()}] Extracting metadata filters for: "${query}"`);
     
     try {
@@ -1526,7 +1524,7 @@ export default function DashboardPage() {
         await typewriterEffect(fallbackText, 
           (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
         );
-        return;
+        return {};
       }
       
       // Set up streaming with text accumulation
@@ -1594,7 +1592,9 @@ export default function DashboardPage() {
         }
       }
       
+      console.log(`[DEBUG ${new Date().toISOString()}] Parsed filters object:`, filtersObj);
       setExtractedFilters(filtersObj);
+      return filtersObj; // Return the filters for immediate use
       
     } catch (error) {
       console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
@@ -1604,6 +1604,7 @@ export default function DashboardPage() {
       await typewriterEffect(fallbackText, 
         (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
       );
+      return {};
     }
   };
 
