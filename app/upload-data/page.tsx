@@ -7,6 +7,7 @@ import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
 import { getUserEmail } from "../utils/auth"
 import { v4 as uuidv4 } from 'uuid'
+import { isDemoMode as checkIsDemoMode } from "../utils/demo"
 
 export default function UploadDataPage() {
   const { isSidebarOpen } = useSidebar()
@@ -19,8 +20,22 @@ export default function UploadDataPage() {
   const [recentUploads, setRecentUploads] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [organizationName, setOrganizationName] = useState<string | null>(null)
+  
+  // Demo mode states
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [showDemoModal, setShowDemoModal] = useState(false)
+
+  // Check for demo mode on component mount
+  useEffect(() => {
+    if (checkIsDemoMode()) {
+      setIsDemoMode(true)
+    }
+  }, [])
 
   const fetchRecentUploads = async () => {
+    // Skip fetching uploads for demo users
+    if (isDemoMode) return
+    
     try {
       const userEmail = await getUserEmail()
       
@@ -91,6 +106,12 @@ export default function UploadDataPage() {
 
   useEffect(() => {
     const fetchOrganizationName = async () => {
+      // Skip fetching organization name for demo users
+      if (isDemoMode) {
+        setOrganizationName("Your Organization")
+        return
+      }
+      
       try {
         const userEmail = await getUserEmail()
 
@@ -119,7 +140,7 @@ export default function UploadDataPage() {
     }
 
     fetchOrganizationName()
-  }, [])
+  }, [isDemoMode])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -160,6 +181,13 @@ export default function UploadDataPage() {
   } 
 
   const handleClick = () => {
+    // Show demo modal for demo users
+    if (isDemoMode) {
+      setShowDemoModal(true)
+      return
+    }
+    
+    // Normal functionality for real users
     fileInputRef.current?.click()
   }
 
@@ -542,6 +570,45 @@ export default function UploadDataPage() {
           </div>
         </div>
       </main>
+      
+      {/* Demo Modal */}
+      {isDemoMode && showDemoModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDemoModal(false)
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Upload className="h-8 w-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">File Upload</h2>
+              <p className="text-gray-600 mb-6">
+                This feature is only for paid users. 
+                <button
+                  onClick={() => window.open('https://calendly.com/david-alumlo/30min', '_blank')}
+                  className="text-emerald-600 underline hover:text-emerald-700 font-medium transition-colors ml-1"
+                >
+                  Want Alumlo for your organization?
+                </button>
+              </p>
+              <button
+                onClick={() => setShowDemoModal(false)}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
