@@ -205,6 +205,11 @@ export default function UploadDataPage() {
       setUploadStatus('error')
       return
     }
+
+    // Return early for demo users - they shouldn't reach this function anyway
+    if (isDemoMode) {
+      return
+    }
   
     try {
       setUploadStatus('uploading')
