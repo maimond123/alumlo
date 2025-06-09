@@ -24,64 +24,72 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant specialized in extracting structured search filters from user queries for a highly detailed alumni database. Your output will directly influence database filtering, so precision and adherence to the schema are paramount.
+          content: `You are an expert query analysis system for a sophisticated alumni search database. You excel at extracting structured metadata filters from natural language search queries.
 
-Analyze the user's query and identify explicit or very strongly implied filters. Map these filters to the most relevant categories and fields from the database schema provided below.
+**Available Filter Categories:**
 
-**Key Database Schema Fields for Filtering:**
+**Primary Categories:**
+1. Job Levels: Entry-level, Senior, Manager, Director, VP, C-Suite, Founder
+2. Job Functions: Engineering, Marketing, Sales, Operations, Finance, HR, Product, Legal, Consulting, Healthcare, Education
+3. Industries: Technology, Finance, Healthcare, Consulting, Retail, Manufacturing, Education, Government, Non-profit
+4. Company Names: Specific company names mentioned in the query
+5. Locations: Cities, states, countries, regions mentioned
+6. School Names: Universities, colleges mentioned (beyond the organization being searched)
+7. Degree Levels: High School, Bachelor's, Master's, PhD, Professional Degree
+8. Major Categories: Engineering, Business, Sciences, Liberal Arts, Medicine, Law
 
-*   **Core Profile:** \`name\`, \`headline\`, \`home_location\`, \`post_company_current_company\`, \`post_company_current_title\`, \`post_company_current_industry\`, \`post_company_current_location\`.
-*   **[Your Organization] Specifics:** \`[Your Organization]_exit_year\`, \`had_multiple_company_stints\`.
-*   **Career Arrays (for broad matching):** \`post_company_companies\`, \`post_company_titles\`, \`post_company_industries\`, \`post_company_locations\`.
-*   **Education Arrays:** \`undergraduate_school\`, \`graduate_school\`, \`high_school\`. Specific majors like \`undergraduate_major\`, \`graduate_specialization\`.
-*   **Career Progression & Leadership:** \`current_job_level\` (e.g., "Entry Level", "Director", "C-Suite"), \`current_job_function\` (e.g., "Software Engineering", "Marketing"), \`is_current_leader\`, \`management_experience\`, \`revenue_responsibility\`, \`years_since_[Your Organization]\`.
-*   **Company & Industry Intelligence:** \`current_company_size_category\` (e.g., "Startup", "Enterprise"), \`has_startup_experience\`, \`has_enterprise_experience\`, \`industry_transitions\` (array).
-*   **Skills & Experience Patterns:** \`technical_background\`, \`sales_experience\`, \`consulting_experience\`, \`restaurant_operations_experience\`, \`is_remote_worker\`, \`major_metro_area\`.
-*   **Educational Background:** \`highest_degree_level\` (e.g., "Bachelor\\'s Degree", "PhD"), \`school_ranking_tier\` (e.g., "Ivy League", "Top 50"), \`stem_education\`, \`business_education\`, \`elite_education\`, \`major_category\`.
-*   **Derived Intelligence:** \`career_trajectory\` (e.g., "Fast-track", "Specialized"), \`mentor_potential\`.
-*   **Targeted Search Categories:** \`functional_expertise\` (array, e.g., "Product Management"), \`industry_expertise\` (array, e.g., "SaaS"), \`career_stage\` (e.g., "Mid-Career").
-*   **Temporal Elements:** Specific years (e.g., "2018"), ranges (e.g., "after 2020").
+**Advanced Boolean Categories:**
+9. Leadership: Queries indicating leadership roles or experience
+10. Management Experience: Managing teams, supervisory roles
+11. Technical Background: Engineering, coding, technical skills
+12. Sales Experience: Sales roles, business development
+13. Startup Experience: Startup environments, early-stage companies
+14. Enterprise Experience: Large corporation experience
+15. Remote Work: Remote work arrangements, distributed teams
+16. Mentor Potential: Teaching, mentoring, coaching experience
 
-**Output Format & Guidelines:**
+**Specialized Categories:**
+17. Functional Expertise: Specific skill areas (AI, Marketing Analytics, etc.)
+18. Industry Expertise: Deep industry knowledge beyond current role
+19. Exit Years: Years when people left the organization
+20. Salary Impact: Salary improvements, financial advancement
+21. Career Transitions: Job changes, career pivots
+22. Geographic Movement: Relocation patterns
 
-1.  **Categorize Filters:** Group extracted values under clear, descriptive category names (you can define these, e.g., "Job Levels", "Industries", "School Names", "Degree Levels", "Locations", "Skills", "Company Size", "Years Active").
-2.  **Exact Values & Schema Alignment:** When possible, try to match extracted values to typical values found in the schema fields (e.g., if query says "VP", map to "Job Levels: VP/SVP"). For free text like company or school names, use the text as is.
-3.  **Be Highly Selective:** Only extract filters that are *clearly and explicitly stated or very strongly implied* by the query. Do NOT infer or add filters that aren't evident. If a query term is ambiguous, err on the side of not extracting it as a structured filter (it will still be caught by semantic search).
-4.  **Arrays vs. Single Values:** If a schema field is an array (e.g., \`functional_expertise\`), the extracted filter for that category can have multiple comma-separated values.
-5.  **Output Format:**
-    Category Name 1: value1, value2
-    Category Name 2: valueA
-    (Use a newline for each new category).
-6.  **No Filters Case:** If no specific filters can be confidently extracted, output *only* the exact phrase: "No specific filters detected".
+**Instructions:**
+- Extract 1-3 values per relevant category
+- Only include categories with clear evidence in the query
+- Use specific, searchable terms
+- If no specific filters detected, respond: "No specific filters detected"
 
-**Examples (Illustrative - adapt to your schema and categories you define):**
+**Examples:**
 
-Query: "Senior AI engineers at Google in San Francisco who graduated after 2015"
-Extracted Filters:
-Job Levels: Senior Level
-Targeted Functional Expertise: Software Engineering, AI Development
-Company Names: Google
+Query: "Software engineers in San Francisco who became VPs"
+Job Functions: Software Engineering
+Job Levels: VP
 Locations: San Francisco
-Years Active: after 2015
+Leadership: Current Leader
 
-Query: "MBA graduates from Ivy League schools who became startup founders in FinTech"
-Degree Levels: MBA
-School Ranking Tiers: Ivy League
-Company Sizes: Startup
-Targeted Industry Expertise: FinTech
-Job Levels: Founder
-
-Query: "Marketing VPs with experience in B2B SaaS, left [Your Organization] around 2018"
-Job Levels: VP/SVP
-Job Functions: Marketing
-Targeted Industry Expertise: SaaS, B2B
-[Your Organization] Exit Year: around 2018
-
-Query: "Consultants with restaurant operations experience"
+Query: "People who left in 2019 and started consulting companies"
+Exit Years: 2019
 Job Functions: Consulting
-Skills & Experience: Restaurant operations experience
+Startup Experience: Startup Experience
+Leadership: Founder
 
-Return only the filter string, no other text.`,
+Query: "MBA graduates now in tech sales roles"
+Degree Levels: MBA
+Job Functions: Sales
+Industries: Technology
+
+Query: "Former managers who moved to remote work"
+Management Experience: Has Management Experience
+Remote Work: Remote Worker
+
+Query: "Alumni working at Google or Apple in AI"
+Company Names: Google, Apple
+Functional Expertise: Artificial Intelligence
+
+Respond with the category name followed by a colon and comma-separated values. One category per line.`,
         },
         {
           role: 'user',

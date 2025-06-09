@@ -26,7 +26,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[API] Request body parsed:', body);
     
-    const { query, top_k = 10, filters = {}, organizationName, isDemo = false } = body;
+    const { 
+      query, 
+      top_k = 10, 
+      filters = {}, 
+      organizationName, 
+      isDemo = false,
+      queryClassification
+    } = body;
     
     if (!query || typeof query !== 'string') {
       console.log('[API] Invalid query parameter');
@@ -36,7 +43,16 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`[API DEBUG] Received parameters: query="${query}", organizationName="${organizationName}", isDemo=${isDemo}`);
+    console.log(`[API DEBUG] Received parameters:`, {
+      query,
+      organizationName,
+      isDemo,
+      hasClassification: !!queryClassification,
+      classificationType: queryClassification?.type,
+      hasFilters: Object.keys(filters).length > 0,
+      filterKeys: Object.keys(filters)
+    });
+    
     console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
 
     // Try each step separately to identify where the error occurs
@@ -52,6 +68,41 @@ export async function POST(req: NextRequest) {
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     
+    // Check for temporal search first (for non-demo users only)
+    if (!isDemo && 
+        queryClassification?.type === 'temporal' && 
+        queryClassification?.temporal_elements && 
+        organizationName) {
+      
+      console.log(`[API DEBUG] 🕐 Temporal search detected for ${organizationName}`);
+      console.log(`[API DEBUG] 🕐 Temporal elements:`, queryClassification.temporal_elements);
+      
+      try {
+        const temporalResults = await search_engine.searchTemporal(
+          query,
+          queryClassification.temporal_elements,
+          50, // Use higher limit for gap-based filtering
+          organizationName
+        );
+        
+        if (temporalResults.length > 0) {
+          console.log(`[API DEBUG] 🕐 Temporal search returned ${temporalResults.length} results`);
+          return NextResponse.json({ 
+            results: temporalResults,
+            searchType: 'temporal',
+            temporal_elements: queryClassification.temporal_elements
+          });
+        } else {
+          console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+        }
+      } catch (error) {
+        console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+      }
+    }
+    
+    // Standard search with enhanced filters
+    console.log(`[API DEBUG] 📊 Using standard search with enhanced filters`);
+    
     // Auth-based routing: Any authenticated user with organizationName gets company search
     if (!isDemo && organizationName) {
       console.log(`[API DEBUG] ✅ Authenticated user detected with organization: "${organizationName}"`);
@@ -59,11 +110,20 @@ export async function POST(req: NextRequest) {
       console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
     }
     
-    // Use gap-based filtering instead of fixed limit
-    const results = await search_engine.search(query, 50, filters, isDemo, organizationName);
+    // Use the filters directly (they already contain the advanced filters from the dashboard)
+    console.log(`[API DEBUG] Filters for company search:`, filters);
+    
+    // Use gap-based filtering instead of fixed limit, always use company search for enhanced capabilities
+    const results = await search_engine.searchCompany(query, 50, filters, organizationName);
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
-    return NextResponse.json({ results });
+    
+    return NextResponse.json({ 
+      results,
+      searchType: 'standard',
+      appliedFilters: filters,
+      filterCount: Object.keys(filters).length
+    });
   } catch (error) {
     console.error('[API] Error in search:', error);
     

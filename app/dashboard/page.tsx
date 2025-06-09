@@ -36,12 +36,39 @@ interface SearchResult {
   pre_company_education: string[];
   during_company_education: string[];
   post_company_education: string[];
-  natural_language_geographic_profile: string;
-  natural_language_educational_profile: string;
   natural_language_education: string;
   highest_degree_level: string;
   major_category: string;
   similarity: number;
+  
+  // Enhanced career and salary fields
+  career_stage?: string;
+  school_ranking_tier?: string;
+  current_estimated_salary?: number;
+  highest_career_salary?: number;
+  
+  // Boolean profile characteristics
+  is_current_leader?: boolean;
+  management_experience?: boolean;
+  technical_background?: boolean;
+  sales_experience?: boolean;
+  has_startup_experience?: boolean;
+  has_enterprise_experience?: boolean;
+  is_remote_worker?: boolean;
+  mentor_potential?: boolean;
+  
+  // Additional arrays for comprehensive data
+  post_company_companies?: string[];
+  post_company_titles?: string[];
+  post_company_industries?: string[];
+  post_company_locations?: string[];
+  functional_expertise?: string[];
+  industry_expertise?: string[];
+  
+  // Dynamic Boolean salary fields (with dynamic company names)
+  // Note: These will be accessed dynamically as [organizationName]_provided_salary_lift etc.
+  [key: string]: any; // Allow dynamic field access for company-specific boolean fields
+  
   // Legacy fields for backward compatibility
   linkedin_url?: string;
   current_company?: string;
@@ -51,6 +78,7 @@ interface SearchResult {
   current_job_location?: string;
   years_experience?: number;
   profile_photo_url?: string;
+  home_location?: string;
 }
 
 // Add realistic suggestion tags for Chick-fil-A employees and alumni
@@ -248,7 +276,6 @@ const getEducationDisplay = (result: SearchResult): string => {
     pre_company_education: result.pre_company_education,
     during_company_education: result.during_company_education,
     post_company_education: result.post_company_education,
-    natural_language_educational_profile: result.natural_language_educational_profile,
     natural_language_education: result.natural_language_education
   });
 
@@ -293,12 +320,7 @@ const getEducationDisplay = (result: SearchResult): string => {
     return text;
   };
   
-  // Fallback to natural language education profiles with extraction
-  if (result.natural_language_educational_profile && 
-      typeof result.natural_language_educational_profile === 'string') {
-    return extractEducationFromNaturalLanguage(result.natural_language_educational_profile);
-  }
-  
+  // Fallback to natural language education with extraction
   if (result.natural_language_education && 
       typeof result.natural_language_education === 'string') {
     return extractEducationFromNaturalLanguage(result.natural_language_education);
@@ -318,15 +340,25 @@ const getStandardProfileInfo = (result: SearchResult) => {
     post_company_current_title: result.post_company_current_title,
     current_job_location: result.current_job_location,
     post_company_current_location: result.post_company_current_location,
-    natural_language_geographic_profile: result.natural_language_geographic_profile,
+    home_location: (result as any).home_location,
     undergraduate_school: result.undergraduate_school,
     graduate_school: result.graduate_school
   });
 
+  // Use home_location as fallback when post_company_current_location is empty
+  const getLocationFallback = () => {
+    if (result.current_job_location) {
+      return result.current_job_location;
+    }
+    if (result.post_company_current_location) {
+      return result.post_company_current_location;
+    }
+    // Fallback to home_location if current work location is empty
+    return (result as any).home_location || '';
+  };
+
   return {
-    location: extractLocationFromText(result.natural_language_geographic_profile) || 
-              result.current_job_location || 
-              result.post_company_current_location || '',
+    location: getLocationFallback(),
     currentRole: result.current_title || 
                  result.post_company_current_title || '',
     currentCompany: result.current_company || 
@@ -339,15 +371,35 @@ const getStandardProfileInfo = (result: SearchResult) => {
 const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: string]: string[]}) => {
   const matches: {category: string, value: string}[] = [];
   
-  // Map filter categories to database fields - expanded with more mappings
+  // Map filter categories to database fields - expanded with more mappings including boolean fields
   const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string)}} = {
     'Job Functions': { field: 'current_job_function' },
     'Job Levels': { field: 'current_job_level' },
-    'Industries': { field: (r) => r.post_company_current_industry || r.industry || r.current_industry || '' },
-    'Company Names': { field: (r) => r.post_company_current_company || r.current_company || '' },
-    'Locations': { field: (r) => extractLocationFromText(r.natural_language_geographic_profile) || r.current_job_location || '' },
+    'Industries': { field: (r: SearchResult) => r.post_company_current_industry || r.industry || r.current_industry || '' },
+    'Company Names': { field: (r: SearchResult) => r.post_company_current_company || r.current_company || '' },
+    'Locations': { field: (r: SearchResult) => r.current_job_location || r.post_company_current_location || '' },
     'Degree Levels': { field: 'highest_degree_level' },
-    'Major Categories': { field: 'major_category' }
+    'Major Categories': { field: 'major_category' },
+    
+    // Enhanced field mappings
+    'Career Stages': { field: 'career_stage' },
+    'School Tiers': { field: 'school_ranking_tier' },
+    'Functional Expertise': { field: (r: SearchResult) => (r.functional_expertise || []).join(', ') },
+    'Industry Expertise': { field: (r: SearchResult) => (r.industry_expertise || []).join(', ') },
+    
+    // Boolean profile characteristics mappings
+    'Leadership': { field: (r: SearchResult) => r.is_current_leader ? 'Current Leader' : '' },
+    'Management Experience': { field: (r: SearchResult) => r.management_experience ? 'Has Management Experience' : '' },
+    'Technical Background': { field: (r: SearchResult) => r.technical_background ? 'Technical Background' : '' },
+    'Sales Experience': { field: (r: SearchResult) => r.sales_experience ? 'Sales Experience' : '' },
+    'Startup Experience': { field: (r: SearchResult) => r.has_startup_experience ? 'Startup Experience' : '' },
+    'Enterprise Experience': { field: (r: SearchResult) => r.has_enterprise_experience ? 'Enterprise Experience' : '' },
+    'Remote Work': { field: (r: SearchResult) => r.is_remote_worker ? 'Remote Worker' : '' },
+    'Mentor Potential': { field: (r: SearchResult) => r.mentor_potential ? 'Mentor Potential' : '' },
+    
+    // Salary-related mappings
+    'Current Salary Range': { field: (r: SearchResult) => r.current_estimated_salary ? `$${r.current_estimated_salary?.toLocaleString()}` : '' },
+    'Highest Career Salary': { field: (r: SearchResult) => r.highest_career_salary ? `$${r.highest_career_salary?.toLocaleString()}` : '' }
   };
   
   // Check each extracted filter category
@@ -404,17 +456,42 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
       post_company_current_location: result.post_company_current_location || result.current_job_location || '',
       current_job_level: result.current_job_level || '',
       current_job_function: result.current_job_function || '',
+      
+      // Education fields
       undergraduate_school: result.undergraduate_school || [],
       graduate_school: result.graduate_school || [],
       high_school: result.high_school || [],
       pre_company_education: result.pre_company_education || [],
       during_company_education: result.during_company_education || [],
       post_company_education: result.post_company_education || [],
-      natural_language_geographic_profile: result.natural_language_geographic_profile || '',
-      natural_language_educational_profile: result.natural_language_educational_profile || '',
       natural_language_education: result.natural_language_education || '',
       highest_degree_level: result.highest_degree_level || '',
       major_category: result.major_category || '',
+      
+      // Enhanced career and salary fields
+      career_stage: result.career_stage || '',
+      school_ranking_tier: result.school_ranking_tier || '',
+      current_estimated_salary: result.current_estimated_salary || 0,
+      highest_career_salary: result.highest_career_salary || 0,
+      
+      // Boolean profile characteristics
+      is_current_leader: result.is_current_leader || false,
+      management_experience: result.management_experience || false,
+      technical_background: result.technical_background || false,
+      sales_experience: result.sales_experience || false,
+      has_startup_experience: result.has_startup_experience || false,
+      has_enterprise_experience: result.has_enterprise_experience || false,
+      is_remote_worker: result.is_remote_worker || false,
+      mentor_potential: result.mentor_potential || false,
+      
+      // Additional arrays for comprehensive data
+      post_company_companies: result.post_company_companies || [],
+      post_company_titles: result.post_company_titles || [],
+      post_company_industries: result.post_company_industries || [],
+      post_company_locations: result.post_company_locations || [],
+      functional_expertise: result.functional_expertise || [],
+      industry_expertise: result.industry_expertise || [],
+      
       // Keep legacy fields for backward compatibility
       linkedin_url: result.linkedin_url || result.profile_url || '',
       current_company: result.current_company || result.post_company_current_company || '',
@@ -423,29 +500,52 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
       current_general_industry: result.current_general_industry || '',
       current_job_location: result.current_job_location || result.post_company_current_location || '',
       years_experience: result.years_experience || 0,
-      profile_photo_url: result.profile_photo_url || result.picture_url
+      profile_photo_url: result.profile_photo_url || result.picture_url,
+      home_location: result.home_location || ''
     };
+    
+    // Dynamic company-specific fields are preserved through the spread operator (...result)
+    // These include fields like: [organizationName]_exit_year, [organizationName]_provided_salary_lift, 
+    // achieved_six_figure_post_[organizationName], doubled_salary_post_[organizationName], 
+    // moved_to_leadership_post_[organizationName]
+    // They will be accessible via mapped[`${organizationName}_provided_salary_lift`] etc.
     
     console.log(`[DEBUG COMPATIBILITY] Mapped result ${index}:`, {
       id: mapped.id,
       name: mapped.name,
-      current_company: mapped.current_company,
+      profile_url: mapped.profile_url,
       post_company_current_company: mapped.post_company_current_company,
-      current_title: mapped.current_title,
-      post_company_current_title: mapped.post_company_current_title,
-      current_job_location: mapped.current_job_location,
-      post_company_current_location: mapped.post_company_current_location,
-      natural_language_geographic_profile: mapped.natural_language_geographic_profile,
-      undergraduate_school: mapped.undergraduate_school,
-      graduate_school: mapped.graduate_school,
-      high_school: mapped.high_school,
-      natural_language_education: mapped.natural_language_education
+      boolean_fields: {
+        is_current_leader: mapped.is_current_leader,
+        management_experience: mapped.management_experience,
+        technical_background: mapped.technical_background,
+        sales_experience: mapped.sales_experience,
+        has_startup_experience: mapped.has_startup_experience,
+        has_enterprise_experience: mapped.has_enterprise_experience,
+        is_remote_worker: mapped.is_remote_worker,
+        mentor_potential: mapped.mentor_potential
+      },
+      salary_fields: {
+        current_estimated_salary: mapped.current_estimated_salary,
+        highest_career_salary: mapped.highest_career_salary
+      },
+      education_fields: {
+        undergraduate_school: mapped.undergraduate_school,
+        graduate_school: mapped.graduate_school,
+        natural_language_education: mapped.natural_language_education
+      },
+      career_fields: {
+        career_stage: mapped.career_stage,
+        school_ranking_tier: mapped.school_ranking_tier,
+        current_job_level: mapped.current_job_level,
+        current_job_function: mapped.current_job_function
+      }
     });
     
     return mapped;
   });
   
-  console.log('[DEBUG COMPATIBILITY] Final mapped results:', mappedResults);
+  console.log('[DEBUG COMPATIBILITY] All results mapped successfully');
   return mappedResults;
 };
 
@@ -512,43 +612,6 @@ export default function DashboardPage() {
   // Add state for save status of each result
   const [savedStatusMap, setSavedStatusMap] = useState<{[key: string]: 'idle' | 'saving' | 'saved' | 'error' | 'already_saved' | 'demo_no_save'}>({});
   
-  // Rotating placeholder suggestion index
-  // const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
-  // const [combinedSuggestions, setCombinedSuggestions] = useState<string[]>([]);
-  
-  // Create combined array with "begin typing to search" every 4 items
-  // useEffect(() => {
-  //   const createCombinedSuggestions = () => {
-  //     const combined: string[] = [];
-  //     const originalPlaceholder = "begin typing to search";
-  //     
-  //     // Create a shuffled copy of all suggestion tags
-  //     const shuffledTags = [...allSuggestionTags].sort(() => Math.random() - 0.5);
-  //     
-  //     // Insert original placeholder every 4 items
-  //     let tagIndex = 0;
-  //     for (let i = 0; i < 40; i++) { // Create a reasonable cycle length
-  //       if (i % 4 === 3) { // Every 4th item (0-indexed, so 3, 7, 11, etc.)
-  //         combined.push(originalPlaceholder);
-  //       } else {
-  //         combined.push(shuffledTags[tagIndex % shuffledTags.length]);
-  //         tagIndex++;
-  //       }
-  //     }
-  //     
-  //     setCombinedSuggestions(combined);
-  //   };
-  //   
-  //   createCombinedSuggestions();
-  // }, []);
-  
-  // Cycle through suggestions every 3 seconds
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentSuggestionIndex(prev => (prev + 1) % combinedSuggestions.length);
-  //   }, 3000);
-  //   return () => clearInterval(interval);
-  // }, [combinedSuggestions.length]);
   
   // Add new state for demo mode
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -568,6 +631,84 @@ export default function DashboardPage() {
 
   // Add ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Add state for query classification
+  const [queryClassification, setQueryClassification] = useState<any>(null);
+
+  // Add function to classify query for temporal search
+  const classifyQuery = async (query: string): Promise<any> => {
+    try {
+      console.log(`[DEBUG ${new Date().toISOString()}] Classifying query for temporal elements: "${query}"`);
+      
+      const response = await fetch('/api/classify-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+      
+      if (!response.ok) {
+        console.error('Query classification failed:', response.statusText);
+        return { type: 'standard' };
+      }
+      
+      const classification = await response.json();
+      console.log(`[DEBUG ${new Date().toISOString()}] Query classification result:`, classification);
+      
+      return classification;
+    } catch (error) {
+      console.error('Error classifying query:', error);
+      return { type: 'standard' };
+    }
+  };
+
+  // Add function to convert extracted filters to API format
+  const convertFiltersToAPI = (extractedFilters: {[key: string]: string[]}): any => {
+    const apiFilters: any = {};
+    
+    // Map extracted filter categories to API parameters
+    const filterMapping: {[key: string]: string} = {
+      'Job Levels': 'job_level_filter',
+      'Job Functions': 'job_function_filter', 
+      'Industries': 'industry',
+      'Company Names': 'company',
+      'Locations': 'location',
+      'School Names': 'school',
+      'Degree Levels': 'degree_level_filter',
+      'School Tiers': 'school_tier_filter',
+      'Career Stages': 'career_stage_filter',
+      'Exit Years': 'exit_year_min', // For simplicity, use the first year as min
+    };
+    
+    // Boolean filter mapping
+    const booleanMapping: {[key: string]: string} = {
+      'Leadership': 'leadership_only',
+      'Management Experience': 'management_exp_only',
+      'Technical Background': 'technical_background_only',
+      'Sales Experience': 'sales_exp_only',
+      'Startup Experience': 'startup_exp_only',
+      'Enterprise Experience': 'enterprise_exp_only',
+      'Remote Work': 'remote_worker_only',
+      'Mentor Potential': 'mentor_potential_only',
+      'Salary Impact': 'salary_lift_only'
+    };
+    
+    // Convert text filters
+    Object.entries(extractedFilters).forEach(([category, values]) => {
+      if (filterMapping[category] && values.length > 0) {
+        apiFilters[filterMapping[category]] = values[0]; // Use first value for text filters
+      }
+      
+      // Convert boolean filters (if the category exists, set to true)
+      if (booleanMapping[category] && values.length > 0) {
+        apiFilters[booleanMapping[category]] = true;
+      }
+    });
+    
+    console.log(`[DEBUG ${new Date().toISOString()}] Converted filters:`, apiFilters);
+    return apiFilters;
+  };
 
   // Define formatOrganizationName function here
   const formatOrganizationName = (name: string): string => {
@@ -1008,6 +1149,9 @@ export default function DashboardPage() {
       displaying: ''
     });
     
+    // Start query classification in parallel with search request
+    const classificationPromise = classifyQuery(currentQuery);
+    
     // IMPORTANT: Start the actual search request immediately in parallel with animations
     console.log(`[DEBUG ${new Date().toISOString()}] Starting API search request for: "${currentQuery}"`);
     
@@ -1015,27 +1159,8 @@ export default function DashboardPage() {
     const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
     console.log(`[DEBUG ${new Date().toISOString()}] Original organization name for API: "${originalOrganizationName}"`);
     
-    const searchPromise = fetch('/api/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        query: currentQuery, 
-        organizationName: originalOrganizationName,
-        isDemo: isDemoMode
-      }),
-    }).then(response => {
-      console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
-      return response.json();
-    }).then(rawData => {
-      console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${rawData.results?.length || 0} results`);
-      console.log(`[DEBUG ${new Date().toISOString()}] First result:`, rawData.results?.[0] || 'No results');
-      return rawData;
-    });
+    // We'll build the search request after we have classification and filters
+    let searchPromise: Promise<any>;
     
     // Start the AI animation sequence
     try {
@@ -1078,7 +1203,40 @@ export default function DashboardPage() {
       setSearchPhase('filtering');
       await extractMetadataFilters(currentQuery);
       
-      // Get search results that were fetching in parallel
+      // Get query classification that was running in parallel
+      console.log(`[DEBUG ${new Date().toISOString()}] Getting query classification for: "${currentQuery}"`);
+      const classification = await classificationPromise;
+      setQueryClassification(classification);
+      
+      // Convert extracted filters to API format
+      const apiFilters = convertFiltersToAPI(extractedFilters);
+      
+      // Now create the enhanced search request with classification and filters
+      searchPromise = fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          query: currentQuery, 
+          organizationName: originalOrganizationName,
+          isDemo: isDemoMode,
+          queryClassification: classification,
+          filters: apiFilters
+        }),
+      }).then(response => {
+        console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
+        return response.json();
+      }).then(rawData => {
+        console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${rawData.results?.length || 0} results`);
+        console.log(`[DEBUG ${new Date().toISOString()}] First result:`, rawData.results?.[0] || 'No results');
+        return rawData;
+      });
+      
+      // Get search results
       console.log(`[DEBUG ${new Date().toISOString()}] Waiting for search promise to resolve for query: "${currentQuery}"`);
       const searchData = await searchPromise;
       const searchResultsData = searchData.results;
@@ -1087,7 +1245,17 @@ export default function DashboardPage() {
       // Phase 5: Display results
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 5: Displaying results`);
       setSearchPhase('complete');
-      await typewriterEffect(`Displaying ${searchResultsData.length} optimized results based on relevance...`, 
+      
+      // Enhanced result display message based on search type
+      let displayMessage = `Displaying ${searchResultsData.length} optimized results based on relevance`;
+      if (classification.type === 'temporal') {
+        displayMessage += ' (using temporal search for career progression patterns)';
+      } else if (Object.keys(apiFilters).length > 0) {
+        displayMessage += ` (with ${Object.keys(apiFilters).length} advanced filters applied)`;
+      }
+      displayMessage += '...';
+      
+      await typewriterEffect(displayMessage, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       

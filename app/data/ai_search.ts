@@ -17,6 +17,28 @@ export interface CompanySearchFilters {
   title?: string;
   location?: string;
   school?: string;
+  
+  // Enhanced text filters
+  job_level_filter?: string;
+  job_function_filter?: string;
+  career_stage_filter?: string;
+  degree_level_filter?: string;
+  school_tier_filter?: string;
+  
+  // Boolean filters
+  leadership_only?: boolean;
+  management_exp_only?: boolean;
+  technical_background_only?: boolean;
+  sales_exp_only?: boolean;
+  startup_exp_only?: boolean;
+  enterprise_exp_only?: boolean;
+  remote_worker_only?: boolean;
+  mentor_potential_only?: boolean;
+  
+  // Dynamic company-specific boolean filter (will be constructed as {organizationName}_salary_lift_only)
+  salary_lift_only?: boolean;
+  
+  // Range filters
   exit_year_min?: number;
   exit_year_max?: number;
 }
@@ -43,9 +65,6 @@ export interface SearchResult {
   pre_company_education?: string[];
   during_company_education?: string[];
   post_company_education?: string[];
-  natural_language_education?: string;
-  natural_language_geographic_profile?: string;
-  natural_language_educational_profile?: string;
   highest_degree_level?: string;
   major_category?: string;
 }
@@ -64,6 +83,42 @@ export interface CompanySearchResult {
   similarity: number;
   industry: string;
   headline: string;
+  // Add enriched fields from the enhanced vector table
+  current_job_level?: string;
+  current_job_function?: string;
+  career_stage?: string;
+  highest_degree_level?: string;
+  school_ranking_tier?: string;
+  
+  // Boolean profile characteristics
+  is_current_leader?: boolean;
+  management_experience?: boolean;
+  technical_background?: boolean;
+  sales_experience?: boolean;
+  has_startup_experience?: boolean;
+  has_enterprise_experience?: boolean;
+  is_remote_worker?: boolean;
+  mentor_potential?: boolean;
+  
+  undergraduate_school?: string[];
+  graduate_school?: string[];
+  high_school?: string[];
+  pre_company_education?: string[];
+  during_company_education?: string[];
+  post_company_education?: string[];
+  post_company_companies?: string[];
+  post_company_titles?: string[];
+  post_company_industries?: string[];
+  post_company_locations?: string[];
+  functional_expertise?: string[];
+  industry_expertise?: string[];
+  current_estimated_salary?: number;
+  highest_career_salary?: number;
+  major_category?: string;
+  
+  // Dynamic company-specific fields - accessed as [organizationName]_field_name
+  // Examples: chick_fil_a_exit_year, chick_fil_a_provided_salary_lift, etc.
+  [key: string]: any; // Allow dynamic field access for company-specific fields
 }
 
 export interface ProfileDetail {
@@ -107,6 +162,7 @@ interface HybridSearchCompanyResult {
   profile_id: bigint;
   name: string;
   profile_url: string;
+  home_location: string;
   post_company_current_company: string;
   post_company_current_title: string;
   post_company_current_industry: string;
@@ -123,7 +179,17 @@ interface HybridSearchCompanyResult {
   career_stage: string;
   highest_degree_level: string;
   school_ranking_tier: string;
-  major_metro_area: string;
+  
+  // Boolean profile characteristics (returned by SQL function)
+  is_current_leader: boolean;
+  management_experience: boolean;
+  technical_background: boolean;
+  sales_experience: boolean;
+  has_startup_experience: boolean;
+  has_enterprise_experience: boolean;
+  is_remote_worker: boolean;
+  mentor_potential: boolean;
+  
   // Add missing education fields
   undergraduate_school: string[];
   graduate_school: string[];
@@ -132,6 +198,7 @@ interface HybridSearchCompanyResult {
   during_company_education: string[];
   post_company_education: string[];
   natural_language_education: string;
+  natural_language_experiences: string;
   // Add other useful fields
   post_company_companies: string[];
   post_company_titles: string[];
@@ -139,6 +206,13 @@ interface HybridSearchCompanyResult {
   post_company_locations: string[];
   functional_expertise: string[];
   industry_expertise: string[];
+  // NEW: Salary fields
+  current_estimated_salary: number;
+  highest_career_salary: number;
+  // Dynamic salary fields - will be accessed as [organizationName]_provided_salary_lift etc.
+  // These include: {organizationName}_provided_salary_lift, achieved_six_figure_post_{organizationName}, 
+  // doubled_salary_post_{organizationName}, moved_to_leadership_post_{organizationName}
+  major_category: string;  // Add missing major_category field
   similarity: number;
 }
 
@@ -147,7 +221,7 @@ export interface TemporalSearchFilters {
   target_company_year?: number;
   subsequent_function?: string;
   subsequent_year?: number;
-  cfa_years_filter?: number[];
+  company_years_filter?: number[];  // Changed from cfa_years_filter to generic company_years_filter
   functions_filter?: string[];
   exit_year_min?: number;
   exit_year_max?: number;
@@ -158,10 +232,12 @@ export interface TemporalSearchResult {
   profile_id: number;
   name: string;
   career_timeline: any;
-  chick_fil_a_years: number[];
+  education_timeline: any;  // Added missing education_timeline field
+  // Dynamic company years field - will be accessed as [organizationName]_years_list
+  [key: string]: any; // Allow dynamic field access for company-specific fields
   post_company_current_company: string;
   post_company_current_title: string;
-  company_exit_year: number;
+  // Dynamic exit year field - will be accessed as [organizationName]_exit_year
   similarity: number;
 }
 
@@ -262,29 +338,84 @@ export class LinkedInProfileSearchEngine {
       
       const embeddingArray = response.data[0].embedding;
       
-      // Extract company-specific filters
+      // Extract all filter types from the enhanced filters interface
       const { 
         company, 
         industry, 
         title, 
         location, 
-        school
+        school,
+        
+        // Enhanced text filters
+        job_level_filter,
+        job_function_filter,
+        career_stage_filter,
+        degree_level_filter,
+        school_tier_filter,
+        
+        // Boolean filters
+        leadership_only = false,
+        management_exp_only = false,
+        technical_background_only = false,
+        sales_exp_only = false,
+        startup_exp_only = false,
+        enterprise_exp_only = false,
+        remote_worker_only = false,
+        mentor_potential_only = false,
+        salary_lift_only = false,
+        
+        // Range filters
+        exit_year_min,
+        exit_year_max
       } = filters;
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 Calling ${rpcFunctionName} RPC function`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 Calling ${rpcFunctionName} RPC function with enhanced filters`);
       
-      // Call the dynamic RPC function with higher limit for gap-based filtering
+      // Construct dynamic company-specific parameter name for salary lift filter
+      const dynamicSalaryLiftParam = `${storedOrganizationName}_salary_lift_only`;
+      
+      // Build RPC parameters object with all available filters
+      const rpcParams: any = {
+        query_embedding: embeddingArray,
+        similarity_threshold: 0.3, // Keep lower threshold for more candidates
+        
+        // Basic filters
+        company_filter: company || null,
+        industry_filter: industry || null,
+        title_filter: title || null,
+        location_filter: location || null,
+        school_filter: school || null,
+        
+        // Enhanced text filters
+        job_level_filter: job_level_filter || null,
+        job_function_filter: job_function_filter || null,
+        career_stage_filter: career_stage_filter || null,
+        degree_level_filter: degree_level_filter || null,
+        school_tier_filter: school_tier_filter || null,
+        
+        // Boolean filters
+        leadership_only,
+        management_exp_only,
+        technical_background_only,
+        sales_exp_only,
+        startup_exp_only,
+        enterprise_exp_only,
+        remote_worker_only,
+        mentor_potential_only,
+        
+        // Range filters
+        exit_year_min: exit_year_min || null,
+        exit_year_max: exit_year_max || null,
+        
+        limit_count: 50 // Increase limit to get more candidates for gap-based filtering
+      };
+      
+      // Add dynamic company-specific salary lift filter
+      rpcParams[dynamicSalaryLiftParam] = salary_lift_only;
+      
+      // Call the dynamic RPC function with all enhanced filters
       const { data, error } = await this.supabase
-        .rpc(rpcFunctionName, {
-          query_embedding: embeddingArray,
-          similarity_threshold: 0.3, // Keep lower threshold for more candidates
-          company_filter: company || null,
-          industry_filter: industry || null,
-          title_filter: title || null,
-          location_filter: location || null,
-          school_filter: school || null,
-          limit_count: 50 // Increase limit to get more candidates for gap-based filtering
-        })
+        .rpc(rpcFunctionName, rpcParams)
         .returns<HybridSearchCompanyResult[]>();
       
       if (error) {
@@ -294,9 +425,10 @@ export class LinkedInProfileSearchEngine {
       
       console.log(`[AI_SEARCH DEBUG] 🏢 ${rpcFunctionName} returned ${data?.length || 0} results`);
       
-      // Format the results for company search
+      // Format the results for company search with enhanced field mapping
       const formattedResults = data.map((item: HybridSearchCompanyResult): CompanySearchResult => {
-        return {
+        // Create base result object
+        const baseResult: CompanySearchResult = {
           id: Number(item.id),
           profile_id: Number(item.profile_id),
           name: item.name,
@@ -308,42 +440,58 @@ export class LinkedInProfileSearchEngine {
           picture_url: item.picture_url,
           similarity: item.similarity,
           industry: item.post_company_current_industry || '',
-          headline: item.headline || ''
+          headline: item.headline || '',
+          
+          // Include all enriched fields directly from RPC result
+          current_job_level: item.current_job_level || '',
+          current_job_function: item.current_job_function || '',
+          career_stage: item.career_stage || '',
+          highest_degree_level: item.highest_degree_level || '',
+          school_ranking_tier: item.school_ranking_tier || '',
+          
+          // Boolean profile characteristics
+          is_current_leader: item.is_current_leader || false,
+          management_experience: item.management_experience || false,
+          technical_background: item.technical_background || false,
+          sales_experience: item.sales_experience || false,
+          has_startup_experience: item.has_startup_experience || false,
+          has_enterprise_experience: item.has_enterprise_experience || false,
+          is_remote_worker: item.is_remote_worker || false,
+          mentor_potential: item.mentor_potential || false,
+          
+          undergraduate_school: item.undergraduate_school || [],
+          graduate_school: item.graduate_school || [],
+          high_school: item.high_school || [],
+          pre_company_education: item.pre_company_education || [],
+          during_company_education: item.during_company_education || [],
+          post_company_education: item.post_company_education || [],
+          post_company_companies: item.post_company_companies || [],
+          post_company_titles: item.post_company_titles || [],
+          post_company_industries: item.post_company_industries || [],
+          post_company_locations: item.post_company_locations || [],
+          functional_expertise: item.functional_expertise || [],
+          industry_expertise: item.industry_expertise || [],
+          current_estimated_salary: item.current_estimated_salary || 0,
+          highest_career_salary: item.highest_career_salary || 0,
+          major_category: item.major_category || ''
         };
+        
+        // Handle dynamic company-specific fields by copying all dynamic properties
+        // This preserves fields like: {organizationName}_exit_year, {organizationName}_provided_salary_lift, etc.
+        Object.keys(item).forEach(key => {
+          if (key.includes(storedOrganizationName) || key.startsWith('achieved_') || key.startsWith('doubled_') || key.startsWith('moved_to_')) {
+            (baseResult as any)[key] = item[key];
+          }
+        });
+        
+        return baseResult;
       });
 
-      // Apply gap-based filtering
-      const filteredResults = this.applyGapBasedFiltering(formattedResults);
+      // Apply gap-based filtering to the enriched results
+      const filteredResults = this.applyGapBasedFiltering(formattedResults) as CompanySearchResult[];
       console.log(`[AI_SEARCH DEBUG] 🏢 Gap-based filtering reduced results from ${formattedResults.length} to ${filteredResults.length}`);
       
-      // The enhanced RPC function already returns enriched data, so no need for additional fetching
-      const enrichedResults = filteredResults.map((item: CompanySearchResult) => {
-        // Access the full data from the RPC result
-        const rpcItem = data.find(d => Number(d.id) === item.id);
-        
-        return {
-          ...item,
-          // The RPC already provides the enriched industry and headline
-          industry: item.industry,
-          headline: item.headline,
-          // Use the enriched data from the RPC function
-          current_job_level: rpcItem?.current_job_level || '',
-          current_job_function: rpcItem?.current_job_function || '',
-          undergraduate_school: rpcItem?.undergraduate_school || [],
-          graduate_school: rpcItem?.graduate_school || [],
-          high_school: rpcItem?.high_school || [],
-          pre_company_education: rpcItem?.pre_company_education || [],
-          during_company_education: rpcItem?.during_company_education || [],
-          post_company_education: rpcItem?.post_company_education || [],
-          natural_language_education: rpcItem?.natural_language_education || '',
-          natural_language_geographic_profile: rpcItem?.natural_language_geographic_profile || '',
-          natural_language_educational_profile: rpcItem?.natural_language_education || '', // Map to legacy field name
-          highest_degree_level: rpcItem?.highest_degree_level || '',
-          major_category: rpcItem?.major_category || ''
-        };
-      });
-      
-      return enrichedResults;
+      return filteredResults;
     } catch (error) {
       throw error;
     }
@@ -352,10 +500,19 @@ export class LinkedInProfileSearchEngine {
   async searchTemporal(
     query: string, 
     temporalElements: any, 
-    top_k: number = 10
+    top_k: number = 10,
+    organizationName?: string  // Add organizationName parameter
   ): Promise<TemporalSearchResult[]> {
     try {
       console.log(`[AI_SEARCH DEBUG] 🕐 searchTemporal called with:`, temporalElements);
+      
+      // Get the organization name for dynamic function naming
+      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('organizationName') : null);
+      
+      if (!storedOrganizationName) {
+        throw new Error('Organization name is required for temporal search');
+      }
       
       // Generate embedding
       const response = await this.openai.embeddings.create({
@@ -371,16 +528,17 @@ export class LinkedInProfileSearchEngine {
       
       // Try specific sequence search first
       if (years.length >= 2 && functions.length >= 1) {
-        console.log(`[AI_SEARCH DEBUG] 🕐 Using sequence search: CFA in ${years[0]}, then ${functions[0]} in ${years[1]}`);
+        const sequenceSearchFunc = `temporal_career_search_${storedOrganizationName}`;
+        console.log(`[AI_SEARCH DEBUG] 🕐 Using sequence search: ${storedOrganizationName} in ${years[0]}, then ${functions[0]} in ${years[1]}`);
         
         const { data, error } = await this.supabase
-          .rpc('temporal_career_search', {
-            target_company_year: years[0],
-            subsequent_function: functions[0],
-            subsequent_year: years[1],
-            query_embedding: embeddingArray,
-            similarity_threshold: 0.3, // Keep lower threshold for more candidates
-            limit_count: 50 // Increase limit for gap-based filtering
+          .rpc(sequenceSearchFunc, {
+            p_target_company_year: years[0],
+            p_subsequent_function: functions[0],
+            p_subsequent_year: years[1],
+            p_query_embedding: embeddingArray,
+            p_similarity_threshold: 0.3, // Keep lower threshold for more candidates
+            p_limit_count: 50 // Increase limit for gap-based filtering
           });
         
         if (error) {
@@ -400,15 +558,16 @@ export class LinkedInProfileSearchEngine {
       
       // Fallback to general temporal filter search
       if (years.length >= 1 || functions.length >= 1) {
+        const filterSearchFunc = `temporal_filter_search_${storedOrganizationName}`;
         console.log(`[AI_SEARCH DEBUG] 🕐 Using general temporal filter search`);
         
         const { data, error } = await this.supabase
-          .rpc('temporal_filter_search', {
-            query_embedding: embeddingArray,
-            similarity_threshold: 0.3, // Keep lower threshold for more candidates
-            cfa_years_filter: years.length > 0 ? years : null,
-            functions_filter: functions.length > 0 ? functions : null,
-            limit_count: 50 // Increase limit for gap-based filtering
+          .rpc(filterSearchFunc, {
+            p_query_embedding: embeddingArray,
+            p_similarity_threshold: 0.3, // Keep lower threshold for more candidates
+            p_company_years_filter: years.length > 0 ? years : null,
+            p_functions_filter: functions.length > 0 ? functions : null,
+            p_limit_count: 50 // Increase limit for gap-based filtering
           });
         
         if (error) {
@@ -469,7 +628,8 @@ export class LinkedInProfileSearchEngine {
           const temporalResults = await this.searchTemporal(
             query, 
             queryClassification.temporal_elements, 
-            top_k
+            top_k,
+            storedOrganizationName
           );
           
           if (temporalResults.length > 0) {
@@ -490,14 +650,17 @@ export class LinkedInProfileSearchEngine {
                   .select(`
                     profile_url, 
                     headline, 
-                    industry,
-                    current_general_industry,
+                    post_company_current_industry,
                     current_job_level,
                     current_job_function,
                     undergraduate_school,
                     graduate_school,
-                    natural_language_geographic_profile,
-                    natural_language_educational_profile,
+                    high_school,
+                    pre_company_education,
+                    during_company_education,
+                    post_company_education,
+                    natural_language_education,
+                    natural_language_experiences,
                     highest_degree_level,
                     major_category
                   `)
@@ -508,7 +671,7 @@ export class LinkedInProfileSearchEngine {
                   profileData = fetchedProfileData; // Assign to outer scope variable
                   linkedinUrl = fetchedProfileData.profile_url || '';
                   headline = fetchedProfileData.headline || '';
-                  industry = fetchedProfileData.industry || fetchedProfileData.current_general_industry || '';
+                  industry = fetchedProfileData.post_company_current_industry || '';
                 }
               } catch (error) {
                 console.warn(`[AI_SEARCH DEBUG] Could not fetch additional data for profile ${item.profile_id}`);
@@ -536,8 +699,10 @@ export class LinkedInProfileSearchEngine {
                 current_job_function: profileData?.current_job_function || '',
                 undergraduate_school: profileData?.undergraduate_school || [],
                 graduate_school: profileData?.graduate_school || [],
-                natural_language_geographic_profile: profileData?.natural_language_geographic_profile || '',
-                natural_language_educational_profile: profileData?.natural_language_educational_profile || '',
+                high_school: profileData?.high_school || [],
+                pre_company_education: profileData?.pre_company_education || [],
+                during_company_education: profileData?.during_company_education || [],
+                post_company_education: profileData?.post_company_education || [],
                 highest_degree_level: profileData?.highest_degree_level || '',
                 major_category: profileData?.major_category || ''
               };
@@ -596,14 +761,16 @@ export class LinkedInProfileSearchEngine {
             similarity: item.similarity,
             headline: item.headline,
             // Add the enriched fields to the SearchResult
-            current_job_level: (item as any).current_job_level || '',
-            current_job_function: (item as any).current_job_function || '',
-            undergraduate_school: (item as any).undergraduate_school || [],
-            graduate_school: (item as any).graduate_school || [],
-            natural_language_geographic_profile: (item as any).natural_language_geographic_profile || '',
-            natural_language_educational_profile: (item as any).natural_language_educational_profile || '',
-            highest_degree_level: (item as any).highest_degree_level || '',
-            major_category: (item as any).major_category || ''
+            current_job_level: item.current_job_level || '',
+            current_job_function: item.current_job_function || '',
+            undergraduate_school: item.undergraduate_school || [],
+            graduate_school: item.graduate_school || [],
+            high_school: item.high_school || [],
+            pre_company_education: item.pre_company_education || [],
+            during_company_education: item.during_company_education || [],
+            post_company_education: item.post_company_education || [],
+            highest_degree_level: item.highest_degree_level || '',
+            major_category: item.major_category || ''
           };
         });
         
@@ -657,7 +824,7 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] ${rpcFunction} returned ${data?.length || 0} results`);
       
       // Format the results to match your frontend expectations
-      const formattedResults = data.map((item: HybridSearchResult): SearchResult => ({
+      const formattedResults: SearchResult[] = data.map((item: HybridSearchResult): SearchResult => ({
         id: Number(item.id),
         name: item.name,
         linkedin_url: item.linkedin_url,
@@ -669,7 +836,18 @@ export class LinkedInProfileSearchEngine {
         years_experience: item.years_of_experience,
         profile_photo_url: item.profile_photo_url,
         similarity: item.similarity,
-        headline: ''
+        headline: '',
+        // Add enriched fields with defaults since fallback search doesn't have them
+        current_job_level: '',
+        current_job_function: '',
+        undergraduate_school: [],
+        graduate_school: [],
+        high_school: [],
+        pre_company_education: [],
+        during_company_education: [],
+        post_company_education: [],
+        highest_degree_level: '',
+        major_category: ''
       }));
 
       // Apply gap-based filtering
@@ -707,20 +885,17 @@ export class LinkedInProfileSearchEngine {
         .select(`
           id, 
           name, 
-          linkedin_url,
+          profile_url,
           current_company,
           current_title,
-          current_general_industry,
+          post_company_current_industry,
           current_job_location,
-          years_of_experience,
-          graduation_year,
           current_estimated_salary,
-          all_companies,
-          all_titles,
-          all_industries,
+          post_company_companies,
+          post_company_titles,
+          post_company_industries,
           undergraduate_school,
           graduate_school,
-          certificate_program,
           natural_language_experiences,
           natural_language_education
         `)
@@ -738,20 +913,20 @@ export class LinkedInProfileSearchEngine {
       return {
         id: data.id,
         name: data.name,
-        linkedin_url: data.linkedin_url,
+        linkedin_url: data.profile_url,
         current_company: data.current_company,
         current_title: data.current_title,
-        current_industry: data.current_general_industry,
+        current_industry: data.post_company_current_industry,
         location: data.current_job_location,
-        years_experience: data.years_of_experience,
-        graduation_year: data.graduation_year,
+        years_experience: 0, // Assuming years_of_experience is not available in the new structure
+        graduation_year: 0, // Assuming graduation_year is not available in the new structure
         estimated_salary: data.current_estimated_salary,
-        companies: data.all_companies || [],
-        titles: data.all_titles || [],
-        industries: data.all_industries || [],
+        companies: data.post_company_companies || [],
+        titles: data.post_company_titles || [],
+        industries: data.post_company_industries || [],
         undergraduate_schools: data.undergraduate_school || [],
         graduate_schools: data.graduate_school || [],
-        certificate_programs: data.certificate_program || [],
+        certificate_programs: [], // Assuming certificate_program is not available in the new structure
         experiences_text: data.natural_language_experiences,
         education_text: data.natural_language_education
       };
