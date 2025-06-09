@@ -665,6 +665,8 @@ export default function DashboardPage() {
 
   // Add function to convert extracted filters to API format
   const convertFiltersToAPI = (extractedFilters: {[key: string]: string[]}): any => {
+    console.log(`🔧🔧🔧 [DASHBOARD] CONVERTING FILTERS:`, extractedFilters);
+    
     const apiFilters: any = {};
     
     // Map extracted filter categories to API parameters
@@ -694,19 +696,33 @@ export default function DashboardPage() {
       'Salary Impact': 'salary_lift_only'
     };
     
+    console.log(`[DASHBOARD DEBUG] Filter mappings available:`, {
+      textFilterMapping: filterMapping,
+      booleanFilterMapping: booleanMapping
+    });
+    
     // Convert text filters
     Object.entries(extractedFilters).forEach(([category, values]) => {
+      console.log(`[DASHBOARD DEBUG] Processing filter category: "${category}" with values:`, values);
+      
       if (filterMapping[category] && values.length > 0) {
         apiFilters[filterMapping[category]] = values[0]; // Use first value for text filters
+        console.log(`[DASHBOARD DEBUG] ✅ Mapped text filter: ${category} -> ${filterMapping[category]} = "${values[0]}"`);
       }
       
       // Convert boolean filters (if the category exists, set to true)
       if (booleanMapping[category] && values.length > 0) {
         apiFilters[booleanMapping[category]] = true;
+        console.log(`[DASHBOARD DEBUG] ✅ Mapped boolean filter: ${category} -> ${booleanMapping[category]} = true`);
+      }
+      
+      // Log if category not recognized
+      if (!filterMapping[category] && !booleanMapping[category]) {
+        console.log(`[DASHBOARD DEBUG] ⚠️ Unrecognized filter category: "${category}"`);
       }
     });
     
-    console.log(`[DEBUG ${new Date().toISOString()}] Converted filters:`, apiFilters);
+    console.log(`[DASHBOARD DEBUG] Final converted filters:`, apiFilters);
     return apiFilters;
   };
 
@@ -1114,7 +1130,9 @@ export default function DashboardPage() {
       return;
     }
     
-    console.log(`[DEBUG ${new Date().toISOString()}] Search initiated for query: "${queryToUse}"`);
+    console.log(`🔥🔥🔥 [DASHBOARD] SEARCH INITIATED! Query: "${queryToUse}" 🔥🔥🔥`);
+    console.log(`[DASHBOARD DEBUG] Search initiated for query: "${queryToUse}"`);
+    console.log(`[DASHBOARD DEBUG] isDemoMode: ${isDemoMode}, formattedOrganizationName: "${formattedOrganizationName}"`);
     
     // Capture a replay snapshot for this important user interaction
     analytics.captureReplaySnapshot('search_initiated');
@@ -1208,8 +1226,16 @@ export default function DashboardPage() {
       const classification = await classificationPromise;
       setQueryClassification(classification);
       
+      console.log(`🔍🔍🔍 [DASHBOARD] CLASSIFICATION RESULT:`, classification);
+      
       // Convert extracted filters to API format
       const apiFilters = convertFiltersToAPI(extractedFilters);
+      
+      console.log(`🎯🎯🎯 [DASHBOARD] CONVERTED FILTERS:`, {
+        extractedFilters,
+        apiFilters,
+        filterCount: Object.keys(apiFilters).length
+      });
       
       // Now create the enhanced search request with classification and filters
       searchPromise = fetch('/api/search', {
@@ -1226,6 +1252,7 @@ export default function DashboardPage() {
         }),
       }).then(response => {
         console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
+        console.log(`🌐🌐🌐 [DASHBOARD] API RESPONSE STATUS: ${response.status} ${response.statusText}`);
         if (!response.ok) {
           throw new Error('Search failed');
         }
@@ -1233,7 +1260,25 @@ export default function DashboardPage() {
       }).then(rawData => {
         console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${rawData.results?.length || 0} results`);
         console.log(`[DEBUG ${new Date().toISOString()}] First result:`, rawData.results?.[0] || 'No results');
+        console.log(`📊📊📊 [DASHBOARD] RAW API RESPONSE:`, {
+          resultCount: rawData.results?.length || 0,
+          searchType: rawData.searchType,
+          filterCount: rawData.filterCount,
+          fullResponse: rawData
+        });
         return rawData;
+      });
+      
+      console.log(`🚀🚀🚀 [DASHBOARD] ABOUT TO SEND SEARCH REQUEST:`, {
+        url: '/api/search',
+        method: 'POST',
+        body: {
+          query: currentQuery, 
+          organizationName: originalOrganizationName,
+          isDemo: isDemoMode,
+          queryClassification: classification,
+          filters: apiFilters
+        }
       });
       
       // Get search results
