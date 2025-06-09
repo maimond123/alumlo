@@ -268,24 +268,39 @@ export class LinkedInProfileSearchEngine {
    * Returns results above 0.4 threshold but stops when similarity drops significantly
    */
   private applyGapBasedFiltering<T extends { similarity: number }>(results: T[]): T[] {
-    console.log(`[GAP_FILTER DEBUG] Processing ${results.length} results for gap-based filtering`);
+    console.log(`[GAP_FILTER DEBUG] 🔍 Processing ${results.length} results for gap-based filtering`);
     
-    if (!results.length) return results;
+    if (!results.length) {
+      console.log(`[GAP_FILTER DEBUG] ⚠️ No results to filter, returning empty array`);
+      return results;
+    }
 
     // Sort by similarity descending (should already be sorted from DB, but ensuring)
     const sortedResults = [...results].sort((a, b) => b.similarity - a.similarity);
+    console.log(`[GAP_FILTER DEBUG] 📊 Sorted results by similarity:`, {
+      totalResults: sortedResults.length,
+      topSimilarity: sortedResults[0]?.similarity,
+      bottomSimilarity: sortedResults[sortedResults.length - 1]?.similarity,
+      averageSimilarity: sortedResults.reduce((sum, r) => sum + r.similarity, 0) / sortedResults.length
+    });
     
     // Filter results above 0.4 threshold first
     const aboveThreshold = sortedResults.filter(r => r.similarity >= 0.4);
-    console.log(`[GAP_FILTER DEBUG] ${aboveThreshold.length} results above 0.4 threshold`);
+    console.log(`[GAP_FILTER DEBUG] 🎯 Threshold filtering (≥0.4):`, {
+      beforeThreshold: sortedResults.length,
+      afterThreshold: aboveThreshold.length,
+      rejectedBelowThreshold: sortedResults.length - aboveThreshold.length,
+      thresholdUsed: 0.4
+    });
     
     if (aboveThreshold.length === 0) {
-      console.log(`[GAP_FILTER DEBUG] No results above 0.4 threshold, returning empty array`);
+      console.log(`[GAP_FILTER DEBUG] ❌ No results above 0.4 threshold`);
+      console.log(`[GAP_FILTER DEBUG] 📊 All similarities:`, sortedResults.map(r => r.similarity));
       return [];
     }
 
     if (aboveThreshold.length === 1) {
-      console.log(`[GAP_FILTER DEBUG] Only 1 result above threshold, returning it`);
+      console.log(`[GAP_FILTER DEBUG] ✅ Only 1 result above threshold, returning it`);
       return aboveThreshold;
     }
 
@@ -293,15 +308,25 @@ export class LinkedInProfileSearchEngine {
     const finalResults: T[] = [aboveThreshold[0]]; // Always include the best result
     let previousSimilarity = aboveThreshold[0].similarity;
     
+    console.log(`[GAP_FILTER DEBUG] 🔍 Starting gap detection analysis:`);
+    console.log(`[GAP_FILTER DEBUG] 🥇 Best result (always included): similarity=${previousSimilarity.toFixed(3)}`);
+    
     for (let i = 1; i < aboveThreshold.length; i++) {
       const currentResult = aboveThreshold[i];
       const gap = previousSimilarity - currentResult.similarity;
       
-      console.log(`[GAP_FILTER DEBUG] Result ${i}: similarity=${currentResult.similarity.toFixed(3)}, gap=${gap.toFixed(3)}`);
+      console.log(`[GAP_FILTER DEBUG] 📊 Result ${i + 1}/${aboveThreshold.length}:`, {
+        index: i,
+        similarity: currentResult.similarity.toFixed(3),
+        gap: gap.toFixed(3),
+        previousSimilarity: previousSimilarity.toFixed(3),
+        gapThreshold: 0.1,
+        willInclude: gap <= 0.1
+      });
       
       // Stop if we detect a significant gap (0.1 seems reasonable for similarity scores)
       if (gap > 0.1) {
-        console.log(`[GAP_FILTER DEBUG] Significant gap detected (${gap.toFixed(3)}), stopping at ${finalResults.length} results`);
+        console.log(`[GAP_FILTER DEBUG] ⛔ Significant gap detected (${gap.toFixed(3)} > 0.1), stopping at ${finalResults.length} results`);
         break;
       }
       
@@ -309,20 +334,41 @@ export class LinkedInProfileSearchEngine {
       previousSimilarity = currentResult.similarity;
     }
     
-    console.log(`[GAP_FILTER DEBUG] Final result count: ${finalResults.length} (started with ${results.length})`);
+    console.log(`[GAP_FILTER DEBUG] ✅ Gap-based filtering complete:`, {
+      startedWith: results.length,
+      afterSorting: sortedResults.length,
+      aboveThreshold: aboveThreshold.length,
+      finalCount: finalResults.length,
+      reductionFromOriginal: Math.round((1 - finalResults.length / results.length) * 100) + '%',
+      finalSimilarities: finalResults.map(r => r.similarity.toFixed(3))
+    });
+    
     return finalResults;
   }
   
   // Company search method for any organization with alumni data
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}, organizationName?: string): Promise<CompanySearchResult[]> {
     try {
-      console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with query: "${query}", filters:`, filters);
+      console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with:`, {
+        query: `"${query}"`,
+        top_k,
+        filters,
+        organizationName,
+        filtersCount: Object.keys(filters).length
+      });
       
       // Get the organization name for dynamic RPC function naming
       const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
         localStorage.getItem('organizationName') : null);
       
+      console.log(`[AI_SEARCH DEBUG] 🏢 Organization name resolution:`, {
+        provided: organizationName,
+        fromLocalStorage: typeof window !== 'undefined' ? localStorage.getItem('organizationName') : 'N/A (server)',
+        final: storedOrganizationName
+      });
+      
       if (!storedOrganizationName) {
+        console.error('[AI_SEARCH DEBUG] 🏢 ❌ Organization name is required for company search');
         throw new Error('Organization name is required for company search');
       }
       
@@ -331,12 +377,14 @@ export class LinkedInProfileSearchEngine {
       console.log(`[AI_SEARCH DEBUG] 🏢 Using dynamic RPC function: ${rpcFunctionName}`);
       
       // Generate embedding using OpenAI API
+      console.log(`[AI_SEARCH DEBUG] 🏢 Generating embedding for query: "${query}"`);
       const response = await this.openai.embeddings.create({
         model: "text-embedding-3-small",
         input: query,
       });
       
       const embeddingArray = response.data[0].embedding;
+      console.log(`[AI_SEARCH DEBUG] 🏢 Embedding generated, length: ${embeddingArray.length}`);
       
       // Extract all filter types from the enhanced filters interface
       const { 
@@ -369,10 +417,18 @@ export class LinkedInProfileSearchEngine {
         exit_year_max
       } = filters;
       
+      console.log(`[AI_SEARCH DEBUG] 🏢 Extracted filters:`, {
+        basicFilters: { company, industry, title, location, school },
+        enhancedTextFilters: { job_level_filter, job_function_filter, career_stage_filter, degree_level_filter, school_tier_filter },
+        booleanFilters: { leadership_only, management_exp_only, technical_background_only, sales_exp_only, startup_exp_only, enterprise_exp_only, remote_worker_only, mentor_potential_only, salary_lift_only },
+        rangeFilters: { exit_year_min, exit_year_max }
+      });
+      
       console.log(`[AI_SEARCH DEBUG] 🏢 Calling ${rpcFunctionName} RPC function with enhanced filters`);
       
       // Construct dynamic company-specific parameter name for salary lift filter
       const dynamicSalaryLiftParam = `${storedOrganizationName}_salary_lift_only`;
+      console.log(`[AI_SEARCH DEBUG] 🏢 Dynamic salary lift parameter: ${dynamicSalaryLiftParam}`);
       
       // Build RPC parameters object with all available filters
       const rpcParams: any = {
@@ -413,20 +469,75 @@ export class LinkedInProfileSearchEngine {
       // Add dynamic company-specific salary lift filter
       rpcParams[dynamicSalaryLiftParam] = salary_lift_only;
       
+      console.log(`[AI_SEARCH DEBUG] 🏢 Final RPC parameters:`, {
+        functionName: rpcFunctionName,
+        parameterCount: Object.keys(rpcParams).length,
+        parameters: rpcParams,
+        embeddingLength: rpcParams.query_embedding.length
+      });
+      
       // Call the dynamic RPC function with all enhanced filters
+      console.log(`[AI_SEARCH DEBUG] 🏢 🔄 Making Supabase RPC call to: ${rpcFunctionName}`);
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, rpcParams)
         .returns<HybridSearchCompanyResult[]>();
       
+      console.log(`[AI_SEARCH DEBUG] 🏢 📡 Supabase RPC response:`, {
+        functionName: rpcFunctionName,
+        error: error ? error.message : null,
+        errorDetails: error,
+        dataLength: data?.length || 0,
+        hasData: !!data,
+        firstResult: data?.[0] ? {
+          id: data[0].id,
+          name: data[0].name,
+          similarity: data[0].similarity
+        } : null
+      });
+      
       if (error) {
-        console.error(`[AI_SEARCH DEBUG] 🏢 Error from ${rpcFunctionName}:`, error);
+        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ Error from ${rpcFunctionName}:`, {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw new Error(`Company vector search failed: ${error.message}`);
       }
       
-      console.log(`[AI_SEARCH DEBUG] 🏢 ${rpcFunctionName} returned ${data?.length || 0} results`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 ✅ ${rpcFunctionName} returned ${data?.length || 0} results`);
+      
+      if (!data || data.length === 0) {
+        console.log(`[AI_SEARCH DEBUG] 🏢 ⚠️ No results returned from database. This could be due to:`, {
+          possibleCauses: [
+            'Table does not exist: ' + `${storedOrganizationName}_alumni_vector`,
+            'No data matches the filters applied',
+            'Similarity threshold too high (0.3)',
+            'RPC function does not exist: ' + rpcFunctionName,
+            'Empty database table'
+          ],
+          suggestions: [
+            'Check if table exists in Supabase',
+            'Lower similarity threshold',
+            'Remove some filters',
+            'Verify RPC function exists'
+          ]
+        });
+        return [];
+      }
       
       // Format the results for company search with enhanced field mapping
-      const formattedResults = data.map((item: HybridSearchCompanyResult): CompanySearchResult => {
+      console.log(`[AI_SEARCH DEBUG] 🏢 🔄 Processing ${data.length} raw results`);
+      const formattedResults = data.map((item: HybridSearchCompanyResult, index: number): CompanySearchResult => {
+        console.log(`[AI_SEARCH DEBUG] 🏢 Processing result ${index + 1}/${data.length}:`, {
+          id: item.id,
+          name: item.name,
+          similarity: item.similarity,
+          hasProfileUrl: !!item.profile_url,
+          hasCurrentCompany: !!item.post_company_current_company,
+          hasCurrentTitle: !!item.post_company_current_title
+        });
+        
         // Create base result object
         const baseResult: CompanySearchResult = {
           id: Number(item.id),
@@ -484,15 +595,45 @@ export class LinkedInProfileSearchEngine {
           }
         });
         
+        console.log(`[AI_SEARCH DEBUG] 🏢 Formatted result ${index + 1}:`, {
+          id: baseResult.id,
+          name: baseResult.name,
+          similarity: baseResult.similarity,
+          hasProfileUrl: !!baseResult.profile_url,
+          industryMapped: baseResult.industry,
+          headlineMapped: baseResult.headline
+        });
+        
         return baseResult;
       });
 
+      console.log(`[AI_SEARCH DEBUG] 🏢 📊 Formatted results summary:`, {
+        totalProcessed: formattedResults.length,
+        sampleResult: formattedResults[0] ? {
+          id: formattedResults[0].id,
+          name: formattedResults[0].name,
+          similarity: formattedResults[0].similarity
+        } : null
+      });
+
       // Apply gap-based filtering to the enriched results
+      console.log(`[AI_SEARCH DEBUG] 🏢 🔍 Applying gap-based filtering...`);
       const filteredResults = this.applyGapBasedFiltering(formattedResults) as CompanySearchResult[];
-      console.log(`[AI_SEARCH DEBUG] 🏢 Gap-based filtering reduced results from ${formattedResults.length} to ${filteredResults.length}`);
+      console.log(`[AI_SEARCH DEBUG] 🏢 ✅ Gap-based filtering results:`, {
+        beforeFiltering: formattedResults.length,
+        afterFiltering: filteredResults.length,
+        reductionPercentage: formattedResults.length > 0 ? Math.round((1 - filteredResults.length / formattedResults.length) * 100) : 0
+      });
       
       return filteredResults;
     } catch (error) {
+      console.error(`[AI_SEARCH DEBUG] 🏢 ❌ CRITICAL ERROR in searchCompany:`, {
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
+        query,
+        organizationName,
+        filters
+      });
       throw error;
     }
   }
@@ -733,21 +874,40 @@ export class LinkedInProfileSearchEngine {
           school: filters.school
         };
         
+        console.log(`[AI_SEARCH DEBUG] 🔄 Calling searchCompany method with parameters:`, {
+          query,
+          top_k,
+          organizationName: storedOrganizationName,
+          isDemo,
+          hasFilters: Object.keys(companyFilters).length > 0,
+          filterDetails: companyFilters
+        });
+        
         console.log(`[AI_SEARCH DEBUG] Calling searchCompany with filters:`, companyFilters);
         const companyResults = await this.searchCompany(query, top_k, companyFilters, storedOrganizationName);
         
-        console.log(`[AI_SEARCH DEBUG] 🏢 Company results before conversion:`, companyResults.map(r => ({
-          id: r.id,
-          name: r.name,
-          industry: r.industry,
-          headline: r.headline
-        })));
+        console.log(`[AI_SEARCH DEBUG] 🏢 Company results received:`, {
+          resultCount: companyResults.length,
+          sampleResults: companyResults.slice(0, 3).map(r => ({
+            id: r.id,
+            name: r.name,
+            industry: r.industry,
+            headline: r.headline,
+            similarity: r.similarity
+          }))
+        });
         
         // Convert company results to regular search results format for compatibility
-        const convertedResults = companyResults.map((item: CompanySearchResult): SearchResult => {
-          console.log(`[AI_SEARCH DEBUG] 🏢 Converting enriched item - industry: "${item.industry}", headline: "${item.headline}"`);
+        console.log(`[AI_SEARCH DEBUG] 🔄 Converting ${companyResults.length} company results to SearchResult format`);
+        const convertedResults = companyResults.map((item: CompanySearchResult, index: number): SearchResult => {
+          console.log(`[AI_SEARCH DEBUG] 🔄 Converting result ${index + 1}:`, {
+            originalId: item.id,
+            originalName: item.name,
+            originalIndustry: item.industry,
+            originalHeadline: item.headline
+          });
           
-          return {
+          const converted = {
             id: item.id,
             name: item.name,
             linkedin_url: item.profile_url, // Map profile_url to linkedin_url
@@ -772,9 +932,28 @@ export class LinkedInProfileSearchEngine {
             highest_degree_level: item.highest_degree_level || '',
             major_category: item.major_category || ''
           };
+          
+          console.log(`[AI_SEARCH DEBUG] ✅ Converted result ${index + 1}:`, {
+            convertedId: converted.id,
+            convertedName: converted.name,
+            convertedIndustry: converted.current_industry,
+            convertedHeadline: converted.headline,
+            convertedSimilarity: converted.similarity
+          });
+          
+          return converted;
         });
         
-        console.log(`[AI_SEARCH DEBUG] ✅ Company search completed, returning ${convertedResults.length} results`);
+        console.log(`[AI_SEARCH DEBUG] ✅ Company search completed successfully:`, {
+          originalResultCount: companyResults.length,
+          convertedResultCount: convertedResults.length,
+          finalResults: convertedResults.map(r => ({
+            id: r.id,
+            name: r.name,
+            similarity: r.similarity
+          }))
+        });
+        
         return convertedResults;
       }
       
