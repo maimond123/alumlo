@@ -348,7 +348,7 @@ export class LinkedInProfileSearchEngine {
   
   // Company search method for any organization with alumni data
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}, organizationName?: string): Promise<CompanySearchResult[]> {
-    console.log(`🚨🚨🚨 [SEARCHCOMPANY] METHOD CALLED! Query: "${query}", Org: "${organizationName}" 🚨🚨��`);
+    console.log(`🚨🚨🚨 [SEARCHCOMPANY] METHOD CALLED! Query: "${query}", Org: "${organizationName}" 🚨🚨🚨`);
     
     try {
       console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with:`, {
@@ -498,12 +498,34 @@ export class LinkedInProfileSearchEngine {
       });
       
       if (error) {
-        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ Error from ${rpcFunctionName}:`, {
+        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ DETAILED ERROR from ${rpcFunctionName}:`, {
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          code: error.code,
+          fullError: error
         });
+        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ RPC Parameters that caused the error:`, rpcParams);
+        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ Function that failed: ${rpcFunctionName}`);
+        
+        // Additional debugging: Check if it's a table/function existence issue
+        if (error.message.includes('does not exist') || error.message.includes('not found')) {
+          console.error(`[AI_SEARCH DEBUG] 🏢 🔍 EXISTENCE ERROR - Checking what exists:`, {
+            expectedTable: `${storedOrganizationName}_alumni_vector`,
+            expectedFunction: rpcFunctionName,
+            suggestion: 'Verify table and function exist in Supabase'
+          });
+        }
+        
+        // Check if it's a column/field mismatch issue
+        if (error.message.includes('column') || error.message.includes('field')) {
+          console.error(`[AI_SEARCH DEBUG] 🏢 📊 COLUMN/FIELD ERROR - Schema mismatch detected:`, {
+            possibleCause: 'Table columns do not match function RETURNS TABLE definition',
+            suggestion: 'Check table schema matches the SQL function return columns',
+            returnedColumns: 'Review the RETURNS TABLE section of your SQL function'
+          });
+        }
+        
         throw new Error(`Company vector search failed: ${error.message}`);
       }
       
