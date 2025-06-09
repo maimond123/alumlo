@@ -348,6 +348,8 @@ export class LinkedInProfileSearchEngine {
   
   // Company search method for any organization with alumni data
   async searchCompany(query: string, top_k: number = 10, filters: CompanySearchFilters = {}, organizationName?: string): Promise<CompanySearchResult[]> {
+    console.log(`🚨🚨🚨 [SEARCHCOMPANY] METHOD CALLED! Query: "${query}", Org: "${organizationName}" 🚨🚨��`);
+    
     try {
       console.log(`[AI_SEARCH DEBUG] 🏢 searchCompany called with:`, {
         query: `"${query}"`,

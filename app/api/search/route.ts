@@ -113,8 +113,28 @@ export async function POST(req: NextRequest) {
     // Use the filters directly (they already contain the advanced filters from the dashboard)
     console.log(`[API DEBUG] Filters for company search:`, filters);
     
+    console.log(`[API DEBUG] 🚀 About to call search_engine.searchCompany with:`, {
+      query,
+      limit: 50,
+      filters,
+      organizationName,
+      searchEngineType: typeof search_engine,
+      hasSearchCompanyMethod: typeof search_engine.searchCompany === 'function'
+    });
+    
     // Use gap-based filtering instead of fixed limit, always use company search for enhanced capabilities
     const results = await search_engine.searchCompany(query, 50, filters, organizationName);
+    
+    console.log(`[API DEBUG] 📊 searchCompany returned:`, {
+      resultCount: results?.length || 0,
+      resultsType: typeof results,
+      isArray: Array.isArray(results),
+      firstResult: results?.[0] ? {
+        id: results[0].id,
+        name: results[0].name,
+        similarity: results[0].similarity
+      } : null
+    });
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
     
