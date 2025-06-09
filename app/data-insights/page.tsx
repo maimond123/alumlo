@@ -987,7 +987,20 @@ export default function DataInsightsPage() {
     setChatInput('');
     setIsSending(true);
 
-    console.log("NIGGA DEBUG: Sending message:")
+    console.log("DEBUG: Sending message")
+    
+    // Check if user is in demo mode
+    if (isDemoMode) {
+      // For demo users, show the restriction message
+      setTimeout(() => {
+        setChatMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: 'This functionality is available only for paid users. Want Alumlo for your organization?' 
+        }]);
+        setIsSending(false);
+      }, 1000); // Add a small delay to simulate processing
+      return;
+    }
     
     try {
       // Get the appropriate chart data based on the selected chart type
@@ -997,7 +1010,7 @@ export default function DataInsightsPage() {
         selectedChart.type === 'location' ? locationData : 
         selectedChart.type === 'graduate_school' ? graduateSchoolData : null;
       
-        console.log("NIGGA DEBUG: LOCATION Chart data:", locationData)
+        console.log("DEBUG: LOCATION Chart data:", locationData)
       // Use the actual API endpoint with the chart data
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -1139,7 +1152,7 @@ export default function DataInsightsPage() {
           onClick={() => setSelectedChart(null)}
         >
           <motion.div
-            className="bg-white rounded-xl overflow-hidden w-full max-w-[1400px] h-[80vh] flex flex-col relative"
+            className="bg-white rounded-xl overflow-hidden w-full max-w-[1400px] h-[90vh] flex flex-col relative"
             layoutId={`chart-${selectedChart.id}`}
             onClick={(e) => e.stopPropagation()}
             transition={{ 
