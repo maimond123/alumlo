@@ -157,13 +157,6 @@ export default function DataInsightsPage() {
           return;
         }
 
-        // Don't redirect immediately after mount to allow auth to stabilize
-        const timeSinceMount = Date.now() - mountTime
-        if (timeSinceMount < 300) {
-          console.log('[DEBUG] DataInsights: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
-          return
-        }
-
         // Check if this is demo mode first, before checking authentication
         const isDemoModeActive = checkIsDemoMode();
         if (isDemoModeActive) {
