@@ -1970,7 +1970,7 @@ export default function DashboardPage() {
                               e.stopPropagation(); // Prevent card click
                               handleSearchResultClick(profileUrl, index, result.name);
                             }}
-                            className="w-8 h-8 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                            className="w-7 h-7 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
                             title="View LinkedIn Profile"
                           >
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
