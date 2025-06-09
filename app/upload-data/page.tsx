@@ -37,7 +37,7 @@ export default function UploadDataPage() {
     if (isDemoMode) return
     
     try {
-      const userEmail = await getUserEmail()
+      const userEmail = isDemoMode ? 'demo@example.com' : await getUserEmail()
       
       if (!userEmail) return
 
@@ -113,7 +113,7 @@ export default function UploadDataPage() {
       }
       
       try {
-        const userEmail = await getUserEmail()
+        const userEmail = isDemoMode ? 'demo@example.com' : await getUserEmail()
 
         if (!userEmail) {
           console.error('No email found in user data')
@@ -218,7 +218,7 @@ export default function UploadDataPage() {
       setUploadId(newUploadId)
       setUploadProgress(10) // Initial progress at 10%
       
-      const userEmail = await getUserEmail()
+      const userEmail = isDemoMode ? 'demo@example.com' : await getUserEmail()
       
       if (!userEmail) {
         throw new Error('User not authenticated')
