@@ -478,6 +478,40 @@ export class LinkedInProfileSearchEngine {
         embeddingLength: rpcParams.query_embedding.length
       });
       
+      // Add detailed parameter inspection
+      console.log(`[AI_SEARCH DEBUG] 🏢 📋 DETAILED PARAMETER INSPECTION:`);
+      Object.entries(rpcParams).forEach(([key, value]) => {
+        console.log(`[AI_SEARCH DEBUG] 🏢   ${key}: ${typeof value} = ${value === null ? 'NULL' : JSON.stringify(value)}`);
+      });
+      
+      console.log(`[AI_SEARCH DEBUG] 🏢 🎯 EXPECTED SQL FUNCTION SIGNATURE:`);
+      console.log(`[AI_SEARCH DEBUG] 🏢   enhanced_hybrid_search_chick_fil_a(`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     query_embedding vector(1536),`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     similarity_threshold float DEFAULT 0.3,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     company_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     industry_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     title_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     location_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     school_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     job_level_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     job_function_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     leadership_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     management_exp_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     technical_background_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     sales_exp_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     startup_exp_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     enterprise_exp_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     remote_worker_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     career_stage_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     degree_level_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     school_tier_filter text DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     mentor_potential_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     chick_fil_a_salary_lift_only boolean DEFAULT FALSE,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     exit_year_min int DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     exit_year_max int DEFAULT NULL,`);
+      console.log(`[AI_SEARCH DEBUG] 🏢     limit_count int DEFAULT 10`);
+      console.log(`[AI_SEARCH DEBUG] 🏢   )`);
+      
       // Call the dynamic RPC function with all enhanced filters
       console.log(`[AI_SEARCH DEBUG] 🏢 🔄 Making Supabase RPC call to: ${rpcFunctionName}`);
       const { data, error } = await this.supabase
