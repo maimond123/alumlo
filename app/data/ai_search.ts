@@ -380,13 +380,34 @@ export class LinkedInProfileSearchEngine {
       
       // Generate embedding using OpenAI API
       console.log(`[AI_SEARCH DEBUG] 🏢 Generating embedding for query: "${query}"`);
-      const response = await this.openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: query,
-      });
       
-      const embeddingArray = response.data[0].embedding;
-      console.log(`[AI_SEARCH DEBUG] 🏢 Embedding generated, length: ${embeddingArray.length}`);
+      let embeddingArray: number[];
+      try {
+        console.log(`[AI_SEARCH DEBUG] 🏢 🔑 Checking OpenAI configuration:`, {
+          hasOpenAI: !!this.openai,
+          hasApiKey: !!process.env.OPENAI_API_KEY,
+          apiKeyLength: process.env.OPENAI_API_KEY?.length || 0,
+          apiKeyStart: process.env.OPENAI_API_KEY?.substring(0, 10) || 'undefined'
+        });
+        
+        const response = await this.openai.embeddings.create({
+          model: "text-embedding-3-small",
+          input: query,
+        });
+        
+        embeddingArray = response.data[0].embedding;
+        console.log(`[AI_SEARCH DEBUG] 🏢 ✅ Embedding generated successfully, length: ${embeddingArray.length}`);
+      } catch (embeddingError: unknown) {
+        console.error(`[AI_SEARCH DEBUG] 🏢 ❌ EMBEDDING GENERATION FAILED:`, {
+          errorType: embeddingError?.constructor?.name || 'unknown',
+          errorMessage: embeddingError instanceof Error ? embeddingError.message : 'Unknown error',
+          errorStack: embeddingError instanceof Error ? embeddingError.stack : 'No stack',
+          query: query,
+          hasOpenAI: !!this.openai,
+          hasApiKey: !!process.env.OPENAI_API_KEY
+        });
+        throw new Error(`Failed to generate embedding: ${embeddingError instanceof Error ? embeddingError.message : 'Unknown error'}`);
+      }
       
       // Extract all filter types from the enhanced filters interface
       const { 
