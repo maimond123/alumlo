@@ -850,6 +850,9 @@ export default function DataInsightsPage() {
     } catch (error) {
       console.error("Error fetching school data:", error)
       setDebugInfo((prev: Record<string, any>) => ({ ...prev, fetchError: error }))
+    } finally {
+      // Set initialized to true after data fetching completes (whether successful or not)
+      setIsInitialized(true)
     }
   }
 
