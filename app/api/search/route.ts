@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LinkedInProfileSearchEngine } from '../../data/ai_search';
+
+// Add debugging around the import
+console.log('[API] 🚀 Starting to import LinkedInProfileSearchEngine...');
+try {
+  var { LinkedInProfileSearchEngine } = require('../../data/ai_search');
+  console.log('[API] ✅ Successfully imported LinkedInProfileSearchEngine');
+} catch (importError: unknown) {
+  console.error('[API] ❌ FAILED TO IMPORT LinkedInProfileSearchEngine:', {
+    error: importError,
+    message: importError instanceof Error ? importError.message : 'Unknown import error',
+    stack: importError instanceof Error ? importError.stack : 'No stack'
+  });
+  throw importError;
+}
 
 // Test function to check if we can load the transformers library
 const testTransformersLoad = async () => {
@@ -12,15 +25,25 @@ const testTransformersLoad = async () => {
       console.log('[API] Loading Node.js version of transformers');
       return await import('@xenova/transformers');
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[API] Failed to load transformers library:', error);
     throw error;
   }
 };
 
 export async function POST(req: NextRequest) {
+  console.log('[API] 🏁 POST function called - starting execution...');
+  
   try {
     console.log('[API] Route handler started');
+    
+    // Add debugging for environment variables
+    console.log('[API] 🔑 Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      nodeEnv: process.env.NODE_ENV
+    });
     
     // Try to parse the request body
     const body = await req.json();
@@ -60,7 +83,7 @@ export async function POST(req: NextRequest) {
     const search_engine = new LinkedInProfileSearchEngine();
     
     console.log('[API] Initializing embedder');
-    await search_engine.initializeEmbedder().catch(error => {
+    await search_engine.initializeEmbedder().catch((error: unknown) => {
       console.error('[API] Error initializing embedder:', error);
       throw new Error(`Embedder initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     });
@@ -95,7 +118,7 @@ export async function POST(req: NextRequest) {
         } else {
           console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
       }
     }
@@ -144,7 +167,7 @@ export async function POST(req: NextRequest) {
       appliedFilters: filters,
       filterCount: Object.keys(filters).length
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[API] Error in search:', error);
     
     // Provide more detailed error information
