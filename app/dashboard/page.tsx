@@ -1211,13 +1211,31 @@ export default function DashboardPage() {
         );
       }
       
-      // Phase 3: Generate expanded queries using the CURRENT query
+      // Phase 3: Generate expanded queries using the CURRENT query (non-blocking)
       console.log(`[DEBUG ${new Date().toISOString()}] Phase 3: Profiling using query: "${currentQuery}"`);
       setSearchPhase('profiling');
-      await generateExpandedQueries(currentQuery);
       
-      // Phase 4: Extract filters and prepare search request  
-      const currentExtractedFilters = await extractMetadataFilters(currentQuery);
+      try {
+        await generateExpandedQueries(currentQuery);
+      } catch (error) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
+        // Continue with search even if profiling fails
+        await typewriterEffect("Alternative search suggestions unavailable", 
+          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+        );
+      }
+      
+      // Phase 4: Extract filters and prepare search request (non-blocking)
+      let currentExtractedFilters: {[key: string]: string[]} = {};
+      try {
+        currentExtractedFilters = await extractMetadataFilters(currentQuery);
+      } catch (error) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
+        // Continue with search even if filter extraction fails
+        await typewriterEffect("No specific filters detected", 
+          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+        );
+      }
       
       // Get query classification that was running in parallel
       console.log(`[DEBUG ${new Date().toISOString()}] Getting query classification for: "${currentQuery}"`);
@@ -1236,6 +1254,20 @@ export default function DashboardPage() {
       });
       
       // Now create the enhanced search request with classification and filters
+      console.log(`🚀🚀🚀 [DASHBOARD] ABOUT TO SEND SEARCH REQUEST:`, {
+        url: '/api/search',
+        method: 'POST',
+        body: {
+          query: currentQuery, 
+          organizationName: originalOrganizationName,
+          isDemo: isDemoMode,
+          queryClassification: classification,
+          filters: apiFilters
+        }
+      });
+      
+      console.log(`[DEBUG ${new Date().toISOString()}] Creating search promise for query: "${currentQuery}"`);
+      
       searchPromise = fetch('/api/search', {
         method: 'POST',
         headers: {
@@ -1265,18 +1297,13 @@ export default function DashboardPage() {
           fullResponse: rawData
         });
         return rawData;
-      });
-      
-      console.log(`🚀🚀🚀 [DASHBOARD] ABOUT TO SEND SEARCH REQUEST:`, {
-        url: '/api/search',
-        method: 'POST',
-        body: {
-          query: currentQuery, 
-          organizationName: originalOrganizationName,
-          isDemo: isDemoMode,
-          queryClassification: classification,
-          filters: apiFilters
-        }
+      }).catch(searchError => {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Search API call failed:`, {
+          error: searchError,
+          message: searchError instanceof Error ? searchError.message : 'Unknown error',
+          stack: searchError instanceof Error ? searchError.stack : 'No stack'
+        });
+        throw searchError;
       });
       
       // Get search results
