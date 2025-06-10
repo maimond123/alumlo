@@ -241,6 +241,88 @@ export interface TemporalSearchResult {
   similarity: number;
 }
 
+// Add improved timeline interfaces for the new chronological search system
+export interface EducationTimelineEntry {
+  degree: string;
+  school: string;
+  start_year: number;
+  end_year: number;
+  degree_level: string;
+  field_of_study: string;
+  graduation_year: number;
+  // Additional useful fields
+  gpa?: number;
+  honors?: string[];
+  activities?: string[];
+  is_current?: boolean; // Helpful for ongoing education
+  location?: string;
+}
+
+export interface CareerTimelineEntry {
+  company: string;
+  title: string;
+  start_year: number;
+  end_year: number; // Use 9999 or current year for ongoing positions
+  industry: string;
+  location: string;
+  job_level: string; // e.g., "Entry Level", "Mid Level", "Senior", "Executive"
+  job_function: string; // e.g., "Engineering", "Sales", "Marketing"
+  department?: string;
+  employment_type: string; // "Full-time", "Part-time", "Contract", "Internship"
+  salary_range?: string;
+  responsibilities?: string[];
+  achievements?: string[];
+  technologies_used?: string[];
+  is_current?: boolean;
+  years_at_company?: number; // Calculated field for easy filtering
+  company_size?: string; // "Startup", "Small", "Medium", "Large", "Enterprise"
+  is_leadership_role?: boolean;
+}
+
+export interface EducationTimeline {
+  [year: string]: EducationTimelineEntry[];
+}
+
+export interface CareerTimeline {
+  [year: string]: CareerTimelineEntry[];
+}
+
+// Interface for the new chronological search
+export interface ChronologicalSearchFilters {
+  // Experience-based filters
+  min_years_in_industry?: number;
+  min_years_in_function?: number;
+  min_years_at_company_type?: number;
+  career_progression_pattern?: string; // e.g., "individual_contributor_to_management"
+  
+  // Education-based filters
+  degree_level_progression?: string[]; // e.g., ["Bachelor's", "Master's"]
+  education_industry_alignment?: boolean; // Education field matches career industry
+  
+  // Timeline-based filters
+  gap_tolerance?: number; // Max acceptable gaps in months
+  concurrent_activities?: boolean; // Working while studying, etc.
+  
+  // Specific patterns
+  industry_transitions?: string[]; // Pattern of industry changes
+  company_size_progression?: string[]; // Pattern of company size changes
+  geographic_mobility?: boolean; // Moved locations for career
+}
+
+export interface ChronologicalSearchResult extends CompanySearchResult {
+  career_timeline: CareerTimeline;
+  education_timeline: EducationTimeline;
+  career_analysis: {
+    total_years_experience: number;
+    years_in_target_industry: number;
+    years_in_target_function: number;
+    career_progression_score: number;
+    industry_diversity_score: number;
+    leadership_progression: boolean;
+    education_career_alignment: number;
+  };
+}
+
 export class LinkedInProfileSearchEngine {
   private supabase;
   private openai;
@@ -1198,6 +1280,231 @@ export class LinkedInProfileSearchEngine {
    */
   async addProfileToDb(profile: any) {
     throw new Error('Method not implemented: profiles should be added through the backend');
+  }
+  
+  async searchChronological(
+    query: string,
+    filters: ChronologicalSearchFilters = {},
+    top_k: number = 10,
+    organizationName?: string
+  ): Promise<ChronologicalSearchResult[]> {
+    try {
+      console.log(`[AI_SEARCH DEBUG] 📊 searchChronological called with filters:`, filters);
+      
+      // Get the organization name
+      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('organizationName') : null);
+      
+      if (!storedOrganizationName) {
+        throw new Error('Organization name is required for chronological search');
+      }
+      
+      // Generate embedding for semantic similarity
+      const response = await this.openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: query,
+      });
+      
+      const embeddingArray = response.data[0].embedding;
+      
+      // Construct the RPC function name for chronological search
+      const rpcFunctionName = `chronological_search_${storedOrganizationName}`;
+      console.log(`[AI_SEARCH DEBUG] 📊 Using chronological RPC function: ${rpcFunctionName}`);
+      
+      // Build RPC parameters
+      const rpcParams = {
+        query_embedding: embeddingArray,
+        similarity_threshold: 0.3,
+        min_years_in_industry: filters.min_years_in_industry || null,
+        min_years_in_function: filters.min_years_in_function || null,
+        min_years_at_company_type: filters.min_years_at_company_type || null,
+        career_progression_pattern: filters.career_progression_pattern || null,
+        degree_level_progression: filters.degree_level_progression || null,
+        education_industry_alignment: filters.education_industry_alignment || false,
+        gap_tolerance: filters.gap_tolerance || 6, // Default 6 months
+        concurrent_activities: filters.concurrent_activities || false,
+        industry_transitions: filters.industry_transitions || null,
+        company_size_progression: filters.company_size_progression || null,
+        geographic_mobility: filters.geographic_mobility || false,
+        limit_count: 50 // Get more candidates for gap-based filtering
+      };
+      
+      console.log(`[AI_SEARCH DEBUG] 📊 Calling ${rpcFunctionName} with parameters:`, rpcParams);
+      
+      // Call the chronological search RPC function
+      const { data, error } = await this.supabase
+        .rpc(rpcFunctionName, rpcParams)
+        .returns<any[]>(); // Will be properly typed based on your SQL function return
+      
+      if (error) {
+        console.error(`[AI_SEARCH DEBUG] 📊 Chronological search error:`, error);
+        throw new Error(`Chronological search failed: ${error.message}`);
+      }
+      
+      console.log(`[AI_SEARCH DEBUG] 📊 Chronological search returned ${data?.length || 0} results`);
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      // Process and analyze the chronological data
+      const processedResults = data.map((item: any): ChronologicalSearchResult => {
+        // Parse the timeline JSONs
+        const careerTimeline: CareerTimeline = item.career_timeline || {};
+        const educationTimeline: EducationTimeline = item.education_timeline || {};
+        
+        // Analyze the career progression
+        const careerAnalysis = this.analyzeCareerProgression(careerTimeline, educationTimeline, filters);
+        
+        // Convert to ChronologicalSearchResult format
+        return {
+          // Inherit all CompanySearchResult fields
+          id: item.id,
+          profile_id: item.profile_id,
+          name: item.name,
+          profile_url: item.profile_url,
+          post_company_current_company: item.post_company_current_company,
+          post_company_current_title: item.post_company_current_title,
+          post_company_current_industry: item.post_company_current_industry,
+          post_company_current_location: item.post_company_current_location,
+          picture_url: item.picture_url,
+          similarity: item.similarity,
+          industry: item.post_company_current_industry || '',
+          headline: item.headline || '',
+          current_job_level: item.current_job_level || '',
+          current_job_function: item.current_job_function || '',
+          career_stage: item.career_stage || '',
+          highest_degree_level: item.highest_degree_level || '',
+          school_ranking_tier: item.school_ranking_tier || '',
+          is_current_leader: item.is_current_leader || false,
+          management_experience: item.management_experience || false,
+          technical_background: item.technical_background || false,
+          sales_experience: item.sales_experience || false,
+          has_startup_experience: item.has_startup_experience || false,
+          has_enterprise_experience: item.has_enterprise_experience || false,
+          is_remote_worker: item.is_remote_worker || false,
+          mentor_potential: item.mentor_potential || false,
+          undergraduate_school: item.undergraduate_school || [],
+          graduate_school: item.graduate_school || [],
+          high_school: item.high_school || [],
+          pre_company_education: item.pre_company_education || [],
+          during_company_education: item.during_company_education || [],
+          post_company_education: item.post_company_education || [],
+          post_company_companies: item.post_company_companies || [],
+          post_company_titles: item.post_company_titles || [],
+          post_company_industries: item.post_company_industries || [],
+          post_company_locations: item.post_company_locations || [],
+          functional_expertise: item.functional_expertise || [],
+          industry_expertise: item.industry_expertise || [],
+          current_estimated_salary: item.current_estimated_salary || 0,
+          highest_career_salary: item.highest_career_salary || 0,
+          major_category: item.major_category || '',
+          
+          // Add chronological-specific fields
+          career_timeline: careerTimeline,
+          education_timeline: educationTimeline,
+          career_analysis: careerAnalysis
+        };
+      });
+      
+      // Apply gap-based filtering
+      const filteredResults = this.applyGapBasedFiltering(processedResults) as ChronologicalSearchResult[];
+      console.log(`[AI_SEARCH DEBUG] 📊 Chronological search gap-based filtering: ${data.length} -> ${filteredResults.length}`);
+      
+      return filteredResults;
+      
+    } catch (error) {
+      console.error(`[AI_SEARCH DEBUG] 📊 Chronological search error:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Analyze career progression based on timeline data
+   */
+  private analyzeCareerProgression(
+    careerTimeline: CareerTimeline, 
+    educationTimeline: EducationTimeline,
+    filters: ChronologicalSearchFilters
+  ) {
+    // Extract all career entries and sort by start year
+    const allCareerEntries: CareerTimelineEntry[] = [];
+    Object.values(careerTimeline).forEach(yearEntries => {
+      allCareerEntries.push(...yearEntries);
+    });
+    
+    // Remove duplicates and sort by start year
+    const uniqueCareerEntries = allCareerEntries
+      .filter((entry, index, self) => 
+        index === self.findIndex(e => e.company === entry.company && e.start_year === entry.start_year)
+      )
+      .sort((a, b) => a.start_year - b.start_year);
+    
+    // Calculate experience metrics
+    const totalYearsExperience = this.calculateTotalYearsExperience(uniqueCareerEntries);
+    const yearsInTargetIndustry = filters.min_years_in_industry ? 
+      this.calculateYearsInIndustry(uniqueCareerEntries, filters.min_years_in_industry) : 0;
+    const yearsInTargetFunction = filters.min_years_in_function ?
+      this.calculateYearsInFunction(uniqueCareerEntries, filters.min_years_in_function) : 0;
+    
+    // Calculate progression scores
+    const careerProgressionScore = this.calculateProgressionScore(uniqueCareerEntries);
+    const industryDiversityScore = this.calculateIndustryDiversityScore(uniqueCareerEntries);
+    const leadershipProgression = this.hasLeadershipProgression(uniqueCareerEntries);
+    const educationCareerAlignment = this.calculateEducationCareerAlignment(educationTimeline, careerTimeline);
+    
+    return {
+      total_years_experience: totalYearsExperience,
+      years_in_target_industry: yearsInTargetIndustry,
+      years_in_target_function: yearsInTargetFunction,
+      career_progression_score: careerProgressionScore,
+      industry_diversity_score: industryDiversityScore,
+      leadership_progression: leadershipProgression,
+      education_career_alignment: educationCareerAlignment
+    };
+  }
+  
+  private calculateTotalYearsExperience(careerEntries: CareerTimelineEntry[]): number {
+    if (careerEntries.length === 0) return 0;
+    
+    const currentYear = new Date().getFullYear();
+    let totalYears = 0;
+    
+    careerEntries.forEach(entry => {
+      const endYear = entry.end_year === 9999 ? currentYear : entry.end_year;
+      totalYears += (endYear - entry.start_year);
+    });
+    
+    return totalYears;
+  }
+  
+  private calculateYearsInIndustry(careerEntries: CareerTimelineEntry[], targetIndustry: number): number {
+    // This would need to be implemented based on your specific industry matching logic
+    return 0;
+  }
+  
+  private calculateYearsInFunction(careerEntries: CareerTimelineEntry[], targetFunction: number): number {
+    // This would need to be implemented based on your specific function matching logic
+    return 0;
+  }
+  
+  private calculateProgressionScore(careerEntries: CareerTimelineEntry[]): number {
+    // Calculate based on job level progression, salary increases, company size progression, etc.
+    return 0.5; // Placeholder
+  }
+  
+  private calculateIndustryDiversityScore(careerEntries: CareerTimelineEntry[]): number {
+    const uniqueIndustries = new Set(careerEntries.map(entry => entry.industry));
+    return uniqueIndustries.size / Math.max(careerEntries.length, 1);
+  }
+  
+  private hasLeadershipProgression(careerEntries: CareerTimelineEntry[]): boolean {
+    return careerEntries.some(entry => entry.is_leadership_role);
+  }
+  
+  private calculateEducationCareerAlignment(educationTimeline: EducationTimeline, careerTimeline: CareerTimeline): number {
+    // Calculate how well education aligns with career choices
+    return 0.5; // Placeholder
   }
 }
 
