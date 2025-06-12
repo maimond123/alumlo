@@ -1244,16 +1244,46 @@ export default function DashboardPage() {
       
       console.log(`🔍🔍🔍 [DASHBOARD] CLASSIFICATION RESULT:`, classification);
       
+      // Phase 4.5: Assign chronological weights if this might be a chronological query
+      let chronologicalWeights: any = null;
+      const isChronologicalQuery = classification.type === 'chronological' || 
+                                  (classification.type === 'standard' && (
+                                    currentQuery.toLowerCase().includes('progression') || 
+                                    currentQuery.toLowerCase().includes('career') ||
+                                    currentQuery.toLowerCase().includes('experience') ||
+                                    currentQuery.toLowerCase().includes('leader') ||
+                                    currentQuery.toLowerCase().includes('senior') ||
+                                    currentQuery.toLowerCase().includes('management')
+                                  ));
+      
+      if (isChronologicalQuery) {
+        try {
+          console.log(`[DEBUG ${new Date().toISOString()}] Detected chronological query (type: ${classification.type}), assigning weights`);
+          chronologicalWeights = await assignChronologicalWeights(currentQuery);
+          
+          // Update UI to show weight assignment
+          const weightSummary = `Career Quality: ${Math.round(chronologicalWeights.career_quality * 100)}%, Education: ${Math.round(chronologicalWeights.education_quality * 100)}%, Timeline: ${Math.round(chronologicalWeights.timeline_precision * 100)}%, Specificity: ${Math.round(chronologicalWeights.filter_specificity * 100)}%`;
+          setDisplayedText(prev => ({ 
+            ...prev, 
+            filters: prev.filters + ` | Weight assignment: ${weightSummary}` 
+          }));
+        } catch (error) {
+          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in assignChronologicalWeights:`, error);
+          // Continue without weights
+        }
+      }
+      
       // Convert extracted filters to API format using the fresh filters
       const apiFilters = convertFiltersToAPI(currentExtractedFilters);
       
       console.log(`🎯🎯🎯 [DASHBOARD] CONVERTED FILTERS:`, {
         extractedFilters: currentExtractedFilters,
         apiFilters,
-        filterCount: Object.keys(apiFilters).length
+        filterCount: Object.keys(apiFilters).length,
+        chronologicalWeights
       });
       
-      // Now create the enhanced search request with classification and filters
+      // Now create the enhanced search request with classification, filters, and weights
       console.log(`🚀🚀🚀 [DASHBOARD] ABOUT TO SEND SEARCH REQUEST:`, {
         url: '/api/search',
         method: 'POST',
@@ -1262,7 +1292,8 @@ export default function DashboardPage() {
           organizationName: originalOrganizationName,
           isDemo: isDemoMode,
           queryClassification: classification,
-          filters: apiFilters
+          filters: apiFilters,
+          chronologicalWeights
         }
       });
       
@@ -1278,7 +1309,8 @@ export default function DashboardPage() {
           organizationName: originalOrganizationName,
           isDemo: isDemoMode,
           queryClassification: classification,
-          filters: apiFilters
+          filters: apiFilters,
+          chronologicalWeights
         }),
       }).then(response => {
         console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
@@ -1318,8 +1350,10 @@ export default function DashboardPage() {
       
       // Enhanced result display message based on search type
       let displayMessage = `Displaying ${searchResultsData.length} optimized results based on relevance`;
-      if (classification.type === 'temporal') {
-        displayMessage += ' (using temporal search for career progression patterns)';
+      if (searchData.searchType === 'temporal') {
+        displayMessage += ' (using temporal search for date-specific timeline analysis)';
+      } else if (searchData.searchType === 'chronological') {
+        displayMessage += ' (using chronological search for career progression patterns)';
       } else if (Object.keys(apiFilters).length > 0) {
         displayMessage += ` (with ${Object.keys(apiFilters).length} advanced filters applied)`;
       }
@@ -1530,12 +1564,11 @@ export default function DashboardPage() {
     }
   };
 
-  // Replace the existing extractMetadataFilters function with this AI-powered version
+  // Extract metadata filters from query using AI
   const extractMetadataFilters = async (query: string): Promise<{[key: string]: string[]}> => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Extracting metadata filters for: "${query}"`);
+    console.log(`[DEBUG ${new Date().toISOString()}] Extracting metadata filters for query: "${query}"`);
     
     try {
-      // Set up event source for the streaming response
       const response = await fetch('/api/extract-filters', {
         method: 'POST',
         headers: {
@@ -1543,95 +1576,110 @@ export default function DashboardPage() {
         },
         body: JSON.stringify({ query }),
       });
-      
-      // Handle non-streaming fallback case
+
       if (!response.ok) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error from extract-filters API:`, response.statusText);
-        const fallbackText = "No specific filters detected";
-        await typewriterEffect(fallbackText, 
-          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-        );
-        return {};
+        throw new Error('Filter extraction failed');
       }
-      
-      // Set up streaming with text accumulation
+
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error('Response body is null');
+        throw new Error('No reader available');
       }
-      
-      let accumulatedText = '';
-      let currentDisplayText = '';
-      
+
       const processStream = async () => {
+        let currentText = '';
+        const decoder = new TextDecoder();
+        
         while (true) {
           const { done, value } = await reader.read();
+          if (done) break;
           
-          if (done) {
-            console.log(`[DEBUG ${new Date().toISOString()}] Stream complete, final filters: "${accumulatedText}"`);
-            break;
-          }
-          
-          // Decode and parse the chunk
-          const chunk = new TextDecoder().decode(value);
-          const lines = chunk.split('\n\n');
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
           
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
-                const parsedData = JSON.parse(line.substring(6));
-                if (parsedData.content) {
-                  accumulatedText += parsedData.content;
+                const data = JSON.parse(line.slice(6));
+                if (data.content) {
+                  currentText += data.content;
+                  console.log(`[DEBUG ${new Date().toISOString()}] Filter extraction stream:`, data.content);
                   
-                  // Update the display with typewriter-like effect
-                  const newPortion = parsedData.content;
-                  currentDisplayText += newPortion;
-                  
+                  // Update UI in real-time
                   setDisplayedText(prev => ({ 
                     ...prev, 
-                    filters: currentDisplayText 
+                    filters: `Detecting relevant filters: ${currentText}` 
                   }));
                 }
-              } catch (e) {
-                console.error('Error parsing SSE data:', e);
+              } catch (error) {
+                console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error parsing stream data:`, error);
               }
             }
           }
         }
-      };
-      
-      await processStream();
-      
-      // Parse the accumulated text into filter categories
-      const filtersObj: {[key: string]: string[]} = {};
-      const filterLines = accumulatedText.split('\n').filter(line => line.trim() !== '');
-      
-      for (const line of filterLines) {
-        if (line === "No specific filters detected") {
-          // No filters case
-          break;
-        }
         
-        const match = line.match(/^([^:]+):\s*(.+)$/);
-        if (match) {
-          const [_, category, valuesStr] = match;
-          filtersObj[category] = valuesStr.split(',').map(v => v.trim());
+        console.log(`[DEBUG ${new Date().toISOString()}] Filter extraction complete, final text:`, currentText);
+        return currentText;
+      };
+
+      const filtersText = await processStream();
+      console.log(`[DEBUG ${new Date().toISOString()}] Filters text received:`, filtersText);
+      
+      if (!filtersText || filtersText.includes('No specific filters detected')) {
+        return {};
+      }
+      
+      const filters: {[key: string]: string[]} = {};
+      const lines = filtersText.split('\n').filter(line => line.trim());
+      
+      for (const line of lines) {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex > 0) {
+          const key = line.substring(0, colonIndex).trim();
+          const values = line.substring(colonIndex + 1).trim().split(',').map(v => v.trim()).filter(v => v);
+          if (values.length > 0) {
+            filters[key] = values;
+          }
         }
       }
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Parsed filters object:`, filtersObj);
-      setExtractedFilters(filtersObj);
-      return filtersObj; // Return the filters for immediate use
-      
+      console.log(`[DEBUG ${new Date().toISOString()}] Parsed filters:`, filters);
+      return filters;
     } catch (error) {
       console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
-      
-      // Fallback in case of error
-      const fallbackText = "No specific filters detected";
-      await typewriterEffect(fallbackText, 
-        (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-      );
       return {};
+    }
+  };
+
+  // Assign chronological weights using LLM
+  const assignChronologicalWeights = async (query: string): Promise<any> => {
+    console.log(`[DEBUG ${new Date().toISOString()}] Assigning chronological weights for query: "${query}"`);
+    
+    try {
+      const response = await fetch('/api/assign-weights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Weight assignment failed');
+      }
+
+      const weights = await response.json();
+      console.log(`[DEBUG ${new Date().toISOString()}] Assigned weights:`, weights);
+      return weights;
+    } catch (error) {
+      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in assignChronologicalWeights:`, error);
+      // Return default weights on error
+      return {
+        career_quality: 0.4,
+        education_quality: 0.25,
+        timeline_precision: 0.25,
+        filter_specificity: 0.1
+      };
     }
   };
 

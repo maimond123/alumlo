@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
       filters = {}, 
       organizationName, 
       isDemo = false,
-      queryClassification
+      queryClassification,
+      chronologicalWeights
     } = body;
     
     if (!query || typeof query !== 'string') {
@@ -73,7 +74,9 @@ export async function POST(req: NextRequest) {
       hasClassification: !!queryClassification,
       classificationType: queryClassification?.type,
       hasFilters: Object.keys(filters).length > 0,
-      filterKeys: Object.keys(filters)
+      filterKeys: Object.keys(filters),
+      hasChronologicalWeights: !!chronologicalWeights,
+      chronologicalWeights
     });
     
     console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
@@ -91,64 +94,155 @@ export async function POST(req: NextRequest) {
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     
-    // Check for temporal search first (for non-demo users only)
-    if (!isDemo && 
-        queryClassification?.type === 'temporal' && 
-        queryClassification?.temporal_elements && 
-        organizationName) {
+    // Route to appropriate search method based on query classification
+    let results;
+    let searchType = 'standard';
+    let searchMetadata: any = {};
+    
+    if (!isDemo && organizationName && queryClassification?.type) {
       
-      console.log(`[API DEBUG] 🕐 Temporal search detected for ${organizationName}`);
-      console.log(`[API DEBUG] 🕐 Temporal elements:`, queryClassification.temporal_elements);
-      
-      try {
-        const temporalResults = await search_engine.searchTemporal(
-          query,
-          queryClassification.temporal_elements,
-          50, // Use higher limit for gap-based filtering
-          organizationName
-        );
+      // 1. TEMPORAL SEARCH - For date-specific timeline queries
+      if (queryClassification.type === 'temporal' && queryClassification.temporal_elements) {
+        console.log(`[API DEBUG] 🕐 TEMPORAL search detected for ${organizationName}`);
+        console.log(`[API DEBUG] 🕐 Temporal elements:`, queryClassification.temporal_elements);
         
-        if (temporalResults.length > 0) {
-          console.log(`[API DEBUG] 🕐 Temporal search returned ${temporalResults.length} results`);
-          return NextResponse.json({ 
-            results: temporalResults,
-            searchType: 'temporal',
-            temporal_elements: queryClassification.temporal_elements
-          });
-        } else {
-          console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+        try {
+          results = await search_engine.searchTemporal(
+            query,
+            queryClassification.temporal_elements,
+            50, // Use higher limit for gap-based filtering
+            organizationName
+          );
+          
+          if (results.length > 0) {
+            console.log(`[API DEBUG] 🕐 Temporal search returned ${results.length} results`);
+            searchType = 'temporal';
+            searchMetadata = { temporal_elements: queryClassification.temporal_elements };
+          } else {
+            console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+            results = null; // Will fall through to standard search
+          }
+        } catch (error: unknown) {
+          console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+          results = null; // Will fall through to standard search
         }
-      } catch (error: unknown) {
-        console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+      }
+      
+      // 2. CHRONOLOGICAL SEARCH - For career progression pattern queries (always uses LLM weights)
+      else if (queryClassification.type === 'chronological' && queryClassification.progression_elements) {
+        console.log(`[API DEBUG] 📈 CHRONOLOGICAL search detected for ${organizationName}`);
+        console.log(`[API DEBUG] 📈 Progression elements:`, queryClassification.progression_elements);
+        
+        try {
+          // Always assign chronological weights for chronological queries
+          let chronologicalWeights = null;
+          try {
+            const weightResponse = await fetch('/api/assign-weights', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            });
+            if (weightResponse.ok) {
+              chronologicalWeights = await weightResponse.json();
+              console.log(`[API DEBUG] 📈 Assigned chronological weights:`, chronologicalWeights);
+            }
+          } catch (weightError) {
+            console.log(`[API DEBUG] 📈 Weight assignment failed, using defaults:`, weightError);
+          }
+          
+          // Translate natural language to chronological filters using new API
+          let translatedFilters = {};
+          try {
+            const translateResponse = await fetch('/api/translate-chronological', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            });
+            if (translateResponse.ok) {
+              translatedFilters = await translateResponse.json();
+              console.log(`[API DEBUG] 📈 Translated chronological filters:`, translatedFilters);
+            }
+          } catch (translateError) {
+            console.log(`[API DEBUG] 📈 Filter translation failed, using basic filters:`, translateError);
+            translatedFilters = { gap_tolerance: 6 };
+          }
+          
+          // Combine progression elements with translated filters and existing filters
+          const chronologicalFilters = {
+            ...translatedFilters,
+            ...filters, // Include any existing filters from dashboard
+          };
+          
+          // Add weights to filters
+          if (chronologicalWeights) {
+            chronologicalFilters.chronological_weights = chronologicalWeights;
+          }
+          
+          console.log(`[API DEBUG] 📈 Final chronological filters:`, chronologicalFilters);
+          
+          results = await search_engine.searchChronological(
+            query,
+            chronologicalFilters,
+            50,
+            organizationName
+          );
+          
+          if (results.length > 0) {
+            console.log(`[API DEBUG] 📈 Chronological search returned ${results.length} results`);
+            searchType = 'chronological';
+            searchMetadata = { 
+              progression_elements: queryClassification.progression_elements,
+              translated_filters: translatedFilters,
+              chronological_filters: chronologicalFilters,
+              chronological_weights: chronologicalWeights
+            };
+          } else {
+            console.log(`[API DEBUG] 📈 Chronological search returned no results, falling back to standard search`);
+            results = null; // Will fall through to standard search
+          }
+        } catch (error: unknown) {
+          console.log(`[API DEBUG] 📈 Chronological search failed, falling back to standard search:`, error);
+          results = null; // Will fall through to standard search
+        }
       }
     }
     
-    // Standard search with enhanced filters
-    console.log(`[API DEBUG] 📊 Using standard search with enhanced filters`);
-    
-    // Auth-based routing: Any authenticated user with organizationName gets company search
-    if (!isDemo && organizationName) {
-      console.log(`[API DEBUG] ✅ Authenticated user detected with organization: "${organizationName}"`);
-    } else {
-      console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
+    // 3. STANDARD SEARCH - For basic semantic queries OR fallback
+    if (!results) {
+      console.log(`[API DEBUG] 📊 Using STANDARD search with enhanced filters`);
+      
+      // Auth-based routing: Any authenticated user with organizationName gets company search
+      if (!isDemo && organizationName) {
+        console.log(`[API DEBUG] ✅ Authenticated user detected with organization: "${organizationName}"`);
+      } else {
+        console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
+      }
+      
+      // Use the filters directly (they already contain the advanced filters from the dashboard)
+      console.log(`[API DEBUG] Filters for company search:`, filters);
+      
+      console.log(`[API DEBUG] 🚀 About to call search_engine.searchCompany with:`, {
+        query,
+        limit: 50,
+        filters,
+        organizationName,
+        chronologicalWeights,
+        searchEngineType: typeof search_engine,
+        hasSearchCompanyMethod: typeof search_engine.searchCompany === 'function'
+      });
+      
+      // For standard search, only apply chronological weights if explicitly provided from dashboard
+      const enhancedFilters = chronologicalWeights ? 
+        { ...filters, chronological_weights: chronologicalWeights } : 
+        filters;
+      
+      console.log(`[API DEBUG] Enhanced filters with weights:`, enhancedFilters);
+      
+      // Use gap-based filtering instead of fixed limit, always use company search for enhanced capabilities
+      results = await search_engine.searchCompany(query, 50, enhancedFilters, organizationName);
     }
     
-    // Use the filters directly (they already contain the advanced filters from the dashboard)
-    console.log(`[API DEBUG] Filters for company search:`, filters);
-    
-    console.log(`[API DEBUG] 🚀 About to call search_engine.searchCompany with:`, {
-      query,
-      limit: 50,
-      filters,
-      organizationName,
-      searchEngineType: typeof search_engine,
-      hasSearchCompanyMethod: typeof search_engine.searchCompany === 'function'
-    });
-    
-    // Use gap-based filtering instead of fixed limit, always use company search for enhanced capabilities
-    const results = await search_engine.searchCompany(query, 50, filters, organizationName);
-    
-    console.log(`[API DEBUG] 📊 searchCompany returned:`, {
+    console.log(`[API DEBUG] 📊 Final search results:`, {
       resultCount: results?.length || 0,
       resultsType: typeof results,
       isArray: Array.isArray(results),
@@ -156,15 +250,18 @@ export async function POST(req: NextRequest) {
         id: results[0].id,
         name: results[0].name,
         similarity: results[0].similarity
-      } : null
+      } : null,
+      searchType,
+      usedMetadata: Object.keys(searchMetadata).length > 0
     });
     
     console.log('[API] Search completed successfully, found', results.length, 'results');
     
     return NextResponse.json({ 
       results,
-      searchType: 'standard',
+      searchType,
       appliedFilters: filters,
+      searchMetadata,
       filterCount: Object.keys(filters).length
     });
   } catch (error: unknown) {

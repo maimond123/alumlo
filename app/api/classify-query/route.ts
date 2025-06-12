@@ -9,28 +9,51 @@ export async function POST(req: NextRequest) {
   try {
     const { query } = await req.json();
     
-    console.log('Classifying query for temporal elements:', query);
+    console.log('Classifying query type for optimal search method:', query);
     
     if (!query) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o-mini',
+      temperature: 0, // For consistent classification
       messages: [
         {
           role: 'system',
-          content: `You are a query classification system for an alumni search database. Your job is to determine if a user query contains temporal elements that would benefit from specialized temporal search.
+          content: `You are a query classification system for an alumni search database. Your job is to determine which search method will best serve the user's query.
 
-**Temporal Query Indicators:**
-- Specific years (e.g., "2018", "2019-2021", "after 2020")
-- Time-based sequences (e.g., "then became", "later moved to", "after leaving")
-- Career progression patterns (e.g., "went from X to Y", "transitioned to")
-- Exit timing references (e.g., "left in", "graduated in", "departed")
-- Sequential job functions (e.g., "started as X, then Y", "first worked as X, now Y")
+**SEARCH TYPES:**
 
-**Classification Output:**
-If the query contains temporal elements, respond with:
+1. **TEMPORAL SEARCH** - For queries with specific dates, years, or time-based sequences
+   - Specific years (e.g., "2018", "2019-2021", "after 2020")
+   - Time-based sequences (e.g., "then became", "later moved to", "after leaving")
+   - Exit timing references (e.g., "left in", "graduated in", "departed")
+   - Sequential patterns with dates (e.g., "started in 2018, then moved to Google in 2020")
+
+2. **CHRONOLOGICAL SEARCH** - For queries about career progression patterns and quality (no specific dates needed)
+   - Career progression quality (e.g., "strong career progression", "rapid advancement")
+   - Experience depth (e.g., "experienced", "10+ years", "senior professionals")
+   - Career transitions (e.g., "moved from tech to finance", "became entrepreneurs")
+   - Leadership development (e.g., "went from IC to management", "became executives")
+   - Industry expertise building (e.g., "deep expertise in", "specialists in")
+
+3. **STANDARD SEARCH** - For basic semantic matching without time or progression focus
+   - Simple role/title searches (e.g., "software engineers", "marketing managers")
+   - Company-based searches (e.g., "people at Google", "former Microsoft employees")
+   - Location-based searches (e.g., "alumni in San Francisco")
+   - Industry-based searches (e.g., "people in healthcare", "finance professionals")
+   - Basic skill/background searches (e.g., "computer science graduates")
+
+**CLASSIFICATION RULES:**
+
+- If query contains specific years/dates OR temporal sequences → **TEMPORAL**
+- If query focuses on career progression/experience quality (no specific dates) → **CHRONOLOGICAL**  
+- If query is basic semantic matching → **STANDARD**
+
+**OUTPUT FORMAT:**
+
+For TEMPORAL queries:
 {
   "type": "temporal",
   "temporal_elements": {
@@ -41,12 +64,23 @@ If the query contains temporal elements, respond with:
   }
 }
 
-If the query does NOT contain temporal elements, respond with:
+For CHRONOLOGICAL queries:
+{
+  "type": "chronological",
+  "progression_elements": {
+    "experience_focus": boolean,
+    "progression_pattern": string,
+    "career_quality_focus": boolean,
+    "leadership_development": boolean
+  }
+}
+
+For STANDARD queries:
 {
   "type": "standard"
 }
 
-**Examples:**
+**EXAMPLES:**
 
 Query: "People who left in 2019 and became consultants"
 {
@@ -59,14 +93,14 @@ Query: "People who left in 2019 and became consultants"
   }
 }
 
-Query: "Alumni who worked here in 2020, then moved to tech startups in 2022"
+Query: "Experienced technology leaders with strong career progression"
 {
-  "type": "temporal",
-  "temporal_elements": {
-    "years": [2020, 2022],
-    "functions": ["tech startup"],
-    "sequence_detected": true,
-    "exit_years": [2020]
+  "type": "chronological",
+  "progression_elements": {
+    "experience_focus": true,
+    "progression_pattern": "leadership_development",
+    "career_quality_focus": true,
+    "leadership_development": true
   }
 }
 
@@ -75,14 +109,41 @@ Query: "Software engineers in San Francisco"
   "type": "standard"
 }
 
-Query: "People who transitioned to finance after graduation"
+Query: "People who worked here 2020-2022 then moved to startups"
 {
   "type": "temporal",
   "temporal_elements": {
-    "years": [],
-    "functions": ["finance"],
+    "years": [2020, 2021, 2022],
+    "functions": ["startup"],
     "sequence_detected": true,
-    "exit_years": []
+    "exit_years": [2022]
+  }
+}
+
+Query: "Alumni who transitioned from individual contributors to management roles"
+{
+  "type": "chronological",
+  "progression_elements": {
+    "experience_focus": false,
+    "progression_pattern": "ic_to_management",
+    "career_quality_focus": true,
+    "leadership_development": true
+  }
+}
+
+Query: "Marketing professionals"
+{
+  "type": "standard"
+}
+
+Query: "People with 10+ years of experience who became entrepreneurs"
+{
+  "type": "chronological",
+  "progression_elements": {
+    "experience_focus": true,
+    "progression_pattern": "entrepreneurship",
+    "career_quality_focus": true,
+    "leadership_development": true
   }
 }
 
