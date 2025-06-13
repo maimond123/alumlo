@@ -289,6 +289,13 @@ export interface CareerTimeline {
 
 // Interface for the new chronological search
 export interface ChronologicalSearchFilters {
+  // Basic search filters (MISSING - this is the bug fix!)
+  school_filter?: string;
+  company_filter?: string;
+  industry_filter?: string;
+  title_filter?: string;
+  location_filter?: string;
+  
   // Experience-based filters
   min_years_in_industry?: number;
   min_years_in_function?: number;
@@ -440,6 +447,14 @@ export class LinkedInProfileSearchEngine {
         organizationName,
         filtersCount: Object.keys(filters).length
       });
+      console.log(`[AI_SEARCH COMPANY] 🚀 Starting company search at ${new Date().toISOString()}`);
+      console.log(`[AI_SEARCH COMPANY] 📝 Search parameters:`, {
+        queryLength: query?.length || 0,
+        targetResultCount: top_k,
+        organizationProvided: !!organizationName,
+        filterCategories: Object.keys(filters),
+        nonEmptyFilters: Object.entries(filters).filter(([key, value]) => value !== undefined && value !== null && value !== false).length
+      });
       
       // Get the organization name for dynamic RPC function naming
       const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
@@ -450,18 +465,26 @@ export class LinkedInProfileSearchEngine {
         fromLocalStorage: typeof window !== 'undefined' ? localStorage.getItem('organizationName') : 'N/A (server)',
         final: storedOrganizationName
       });
+      console.log(`[AI_SEARCH COMPANY] 🏛️ Organization resolution:`, {
+        providedOrg: organizationName,
+        storedOrg: storedOrganizationName,
+        isClient: typeof window !== 'undefined'
+      });
       
       if (!storedOrganizationName) {
         console.error('[AI_SEARCH DEBUG] 🏢 ❌ Organization name is required for company search');
+        console.error(`[AI_SEARCH COMPANY] ❌ Missing organization name - cannot proceed`);
         throw new Error('Organization name is required for company search');
       }
       
       // Construct dynamic RPC function name
       const rpcFunctionName = `enhanced_hybrid_search_${storedOrganizationName}`;
       console.log(`[AI_SEARCH DEBUG] 🏢 Using dynamic RPC function: ${rpcFunctionName}`);
+      console.log(`[AI_SEARCH COMPANY] 🎯 Target SQL function: ${rpcFunctionName}`);
       
       // Generate embedding using OpenAI API
       console.log(`[AI_SEARCH DEBUG] 🏢 Generating embedding for query: "${query}"`);
+      console.log(`[AI_SEARCH COMPANY] 🧠 Starting embedding generation`);
       
       let embeddingArray: number[];
       try {
@@ -471,6 +494,11 @@ export class LinkedInProfileSearchEngine {
           apiKeyLength: process.env.OPENAI_API_KEY?.length || 0,
           apiKeyStart: process.env.OPENAI_API_KEY?.substring(0, 10) || 'undefined'
         });
+        console.log(`[AI_SEARCH COMPANY] 🔑 OpenAI configuration check:`, {
+          clientInitialized: !!this.openai,
+          apiKeyPresent: !!process.env.OPENAI_API_KEY,
+          apiKeyLength: process.env.OPENAI_API_KEY?.length || 0
+        });
         
         const response = await this.openai.embeddings.create({
           model: "text-embedding-3-small",
@@ -479,6 +507,7 @@ export class LinkedInProfileSearchEngine {
         
         embeddingArray = response.data[0].embedding;
         console.log(`[AI_SEARCH DEBUG] 🏢 ✅ Embedding generated successfully, length: ${embeddingArray.length}`);
+        console.log(`[AI_SEARCH COMPANY] ✅ Embedding generated: ${embeddingArray.length} dimensions`);
       } catch (embeddingError: unknown) {
         console.error(`[AI_SEARCH DEBUG] 🏢 ❌ EMBEDDING GENERATION FAILED:`, {
           errorType: embeddingError?.constructor?.name || 'unknown',
@@ -487,6 +516,10 @@ export class LinkedInProfileSearchEngine {
           query: query,
           hasOpenAI: !!this.openai,
           hasApiKey: !!process.env.OPENAI_API_KEY
+        });
+        console.error(`[AI_SEARCH COMPANY] ❌ Embedding generation failed:`, {
+          error: embeddingError,
+          message: embeddingError instanceof Error ? embeddingError.message : 'Unknown error'
         });
         throw new Error(`Failed to generate embedding: ${embeddingError instanceof Error ? embeddingError.message : 'Unknown error'}`);
       }
@@ -528,12 +561,20 @@ export class LinkedInProfileSearchEngine {
         booleanFilters: { leadership_only, management_exp_only, technical_background_only, sales_exp_only, startup_exp_only, enterprise_exp_only, remote_worker_only, mentor_potential_only, salary_lift_only },
         rangeFilters: { exit_year_min, exit_year_max }
       });
+      console.log(`[AI_SEARCH COMPANY] 🔍 Filter extraction completed:`, {
+        basicFilterCount: [company, industry, title, location, school].filter(f => f).length,
+        enhancedFilterCount: [job_level_filter, job_function_filter, career_stage_filter, degree_level_filter, school_tier_filter].filter(f => f).length,
+        booleanFilterCount: [leadership_only, management_exp_only, technical_background_only, sales_exp_only, startup_exp_only, enterprise_exp_only, remote_worker_only, mentor_potential_only, salary_lift_only].filter(f => f).length,
+        rangeFilterCount: [exit_year_min, exit_year_max].filter(f => f !== undefined).length
+      });
       
       console.log(`[AI_SEARCH DEBUG] 🏢 Calling ${rpcFunctionName} RPC function with enhanced filters`);
+      console.log(`[AI_SEARCH COMPANY] 📡 Preparing Supabase RPC call`);
       
       // Construct dynamic company-specific parameter name for salary lift filter
       const dynamicSalaryLiftParam = `${storedOrganizationName}_salary_lift_only`;
       console.log(`[AI_SEARCH DEBUG] 🏢 Dynamic salary lift parameter: ${dynamicSalaryLiftParam}`);
+      console.log(`[AI_SEARCH COMPANY] 💰 Dynamic salary parameter: ${dynamicSalaryLiftParam} = ${salary_lift_only}`);
       
       // Build RPC parameters object with all available filters
       const rpcParams: any = {
@@ -580,6 +621,13 @@ export class LinkedInProfileSearchEngine {
         parameters: rpcParams,
         embeddingLength: rpcParams.query_embedding.length
       });
+      console.log(`[AI_SEARCH COMPANY] 📊 RPC parameters summary:`, {
+        totalParams: Object.keys(rpcParams).length,
+        nonNullParams: Object.entries(rpcParams).filter(([key, value]) => value !== null && value !== false).length,
+        embeddingDimensions: rpcParams.query_embedding.length,
+        similarityThreshold: rpcParams.similarity_threshold,
+        resultLimit: rpcParams.limit_count
+      });
       
       // Add detailed parameter inspection
       console.log(`[AI_SEARCH DEBUG] 🏢 📋 DETAILED PARAMETER INSPECTION:`);
@@ -617,6 +665,7 @@ export class LinkedInProfileSearchEngine {
       
       // Call the dynamic RPC function with all enhanced filters
       console.log(`[AI_SEARCH DEBUG] 🏢 🔄 Making Supabase RPC call to: ${rpcFunctionName}`);
+      console.log(`[AI_SEARCH COMPANY] 📡 Executing Supabase RPC call`);
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, rpcParams)
         .returns<HybridSearchCompanyResult[]>();
@@ -633,6 +682,11 @@ export class LinkedInProfileSearchEngine {
           similarity: data[0].similarity
         } : null
       });
+      console.log(`[AI_SEARCH COMPANY] 📈 RPC response received:`, {
+        success: !error,
+        resultCount: data?.length || 0,
+        errorMessage: error?.message || null
+      });
       
       if (error) {
         console.error(`[AI_SEARCH DEBUG] 🏢 ❌ DETAILED ERROR from ${rpcFunctionName}:`, {
@@ -644,6 +698,13 @@ export class LinkedInProfileSearchEngine {
         });
         console.error(`[AI_SEARCH DEBUG] 🏢 ❌ RPC Parameters that caused the error:`, rpcParams);
         console.error(`[AI_SEARCH DEBUG] 🏢 ❌ Function that failed: ${rpcFunctionName}`);
+        console.error(`[AI_SEARCH COMPANY] ❌ Supabase RPC error:`, {
+          function: rpcFunctionName,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         
         // Additional debugging: Check if it's a table/function existence issue
         if (error.message.includes('does not exist') || error.message.includes('not found')) {
@@ -667,6 +728,7 @@ export class LinkedInProfileSearchEngine {
       }
       
       console.log(`[AI_SEARCH DEBUG] 🏢 ✅ ${rpcFunctionName} returned ${data?.length || 0} results`);
+      console.log(`[AI_SEARCH COMPANY] ✅ Search completed: ${data?.length || 0} raw results`);
       
       if (!data || data.length === 0) {
         console.log(`[AI_SEARCH DEBUG] 🏢 ⚠️ No results returned from database. This could be due to:`, {
@@ -684,11 +746,18 @@ export class LinkedInProfileSearchEngine {
             'Verify RPC function exists'
           ]
         });
+        console.log(`[AI_SEARCH COMPANY] ⚠️ No results found - possible causes:`, [
+          'Empty database table',
+          'Filters too restrictive',
+          'Similarity threshold too high',
+          'Database function missing'
+        ]);
         return [];
       }
       
       // Format the results for company search with enhanced field mapping
       console.log(`[AI_SEARCH DEBUG] 🏢 🔄 Processing ${data.length} raw results`);
+      console.log(`[AI_SEARCH COMPANY] 🔄 Starting result processing`);
       const formattedResults = data.map((item: HybridSearchCompanyResult, index: number): CompanySearchResult => {
         console.log(`[AI_SEARCH DEBUG] 🏢 Processing result ${index + 1}/${data.length}:`, {
           id: item.id,
@@ -698,6 +767,7 @@ export class LinkedInProfileSearchEngine {
           hasCurrentCompany: !!item.post_company_current_company,
           hasCurrentTitle: !!item.post_company_current_title
         });
+        console.log(`[AI_SEARCH COMPANY] 📝 Processing result ${index + 1}: ${item.name} (similarity: ${item.similarity})`);
         
         // Create base result object
         const baseResult: CompanySearchResult = {
@@ -776,16 +846,20 @@ export class LinkedInProfileSearchEngine {
           similarity: formattedResults[0].similarity
         } : null
       });
+      console.log(`[AI_SEARCH COMPANY] 📊 Result formatting completed: ${formattedResults.length} results`);
 
       // Apply gap-based filtering to the enriched results
       console.log(`[AI_SEARCH DEBUG] 🏢 🔍 Applying gap-based filtering...`);
+      console.log(`[AI_SEARCH COMPANY] 🔍 Starting gap-based filtering`);
       const filteredResults = this.applyGapBasedFiltering(formattedResults) as CompanySearchResult[];
       console.log(`[AI_SEARCH DEBUG] 🏢 ✅ Gap-based filtering results:`, {
         beforeFiltering: formattedResults.length,
         afterFiltering: filteredResults.length,
         reductionPercentage: formattedResults.length > 0 ? Math.round((1 - filteredResults.length / formattedResults.length) * 100) : 0
       });
+      console.log(`[AI_SEARCH COMPANY] ✅ Gap-based filtering completed: ${formattedResults.length} → ${filteredResults.length} results`);
       
+      console.log(`[AI_SEARCH COMPANY] 🎉 Company search completed successfully: ${filteredResults.length} final results`);
       return filteredResults;
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] 🏢 ❌ CRITICAL ERROR in searchCompany:`, {
@@ -794,6 +868,12 @@ export class LinkedInProfileSearchEngine {
         query,
         organizationName,
         filters
+      });
+      console.error(`[AI_SEARCH COMPANY] ❌ Critical search error:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        query: `"${query}"`,
+        organization: organizationName
       });
       throw error;
     }
@@ -807,31 +887,62 @@ export class LinkedInProfileSearchEngine {
   ): Promise<TemporalSearchResult[]> {
     try {
       console.log(`[AI_SEARCH DEBUG] 🕐 searchTemporal called with:`, temporalElements);
+      console.log(`[AI_SEARCH TEMPORAL] 🚀 Starting temporal search at ${new Date().toISOString()}`);
+      console.log(`[AI_SEARCH TEMPORAL] 📝 Search parameters:`, {
+        query: `"${query}"`,
+        temporalElementCount: Object.keys(temporalElements || {}).length,
+        targetResults: top_k,
+        organizationName,
+        hasTemporalElements: !!temporalElements && Object.keys(temporalElements).length > 0
+      });
       
       // Get the organization name for dynamic function naming
       const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
         localStorage.getItem('organizationName') : null);
       
+      console.log(`[AI_SEARCH TEMPORAL] 🏛️ Organization resolution:`, {
+        provided: organizationName,
+        stored: storedOrganizationName,
+        final: storedOrganizationName
+      });
+      
       if (!storedOrganizationName) {
+        console.error(`[AI_SEARCH TEMPORAL] ❌ Missing organization name`);
         throw new Error('Organization name is required for temporal search');
       }
       
       // Generate embedding
+      console.log(`[AI_SEARCH TEMPORAL] 🧠 Generating embedding for temporal search`);
       const response = await this.openai.embeddings.create({
         model: "text-embedding-3-small",
         input: query,
       });
       
       const embeddingArray = response.data[0].embedding;
+      console.log(`[AI_SEARCH TEMPORAL] ✅ Embedding generated: ${embeddingArray.length} dimensions`);
       
       // Extract temporal parameters
       const years = temporalElements.years || [];
       const functions = temporalElements.functions || [];
       
+      console.log(`[AI_SEARCH TEMPORAL] 🔍 Temporal elements analysis:`, {
+        years: years,
+        functions: functions,
+        yearCount: years.length,
+        functionCount: functions.length,
+        hasSequenceData: years.length >= 2 && functions.length >= 1
+      });
+      
       // Try specific sequence search first
       if (years.length >= 2 && functions.length >= 1) {
         const sequenceSearchFunc = `temporal_career_search_${storedOrganizationName}`;
         console.log(`[AI_SEARCH DEBUG] 🕐 Using sequence search: ${storedOrganizationName} in ${years[0]}, then ${functions[0]} in ${years[1]}`);
+        console.log(`[AI_SEARCH TEMPORAL] 🎯 Attempting sequence search with function: ${sequenceSearchFunc}`);
+        console.log(`[AI_SEARCH TEMPORAL] 📊 Sequence parameters:`, {
+          targetCompanyYear: years[0],
+          subsequentFunction: functions[0],
+          subsequentYear: years[1]
+        });
         
         const { data, error } = await this.supabase
           .rpc(sequenceSearchFunc, {
@@ -843,8 +954,19 @@ export class LinkedInProfileSearchEngine {
             p_limit_count: 50 // Increase limit for gap-based filtering
           });
         
+        console.log(`[AI_SEARCH TEMPORAL] 📈 Sequence search response:`, {
+          success: !error,
+          resultCount: data?.length || 0,
+          errorMessage: error?.message || null
+        });
+        
         if (error) {
           console.error(`[AI_SEARCH DEBUG] 🕐 Sequence search error:`, error);
+          console.error(`[AI_SEARCH TEMPORAL] ❌ Sequence search error:`, {
+            function: sequenceSearchFunc,
+            message: error.message,
+            details: error.details
+          });
           throw new Error(`Temporal sequence search failed: ${error.message}`);
         }
         
@@ -852,8 +974,10 @@ export class LinkedInProfileSearchEngine {
         
         // Apply gap-based filtering to sequence search results
         if (data && data.length > 0) {
+          console.log(`[AI_SEARCH TEMPORAL] 🔍 Applying gap-based filtering to sequence results`);
           const filteredResults = this.applyGapBasedFiltering(data) as TemporalSearchResult[];
           console.log(`[AI_SEARCH DEBUG] 🕐 Gap-based filtering reduced sequence results from ${data.length} to ${filteredResults.length}`);
+          console.log(`[AI_SEARCH TEMPORAL] ✅ Sequence search completed: ${filteredResults.length} final results`);
           return filteredResults;
         }
       }
@@ -862,6 +986,11 @@ export class LinkedInProfileSearchEngine {
       if (years.length >= 1 || functions.length >= 1) {
         const filterSearchFunc = `temporal_filter_search_${storedOrganizationName}`;
         console.log(`[AI_SEARCH DEBUG] 🕐 Using general temporal filter search`);
+        console.log(`[AI_SEARCH TEMPORAL] 🔄 Attempting general filter search with function: ${filterSearchFunc}`);
+        console.log(`[AI_SEARCH TEMPORAL] 📊 Filter parameters:`, {
+          yearsFilter: years.length > 0 ? years : null,
+          functionsFilter: functions.length > 0 ? functions : null
+        });
         
         const { data, error } = await this.supabase
           .rpc(filterSearchFunc, {
@@ -872,8 +1001,19 @@ export class LinkedInProfileSearchEngine {
             p_limit_count: 50 // Increase limit for gap-based filtering
           });
         
+        console.log(`[AI_SEARCH TEMPORAL] 📈 Filter search response:`, {
+          success: !error,
+          resultCount: data?.length || 0,
+          errorMessage: error?.message || null
+        });
+        
         if (error) {
           console.error(`[AI_SEARCH DEBUG] 🕐 Temporal filter error:`, error);
+          console.error(`[AI_SEARCH TEMPORAL] ❌ Filter search error:`, {
+            function: filterSearchFunc,
+            message: error.message,
+            details: error.details
+          });
           throw new Error(`Temporal filter search failed: ${error.message}`);
         }
         
@@ -881,16 +1021,25 @@ export class LinkedInProfileSearchEngine {
         
         // Apply gap-based filtering to filter search results
         if (data && data.length > 0) {
+          console.log(`[AI_SEARCH TEMPORAL] 🔍 Applying gap-based filtering to filter results`);
           const filteredResults = this.applyGapBasedFiltering(data) as TemporalSearchResult[];
           console.log(`[AI_SEARCH DEBUG] 🕐 Gap-based filtering reduced filter results from ${data.length} to ${filteredResults.length}`);
+          console.log(`[AI_SEARCH TEMPORAL] ✅ Filter search completed: ${filteredResults.length} final results`);
           return filteredResults;
         }
       }
       
       console.log(`[AI_SEARCH DEBUG] 🕐 Insufficient temporal data, returning empty results`);
+      console.log(`[AI_SEARCH TEMPORAL] ⚠️ Insufficient temporal data for search`);
       return [];
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] 🕐 Temporal search error:`, error);
+      console.error(`[AI_SEARCH TEMPORAL] ❌ Critical temporal search error:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        query: `"${query}"`,
+        organizationName
+      });
       throw error;
     }
   }
@@ -1292,12 +1441,28 @@ export class LinkedInProfileSearchEngine {
     try {
       console.log(`[AI_SEARCH DEBUG] 📊 searchChronological called with filters:`, filters);
       console.log(`[AI_SEARCH DEBUG] 📊 chronologicalWeights:`, chronologicalWeights);
+      console.log(`[AI_SEARCH CHRONOLOGICAL] 🚀 Starting chronological search at ${new Date().toISOString()}`);
+      console.log(`[AI_SEARCH CHRONOLOGICAL] 📝 Search parameters:`, {
+        query: `"${query}"`,
+        filterCount: Object.keys(filters).length,
+        targetResults: top_k,
+        organizationName,
+        hasWeights: !!chronologicalWeights,
+        weightKeys: chronologicalWeights ? Object.keys(chronologicalWeights) : []
+      });
       
       // Get the organization name
       const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
         localStorage.getItem('organizationName') : null);
       
+      console.log(`[AI_SEARCH CHRONOLOGICAL] 🏛️ Organization resolution:`, {
+        provided: organizationName,
+        stored: storedOrganizationName,
+        final: storedOrganizationName
+      });
+      
       if (!storedOrganizationName) {
+        console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ Missing organization name`);
         throw new Error('Organization name is required for chronological search');
       }
       
@@ -1308,8 +1473,20 @@ export class LinkedInProfileSearchEngine {
          chronologicalWeights.timeline_precision !== undefined ||
          chronologicalWeights.filter_specificity !== undefined);
       
+      console.log(`[AI_SEARCH CHRONOLOGICAL] 🔍 Configuration check:`, {
+        hasLLMConfiguration,
+        weightsProvided: !!chronologicalWeights,
+        weightValidation: chronologicalWeights ? {
+          hasCareerQuality: chronologicalWeights.career_quality !== undefined,
+          hasEducationQuality: chronologicalWeights.education_quality !== undefined,
+          hasTimelinePrecision: chronologicalWeights.timeline_precision !== undefined,
+          hasFilterSpecificity: chronologicalWeights.filter_specificity !== undefined
+        } : 'no weights'
+      });
+      
       if (hasLLMConfiguration) {
         console.log(`[AI_SEARCH DEBUG] 📊 Using LLM-integrated chronological search`);
+        console.log(`[AI_SEARCH CHRONOLOGICAL] 🧠 Using LLM-integrated search path`);
         return this.searchChronologicalWithLLMIntegration(
           query, 
           filters, 
@@ -1319,6 +1496,7 @@ export class LinkedInProfileSearchEngine {
         );
       } else {
         console.log(`[AI_SEARCH DEBUG] 📊 Using legacy chronological search`);
+        console.log(`[AI_SEARCH CHRONOLOGICAL] 🔄 Using legacy search path`);
         return this.searchChronologicalLegacy(
           query, 
           filters, 
@@ -1329,6 +1507,12 @@ export class LinkedInProfileSearchEngine {
       
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] 📊 Chronological search error:`, error);
+      console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ Critical chronological search error:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        query: `"${query}"`,
+        organizationName
+      });
       throw error;
     }
   }
@@ -1344,12 +1528,30 @@ export class LinkedInProfileSearchEngine {
     organizationName: string
   ): Promise<ChronologicalSearchResult[]> {
     try {
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🧠 Starting LLM-integrated chronological search`);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📝 Input parameters:`, {
+        query: `"${query}"`,
+        filterCount: Object.keys(filters).length,
+        weightCount: Object.keys(weights).length,
+        targetResults: top_k,
+        organization: organizationName
+      });
+      
       // Construct the LLM-integrated RPC function name
       const rpcFunctionName = `llm_integrated_chronological_search_${organizationName}`;
       console.log(`[AI_SEARCH DEBUG] 📊 Using LLM-integrated RPC function: ${rpcFunctionName}`);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🎯 Target SQL function: ${rpcFunctionName}`);
       
       // Prepare structured JSON parameters for the optimized SQL function
       const chronologicalFilters = {
+        // ADD MISSING BASIC FILTERS - This is the bug fix!
+        school_filter: filters.school_filter || null,
+        company_filter: filters.company_filter || null,
+        industry_filter: filters.industry_filter || null,
+        title_filter: filters.title_filter || null,
+        location_filter: filters.location_filter || null,
+        
+        // Career progression filters
         min_years_in_industry: filters.min_years_in_industry || null,
         min_years_in_function: filters.min_years_in_function || null,
         min_years_at_company_type: filters.min_years_at_company_type || null,
@@ -1370,6 +1572,9 @@ export class LinkedInProfileSearchEngine {
         filter_specificity: weights.filter_specificity || 0.1
       };
       
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 Prepared filters:`, chronologicalFilters);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ⚖️ Prepared weights:`, weightAssignment);
+      
       const rpcParams = {
         chronological_filters: chronologicalFilters,
         weight_assignment: weightAssignment,
@@ -1378,27 +1583,51 @@ export class LinkedInProfileSearchEngine {
       };
       
       console.log(`[AI_SEARCH DEBUG] 📊 Calling ${rpcFunctionName} with LLM parameters:`, rpcParams);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📡 Executing RPC with parameters:`, {
+        filterKeys: Object.keys(chronologicalFilters),
+        weightKeys: Object.keys(weightAssignment),
+        limitCount: rpcParams.limit_count,
+        organization: rpcParams.organization_name
+      });
       
       // Call the LLM-integrated chronological search RPC function
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, rpcParams)
         .returns<any[]>();
       
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📈 RPC response:`, {
+        success: !error,
+        resultCount: data?.length || 0,
+        errorMessage: error?.message || null
+      });
+      
       if (error) {
         console.error(`[AI_SEARCH DEBUG] 📊 LLM chronological search error:`, error);
+        console.error(`[AI_SEARCH LLM_CHRONOLOGICAL] ❌ RPC error:`, {
+          function: rpcFunctionName,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw new Error(`LLM chronological search failed: ${error.message}`);
       }
       
       console.log(`[AI_SEARCH DEBUG] 📊 LLM chronological search returned ${data?.length || 0} results`);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ✅ Search completed: ${data?.length || 0} raw results`);
       
       if (!data || data.length === 0) {
+        console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ⚠️ No results found`);
         return [];
       }
       
       // Process the results from the LLM-integrated SQL function
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔄 Processing results`);
       const processedResults = data.map((item: any): ChronologicalSearchResult => {
         // The comprehensive_analysis already contains processed timeline and scoring data
         const analysis = item.comprehensive_analysis || {};
+        
+        console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📝 Processing: ${item.name} (relevance: ${item.chronological_relevance_score || 'N/A'})`);
         
         return {
           // Standard CompanySearchResult fields
@@ -1460,12 +1689,19 @@ export class LinkedInProfileSearchEngine {
       
       // Sort by chronological relevance score (highest first)
       const sortedResults = processedResults.sort((a, b) => b.similarity - a.similarity);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📊 Results sorted by relevance score`);
       
       // Return up to top_k results
-      return sortedResults.slice(0, top_k);
+      const finalResults = sortedResults.slice(0, top_k);
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ✅ LLM chronological search completed: ${finalResults.length} final results`);
+      return finalResults;
       
     } catch (error) {
       console.error(`[AI_SEARCH DEBUG] 📊 LLM chronological search error:`, error);
+      console.error(`[AI_SEARCH LLM_CHRONOLOGICAL] ❌ Critical error:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
       throw error;
     }
   }

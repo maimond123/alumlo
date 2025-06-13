@@ -33,6 +33,7 @@ const testTransformersLoad = async () => {
 
 export async function POST(req: NextRequest) {
   console.log('[API] 🏁 POST function called - starting execution...');
+  console.log(`[API SEARCH] 🚀 Search API started at ${new Date().toISOString()}`);
   
   try {
     console.log('[API] Route handler started');
@@ -48,6 +49,16 @@ export async function POST(req: NextRequest) {
     // Try to parse the request body
     const body = await req.json();
     console.log('[API] Request body parsed:', body);
+    console.log(`[API SEARCH] 📝 Request body received:`, {
+      hasQuery: !!body.query,
+      queryLength: body.query?.length || 0,
+      organizationName: body.organizationName,
+      isDemo: body.isDemo,
+      hasClassification: !!body.queryClassification,
+      hasSearchConfig: !!body.searchConfig,
+      hasFilters: !!body.filters && Object.keys(body.filters).length > 0,
+      hasChronologicalWeights: !!body.chronologicalWeights
+    });
     
     const { 
       query, 
@@ -58,11 +69,13 @@ export async function POST(req: NextRequest) {
       queryClassification,
       chronologicalWeights,
       useChronologicalConfig = false,
-      chronologicalConfig
+      chronologicalConfig,
+      searchConfig // New: pipeline search config
     } = body;
     
     if (!query || typeof query !== 'string') {
       console.log('[API] Invalid query parameter');
+      console.log(`[API SEARCH] ❌ Invalid query parameter`);
       return NextResponse.json({ 
         results: [],
         error: 'Invalid query parameter' 
@@ -79,35 +92,118 @@ export async function POST(req: NextRequest) {
       filterKeys: Object.keys(filters),
       hasChronologicalWeights: !!chronologicalWeights,
       useChronologicalConfig,
-      hasChronologicalConfig: !!chronologicalConfig
+      hasChronologicalConfig: !!chronologicalConfig,
+      hasSearchConfig: !!searchConfig
+    });
+    console.log(`[API SEARCH] 📊 Parameter analysis:`, {
+      searchType: queryClassification?.type || 'unknown',
+      configSource: searchConfig ? 'pipeline' : 'legacy',
+      filterCount: Object.keys(filters).length,
+      isAuthenticated: !isDemo && !!organizationName
     });
     
     console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
 
     // Try each step separately to identify where the error occurs
     console.log('[API] Creating search engine instance');
+    console.log(`[API SEARCH] 🔧 Initializing search engine`);
     const search_engine = new LinkedInProfileSearchEngine();
     
     console.log('[API] Initializing embedder');
+    console.log(`[API SEARCH] 🧠 Initializing embedder`);
     await search_engine.initializeEmbedder().catch((error: unknown) => {
       console.error('[API] Error initializing embedder:', error);
+      console.error(`[API SEARCH] ❌ Embedder initialization failed:`, error);
       throw new Error(`Embedder initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     });
     
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
+    console.log(`[API SEARCH] 🎯 Starting search execution`);
     
     // Route to appropriate search method
     let results;
     let searchType = 'standard';
     let searchMetadata: any = {};
     
-    if (!isDemo && organizationName) {
+    // NEW: Check for unified pipeline configuration
+    if (searchConfig) {
+      console.log(`[API SEARCH] 🔗 Processing unified pipeline configuration`);
+      console.log(`[API SEARCH] 📋 Pipeline config type: ${searchConfig.type}`);
+      
+      if (searchConfig.type === 'temporal' && searchConfig.temporalElements) {
+        console.log(`[API SEARCH] 🕐 Executing temporal search from pipeline`);
+        try {
+          results = await search_engine.searchTemporal(
+            query,
+            searchConfig.temporalElements,
+            50,
+            organizationName
+          );
+          
+          if (results.length > 0) {
+            console.log(`[API SEARCH] ✅ Temporal search successful: ${results.length} results`);
+            searchType = 'temporal';
+            searchMetadata = { 
+              search_method: 'temporal_pipeline',
+              temporal_elements: searchConfig.temporalElements,
+              sql_function: searchConfig.sqlFunction,
+              configuration_source: 'pipeline'
+            };
+          } else {
+            console.log(`[API SEARCH] ⚠️ Temporal search returned no results, falling back`);
+            results = null;
+          }
+        } catch (error) {
+          console.error(`[API SEARCH] ❌ Temporal search from pipeline failed:`, error);
+          results = null;
+        }
+      }
+      
+      else if (searchConfig.type === 'chronological' && searchConfig.filters && searchConfig.weights) {
+        console.log(`[API SEARCH] 📈 Executing chronological search from pipeline`);
+        try {
+          results = await search_engine.searchChronological(
+            query,
+            searchConfig.filters,
+            50,
+            organizationName,
+            searchConfig.weights
+          );
+          
+          if (results.length > 0) {
+            console.log(`[API SEARCH] ✅ Chronological search successful: ${results.length} results`);
+            searchType = 'chronological';
+            searchMetadata = {
+              search_method: 'chronological_pipeline',
+              filters: searchConfig.filters,
+              weights: searchConfig.weights,
+              sql_function: searchConfig.sqlFunction,
+              configuration_source: 'pipeline'
+            };
+          } else {
+            console.log(`[API SEARCH] ⚠️ Chronological search returned no results, falling back`);
+            results = null;
+          }
+        } catch (error) {
+          console.error(`[API SEARCH] ❌ Chronological search from pipeline failed:`, error);
+          results = null;
+        }
+      }
+      
+      else if (searchConfig.type === 'standard') {
+        console.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
+        // Will fall through to standard search below
+      }
+    }
+    
+    if (!isDemo && organizationName && !results) {
       
       // NEW: Check if we should use the pre-configured chronological setup
       if (useChronologicalConfig && chronologicalConfig) {
         console.log(`[API DEBUG] 🔗 USING PRE-CONFIGURED CHRONOLOGICAL SEARCH`);
         console.log(`[API DEBUG] 🔗 Chronological config:`, chronologicalConfig);
+        console.log(`[API SEARCH] 🔗 Processing pre-configured chronological setup`);
         
         try {
           results = await search_engine.searchChronological(
@@ -120,28 +216,33 @@ export async function POST(req: NextRequest) {
           
           if (results.length > 0) {
             console.log(`[API DEBUG] 🔗 Pre-configured chronological search returned ${results.length} results`);
+            console.log(`[API SEARCH] ✅ Pre-configured chronological search successful: ${results.length} results`);
             searchType = 'chronological';
             searchMetadata = {
               chronological_config: chronologicalConfig,
-              configuration_source: 'pipeline'
+              configuration_source: 'pre-configured'
             };
           } else {
             console.log(`[API DEBUG] 🔗 Pre-configured chronological search returned no results, falling back`);
+            console.log(`[API SEARCH] ⚠️ Pre-configured chronological search returned no results`);
             results = null; // Will fall through to standard search
           }
         } catch (error: unknown) {
           console.log(`[API DEBUG] 🔗 Pre-configured chronological search failed, falling back:`, error);
+          console.log(`[API SEARCH] ❌ Pre-configured chronological search failed:`, error);
           results = null; // Will fall through to standard search
         }
       }
       
       // LEGACY: Old temporal and chronological routing (only if not using pre-configured)
-      else if (queryClassification?.type) {
+      else if (queryClassification?.type && !searchConfig) {
+        console.log(`[API SEARCH] 🔄 Processing legacy classification routing`);
         
         // 1. TEMPORAL SEARCH - For date-specific timeline queries
         if (queryClassification.type === 'temporal') {
           console.log(`[API DEBUG] 🕐 TEMPORAL search detected for ${organizationName}`);
           console.log(`[API DEBUG] 🕐 Using temporal search method`);
+          console.log(`[API SEARCH] 🕐 Executing legacy temporal search`);
           
           try {
             // For temporal search, we'll need to extract temporal elements within the search method
@@ -155,14 +256,17 @@ export async function POST(req: NextRequest) {
             
             if (results.length > 0) {
               console.log(`[API DEBUG] 🕐 Temporal search returned ${results.length} results`);
+              console.log(`[API SEARCH] ✅ Legacy temporal search successful: ${results.length} results`);
               searchType = 'temporal';
-              searchMetadata = { search_method: 'temporal' };
+              searchMetadata = { search_method: 'temporal_legacy' };
             } else {
               console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+              console.log(`[API SEARCH] ⚠️ Legacy temporal search returned no results`);
               results = null; // Will fall through to standard search
             }
           } catch (error: unknown) {
             console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+            console.log(`[API SEARCH] ❌ Legacy temporal search failed:`, error);
             results = null; // Will fall through to standard search
           }
         }
@@ -171,11 +275,13 @@ export async function POST(req: NextRequest) {
         else if (queryClassification.type === 'chronological') {
           console.log(`[API DEBUG] 📈 LEGACY CHRONOLOGICAL search detected for ${organizationName}`);
           console.log(`[API DEBUG] ⚠️  WARNING: Using legacy chronological path with redundant LLM calls`);
+          console.log(`[API SEARCH] 📈 Executing legacy chronological search with redundant LLM calls`);
           
           try {
             // Legacy redundant weight assignment
             let legacyChronologicalWeights = chronologicalWeights; // Use passed weights if available
             if (!legacyChronologicalWeights) {
+              console.log(`[API SEARCH] ⚖️ Performing redundant weight assignment`);
           try {
             const weightResponse = await fetch('/api/assign-weights', {
               method: 'POST',
@@ -185,14 +291,17 @@ export async function POST(req: NextRequest) {
             if (weightResponse.ok) {
                   legacyChronologicalWeights = await weightResponse.json();
                   console.log(`[API DEBUG] 📈 Legacy assigned chronological weights:`, legacyChronologicalWeights);
+                  console.log(`[API SEARCH] ✅ Legacy weight assignment completed`);
             }
           } catch (weightError) {
                 console.log(`[API DEBUG] 📈 Legacy weight assignment failed, using defaults:`, weightError);
+                console.log(`[API SEARCH] ❌ Legacy weight assignment failed`);
               }
           }
           
             // Legacy chronological filter translation
           let translatedFilters = {};
+            console.log(`[API SEARCH] 🔄 Performing redundant filter translation`);
           try {
             const translateResponse = await fetch('/api/translate-chronological', {
               method: 'POST',
@@ -202,9 +311,11 @@ export async function POST(req: NextRequest) {
             if (translateResponse.ok) {
               translatedFilters = await translateResponse.json();
                 console.log(`[API DEBUG] 📈 Legacy translated chronological filters:`, translatedFilters);
+                console.log(`[API SEARCH] ✅ Legacy filter translation completed`);
             }
           } catch (translateError) {
               console.log(`[API DEBUG] 📈 Legacy filter translation failed, using basic filters:`, translateError);
+              console.log(`[API SEARCH] ❌ Legacy filter translation failed`);
             translatedFilters = { gap_tolerance: 6 };
           }
           
@@ -220,6 +331,7 @@ export async function POST(req: NextRequest) {
           }
           
             console.log(`[API DEBUG] 📈 Legacy final chronological filters:`, chronologicalFilters);
+            console.log(`[API SEARCH] 📊 Final legacy chronological configuration prepared`);
           
           results = await search_engine.searchChronological(
             query,
@@ -230,6 +342,7 @@ export async function POST(req: NextRequest) {
           
           if (results.length > 0) {
               console.log(`[API DEBUG] 📈 Legacy chronological search returned ${results.length} results`);
+              console.log(`[API SEARCH] ✅ Legacy chronological search successful: ${results.length} results`);
             searchType = 'chronological';
             searchMetadata = { 
                 search_method: 'legacy_chronological',
@@ -240,10 +353,12 @@ export async function POST(req: NextRequest) {
             };
           } else {
               console.log(`[API DEBUG] 📈 Legacy chronological search returned no results, falling back to standard search`);
+              console.log(`[API SEARCH] ⚠️ Legacy chronological search returned no results`);
               results = null; // Will fall through to standard search
             }
           } catch (error: unknown) {
             console.log(`[API DEBUG] 📈 Legacy chronological search failed, falling back to standard search:`, error);
+            console.log(`[API SEARCH] ❌ Legacy chronological search failed:`, error);
             results = null; // Will fall through to standard search
           }
         }

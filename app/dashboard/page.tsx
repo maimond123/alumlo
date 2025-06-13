@@ -1141,7 +1141,7 @@ export default function DashboardPage() {
     analytics.trackSearch(queryToUse, 0, { source: directQuery ? 'tag_click' : 'search_input' });
     
     if (searchTimerRef.current) {
-      console.log(`[DEBUG ${new Date().toISOString()}] Cancelling previous search timer`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Cancelling previous search timer`);
       clearTimeout(searchTimerRef.current);
     }
 
@@ -1156,7 +1156,7 @@ export default function DashboardPage() {
     
     // Store the current query to ensure consistency 
     const currentQuery = queryToUse;
-    console.log(`[DEBUG ${new Date().toISOString()}] Using query: "${currentQuery}"`);
+    console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Using query: "${currentQuery}"`);
     
     // Reset displayed text
     setDisplayedText({
@@ -1169,20 +1169,21 @@ export default function DashboardPage() {
     
     // Get the original school name from localStorage for the API
     const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
-    console.log(`[DEBUG ${new Date().toISOString()}] Original organization name for API: "${originalOrganizationName}"`);
+    console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Original organization name for API: "${originalOrganizationName}"`);
     
     // Start the AI animation sequence
     try {
-      console.log(`[DEBUG ${new Date().toISOString()}] Starting animation sequence for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Starting animation sequence for query: "${currentQuery}"`);
       
       // Phase 1: Analyzing query with unified search pipeline
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 1: Analyzing with unified search pipeline`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 1: Analyzing with unified search pipeline`);
       await typewriterEffect('Analyzing your search query to determine optimal search method...', 
         (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
       );
       
       // STEP 1: Try unified search pipeline
       console.log(`🔍🔍🔍 [DASHBOARD] ATTEMPTING UNIFIED SEARCH PIPELINE for: "${currentQuery}"`);
+      console.log(`[DASHBOARD PIPELINE] 🚀 Starting search pipeline request at ${new Date().toISOString()}`);
       
       let searchConfig = null;
       let pipelineResult = null;
@@ -1190,6 +1191,13 @@ export default function DashboardPage() {
       let queryClassification = null;
       
       try {
+        console.log(`[DASHBOARD PIPELINE] 📡 Making fetch request to /api/search-pipeline`);
+        console.log(`[DASHBOARD PIPELINE] 📝 Request body:`, { 
+          query: currentQuery, 
+          organizationName: originalOrganizationName,
+          isDemo: isDemoMode
+        });
+        
         const pipelineResponse = await fetch('/api/search-pipeline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1200,15 +1208,21 @@ export default function DashboardPage() {
           }),
         });
         
+        console.log(`[DASHBOARD PIPELINE] 📡 Pipeline response status: ${pipelineResponse.status} ${pipelineResponse.statusText}`);
+        
         if (pipelineResponse.ok) {
           pipelineResult = await pipelineResponse.json();
           console.log(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE RESULT:`, pipelineResult);
+          console.log(`[DASHBOARD PIPELINE] ✅ Pipeline success - searchType: ${pipelineResult.searchType}`);
+          console.log(`[DASHBOARD PIPELINE] 📊 Pipeline metadata:`, pipelineResult.metadata);
+          console.log(`[DASHBOARD PIPELINE] 🎯 Search configuration:`, pipelineResult.searchConfig);
           
           searchConfig = pipelineResult.searchConfig;
           queryClassification = pipelineResult.classification;
           
           // Update UI based on search type
           if (pipelineResult.searchType === 'temporal') {
+            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal search detected - processing temporal elements`);
             await typewriterEffect('🕐 Detected temporal query - using date-specific timeline search', 
               (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
             );
@@ -1216,16 +1230,20 @@ export default function DashboardPage() {
             // Show temporal analysis
       setSearchPhase('searching');
             const temporalElements = searchConfig.temporalElements;
+            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal elements extracted:`, temporalElements);
+            
             const temporalSummary = [];
             if (temporalElements.exit_year) temporalSummary.push(`exit year: ${temporalElements.exit_year}`);
             if (temporalElements.subsequent_functions) temporalSummary.push(`functions: ${temporalElements.subsequent_functions.join(', ')}`);
             if (temporalElements.sequence_type) temporalSummary.push(`pattern: ${temporalElements.sequence_type}`);
             
+            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal summary: ${temporalSummary.join(', ')}`);
             await typewriterEffect(`Applied temporal filters (${temporalSummary.join(', ')})`, 
               (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
             );
             
           } else if (pipelineResult.searchType === 'chronological') {
+            console.log(`[DASHBOARD PIPELINE] 📈 Chronological search detected - processing filters and weights`);
             await typewriterEffect('📈 Detected career progression query - using chronological search', 
               (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
             );
@@ -1233,6 +1251,9 @@ export default function DashboardPage() {
             // Show chronological analysis
             setSearchPhase('searching');
             const filterCount = Object.keys(searchConfig.filters).length;
+            console.log(`[DASHBOARD PIPELINE] 📈 Chronological filters applied:`, searchConfig.filters);
+            console.log(`[DASHBOARD PIPELINE] 📈 Chronological weights assigned:`, searchConfig.weights);
+            
             await typewriterEffect(`Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`, 
               (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
             );
@@ -1240,22 +1261,26 @@ export default function DashboardPage() {
             // Show weight analysis
             const weights = searchConfig.weights;
             const weightSummary = `Career Quality: ${Math.round(weights.career_quality * 100)}%, Education: ${Math.round(weights.education_quality * 100)}%, Timeline: ${Math.round(weights.timeline_precision * 100)}%, Specificity: ${Math.round(weights.filter_specificity * 100)}%`;
+            console.log(`[DASHBOARD PIPELINE] 📈 Weight summary: ${weightSummary}`);
             setDisplayedText(prev => ({ 
               ...prev, 
               filters: prev.filters + ` | Weight assignment: ${weightSummary}` 
             }));
             
           } else if (pipelineResult.searchType === 'standard') {
+            console.log(`[DASHBOARD PIPELINE] 📊 Standard search detected - processing semantic filters`);
             await typewriterEffect('📊 Using standard semantic search with enhanced filtering', 
               (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
             );
             
             // For standard search, still run the expanded queries and filter extraction
             setSearchPhase('profiling');
+            console.log(`[DASHBOARD PIPELINE] 📊 Running expanded query generation for standard search`);
       try {
         await generateExpandedQueries(currentQuery);
+              console.log(`[DASHBOARD PIPELINE] 📊 Expanded queries generated successfully`);
       } catch (error) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
+              console.error(`[DASHBOARD PIPELINE] ❌ Error in generateExpandedQueries:`, error);
         await typewriterEffect("Alternative search suggestions unavailable", 
           (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
         );
@@ -1263,9 +1288,13 @@ export default function DashboardPage() {
       
             // Extract filters for standard search
       let currentExtractedFilters: {[key: string]: string[]} = {};
+            console.log(`[DASHBOARD PIPELINE] 📊 Extracting metadata filters for standard search`);
       try {
         currentExtractedFilters = await extractMetadataFilters(currentQuery);
+              console.log(`[DASHBOARD PIPELINE] 📊 Extracted filters:`, currentExtractedFilters);
+              
               apiFilters = convertFiltersToAPI(currentExtractedFilters);
+              console.log(`[DASHBOARD PIPELINE] 📊 Converted API filters:`, apiFilters);
               
               const filterCount = Object.keys(apiFilters).length;
               if (filterCount > 0) {
@@ -1278,7 +1307,7 @@ export default function DashboardPage() {
                 );
               }
       } catch (error) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
+              console.error(`[DASHBOARD PIPELINE] ❌ Error in extractMetadataFilters:`, error);
         await typewriterEffect("No specific filters detected", 
           (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
         );
@@ -1286,15 +1315,27 @@ export default function DashboardPage() {
           }
           
           console.log(`🎯🎯🎯 [DASHBOARD] SEARCH CONFIG READY:`, searchConfig);
+        } else {
+          console.error(`[DASHBOARD PIPELINE] ❌ Pipeline response not ok:`, {
+            status: pipelineResponse.status,
+            statusText: pipelineResponse.statusText
+          });
+          throw new Error(`Pipeline returned ${pipelineResponse.status}: ${pipelineResponse.statusText}`);
         }
       } catch (pipelineError) {
         console.error(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE FAILED:`, pipelineError);
+        console.error(`[DASHBOARD PIPELINE] ❌ Pipeline error details:`, {
+          error: pipelineError,
+          message: pipelineError instanceof Error ? pipelineError.message : 'Unknown error',
+          stack: pipelineError instanceof Error ? pipelineError.stack : 'No stack'
+        });
         
         // Fallback to basic search
         await typewriterEffect('Pipeline failed - using basic semantic search...', 
           (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
         );
         
+        console.log(`[DASHBOARD PIPELINE] 🔄 Creating fallback pipeline result`);
         pipelineResult = {
           searchType: 'standard',
           searchConfig: { type: 'standard', enhancedFilters: {}, searchMethod: 'semantic_with_filters' },
@@ -1305,10 +1346,12 @@ export default function DashboardPage() {
         
         searchConfig = pipelineResult.searchConfig;
         queryClassification = pipelineResult.classification;
+        console.log(`[DASHBOARD PIPELINE] 🔄 Fallback config created:`, { searchConfig, queryClassification });
       }
       
       // Phase 2: Searching database
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 2: Searching database`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 2: Searching database`);
+      console.log(`[DASHBOARD SEARCH] 🚀 Starting database search phase`);
       setSearchPhase('searching');
       
       // Custom message for demo account
@@ -1329,6 +1372,9 @@ export default function DashboardPage() {
       }
       
       // Create the search request based on the pipeline result
+      console.log(`[DASHBOARD SEARCH] 🔧 Building search request body`);
+      console.log(`[DASHBOARD SEARCH] 📊 Pipeline result type: ${pipelineResult?.searchType || 'unknown'}`);
+      
       const searchRequestBody = pipelineResult && (pipelineResult.searchType === 'chronological' || pipelineResult.searchType === 'temporal') ? {
           query: currentQuery, 
           organizationName: originalOrganizationName,
@@ -1348,8 +1394,10 @@ export default function DashboardPage() {
         searchType: pipelineResult?.searchType || 'standard',
         body: searchRequestBody
       });
+      console.log(`[DASHBOARD SEARCH] 📝 Final request body:`, searchRequestBody);
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Creating search promise for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Creating search promise for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD SEARCH] 📡 Making search API request`);
       
       const searchPromise = fetch('/api/search', {
         method: 'POST',
@@ -1358,39 +1406,49 @@ export default function DashboardPage() {
         },
         body: JSON.stringify(searchRequestBody),
       }).then(response => {
-        console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
+        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search API response received, status: ${response.status}`);
         console.log(`🌐🌐🌐 [DASHBOARD] API RESPONSE STATUS: ${response.status} ${response.statusText}`);
+        console.log(`[DASHBOARD SEARCH] 📡 Search API response: ${response.status} ${response.statusText}`);
         if (!response.ok) {
           throw new Error('Search failed');
         }
         return response.json();
       }).then(rawData => {
-        console.log(`[DEBUG ${new Date().toISOString()}] Search data parsed, found ${rawData.results?.length || 0} results`);
-        console.log(`[DEBUG ${new Date().toISOString()}] First result:`, rawData.results?.[0] || 'No results');
+        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search data parsed, found ${rawData.results?.length || 0} results`);
+        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} First result:`, rawData.results?.[0] || 'No results');
         console.log(`📊📊📊 [DASHBOARD] RAW API RESPONSE:`, {
           resultCount: rawData.results?.length || 0,
           searchType: rawData.searchType,
           filterCount: rawData.filterCount,
           fullResponse: rawData
         });
+        console.log(`[DASHBOARD SEARCH] ✅ Search completed successfully:`, {
+          resultCount: rawData.results?.length || 0,
+          searchType: rawData.searchType,
+          metadata: rawData.searchMetadata
+        });
         return rawData;
       }).catch(searchError => {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Search API call failed:`, {
+        console.error(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search API call failed:`, {
           error: searchError,
           message: searchError instanceof Error ? searchError.message : 'Unknown error',
           stack: searchError instanceof Error ? searchError.stack : 'No stack'
         });
+        console.error(`[DASHBOARD SEARCH] ❌ Search API error:`, searchError);
         throw searchError;
       });
       
       // Get search results
-      console.log(`[DEBUG ${new Date().toISOString()}] Waiting for search promise to resolve for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Waiting for search promise to resolve for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD SEARCH] ⏳ Waiting for search results...`);
       const searchData = await searchPromise;
       const searchResultsData = searchData.results;
-      console.log(`[DEBUG ${new Date().toISOString()}] Search promise resolved with ${searchResultsData?.length || 0} results for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search promise resolved with ${searchResultsData?.length || 0} results for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD SEARCH] ✅ Search results received: ${searchResultsData?.length || 0} results`);
       
       // Phase 5: Display results
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 5: Displaying results`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 5: Displaying results`);
+      console.log(`[DASHBOARD RESULTS] 🎨 Starting results display phase`);
       setSearchPhase('complete');
       
       // Enhanced result display message based on search type
@@ -1404,30 +1462,36 @@ export default function DashboardPage() {
       }
       displayMessage += '...';
       
+      console.log(`[DASHBOARD RESULTS] 📄 Display message: ${displayMessage}`);
       await typewriterEffect(displayMessage, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Setting search results state for query: "${currentQuery}"`);
-      console.log(`[DEBUG ${new Date().toISOString()}] Results before setState:`, searchResultsData);
-      console.log(`[DEBUG TIMING] About to call ensureSearchResultCompatibility with ${searchResultsData.length} results`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting search results state for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Results before setState:`, searchResultsData);
+      console.log(`[DASHBOARD RESULTS] 🔄 Processing results for display`);
+      console.log(`[DASHBOARD DEBUG] About to call ensureSearchResultCompatibility with ${searchResultsData.length} results`);
       
       const compatibleResults = ensureSearchResultCompatibility(searchResultsData);
-      console.log(`[DEBUG TIMING] After compatibility mapping, got ${compatibleResults.length} results`);
-      console.log(`[DEBUG TIMING] Setting search results state now...`);
+      console.log(`[DASHBOARD DEBUG] After compatibility mapping, got ${compatibleResults.length} results`);
+      console.log(`[DASHBOARD DEBUG] Setting search results state now...`);
+      console.log(`[DASHBOARD RESULTS] ✅ Results processed and ready for display: ${compatibleResults.length} results`);
       
       setSearchResults(compatibleResults);
-      console.log(`[DEBUG TIMING] Search results state has been set`);
+      console.log(`[DASHBOARD DEBUG] Search results state has been set`);
       
       // Automatically collapse the search analysis when results are presented
       if (searchResultsData && searchResultsData.length > 0) {
         setIsAnalysisCollapsed(true);
+        console.log(`[DASHBOARD RESULTS] 📁 Analysis collapsed due to results being available`);
       }
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Search process completed for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search process completed for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD RESULTS] 🎉 Search process completed successfully!`);
       
       // Save search to history with complete session data
       if (!isDemoMode) {
+        console.log(`[DASHBOARD HISTORY] 💾 Saving search to history`);
         // Capture current state at time of saving
         const currentDisplayedText = {
           analyzing: displayedText.analyzing,
@@ -1457,11 +1521,12 @@ export default function DashboardPage() {
           }
         });
         
-        console.log(`[DEBUG] Saved complete search session with ID: ${searchId}`, {
+        console.log(`[DASHBOARD DEBUG] Saved complete search session with ID: ${searchId}`, {
           hasDisplayedText: !!currentDisplayedText.analyzing,
           expandedQueriesCount: expandedQueries.length,
           extractedFiltersKeys: Object.keys(extractedFilters)
         });
+        console.log(`[DASHBOARD HISTORY] ✅ Search saved with ID: ${searchId}`);
       }
       
       // Track search completion with result count
@@ -1470,11 +1535,17 @@ export default function DashboardPage() {
         status: 'complete'
       });
     } catch (error) {
-      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Search error for query "${currentQuery}":`, error);
+      console.error(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search error for query "${currentQuery}":`, error);
+      console.error(`[DASHBOARD ERROR] ❌ Critical search error:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
     } finally {
-      console.log(`[DEBUG ${new Date().toISOString()}] Setting isSearching to false`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting isSearching to false`);
+      console.log(`[DASHBOARD CLEANUP] 🧹 Cleaning up search state`);
       setIsSearching(false);
-      console.log(`[DEBUG ${new Date().toISOString()}] Search complete, isSearching set to false`);
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search complete, isSearching set to false`);
     }
   };
 

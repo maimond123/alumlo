@@ -16,6 +16,14 @@ interface QueryClassification {
 }
 
 interface ChronologicalFilters {
+  // Basic search filters (MISSING - this is the bug!)
+  school_filter?: string;
+  company_filter?: string;
+  industry_filter?: string;
+  title_filter?: string;
+  location_filter?: string;
+  
+  // Experience-based filters
   min_years_in_industry?: number;
   min_years_in_function?: number;
   min_years_at_company_type?: number;
@@ -112,44 +120,81 @@ export async function POST(req: NextRequest) {
     const { query, organizationName, isDemo = false }: SearchPipelineRequest = await req.json();
     
     console.log('🔍 [SEARCH PIPELINE] Starting unified LLM chain for:', query);
+    console.log(`[PIPELINE DEBUG] 🚀 Pipeline started at ${new Date().toISOString()}`);
+    console.log(`[PIPELINE DEBUG] 📝 Request parameters:`, {
+      query: `"${query}"`,
+      organizationName,
+      isDemo,
+      queryLength: query?.length || 0
+    });
     
     if (!query) {
+      console.log(`[PIPELINE DEBUG] ❌ Missing query parameter`);
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
 
     // STEP 1: Universal Classification
     console.log('🔍 [STEP 1] Classifying search query...');
+    console.log(`[PIPELINE DEBUG] 🎯 Starting classification step`);
     const classification = await classifyQueryUsingMainAPI(query);
     processingSteps.push('classification');
     llmCalls++;
     
+    console.log(`[PIPELINE DEBUG] ✅ Classification completed:`, {
+      type: classification.type,
+      processingTime: Date.now() - startTime + 'ms',
+      llmCallsUsed: llmCalls
+    });
+    
     // STEP 2: Route to Appropriate Translation
+    console.log(`[PIPELINE DEBUG] 🔀 Routing to ${classification.type} processing`);
     let searchConfig: SearchConfig;
     
     switch (classification.type) {
       case 'temporal':
         console.log('🕐 [STEP 2] Processing temporal search...');
+        console.log(`[PIPELINE DEBUG] 🕐 Starting temporal extraction and processing`);
         searchConfig = await processTemporalSearch(query, classification, organizationName);
         processingSteps.push('temporal_extraction');
         llmCalls++;
+        console.log(`[PIPELINE DEBUG] ✅ Temporal processing completed:`, {
+          sqlFunction: searchConfig.sqlFunction,
+          hasTemporalElements: !!searchConfig.temporalElements,
+          elementCount: Object.keys(searchConfig.temporalElements || {}).length
+        });
         break;
         
       case 'chronological':
         console.log('📈 [STEP 2] Processing chronological search...');
+        console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation and weight assignment`);
         searchConfig = await processChronologicalSearch(query, classification, organizationName);
         processingSteps.push('chronological_translation', 'weight_assignment');
         llmCalls += 2;
+        console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {
+          sqlFunction: searchConfig.sqlFunction,
+          filterCount: Object.keys(searchConfig.filters || {}).length,
+          hasWeights: !!searchConfig.weights,
+          weightSum: searchConfig.weights ? 
+            Object.values(searchConfig.weights).reduce((sum, val) => sum + val, 0) : 0
+        });
         break;
         
       case 'standard':
         console.log('📊 [STEP 2] Processing standard search...');
+        console.log(`[PIPELINE DEBUG] 📊 Starting standard search enhancement`);
         searchConfig = await processStandardSearch(query, classification);
         processingSteps.push('standard_enhancement');
         llmCalls++;
+        console.log(`[PIPELINE DEBUG] ✅ Standard processing completed:`, {
+          searchMethod: searchConfig.searchMethod,
+          hasEnhancedFilters: !!searchConfig.enhancedFilters,
+          filterCount: Object.keys(searchConfig.enhancedFilters || {}).length
+        });
         break;
     }
 
     // STEP 3: Return Unified Response
+    console.log(`[PIPELINE DEBUG] 📤 Preparing unified response`);
     const response: SearchPipelineResponse = {
       searchType: classification.type,
       classification,
@@ -168,11 +213,26 @@ export async function POST(req: NextRequest) {
       llmCalls: response.metadata.llmCalls,
       processingTime: response.metadata.processingTimeMs + 'ms'
     });
+    
+    console.log(`[PIPELINE DEBUG] 🎉 Pipeline completed successfully:`, {
+      finalSearchType: response.searchType,
+      totalProcessingTime: response.metadata.processingTimeMs + 'ms',
+      totalLLMCalls: response.metadata.llmCalls,
+      configReady: true
+    });
 
     return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('🔍 [PIPELINE ERROR] Search pipeline failed:', error);
+    console.error(`[PIPELINE DEBUG] ❌ Critical pipeline error:`, {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack',
+      processingTime: Date.now() - startTime + 'ms',
+      completedSteps: processingSteps,
+      llmCallsBeforeError: llmCalls
+    });
     
     // Unified error handling with fallback
     const errorResponse: SearchPipelineResponse = {
@@ -192,6 +252,7 @@ export async function POST(req: NextRequest) {
       }
     };
     
+    console.log(`[PIPELINE DEBUG] 🔄 Returning error fallback response:`, errorResponse);
     return NextResponse.json(errorResponse, { status: 200 }); // Return 200 to allow fallback
   }
 }
@@ -224,6 +285,8 @@ async function processTemporalSearch(
 
 // NEW: Extract temporal elements from query
 async function extractTemporalElements(query: string): Promise<TemporalElements> {
+  console.log(`[PIPELINE TEMPORAL] 🕐 Starting temporal element extraction for: "${query}"`);
+  
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0,
@@ -280,14 +343,31 @@ Return only JSON with extracted temporal elements. If no temporal patterns detec
     ]
   });
 
+  console.log(`[PIPELINE TEMPORAL] 🤖 OpenAI temporal extraction response received`);
+
   const content = response.choices[0]?.message?.content;
   if (!content) {
+    console.log(`[PIPELINE TEMPORAL] ⚠️ Empty response from OpenAI, returning empty object`);
     return {};
   }
 
   try {
-    return JSON.parse(content);
-  } catch {
+    const parsed = JSON.parse(content);
+    console.log(`[PIPELINE TEMPORAL] ✅ Temporal elements extracted successfully:`, parsed);
+    console.log(`[PIPELINE TEMPORAL] 📊 Extraction summary:`, {
+      hasExitYear: !!parsed.exit_year,
+      hasYearRanges: !!parsed.year_ranges?.length,
+      hasSubsequentFunctions: !!parsed.subsequent_functions?.length,
+      hasSequenceType: !!parsed.sequence_type,
+      hasTimingConstraints: !!parsed.timing_constraints,
+      hasEducationTiming: !!parsed.education_timing
+    });
+    return parsed;
+  } catch (error) {
+    console.error(`[PIPELINE TEMPORAL] ❌ Failed to parse temporal extraction response:`, {
+      error: error,
+      rawContent: content
+    });
     return {};
   }
 }
@@ -375,6 +455,8 @@ async function processStandardSearch(
 // STEP 1: Use the main classification API instead of specialized function
 async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassification> {
   try {
+    console.log(`[PIPELINE CLASSIFY] 🎯 Starting classification for: "${query}"`);
+    
     // Call the main classification API
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/classify-query`, {
       method: 'POST',
@@ -384,16 +466,25 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
       body: JSON.stringify({ query }),
     });
 
+    console.log(`[PIPELINE CLASSIFY] 📡 Classification API response: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       throw new Error(`Classification API failed: ${response.status}`);
     }
 
     const classification = await response.json();
     console.log('🔗 [CLASSIFICATION] Main API result:', classification);
+    console.log(`[PIPELINE CLASSIFY] ✅ Main API classification successful: ${classification.type}`);
     
     return classification;
   } catch (error) {
     console.error('🔗 [CLASSIFICATION ERROR] Main API failed, using fallback:', error);
+    console.error(`[PIPELINE CLASSIFY] ❌ Main API failed, switching to fallback:`, {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
+    console.log(`[PIPELINE CLASSIFY] 🔄 Starting OpenAI fallback classification`);
     
     // Fallback to direct OpenAI call with the same logic as classify-query/route.ts
     const response = await openai.chat.completions.create({
@@ -402,7 +493,7 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
       messages: [
         {
           role: 'system',
-          content: `You are a query classification system for an alumni search database. Your job is to determine which search method will best serve the user's query.
+          content: `You are a search query classifier. Analyze the user's query and determine the most appropriate search type.
 
 **SEARCH TYPES:**
 
@@ -410,21 +501,20 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
    - Specific years (e.g., "2018", "2019-2021", "after 2020")
    - Time-based sequences (e.g., "then became", "later moved to", "after leaving")
    - Exit timing references (e.g., "left in", "graduated in", "departed")
-   - Sequential patterns with dates (e.g., "started in 2018, then moved to Google in 2020")
 
-2. **CHRONOLOGICAL SEARCH** - For queries about career progression patterns and quality (no specific dates needed)
+2. **CHRONOLOGICAL SEARCH** - For queries about career/education progression patterns and quality (no specific dates needed)
    - Career progression quality (e.g., "strong career progression", "rapid advancement")
    - Experience depth (e.g., "experienced", "10+ years", "senior professionals")
    - Career transitions (e.g., "moved from tech to finance", "became entrepreneurs")
    - Leadership development (e.g., "went from IC to management", "became executives")
-   - Industry expertise building (e.g., "deep expertise in", "specialists in")
+   - Education and career progression combined (e.g., "studied engineering then became product managers", "MBA graduates who joined consulting")
+   - General life/professional progression patterns (e.g., "people who advanced quickly", "alumni with impressive trajectories")
 
 3. **STANDARD SEARCH** - For basic semantic matching without time or progression focus
    - Simple role/title searches (e.g., "software engineers", "marketing managers")
    - Company-based searches (e.g., "people at Google", "former Microsoft employees")
    - Location-based searches (e.g., "alumni in San Francisco")
    - Industry-based searches (e.g., "people in healthcare", "finance professionals")
-   - Basic skill/background searches (e.g., "computer science graduates")
 
 **CRITICAL DISTINCTION - TEMPORAL vs CHRONOLOGICAL:**
 
@@ -432,75 +522,29 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
 - "People who left in 2019" → TEMPORAL
 - "Graduated in 2020 and became consultants" → TEMPORAL  
 - "Worked here 2018-2021 then joined startups" → TEMPORAL
-- "After leaving in 2019, became entrepreneurs" → TEMPORAL
-- "Left during COVID (2020-2021)" → TEMPORAL
-- "Joined Google immediately after graduation in 2022" → TEMPORAL
 
 **CHRONOLOGICAL = Career Progression Patterns (no specific dates):**
-- "People with strong career progression" → CHRONOLOGICAL
+- "Find people who went to Duke University and are now working at Google → CHRONOLOGICAL
 - "Experienced professionals who became executives" → CHRONOLOGICAL
 - "Alumni who moved from technical roles to leadership" → CHRONOLOGICAL
-- "People who advanced rapidly in their careers" → CHRONOLOGICAL
-- "Professionals who transitioned industries" → CHRONOLOGICAL
-- "Alumni with 10+ years experience who became managers" → CHRONOLOGICAL
 
 **TRICKY EDGE CASES:**
 
 **Contains "years" but NO specific dates = CHRONOLOGICAL:**
 - "People with 10+ years experience" → CHRONOLOGICAL (experience depth, no specific years)
 - "Professionals with 5+ years in finance" → CHRONOLOGICAL (experience pattern)
-- "Alumni with many years of leadership experience" → CHRONOLOGICAL (progression quality)
 
 **Contains progression words WITH specific dates = TEMPORAL:**
 - "Advanced to senior roles after leaving in 2020" → TEMPORAL (specific year)
 - "Became managers after graduating in 2019" → TEMPORAL (specific graduation year)
-- "Progressed quickly after starting in 2018" → TEMPORAL (specific start year)
 
 **Sequential patterns WITHOUT dates = CHRONOLOGICAL:**
 - "People who went from junior to senior roles" → CHRONOLOGICAL (progression pattern)
 - "Alumni who moved from IC to management" → CHRONOLOGICAL (career transition)
-- "Professionals who became entrepreneurs" → CHRONOLOGICAL (career outcome)
 
 **Sequential patterns WITH dates = TEMPORAL:**
 - "Went from junior to senior between 2019-2021" → TEMPORAL (specific timeframe)
 - "Moved to management after 2020" → TEMPORAL (specific year reference)
-- "Became entrepreneurs in 2019" → TEMPORAL (specific year)
-
-**TEMPORAL EXAMPLES:**
-- "People who left in 2019" → TEMPORAL
-- "Graduated in 2020 and became consultants" → TEMPORAL
-- "Worked here from 2018 to 2021" → TEMPORAL
-- "Left during COVID and joined startups" → TEMPORAL
-- "After leaving in 2019, what did they do?" → TEMPORAL
-- "Class of 2020 graduates who became entrepreneurs" → TEMPORAL
-- "People who joined tech companies after graduating in 2021" → TEMPORAL
-- "Alumni who left in 2019-2020 and became consultants" → TEMPORAL
-- "Moved to management roles post-2020" → TEMPORAL
-- "Became founders after the 2019 cohort graduated" → TEMPORAL
-
-**CHRONOLOGICAL EXAMPLES:**
-- "People with strong career progression" → CHRONOLOGICAL
-- "Experienced professionals who became executives" → CHRONOLOGICAL
-- "Alumni who moved from technical roles to leadership" → CHRONOLOGICAL
-- "People with 10+ years experience who advanced rapidly" → CHRONOLOGICAL
-- "Professionals who transitioned from finance to tech" → CHRONOLOGICAL
-- "Alumni who went from individual contributors to management" → CHRONOLOGICAL
-- "People who built successful careers in consulting" → CHRONOLOGICAL
-- "Seasoned professionals who became entrepreneurs" → CHRONOLOGICAL
-- "Alumni with deep expertise who became industry leaders" → CHRONOLOGICAL
-- "People who had rapid career advancement" → CHRONOLOGICAL
-
-**STANDARD EXAMPLES:**
-- "Software engineers" → STANDARD
-- "Marketing managers in tech companies" → STANDARD
-- "People working at Google" → STANDARD
-- "Computer science graduates" → STANDARD
-- "Alumni in San Francisco" → STANDARD
-- "Finance professionals" → STANDARD
-- "Product managers" → STANDARD
-- "Data scientists at startups" → STANDARD
-- "Consultants in healthcare" → STANDARD
-- "MBA graduates" → STANDARD
 
 **OUTPUT FORMAT:**
 Return only the search type as a simple JSON object:
@@ -518,14 +562,20 @@ Respond only with valid JSON containing just the type field.`,
       ],
     });
 
+    console.log(`[PIPELINE CLASSIFY] 🤖 OpenAI fallback response received`);
+
     const content = response.choices[0]?.message?.content;
     if (!content) {
+      console.log(`[PIPELINE CLASSIFY] ⚠️ Empty response from OpenAI, defaulting to standard`);
       return { type: 'standard' };
     }
 
     try {
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      console.log(`[PIPELINE CLASSIFY] ✅ OpenAI fallback successful: ${parsed.type}`);
+      return parsed;
     } catch {
+      console.log(`[PIPELINE CLASSIFY] ❌ Failed to parse OpenAI response, defaulting to standard`);
       return { type: 'standard' };
     }
   }
@@ -535,6 +585,8 @@ Respond only with valid JSON containing just the type field.`,
 async function translateWithoutClassificationContext(
   query: string
 ): Promise<ChronologicalFilters> {
+  console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
+  
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0,
@@ -544,6 +596,13 @@ async function translateWithoutClassificationContext(
         content: `You are translating natural language career progression queries into structured chronological filters.
 
 **COMPREHENSIVE FILTER CATEGORIES:**
+
+**Basic Search Filters:**
+- school_filter: Extract specific schools/universities mentioned (string)
+- company_filter: Extract specific companies mentioned (string)  
+- industry_filter: Extract specific industries mentioned (string)
+- title_filter: Extract specific job titles mentioned (string)
+- location_filter: Extract specific locations mentioned (string)
 
 **Experience-Based Filters:**
 - min_years_in_industry: Extract from "5+ years in tech", "experienced in finance" (number)
@@ -576,6 +635,14 @@ async function translateWithoutClassificationContext(
 
 **ENHANCED EXAMPLES:**
 
+Query: "Find someone who worked at Chick Fil A and then went to Georgetown University"
+{
+  "company_filter": "Chick Fil A",
+  "school_filter": "Georgetown University", 
+  "career_progression_pattern": "startup_to_enterprise",
+  "gap_tolerance": 6
+}
+
 Query: "MBA graduates who became senior executives"
 {
   "degree_level_progression": ["Bachelor's", "Master's"],
@@ -587,14 +654,17 @@ Query: "MBA graduates who became senior executives"
 
 Query: "People with 10+ years engineering experience who moved to management"
 {
+  "title_filter": "engineering",
   "min_years_in_function": 10,
   "total_experience_years": 10,
   "career_progression_pattern": "individual_contributor_to_management",
   "gap_tolerance": 6
 }
 
-Query: "Tech professionals who worked while getting their Master's degree"
+Query: "Tech professionals at Google who worked while getting their Master's degree"
 {
+  "company_filter": "Google",
+  "industry_filter": "technology",
   "min_years_in_industry": 3,
   "degree_level_progression": ["Bachelor's", "Master's"],
   "concurrent_activities": true,
@@ -621,11 +691,16 @@ Query: "People who studied abroad and had international careers"
 }
 
 **EXTRACTION RULES:**
-- Extract numeric values from "X+ years", "experienced" (assume 5+), "senior" (assume 7+)
-- Detect education levels from "MBA", "graduate degree", "PhD", "Bachelor's"
-- Identify concurrent activities from "while studying", "part-time", "evening program"
-- Recognize company size from "big tech", "startup", "enterprise", "Fortune 500"
-- Default gap_tolerance to 6 months unless context suggests longer gaps
+- Extract specific institutions: "Georgetown University" → school_filter: "Georgetown University"
+- Extract specific companies: "Chick Fil A", "Google", "Apple" → company_filter: "Company Name"
+- Extract industries: "tech", "finance", "healthcare" → industry_filter: "technology"
+- Extract job titles: "engineering", "marketing", "sales" → title_filter: "engineering"
+- Extract locations: "New York", "San Francisco", "remote" → location_filter: "New York"
+- Extract numeric values for experience requirements (e.g., "10+ years" → 10)
+- Identify career progression patterns (e.g., "IC to management" → "individual_contributor_to_management")
+- Detect education requirements and progressions
+- Identify mobility and transition patterns
+- Set reasonable defaults for timeline tolerances
 
 Return comprehensive JSON with all applicable filters. If no chronological patterns detected, return: {"gap_tolerance": 6}`
       },
@@ -636,14 +711,45 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
     ]
   });
 
+  console.log(`[PIPELINE CHRONOLOGICAL] 🤖 OpenAI filter translation response received`);
+
   const content = response.choices[0]?.message?.content;
   if (!content) {
+    console.log(`[PIPELINE CHRONOLOGICAL] ⚠️ Empty response from OpenAI, returning default filters`);
     return { gap_tolerance: 6 };
   }
 
   try {
-    return JSON.parse(content);
-  } catch {
+    const parsed = JSON.parse(content);
+    console.log(`[PIPELINE CHRONOLOGICAL] ✅ Chronological filters extracted successfully:`, parsed);
+    console.log(`[PIPELINE CHRONOLOGICAL] 📊 Filter summary:`, {
+      experienceFilters: {
+        hasMinYearsIndustry: !!parsed.min_years_in_industry,
+        hasMinYearsFunction: !!parsed.min_years_in_function,
+        hasTotalExperience: !!parsed.total_experience_years,
+        hasProgressionPattern: !!parsed.career_progression_pattern
+      },
+      educationFilters: {
+        hasDegreeProgression: !!parsed.degree_level_progression?.length,
+        hasEducationAlignment: !!parsed.education_industry_alignment
+      },
+      timelineFilters: {
+        gapTolerance: parsed.gap_tolerance || 6,
+        hasConcurrentActivities: !!parsed.concurrent_activities
+      },
+      patternFilters: {
+        hasIndustryTransitions: !!parsed.industry_transitions?.length,
+        hasCompanySizeProgression: !!parsed.company_size_progression?.length,
+        hasGeographicMobility: !!parsed.geographic_mobility
+      },
+      totalFilterCount: Object.keys(parsed).length
+    });
+    return parsed;
+  } catch (error) {
+    console.error(`[PIPELINE CHRONOLOGICAL] ❌ Failed to parse filter translation response:`, {
+      error: error,
+      rawContent: content
+    });
     return { gap_tolerance: 6 };
   }
 }
@@ -654,6 +760,15 @@ async function assignWeightsWithContext(
   classification: QueryClassification,
   filters: ChronologicalFilters
 ): Promise<WeightAssignment> {
+  console.log(`[PIPELINE WEIGHTS] ⚖️ Starting weight assignment for: "${query}"`);
+  console.log(`[PIPELINE WEIGHTS] 📊 Input context:`, {
+    searchType: classification.type,
+    filterCount: Object.keys(filters).length,
+    hasProgressionPattern: !!filters.career_progression_pattern,
+    hasExperienceFilters: !!(filters.min_years_in_industry || filters.min_years_in_function),
+    hasEducationFilters: !!(filters.degree_level_progression || filters.education_industry_alignment)
+  });
+  
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0,
@@ -730,15 +845,34 @@ Return ONLY the JSON object with four weights that sum to 1.0.`
     ]
   });
 
+  console.log(`[PIPELINE WEIGHTS] 🤖 OpenAI weight assignment response received`);
+
   const content = response.choices[0]?.message?.content;
   if (!content) {
+    console.log(`[PIPELINE WEIGHTS] ⚠️ Empty response from OpenAI, using default weights`);
     return getDefaultWeights();
   }
 
   try {
     const weights = JSON.parse(content);
-    return validateWeights(weights);
-  } catch {
+    console.log(`[PIPELINE WEIGHTS] 📊 Raw weights received:`, weights);
+    
+    const validatedWeights = validateWeights(weights);
+    console.log(`[PIPELINE WEIGHTS] ✅ Weight assignment completed:`, validatedWeights);
+    console.log(`[PIPELINE WEIGHTS] 📈 Weight distribution:`, {
+      careerQuality: `${Math.round(validatedWeights.career_quality * 100)}%`,
+      educationQuality: `${Math.round(validatedWeights.education_quality * 100)}%`,
+      timelinePrecision: `${Math.round(validatedWeights.timeline_precision * 100)}%`,
+      filterSpecificity: `${Math.round(validatedWeights.filter_specificity * 100)}%`,
+      totalSum: Math.round((validatedWeights.career_quality + validatedWeights.education_quality + validatedWeights.timeline_precision + validatedWeights.filter_specificity) * 100) / 100
+    });
+    
+    return validatedWeights;
+  } catch (error) {
+    console.error(`[PIPELINE WEIGHTS] ❌ Failed to parse weight assignment response:`, {
+      error: error,
+      rawContent: content
+    });
     return getDefaultWeights();
   }
 }
