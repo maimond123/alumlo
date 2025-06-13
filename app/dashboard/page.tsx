@@ -1214,7 +1214,7 @@ export default function DashboardPage() {
             );
             
             // Show temporal analysis
-            setSearchPhase('searching');
+      setSearchPhase('searching');
             const temporalElements = searchConfig.temporalElements;
             const temporalSummary = [];
             if (temporalElements.exit_year) temporalSummary.push(`exit year: ${temporalElements.exit_year}`);
@@ -1252,19 +1252,19 @@ export default function DashboardPage() {
             
             // For standard search, still run the expanded queries and filter extraction
             setSearchPhase('profiling');
-            try {
-              await generateExpandedQueries(currentQuery);
-            } catch (error) {
-              console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
-              await typewriterEffect("Alternative search suggestions unavailable", 
-                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-              );
-            }
-            
+      try {
+        await generateExpandedQueries(currentQuery);
+      } catch (error) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
+        await typewriterEffect("Alternative search suggestions unavailable", 
+          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+        );
+      }
+      
             // Extract filters for standard search
-            let currentExtractedFilters: {[key: string]: string[]} = {};
-            try {
-              currentExtractedFilters = await extractMetadataFilters(currentQuery);
+      let currentExtractedFilters: {[key: string]: string[]} = {};
+      try {
+        currentExtractedFilters = await extractMetadataFilters(currentQuery);
               apiFilters = convertFiltersToAPI(currentExtractedFilters);
               
               const filterCount = Object.keys(apiFilters).length;
@@ -1277,11 +1277,11 @@ export default function DashboardPage() {
                   (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
                 );
               }
-            } catch (error) {
-              console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
-              await typewriterEffect("No specific filters detected", 
-                (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-              );
+      } catch (error) {
+        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
+        await typewriterEffect("No specific filters detected", 
+          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+        );
             }
           }
           
@@ -1330,9 +1330,9 @@ export default function DashboardPage() {
       
       // Create the search request based on the pipeline result
       const searchRequestBody = pipelineResult && (pipelineResult.searchType === 'chronological' || pipelineResult.searchType === 'temporal') ? {
-        query: currentQuery,
-        organizationName: originalOrganizationName,
-        isDemo: isDemoMode,
+          query: currentQuery, 
+          organizationName: originalOrganizationName,
+          isDemo: isDemoMode,
         searchConfig: searchConfig,
         queryClassification: queryClassification
       } : {
@@ -1340,7 +1340,7 @@ export default function DashboardPage() {
         organizationName: originalOrganizationName,
         isDemo: isDemoMode,
         queryClassification: queryClassification,
-        filters: apiFilters,
+          filters: apiFilters,
         chronologicalWeights: searchConfig?.weights
       };
       

@@ -77,9 +77,9 @@ interface ChronologicalConfig {
   weights: WeightAssignment;
   sqlFunction: string;
   sqlParameters: {
-    chronological_filters: ChronologicalFilters;
-    weight_assignment: WeightAssignment;
-  };
+      chronological_filters: ChronologicalFilters;
+      weight_assignment: WeightAssignment;
+    };
 }
 
 interface StandardConfig {
@@ -426,11 +426,81 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
    - Industry-based searches (e.g., "people in healthcare", "finance professionals")
    - Basic skill/background searches (e.g., "computer science graduates")
 
-**CLASSIFICATION RULES:**
+**CRITICAL DISTINCTION - TEMPORAL vs CHRONOLOGICAL:**
 
-- If query contains specific years/dates OR temporal sequences → **TEMPORAL**
-- If query focuses on career progression/experience quality (no specific dates) → **CHRONOLOGICAL**  
-- If query is basic semantic matching → **STANDARD**
+**TEMPORAL = Specific Dates/Years/Timing:**
+- "People who left in 2019" → TEMPORAL
+- "Graduated in 2020 and became consultants" → TEMPORAL  
+- "Worked here 2018-2021 then joined startups" → TEMPORAL
+- "After leaving in 2019, became entrepreneurs" → TEMPORAL
+- "Left during COVID (2020-2021)" → TEMPORAL
+- "Joined Google immediately after graduation in 2022" → TEMPORAL
+
+**CHRONOLOGICAL = Career Progression Patterns (no specific dates):**
+- "People with strong career progression" → CHRONOLOGICAL
+- "Experienced professionals who became executives" → CHRONOLOGICAL
+- "Alumni who moved from technical roles to leadership" → CHRONOLOGICAL
+- "People who advanced rapidly in their careers" → CHRONOLOGICAL
+- "Professionals who transitioned industries" → CHRONOLOGICAL
+- "Alumni with 10+ years experience who became managers" → CHRONOLOGICAL
+
+**TRICKY EDGE CASES:**
+
+**Contains "years" but NO specific dates = CHRONOLOGICAL:**
+- "People with 10+ years experience" → CHRONOLOGICAL (experience depth, no specific years)
+- "Professionals with 5+ years in finance" → CHRONOLOGICAL (experience pattern)
+- "Alumni with many years of leadership experience" → CHRONOLOGICAL (progression quality)
+
+**Contains progression words WITH specific dates = TEMPORAL:**
+- "Advanced to senior roles after leaving in 2020" → TEMPORAL (specific year)
+- "Became managers after graduating in 2019" → TEMPORAL (specific graduation year)
+- "Progressed quickly after starting in 2018" → TEMPORAL (specific start year)
+
+**Sequential patterns WITHOUT dates = CHRONOLOGICAL:**
+- "People who went from junior to senior roles" → CHRONOLOGICAL (progression pattern)
+- "Alumni who moved from IC to management" → CHRONOLOGICAL (career transition)
+- "Professionals who became entrepreneurs" → CHRONOLOGICAL (career outcome)
+
+**Sequential patterns WITH dates = TEMPORAL:**
+- "Went from junior to senior between 2019-2021" → TEMPORAL (specific timeframe)
+- "Moved to management after 2020" → TEMPORAL (specific year reference)
+- "Became entrepreneurs in 2019" → TEMPORAL (specific year)
+
+**TEMPORAL EXAMPLES:**
+- "People who left in 2019" → TEMPORAL
+- "Graduated in 2020 and became consultants" → TEMPORAL
+- "Worked here from 2018 to 2021" → TEMPORAL
+- "Left during COVID and joined startups" → TEMPORAL
+- "After leaving in 2019, what did they do?" → TEMPORAL
+- "Class of 2020 graduates who became entrepreneurs" → TEMPORAL
+- "People who joined tech companies after graduating in 2021" → TEMPORAL
+- "Alumni who left in 2019-2020 and became consultants" → TEMPORAL
+- "Moved to management roles post-2020" → TEMPORAL
+- "Became founders after the 2019 cohort graduated" → TEMPORAL
+
+**CHRONOLOGICAL EXAMPLES:**
+- "People with strong career progression" → CHRONOLOGICAL
+- "Experienced professionals who became executives" → CHRONOLOGICAL
+- "Alumni who moved from technical roles to leadership" → CHRONOLOGICAL
+- "People with 10+ years experience who advanced rapidly" → CHRONOLOGICAL
+- "Professionals who transitioned from finance to tech" → CHRONOLOGICAL
+- "Alumni who went from individual contributors to management" → CHRONOLOGICAL
+- "People who built successful careers in consulting" → CHRONOLOGICAL
+- "Seasoned professionals who became entrepreneurs" → CHRONOLOGICAL
+- "Alumni with deep expertise who became industry leaders" → CHRONOLOGICAL
+- "People who had rapid career advancement" → CHRONOLOGICAL
+
+**STANDARD EXAMPLES:**
+- "Software engineers" → STANDARD
+- "Marketing managers in tech companies" → STANDARD
+- "People working at Google" → STANDARD
+- "Computer science graduates" → STANDARD
+- "Alumni in San Francisco" → STANDARD
+- "Finance professionals" → STANDARD
+- "Product managers" → STANDARD
+- "Data scientists at startups" → STANDARD
+- "Consultants in healthcare" → STANDARD
+- "MBA graduates" → STANDARD
 
 **OUTPUT FORMAT:**
 Return only the search type as a simple JSON object:
@@ -473,53 +543,91 @@ async function translateWithoutClassificationContext(
         role: 'system',
         content: `You are translating natural language career progression queries into structured chronological filters.
 
-**FILTER CATEGORIES:**
+**COMPREHENSIVE FILTER CATEGORIES:**
 
-**Experience-Based:**
-- min_years_in_industry: Minimum years in specific industry
-- min_years_in_function: Minimum years in specific job function
-- min_years_at_company_type: Minimum years at company types (startup/enterprise)
-- career_progression_pattern: Specific advancement patterns
+**Experience-Based Filters:**
+- min_years_in_industry: Extract from "5+ years in tech", "experienced in finance" (number)
+- min_years_in_function: Extract from "10+ years engineering", "seasoned marketing" (number)
+- total_experience_years: Extract from "experienced professionals", "10+ years total" (number)
+- career_progression_pattern: Specific advancement patterns (string)
 
-**Education-Based:**
-- degree_level_progression: Education advancement sequence
-- education_industry_alignment: Whether education matches career
+**Education-Based Filters:**
+- degree_level_progression: Education sequence like ["Bachelor's", "Master's", "PhD"] (array)
+- education_industry_alignment: Whether education field matches career industry (boolean)
 
-**Timeline-Based:**
-- gap_tolerance: Max career gaps in months (default: 6)
-- concurrent_activities: Working while studying
+**Timeline-Based Filters:**
+- gap_tolerance: Max acceptable career gaps in months, default 6 (number)
+- concurrent_activities: Working while studying, part-time education (boolean)
 
-**Pattern-Based:**
-- industry_transitions: Industry change patterns
-- company_size_progression: Company size advancement patterns
-- geographic_mobility: Location moves for career
+**Pattern-Based Filters:**
+- industry_transitions: Industry change patterns like ["finance", "technology"] (array)
+- company_size_progression: Company size advancement like ["startup", "large"] (array)  
+- geographic_mobility: Moved locations for career advancement (boolean)
 
 **PROGRESSION PATTERNS:**
-- "individual_contributor_to_management"
-- "entry_level_to_senior"
-- "startup_to_enterprise"
-- "technical_to_leadership"
-- "rapid_advancement"
-- "steady_progression"
+- "individual_contributor_to_management" - IC → Manager
+- "entry_level_to_senior" - Junior → Senior roles
+- "startup_to_enterprise" - Small → Large companies
+- "technical_to_leadership" - Engineer → CTO/VP
+- "rapid_advancement" - Fast promotions
+- "steady_progression" - Consistent growth
+- "industry_switcher" - Changed industries
+- "entrepreneur_path" - Became founder/entrepreneur
 
-**EXAMPLES:**
+**ENHANCED EXAMPLES:**
 
-Query: "People with 10+ years engineering experience who became managers"
+Query: "MBA graduates who became senior executives"
+{
+  "degree_level_progression": ["Bachelor's", "Master's"],
+  "career_progression_pattern": "entry_level_to_senior",
+  "min_years_in_function": 5,
+  "education_industry_alignment": true,
+  "gap_tolerance": 12
+}
+
+Query: "People with 10+ years engineering experience who moved to management"
 {
   "min_years_in_function": 10,
+  "total_experience_years": 10,
   "career_progression_pattern": "individual_contributor_to_management",
   "gap_tolerance": 6
+}
+
+Query: "Tech professionals who worked while getting their Master's degree"
+{
+  "min_years_in_industry": 3,
+  "degree_level_progression": ["Bachelor's", "Master's"],
+  "concurrent_activities": true,
+  "education_industry_alignment": true,
+  "gap_tolerance": 0
 }
 
 Query: "Experienced professionals who moved from big tech to startups"
 {
   "min_years_in_industry": 5,
+  "total_experience_years": 7,
   "company_size_progression": ["large", "startup"],
   "industry_transitions": ["technology"],
-  "gap_tolerance": 12
+  "career_progression_pattern": "startup_to_enterprise",
+  "gap_tolerance": 6
 }
 
-Return only JSON with extracted filters. If no chronological patterns detected, return: {"gap_tolerance": 6}`
+Query: "People who studied abroad and had international careers"
+{
+  "geographic_mobility": true,
+  "education_industry_alignment": false,
+  "gap_tolerance": 12,
+  "total_experience_years": 5
+}
+
+**EXTRACTION RULES:**
+- Extract numeric values from "X+ years", "experienced" (assume 5+), "senior" (assume 7+)
+- Detect education levels from "MBA", "graduate degree", "PhD", "Bachelor's"
+- Identify concurrent activities from "while studying", "part-time", "evening program"
+- Recognize company size from "big tech", "startup", "enterprise", "Fortune 500"
+- Default gap_tolerance to 6 months unless context suggests longer gaps
+
+Return comprehensive JSON with all applicable filters. If no chronological patterns detected, return: {"gap_tolerance": 6}`
       },
       {
         role: 'user',
