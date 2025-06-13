@@ -56,7 +56,9 @@ export async function POST(req: NextRequest) {
       organizationName, 
       isDemo = false,
       queryClassification,
-      chronologicalWeights
+      chronologicalWeights,
+      useChronologicalConfig = false,
+      chronologicalConfig
     } = body;
     
     if (!query || typeof query !== 'string') {
@@ -76,7 +78,8 @@ export async function POST(req: NextRequest) {
       hasFilters: Object.keys(filters).length > 0,
       filterKeys: Object.keys(filters),
       hasChronologicalWeights: !!chronologicalWeights,
-      chronologicalWeights
+      useChronologicalConfig,
+      hasChronologicalConfig: !!chronologicalConfig
     });
     
     console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
@@ -94,48 +97,85 @@ export async function POST(req: NextRequest) {
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     
-    // Route to appropriate search method based on query classification
+    // Route to appropriate search method
     let results;
     let searchType = 'standard';
     let searchMetadata: any = {};
     
-    if (!isDemo && organizationName && queryClassification?.type) {
+    if (!isDemo && organizationName) {
       
-      // 1. TEMPORAL SEARCH - For date-specific timeline queries
-      if (queryClassification.type === 'temporal' && queryClassification.temporal_elements) {
-        console.log(`[API DEBUG] 🕐 TEMPORAL search detected for ${organizationName}`);
-        console.log(`[API DEBUG] 🕐 Temporal elements:`, queryClassification.temporal_elements);
+      // NEW: Check if we should use the pre-configured chronological setup
+      if (useChronologicalConfig && chronologicalConfig) {
+        console.log(`[API DEBUG] 🔗 USING PRE-CONFIGURED CHRONOLOGICAL SEARCH`);
+        console.log(`[API DEBUG] 🔗 Chronological config:`, chronologicalConfig);
         
         try {
-          results = await search_engine.searchTemporal(
+          results = await search_engine.searchChronological(
             query,
-            queryClassification.temporal_elements,
-            50, // Use higher limit for gap-based filtering
-            organizationName
+            chronologicalConfig.enhancedFilters,
+            50,
+            organizationName,
+            chronologicalConfig.sqlParameters?.weight_assignment
           );
           
           if (results.length > 0) {
-            console.log(`[API DEBUG] 🕐 Temporal search returned ${results.length} results`);
-            searchType = 'temporal';
-            searchMetadata = { temporal_elements: queryClassification.temporal_elements };
+            console.log(`[API DEBUG] 🔗 Pre-configured chronological search returned ${results.length} results`);
+            searchType = 'chronological';
+            searchMetadata = {
+              chronological_config: chronologicalConfig,
+              configuration_source: 'pipeline'
+            };
           } else {
-            console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+            console.log(`[API DEBUG] 🔗 Pre-configured chronological search returned no results, falling back`);
             results = null; // Will fall through to standard search
           }
         } catch (error: unknown) {
-          console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+          console.log(`[API DEBUG] 🔗 Pre-configured chronological search failed, falling back:`, error);
           results = null; // Will fall through to standard search
         }
       }
       
-      // 2. CHRONOLOGICAL SEARCH - For career progression pattern queries (always uses LLM weights)
-      else if (queryClassification.type === 'chronological' && queryClassification.progression_elements) {
-        console.log(`[API DEBUG] 📈 CHRONOLOGICAL search detected for ${organizationName}`);
-        console.log(`[API DEBUG] 📈 Progression elements:`, queryClassification.progression_elements);
+      // LEGACY: Old temporal and chronological routing (only if not using pre-configured)
+      else if (queryClassification?.type) {
         
-        try {
-          // Always assign chronological weights for chronological queries
-          let chronologicalWeights = null;
+        // 1. TEMPORAL SEARCH - For date-specific timeline queries
+        if (queryClassification.type === 'temporal') {
+          console.log(`[API DEBUG] 🕐 TEMPORAL search detected for ${organizationName}`);
+          console.log(`[API DEBUG] 🕐 Using temporal search method`);
+          
+          try {
+            // For temporal search, we'll need to extract temporal elements within the search method
+            // or pass a flag to indicate temporal processing is needed
+            results = await search_engine.searchTemporal(
+              query,
+              {}, // Let the search method extract temporal elements
+              50, // Use higher limit for gap-based filtering
+              organizationName
+            );
+            
+            if (results.length > 0) {
+              console.log(`[API DEBUG] 🕐 Temporal search returned ${results.length} results`);
+              searchType = 'temporal';
+              searchMetadata = { search_method: 'temporal' };
+            } else {
+              console.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
+              results = null; // Will fall through to standard search
+            }
+          } catch (error: unknown) {
+            console.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
+            results = null; // Will fall through to standard search
+          }
+        }
+        
+        // 2. LEGACY CHRONOLOGICAL SEARCH - For career progression pattern queries (with redundant LLM calls)
+        else if (queryClassification.type === 'chronological') {
+          console.log(`[API DEBUG] 📈 LEGACY CHRONOLOGICAL search detected for ${organizationName}`);
+          console.log(`[API DEBUG] ⚠️  WARNING: Using legacy chronological path with redundant LLM calls`);
+          
+          try {
+            // Legacy redundant weight assignment
+            let legacyChronologicalWeights = chronologicalWeights; // Use passed weights if available
+            if (!legacyChronologicalWeights) {
           try {
             const weightResponse = await fetch('/api/assign-weights', {
               method: 'POST',
@@ -143,14 +183,15 @@ export async function POST(req: NextRequest) {
               body: JSON.stringify({ query })
             });
             if (weightResponse.ok) {
-              chronologicalWeights = await weightResponse.json();
-              console.log(`[API DEBUG] 📈 Assigned chronological weights:`, chronologicalWeights);
+                  legacyChronologicalWeights = await weightResponse.json();
+                  console.log(`[API DEBUG] 📈 Legacy assigned chronological weights:`, legacyChronologicalWeights);
             }
           } catch (weightError) {
-            console.log(`[API DEBUG] 📈 Weight assignment failed, using defaults:`, weightError);
+                console.log(`[API DEBUG] 📈 Legacy weight assignment failed, using defaults:`, weightError);
+              }
           }
           
-          // Translate natural language to chronological filters using new API
+            // Legacy chronological filter translation
           let translatedFilters = {};
           try {
             const translateResponse = await fetch('/api/translate-chronological', {
@@ -160,25 +201,25 @@ export async function POST(req: NextRequest) {
             });
             if (translateResponse.ok) {
               translatedFilters = await translateResponse.json();
-              console.log(`[API DEBUG] 📈 Translated chronological filters:`, translatedFilters);
+                console.log(`[API DEBUG] 📈 Legacy translated chronological filters:`, translatedFilters);
             }
           } catch (translateError) {
-            console.log(`[API DEBUG] 📈 Filter translation failed, using basic filters:`, translateError);
+              console.log(`[API DEBUG] 📈 Legacy filter translation failed, using basic filters:`, translateError);
             translatedFilters = { gap_tolerance: 6 };
           }
           
-          // Combine progression elements with translated filters and existing filters
+            // Combine translated filters with existing filters
           const chronologicalFilters = {
             ...translatedFilters,
             ...filters, // Include any existing filters from dashboard
           };
           
           // Add weights to filters
-          if (chronologicalWeights) {
-            chronologicalFilters.chronological_weights = chronologicalWeights;
+            if (legacyChronologicalWeights) {
+              chronologicalFilters.chronological_weights = legacyChronologicalWeights;
           }
           
-          console.log(`[API DEBUG] 📈 Final chronological filters:`, chronologicalFilters);
+            console.log(`[API DEBUG] 📈 Legacy final chronological filters:`, chronologicalFilters);
           
           results = await search_engine.searchChronological(
             query,
@@ -188,21 +229,23 @@ export async function POST(req: NextRequest) {
           );
           
           if (results.length > 0) {
-            console.log(`[API DEBUG] 📈 Chronological search returned ${results.length} results`);
+              console.log(`[API DEBUG] 📈 Legacy chronological search returned ${results.length} results`);
             searchType = 'chronological';
             searchMetadata = { 
-              progression_elements: queryClassification.progression_elements,
+                search_method: 'legacy_chronological',
               translated_filters: translatedFilters,
               chronological_filters: chronologicalFilters,
-              chronological_weights: chronologicalWeights
+                chronological_weights: legacyChronologicalWeights,
+                configuration_source: 'legacy'
             };
           } else {
-            console.log(`[API DEBUG] 📈 Chronological search returned no results, falling back to standard search`);
+              console.log(`[API DEBUG] 📈 Legacy chronological search returned no results, falling back to standard search`);
+              results = null; // Will fall through to standard search
+            }
+          } catch (error: unknown) {
+            console.log(`[API DEBUG] 📈 Legacy chronological search failed, falling back to standard search:`, error);
             results = null; // Will fall through to standard search
           }
-        } catch (error: unknown) {
-          console.log(`[API DEBUG] 📈 Chronological search failed, falling back to standard search:`, error);
-          results = null; // Will fall through to standard search
         }
       }
     }

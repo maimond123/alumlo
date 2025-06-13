@@ -1167,31 +1167,148 @@ export default function DashboardPage() {
       displaying: ''
     });
     
-    // Start query classification in parallel with search request
-    const classificationPromise = classifyQuery(currentQuery);
-    
-    // IMPORTANT: Start the actual search request immediately in parallel with animations
-    console.log(`[DEBUG ${new Date().toISOString()}] Starting API search request for: "${currentQuery}"`);
-    
     // Get the original school name from localStorage for the API
     const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
     console.log(`[DEBUG ${new Date().toISOString()}] Original organization name for API: "${originalOrganizationName}"`);
-    
-    // We'll build the search request after we have classification and filters
-    let searchPromise: Promise<any>;
     
     // Start the AI animation sequence
     try {
       console.log(`[DEBUG ${new Date().toISOString()}] Starting animation sequence for query: "${currentQuery}"`);
       
-      // Phase 1: Analyzing query
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 1: Analyzing`);
-      await typewriterEffect('Analyzing your search query...', 
+      // Phase 1: Analyzing query with unified search pipeline
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 1: Analyzing with unified search pipeline`);
+      await typewriterEffect('Analyzing your search query to determine optimal search method...', 
         (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
       );
       
+      // STEP 1: Try unified search pipeline
+      console.log(`🔍🔍🔍 [DASHBOARD] ATTEMPTING UNIFIED SEARCH PIPELINE for: "${currentQuery}"`);
+      
+      let searchConfig = null;
+      let pipelineResult = null;
+      let apiFilters = {};
+      let queryClassification = null;
+      
+      try {
+        const pipelineResponse = await fetch('/api/search-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            query: currentQuery, 
+            organizationName: originalOrganizationName,
+            isDemo: isDemoMode
+          }),
+        });
+        
+        if (pipelineResponse.ok) {
+          pipelineResult = await pipelineResponse.json();
+          console.log(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE RESULT:`, pipelineResult);
+          
+          searchConfig = pipelineResult.searchConfig;
+          queryClassification = pipelineResult.classification;
+          
+          // Update UI based on search type
+          if (pipelineResult.searchType === 'temporal') {
+            await typewriterEffect('🕐 Detected temporal query - using date-specific timeline search', 
+              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+            );
+            
+            // Show temporal analysis
+            setSearchPhase('searching');
+            const temporalElements = searchConfig.temporalElements;
+            const temporalSummary = [];
+            if (temporalElements.exit_year) temporalSummary.push(`exit year: ${temporalElements.exit_year}`);
+            if (temporalElements.subsequent_functions) temporalSummary.push(`functions: ${temporalElements.subsequent_functions.join(', ')}`);
+            if (temporalElements.sequence_type) temporalSummary.push(`pattern: ${temporalElements.sequence_type}`);
+            
+            await typewriterEffect(`Applied temporal filters (${temporalSummary.join(', ')})`, 
+              (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+            );
+            
+          } else if (pipelineResult.searchType === 'chronological') {
+            await typewriterEffect('📈 Detected career progression query - using chronological search', 
+              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+            );
+            
+            // Show chronological analysis
+            setSearchPhase('searching');
+            const filterCount = Object.keys(searchConfig.filters).length;
+            await typewriterEffect(`Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`, 
+              (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+            );
+            
+            // Show weight analysis
+            const weights = searchConfig.weights;
+            const weightSummary = `Career Quality: ${Math.round(weights.career_quality * 100)}%, Education: ${Math.round(weights.education_quality * 100)}%, Timeline: ${Math.round(weights.timeline_precision * 100)}%, Specificity: ${Math.round(weights.filter_specificity * 100)}%`;
+            setDisplayedText(prev => ({ 
+              ...prev, 
+              filters: prev.filters + ` | Weight assignment: ${weightSummary}` 
+            }));
+            
+          } else if (pipelineResult.searchType === 'standard') {
+            await typewriterEffect('📊 Using standard semantic search with enhanced filtering', 
+              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+            );
+            
+            // For standard search, still run the expanded queries and filter extraction
+            setSearchPhase('profiling');
+            try {
+              await generateExpandedQueries(currentQuery);
+            } catch (error) {
+              console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
+              await typewriterEffect("Alternative search suggestions unavailable", 
+                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+              );
+            }
+            
+            // Extract filters for standard search
+            let currentExtractedFilters: {[key: string]: string[]} = {};
+            try {
+              currentExtractedFilters = await extractMetadataFilters(currentQuery);
+              apiFilters = convertFiltersToAPI(currentExtractedFilters);
+              
+              const filterCount = Object.keys(apiFilters).length;
+              if (filterCount > 0) {
+                await typewriterEffect(`Applied ${filterCount} semantic filters`, 
+                  (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+                );
+              } else {
+                await typewriterEffect("No specific filters detected - using broad semantic search", 
+                  (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+                );
+              }
+            } catch (error) {
+              console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
+              await typewriterEffect("No specific filters detected", 
+                (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+              );
+            }
+          }
+          
+          console.log(`🎯🎯🎯 [DASHBOARD] SEARCH CONFIG READY:`, searchConfig);
+        }
+      } catch (pipelineError) {
+        console.error(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE FAILED:`, pipelineError);
+        
+        // Fallback to basic search
+        await typewriterEffect('Pipeline failed - using basic semantic search...', 
+          (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
+        );
+        
+        pipelineResult = {
+          searchType: 'standard',
+          searchConfig: { type: 'standard', enhancedFilters: {}, searchMethod: 'semantic_with_filters' },
+          classification: { type: 'standard' },
+          shouldExecuteSearch: true,
+          fallbackToStandard: true
+        };
+        
+        searchConfig = pipelineResult.searchConfig;
+        queryClassification = pipelineResult.classification;
+      }
+      
       // Phase 2: Searching database
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 2: Searching`);
+      console.log(`[DEBUG ${new Date().toISOString()}] Phase 2: Searching database`);
       setSearchPhase('searching');
       
       // Custom message for demo account
@@ -1211,107 +1328,35 @@ export default function DashboardPage() {
         );
       }
       
-      // Phase 3: Generate expanded queries using the CURRENT query (non-blocking)
-      console.log(`[DEBUG ${new Date().toISOString()}] Phase 3: Profiling using query: "${currentQuery}"`);
-      setSearchPhase('profiling');
+      // Create the search request based on the pipeline result
+      const searchRequestBody = pipelineResult && (pipelineResult.searchType === 'chronological' || pipelineResult.searchType === 'temporal') ? {
+        query: currentQuery,
+        organizationName: originalOrganizationName,
+        isDemo: isDemoMode,
+        searchConfig: searchConfig,
+        queryClassification: queryClassification
+      } : {
+        query: currentQuery, 
+        organizationName: originalOrganizationName,
+        isDemo: isDemoMode,
+        queryClassification: queryClassification,
+        filters: apiFilters,
+        chronologicalWeights: searchConfig?.weights
+      };
       
-      try {
-        await generateExpandedQueries(currentQuery);
-      } catch (error) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
-        // Continue with search even if profiling fails
-        await typewriterEffect("Alternative search suggestions unavailable", 
-          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-        );
-      }
-      
-      // Phase 4: Extract filters and prepare search request (non-blocking)
-      let currentExtractedFilters: {[key: string]: string[]} = {};
-      try {
-        currentExtractedFilters = await extractMetadataFilters(currentQuery);
-      } catch (error) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
-        // Continue with search even if filter extraction fails
-        await typewriterEffect("No specific filters detected", 
-          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-        );
-      }
-      
-      // Get query classification that was running in parallel
-      console.log(`[DEBUG ${new Date().toISOString()}] Getting query classification for: "${currentQuery}"`);
-      const classification = await classificationPromise;
-      setQueryClassification(classification);
-      
-      console.log(`🔍🔍🔍 [DASHBOARD] CLASSIFICATION RESULT:`, classification);
-      
-      // Phase 4.5: Assign chronological weights if this might be a chronological query
-      let chronologicalWeights: any = null;
-      const isChronologicalQuery = classification.type === 'chronological' || 
-                                  (classification.type === 'standard' && (
-                                    currentQuery.toLowerCase().includes('progression') || 
-                                    currentQuery.toLowerCase().includes('career') ||
-                                    currentQuery.toLowerCase().includes('experience') ||
-                                    currentQuery.toLowerCase().includes('leader') ||
-                                    currentQuery.toLowerCase().includes('senior') ||
-                                    currentQuery.toLowerCase().includes('management')
-                                  ));
-      
-      if (isChronologicalQuery) {
-        try {
-          console.log(`[DEBUG ${new Date().toISOString()}] Detected chronological query (type: ${classification.type}), assigning weights`);
-          chronologicalWeights = await assignChronologicalWeights(currentQuery);
-          
-          // Update UI to show weight assignment
-          const weightSummary = `Career Quality: ${Math.round(chronologicalWeights.career_quality * 100)}%, Education: ${Math.round(chronologicalWeights.education_quality * 100)}%, Timeline: ${Math.round(chronologicalWeights.timeline_precision * 100)}%, Specificity: ${Math.round(chronologicalWeights.filter_specificity * 100)}%`;
-          setDisplayedText(prev => ({ 
-            ...prev, 
-            filters: prev.filters + ` | Weight assignment: ${weightSummary}` 
-          }));
-        } catch (error) {
-          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in assignChronologicalWeights:`, error);
-          // Continue without weights
-        }
-      }
-      
-      // Convert extracted filters to API format using the fresh filters
-      const apiFilters = convertFiltersToAPI(currentExtractedFilters);
-      
-      console.log(`🎯🎯🎯 [DASHBOARD] CONVERTED FILTERS:`, {
-        extractedFilters: currentExtractedFilters,
-        apiFilters,
-        filterCount: Object.keys(apiFilters).length,
-        chronologicalWeights
-      });
-      
-      // Now create the enhanced search request with classification, filters, and weights
-      console.log(`🚀🚀🚀 [DASHBOARD] ABOUT TO SEND SEARCH REQUEST:`, {
-        url: '/api/search',
-        method: 'POST',
-        body: {
-          query: currentQuery, 
-          organizationName: originalOrganizationName,
-          isDemo: isDemoMode,
-          queryClassification: classification,
-          filters: apiFilters,
-          chronologicalWeights
-        }
+      console.log(`🚀🚀🚀 [DASHBOARD] SEARCH REQUEST BODY:`, {
+        searchType: pipelineResult?.searchType || 'standard',
+        body: searchRequestBody
       });
       
       console.log(`[DEBUG ${new Date().toISOString()}] Creating search promise for query: "${currentQuery}"`);
       
-      searchPromise = fetch('/api/search', {
+      const searchPromise = fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          query: currentQuery, 
-          organizationName: originalOrganizationName,
-          isDemo: isDemoMode,
-          queryClassification: classification,
-          filters: apiFilters,
-          chronologicalWeights
-        }),
+        body: JSON.stringify(searchRequestBody),
       }).then(response => {
         console.log(`[DEBUG ${new Date().toISOString()}] Search API response received, status: ${response.status}`);
         console.log(`🌐🌐🌐 [DASHBOARD] API RESPONSE STATUS: ${response.status} ${response.statusText}`);
@@ -1350,10 +1395,10 @@ export default function DashboardPage() {
       
       // Enhanced result display message based on search type
       let displayMessage = `Displaying ${searchResultsData.length} optimized results based on relevance`;
-      if (searchData.searchType === 'temporal') {
+      if (searchData.searchType === 'chronological') {
+        displayMessage += ' (using advanced chronological search for career progression analysis)';
+      } else if (searchData.searchType === 'temporal') {
         displayMessage += ' (using temporal search for date-specific timeline analysis)';
-      } else if (searchData.searchType === 'chronological') {
-        displayMessage += ' (using chronological search for career progression patterns)';
       } else if (Object.keys(apiFilters).length > 0) {
         displayMessage += ` (with ${Object.keys(apiFilters).length} advanced filters applied)`;
       }

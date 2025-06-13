@@ -52,56 +52,22 @@ export async function POST(req: NextRequest) {
 - If query is basic semantic matching → **STANDARD**
 
 **OUTPUT FORMAT:**
+Return only the search type as a simple JSON object:
 
-For TEMPORAL queries:
 {
-  "type": "temporal",
-  "temporal_elements": {
-    "years": [array of years as numbers],
-    "functions": [array of job functions/roles as strings],
-    "sequence_detected": boolean,
-    "exit_years": [array of exit years as numbers]
-  }
-}
-
-For CHRONOLOGICAL queries:
-{
-  "type": "chronological",
-  "progression_elements": {
-    "experience_focus": boolean,
-    "progression_pattern": string,
-    "career_quality_focus": boolean,
-    "leadership_development": boolean
-  }
-}
-
-For STANDARD queries:
-{
-  "type": "standard"
+  "type": "temporal" | "chronological" | "standard"
 }
 
 **EXAMPLES:**
 
 Query: "People who left in 2019 and became consultants"
 {
-  "type": "temporal",
-  "temporal_elements": {
-    "years": [2019],
-    "functions": ["consultant"],
-    "sequence_detected": true,
-    "exit_years": [2019]
-  }
+  "type": "temporal"
 }
 
 Query: "Experienced technology leaders with strong career progression"
 {
-  "type": "chronological",
-  "progression_elements": {
-    "experience_focus": true,
-    "progression_pattern": "leadership_development",
-    "career_quality_focus": true,
-    "leadership_development": true
-  }
+  "type": "chronological"
 }
 
 Query: "Software engineers in San Francisco"
@@ -111,24 +77,12 @@ Query: "Software engineers in San Francisco"
 
 Query: "People who worked here 2020-2022 then moved to startups"
 {
-  "type": "temporal",
-  "temporal_elements": {
-    "years": [2020, 2021, 2022],
-    "functions": ["startup"],
-    "sequence_detected": true,
-    "exit_years": [2022]
-  }
+  "type": "temporal"
 }
 
 Query: "Alumni who transitioned from individual contributors to management roles"
 {
-  "type": "chronological",
-  "progression_elements": {
-    "experience_focus": false,
-    "progression_pattern": "ic_to_management",
-    "career_quality_focus": true,
-    "leadership_development": true
-  }
+  "type": "chronological"
 }
 
 Query: "Marketing professionals"
@@ -138,16 +92,10 @@ Query: "Marketing professionals"
 
 Query: "People with 10+ years of experience who became entrepreneurs"
 {
-  "type": "chronological",
-  "progression_elements": {
-    "experience_focus": true,
-    "progression_pattern": "entrepreneurship",
-    "career_quality_focus": true,
-    "leadership_development": true
-  }
+  "type": "chronological"
 }
 
-Respond only with valid JSON, no other text.`,
+Respond only with valid JSON containing just the type field.`,
         },
         {
           role: 'user',
