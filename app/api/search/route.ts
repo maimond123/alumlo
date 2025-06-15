@@ -133,7 +133,20 @@ export async function POST(req: NextRequest) {
       
       if (searchConfig.type === 'temporal' && searchConfig.temporalElements) {
         console.log(`[API SEARCH] 🕐 Executing temporal search from pipeline`);
+        console.log(`[API SEARCH] 🕐 DETAILED: Temporal search configuration:`, {
+          temporalElements: searchConfig.temporalElements,
+          sqlFunction: searchConfig.sqlFunction,
+          organizationName: organizationName
+        });
+        
         try {
+          console.log(`[API SEARCH] 🕐 DETAILED: Calling searchTemporal with parameters:`, {
+            query: `"${query}"`,
+            temporalElementsKeys: Object.keys(searchConfig.temporalElements),
+            limit: 50,
+            organizationName: organizationName
+          });
+          
           results = await search_engine.searchTemporal(
             query,
             searchConfig.temporalElements,
@@ -141,28 +154,57 @@ export async function POST(req: NextRequest) {
             organizationName
           );
           
-          if (results.length > 0) {
-            console.log(`[API SEARCH] ✅ Temporal search successful: ${results.length} results`);
-            searchType = 'temporal';
-            searchMetadata = { 
-              search_method: 'temporal_pipeline',
-              temporal_elements: searchConfig.temporalElements,
-              sql_function: searchConfig.sqlFunction,
-              configuration_source: 'pipeline'
-            };
-          } else {
-            console.log(`[API SEARCH] ⚠️ Temporal search returned no results, falling back`);
-            results = null;
-          }
+          console.log(`[API SEARCH] 🕐 DETAILED: Temporal search completed:`, {
+            resultCount: results?.length || 0,
+            hasResults: !!results,
+            isArray: Array.isArray(results),
+            firstResultId: results?.[0]?.id || 'none'
+          });
+          
+          // REMOVED FALLBACK LOGIC - Return results directly
+          console.log(`[API SEARCH] ✅ Temporal search completed with ${results?.length || 0} results - NO FALLBACK`);
+          searchType = 'temporal';
+          searchMetadata = {
+            search_method: 'temporal_pipeline',
+            temporal_elements: searchConfig.temporalElements,
+            sql_function: searchConfig.sqlFunction,
+            configuration_source: 'pipeline',
+            fallback_disabled: true
+          };
+          
         } catch (error) {
-          console.error(`[API SEARCH] ❌ Temporal search from pipeline failed:`, error);
-          results = null;
+          console.error(`[API SEARCH] ❌ DETAILED: Temporal search from pipeline failed:`, {
+            error: error,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : 'No stack',
+            errorName: error instanceof Error ? error.name : 'Unknown',
+            searchConfig: searchConfig,
+            organizationName: organizationName
+          });
+          
+          // REMOVED FALLBACK LOGIC - Return error directly
+          throw new Error(`Temporal search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
       
       else if (searchConfig.type === 'chronological' && searchConfig.filters && searchConfig.weights) {
         console.log(`[API SEARCH] 📈 Executing chronological search from pipeline`);
+        console.log(`[API SEARCH] 📈 DETAILED: Chronological search configuration:`, {
+          filters: searchConfig.filters,
+          weights: searchConfig.weights,
+          sqlFunction: searchConfig.sqlFunction,
+          organizationName: organizationName
+        });
+        
         try {
+          console.log(`[API SEARCH] 📈 DETAILED: Calling searchChronological with parameters:`, {
+            query: `"${query}"`,
+            filtersCount: Object.keys(searchConfig.filters).length,
+            weightsCount: Object.keys(searchConfig.weights).length,
+            limit: 50,
+            organizationName: organizationName
+          });
+          
           results = await search_engine.searchChronological(
             query,
             searchConfig.filters,
@@ -171,23 +213,38 @@ export async function POST(req: NextRequest) {
             searchConfig.weights
           );
           
-          if (results.length > 0) {
-            console.log(`[API SEARCH] ✅ Chronological search successful: ${results.length} results`);
-            searchType = 'chronological';
-            searchMetadata = {
-              search_method: 'chronological_pipeline',
-              filters: searchConfig.filters,
-              weights: searchConfig.weights,
-              sql_function: searchConfig.sqlFunction,
-              configuration_source: 'pipeline'
-            };
-          } else {
-            console.log(`[API SEARCH] ⚠️ Chronological search returned no results, falling back`);
-            results = null;
-          }
+          console.log(`[API SEARCH] 📈 DETAILED: Chronological search completed:`, {
+            resultCount: results?.length || 0,
+            hasResults: !!results,
+            isArray: Array.isArray(results),
+            firstResultId: results?.[0]?.id || 'none'
+          });
+          
+          // REMOVED FALLBACK LOGIC - Return results directly
+          console.log(`[API SEARCH] ✅ Chronological search completed with ${results?.length || 0} results - NO FALLBACK`);
+          searchType = 'chronological';
+          searchMetadata = {
+            search_method: 'chronological_pipeline',
+            filters: searchConfig.filters,
+            weights: searchConfig.weights,
+            sql_function: searchConfig.sqlFunction,
+            configuration_source: 'pipeline',
+            strict_filtering: true,
+            fallback_disabled: true
+          };
+          
         } catch (error) {
-          console.error(`[API SEARCH] ❌ Chronological search from pipeline failed:`, error);
-          results = null;
+          console.error(`[API SEARCH] ❌ DETAILED: Chronological search from pipeline failed:`, {
+            error: error,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : 'No stack',
+            errorName: error instanceof Error ? error.name : 'Unknown',
+            searchConfig: searchConfig,
+            organizationName: organizationName
+          });
+          
+          // REMOVED FALLBACK LOGIC - Return error directly
+          throw new Error(`Chronological search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
       

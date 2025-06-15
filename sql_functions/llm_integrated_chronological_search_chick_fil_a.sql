@@ -294,7 +294,9 @@ BEGIN
     FROM career_analysis ca
     FULL OUTER JOIN education_analysis ea ON ca.profile_id = ea.profile_id
     WHERE 
-      -- Apply experience filters
+      -- STRICT FILTER ENFORCEMENT: All filters must be satisfied
+      
+      -- Experience filters (existing)
       ($2 IS NULL OR COALESCE(ca.total_years_experience, 0) >= $2)
       AND ($3 IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= $3)
       AND ($11 IS FALSE OR COALESCE(ca.has_geographic_mobility, FALSE) = $11)
@@ -306,6 +308,36 @@ BEGIN
                 ca.earliest_career_start_month <= ea.latest_education_end_month) = $12
              ELSE $12 = FALSE
            END)
+      
+      -- NEW: HARD SCHOOL FILTER ENFORCEMENT
+      AND ($18 IS NULL OR 
+           (ea.profile_id IS NOT NULL AND 
+            EXISTS (SELECT 1 FROM %I ee2 WHERE ee2.profile_id = ea.profile_id 
+                    AND ee2.institution ILIKE ''%%'' || $18 || ''%%'')))
+      
+      -- NEW: HARD COMPANY FILTER ENFORCEMENT  
+      AND ($14 IS NULL OR 
+           (ca.profile_id IS NOT NULL AND
+            EXISTS (SELECT 1 FROM %I ce2 WHERE ce2.profile_id = ca.profile_id
+                    AND ce2.company ILIKE ''%%'' || $14 || ''%%'')))
+      
+      -- NEW: HARD INDUSTRY FILTER ENFORCEMENT
+      AND ($15 IS NULL OR 
+           (ca.profile_id IS NOT NULL AND
+            EXISTS (SELECT 1 FROM %I ce3 WHERE ce3.profile_id = ca.profile_id
+                    AND ce3.industry ILIKE ''%%'' || $15 || ''%%'')))
+      
+      -- NEW: HARD TITLE FILTER ENFORCEMENT
+      AND ($16 IS NULL OR 
+           (ca.profile_id IS NOT NULL AND
+            EXISTS (SELECT 1 FROM %I ce4 WHERE ce4.profile_id = ca.profile_id
+                    AND ce4.title ILIKE ''%%'' || $16 || ''%%'')))
+      
+      -- NEW: HARD LOCATION FILTER ENFORCEMENT
+      AND ($17 IS NULL OR 
+           (ca.profile_id IS NOT NULL AND
+            EXISTS (SELECT 1 FROM %I ce5 WHERE ce5.profile_id = ca.profile_id
+                    AND ce5.location ILIKE ''%%'' || $17 || ''%%'')))
   )
   
   SELECT 
@@ -351,6 +383,11 @@ BEGIN
   ', 
   career_events_table, 
   education_events_table, 
+  education_events_table,  -- ee2 for school filter
+  career_events_table,     -- ce2 for company filter  
+  career_events_table,     -- ce3 for industry filter
+  career_events_table,     -- ce4 for title filter
+  career_events_table,     -- ce5 for location filter
   vector_table
   ) 
   USING 
@@ -377,4 +414,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'LLM-integrated chronological search accepting structured JSON outputs from the chronological pipeline: filters from translateWithoutClassificationContext and dynamic weights from the weight assignment step. Now includes comprehensive basic filter support including school filtering.'; 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'LLM-integrated chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied before scoring. Scoring is used purely for ranking compliant profiles. No profile can bypass filter requirements through high scores.'; 

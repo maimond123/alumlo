@@ -1590,7 +1590,20 @@ export class LinkedInProfileSearchEngine {
         organization: rpcParams.organization_name
       });
       
+      // DETAILED LOGGING: Log the exact SQL function call parameters
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 DETAILED SQL PARAMETERS:`, {
+        function_name: rpcFunctionName,
+        chronological_filters: JSON.stringify(chronologicalFilters, null, 2),
+        weight_assignment: JSON.stringify(weightAssignment, null, 2),
+        limit_count: rpcParams.limit_count,
+        organization_name: rpcParams.organization_name,
+        school_filter_value: chronologicalFilters.school_filter,
+        company_filter_value: chronologicalFilters.company_filter,
+        has_basic_filters: !!(chronologicalFilters.school_filter || chronologicalFilters.company_filter || chronologicalFilters.industry_filter || chronologicalFilters.title_filter || chronologicalFilters.location_filter)
+      });
+      
       // Call the LLM-integrated chronological search RPC function
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📞 Making Supabase RPC call to: ${rpcFunctionName}`);
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, rpcParams)
         .returns<any[]>();
@@ -1599,6 +1612,27 @@ export class LinkedInProfileSearchEngine {
         success: !error,
         resultCount: data?.length || 0,
         errorMessage: error?.message || null
+      });
+      
+      // DETAILED LOGGING: Log the raw response
+      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 DETAILED RPC RESPONSE:`, {
+        has_data: !!data,
+        data_is_array: Array.isArray(data),
+        data_length: data?.length || 0,
+        first_result_sample: data?.[0] ? {
+          id: data[0].profile_id || data[0].id,
+          name: data[0].name,
+          has_comprehensive_analysis: !!data[0].comprehensive_analysis,
+          chronological_relevance_score: data[0].chronological_relevance_score,
+          current_company: data[0].current_company,
+          undergraduate_school: data[0].undergraduate_school
+        } : null,
+        error_details: error ? {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        } : null
       });
       
       if (error) {
