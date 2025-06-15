@@ -21,16 +21,9 @@ export default function UploadDataPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [organizationName, setOrganizationName] = useState<string | null>(null)
   
-  // Demo mode states
-  const [isDemoMode, setIsDemoMode] = useState(false)
+  // Demo mode states - initialize synchronously
+  const [isDemoMode, setIsDemoMode] = useState(() => checkIsDemoMode())
   const [showDemoModal, setShowDemoModal] = useState(false)
-
-  // Check for demo mode on component mount
-  useEffect(() => {
-    if (checkIsDemoMode()) {
-      setIsDemoMode(true)
-    }
-  }, [])
 
   const fetchRecentUploads = async () => {
     // Skip fetching uploads for demo users
