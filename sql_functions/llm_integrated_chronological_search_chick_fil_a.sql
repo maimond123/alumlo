@@ -22,19 +22,14 @@ RETURNS TABLE (
   -- Career progression metrics (calculated from event tables)
   total_years_experience numeric,
   years_in_target_industry numeric,
-  career_progression_score float,
   
   -- Education progression metrics (calculated from event tables)
   highest_degree_level text,
-  education_progression_score float,
   
   -- Cross-domain analysis
   timeline_pattern text,
   sequence_gap_months int,
-  has_concurrent_activities boolean,
-  
-  -- Dynamic chronological relevance score using default weights
-  chronological_relevance_score float
+  has_concurrent_activities boolean
 ) AS $$
 DECLARE
   -- Dynamic table name based on organization
@@ -93,30 +88,6 @@ BEGIN
         ) / 12.0, 0
       ) as years_in_target_industry,
       
-      -- Career progression score based on patterns and leadership (CAST TO FLOAT)
-      (CASE 
-        WHEN ($1->>''career_progression_pattern'') IS NOT NULL THEN
-          CASE ($1->>''career_progression_pattern'')
-            WHEN ''individual_contributor_to_management'' THEN
-              CASE WHEN bool_or(ce.is_leadership_role) AND bool_or(NOT ce.management_responsibility) THEN 1.0 ELSE 0.3 END
-            WHEN ''entry_level_to_senior'' THEN
-              CASE WHEN MAX(ce.job_level) ILIKE ''%%Senior%%'' OR MAX(ce.job_level) ILIKE ''%%Lead%%'' THEN 0.9 ELSE 0.4 END
-            WHEN ''startup_to_enterprise'' THEN
-              CASE WHEN bool_and(ce.company_size IN (''Startup'', ''Large'')) THEN 0.8 ELSE 0.3 END
-            WHEN ''rapid_advancement'' THEN
-              CASE WHEN COUNT(DISTINCT ce.job_level) >= 3 THEN 1.0 ELSE 0.5 END
-            ELSE 0.5
-          END
-        ELSE
-          -- Default progression scoring
-          CASE 
-            WHEN COUNT(DISTINCT ce.job_level) > 1 THEN
-              (COUNT(DISTINCT ce.job_level) - 1) * 0.25 + 
-              (CASE WHEN bool_or(ce.is_leadership_role) THEN 0.3 ELSE 0 END)
-            ELSE 0.2
-          END
-      END)::float as career_progression_score,
-      
       -- Geographic mobility check
       COUNT(DISTINCT ce.location) > 1 as has_geographic_mobility,
       
@@ -165,26 +136,6 @@ BEGIN
         ELSE ''High School''
       END as highest_degree_level,
       
-      -- Education progression score with LLM pattern matching (CAST TO FLOAT)
-      (CASE 
-        WHEN ($1->''degree_level_progression'') IS NOT NULL THEN
-          -- Check if actual progression matches expected pattern
-          CASE WHEN jsonb_array_length($1->''degree_level_progression'') > 0 THEN
-            CASE 
-              WHEN COUNT(DISTINCT ee.degree_level) >= jsonb_array_length($1->''degree_level_progression'') THEN 1.0
-              ELSE COUNT(DISTINCT ee.degree_level)::float / jsonb_array_length($1->''degree_level_progression'')
-            END
-          ELSE 0.5
-          END
-        ELSE
-          -- Default progression scoring
-          CASE 
-            WHEN COUNT(DISTINCT ee.degree_level) >= 3 THEN 1.0  
-            WHEN COUNT(DISTINCT ee.degree_level) = 2 THEN 0.7   
-            ELSE 0.3
-          END
-      END)::float as education_progression_score,
-      
       -- Latest and earliest education dates for timeline analysis
       MAX(ee.end_year * 12 + ee.end_month) as latest_education_end_month,
       MIN(ee.start_year * 12 + ee.start_month) as earliest_education_start_month
@@ -203,9 +154,7 @@ BEGIN
       ea.education_timeline,
       ca.total_years_experience,
       ca.years_in_target_industry,
-      ca.career_progression_score,
       ea.highest_degree_level,
-      ea.education_progression_score,
       ca.has_geographic_mobility,
       
       -- Timeline pattern analysis
@@ -235,30 +184,7 @@ BEGIN
           (ea.earliest_education_start_month <= ca.latest_career_end_month AND 
            ca.earliest_career_start_month <= ea.latest_education_end_month)
         ELSE FALSE
-      END as has_concurrent_activities,
-      
-      -- CHRONOLOGICAL RELEVANCE SCORE using default weights (CAST TO FLOAT)
-      (
-        -- Career quality component (default weight: 0.4)
-        COALESCE(ca.career_progression_score, 0) * 0.4 +
-        
-        -- Education quality component (default weight: 0.25)
-        COALESCE(ea.education_progression_score, 0) * 0.25 +
-        
-        -- Timeline precision component (default weight: 0.25)
-        CASE 
-          WHEN (($1->>''gap_tolerance'')::numeric) IS NOT NULL THEN -- gap_tolerance provided
-            CASE WHEN ABS(COALESCE(ca.earliest_career_start_month, 0) - COALESCE(ea.latest_education_end_month, 0)) <= (($1->>''gap_tolerance'')::numeric) THEN 1.0 ELSE 0.3 END
-          ELSE 0.7 -- Default timeline score
-        END * 0.25 +
-        
-        -- Filter specificity component (default weight: 0.1)
-        CASE 
-          WHEN ca.total_years_experience IS NOT NULL AND ea.highest_degree_level IS NOT NULL THEN 1.0
-          WHEN ca.total_years_experience IS NOT NULL OR ea.highest_degree_level IS NOT NULL THEN 0.7
-          ELSE 0.4
-        END * 0.1
-      )::float as chronological_relevance_score
+      END as has_concurrent_activities
       
     FROM career_analysis ca
     FULL OUTER JOIN education_analysis ea ON ca.profile_id = ea.profile_id
@@ -317,13 +243,10 @@ BEGIN
     jsonb_build_object(
       ''total_years_experience'', cda.total_years_experience,
       ''years_in_target_industry'', cda.years_in_target_industry,
-      ''career_progression_score'', cda.career_progression_score,
-      ''education_progression_score'', cda.education_progression_score,
       ''timeline_pattern'', cda.timeline_pattern,
       ''sequence_gap_months'', cda.sequence_gap_months,
       ''has_concurrent_activities'', cda.has_concurrent_activities,
       ''has_geographic_mobility'', cda.has_geographic_mobility,
-      ''chronological_relevance_score'', cda.chronological_relevance_score,
       ''applied_filters'', $1
     ) as comprehensive_analysis,
     COALESCE(av.post_company_current_company, ''Unknown'') as current_company,
@@ -332,16 +255,13 @@ BEGIN
     COALESCE(av.post_company_current_location, ''Unknown'') as current_location,
     cda.total_years_experience,
     cda.years_in_target_industry,
-    cda.career_progression_score,
     cda.highest_degree_level,
-    cda.education_progression_score,
     cda.timeline_pattern,
     cda.sequence_gap_months::int,
-    cda.has_concurrent_activities,
-    cda.chronological_relevance_score
+    cda.has_concurrent_activities
   FROM cross_domain_analysis cda
   LEFT JOIN %I av ON cda.profile_id = av.profile_id
-  ORDER BY cda.chronological_relevance_score DESC
+  ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
   career_events_table, 
@@ -361,4 +281,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'LLM-integrated chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied before scoring. Scoring is used purely for ranking compliant profiles. No profile can bypass filter requirements through high scores. Removed weight assignment functionality and uses default weights (career: 0.4, education: 0.25, timeline: 0.25, specificity: 0.1).'; 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Simplified chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied. Results are ordered by total years of experience. No scoring or weight calculations - pure filter-based search.'; 

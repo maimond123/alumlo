@@ -1479,7 +1479,7 @@ export class LinkedInProfileSearchEngine {
     top_k: number,
     organizationName: string
   ): Promise<ChronologicalSearchResult[]> {
-    console.log(`[AI SEARCH LLM] 🚀 Starting LLM-integrated chronological search`);
+    console.log(`[AI SEARCH LLM] 🚀 Starting simplified chronological search`);
     console.log(`[AI SEARCH LLM] 📊 Input parameters:`, {
       query: query,
       filtersProvided: Object.keys(filters).length,
@@ -1512,37 +1512,6 @@ export class LinkedInProfileSearchEngine {
           code: error.code
         });
         
-        // Enhanced error analysis
-        if (error.message?.includes('structure of query does not match function result type')) {
-          console.error(`[AI SEARCH LLM] 🔍 STRUCTURE MISMATCH ERROR DETECTED:`, {
-            errorType: 'structure_mismatch',
-            errorMessage: error.message,
-            sqlFunction: sqlFunctionName,
-            parametersUsed: {
-              chronological_filters: typeof filters,
-              limit_count: typeof top_k,
-              organization_name: typeof organizationName
-            }
-          });
-        }
-        
-        if (error.message?.includes('parameter')) {
-          console.error(`[AI SEARCH LLM] 🔍 PARAMETER ERROR DETECTED:`, {
-            errorType: 'parameter_mismatch',
-            errorMessage: error.message,
-            parameterTypes: {
-              chronological_filters: typeof filters,
-              limit_count: typeof top_k,
-              organization_name: typeof organizationName
-            },
-            parameterValues: {
-              chronological_filters: JSON.stringify(filters),
-              limit_count: top_k,
-              organization_name: organizationName
-            }
-          });
-        }
-        
         throw error;
       }
       
@@ -1554,7 +1523,7 @@ export class LinkedInProfileSearchEngine {
           name: data[0].name,
           hasCareerTimeline: !!data[0].career_timeline,
           hasEducationTimeline: !!data[0].education_timeline,
-          chronological_relevance_score: data[0].chronological_relevance_score
+          total_years_experience: data[0].total_years_experience
         } : null
       });
       
@@ -1575,7 +1544,7 @@ export class LinkedInProfileSearchEngine {
         post_company_current_industry: row.current_industry || '',
         post_company_current_location: row.current_location || '',
         picture_url: undefined,
-        similarity: row.chronological_relevance_score || 0,
+        similarity: 1.0, // All results are equally valid since they passed strict filters
         industry: row.current_industry || '',
         headline: '',
         
@@ -1622,7 +1591,7 @@ export class LinkedInProfileSearchEngine {
           total_years_experience: row.total_years_experience || 0,
           years_in_target_industry: row.years_in_target_industry || 0,
           years_in_target_function: 0, // Not provided by current function
-          career_progression_score: row.career_progression_score || 0,
+          career_progression_score: 0, // No longer calculated
           industry_diversity_score: 0, // Not provided by current function
           leadership_progression: false, // Not provided by current function
           education_career_alignment: 0 // Not provided by current function
@@ -1637,14 +1606,15 @@ export class LinkedInProfileSearchEngine {
           name: transformedResults[0].name,
           similarity: transformedResults[0].similarity,
           hasCareerTimeline: !!transformedResults[0].career_timeline,
-          hasEducationTimeline: !!transformedResults[0].education_timeline
+          hasEducationTimeline: !!transformedResults[0].education_timeline,
+          totalExperience: transformedResults[0].career_analysis.total_years_experience
         } : null
       });
       
       return transformedResults;
       
     } catch (error) {
-      console.error(`[AI SEARCH LLM] ❌ Critical error in LLM integration:`, {
+      console.error(`[AI SEARCH LLM] ❌ Critical error in simplified chronological search:`, {
         error: error,
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : 'No stack',

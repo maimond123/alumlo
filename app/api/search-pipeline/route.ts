@@ -833,7 +833,7 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
   });
 
   console.log(`[PIPELINE CHRONOLOGICAL] 🤖 OpenAI filter translation response received`);
-  
+
   // ADD DETAILED DEBUGGING: Log the raw response
   const content = response.choices[0]?.message?.content;
   console.log(`[PIPELINE CHRONOLOGICAL] 🔍 RAW LLM RESPONSE:`, {
