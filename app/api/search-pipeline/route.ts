@@ -643,6 +643,13 @@ Query: "Find someone who worked at Chick Fil A and then went to Georgetown Unive
   "gap_tolerance": 6
 }
 
+Query: "Find me people who went to college and then worked at Chick Fil A"
+{
+  "company_filter": "Chick Fil A",
+  "degree_level_progression": ["Bachelor's"],
+  "gap_tolerance": 6
+}
+
 Query: "MBA graduates who became senior executives"
 {
   "degree_level_progression": ["Bachelor's", "Master's"],
@@ -692,6 +699,9 @@ Query: "People who studied abroad and had international careers"
 
 **EXTRACTION RULES:**
 - Extract specific institutions: "Georgetown University" → school_filter: "Georgetown University"
+- **DO NOT extract generic education terms**: "college", "university", "school" → school_filter: null
+- **Only extract when specific institution names are mentioned**: "Harvard", "MIT", "Stanford University" → school_filter: "Stanford University"
+- **Generic education requirements go to degree_level_progression**: "college graduates" → degree_level_progression: ["Bachelor's"]
 - Extract specific companies: "Chick Fil A", "Google", "Apple" → company_filter: "Company Name"
 - Extract industries: "tech", "finance", "healthcare" → industry_filter: "technology"
 - Extract job titles: "engineering", "marketing", "sales" → title_filter: "engineering"
@@ -701,6 +711,123 @@ Query: "People who studied abroad and had international careers"
 - Detect education requirements and progressions
 - Identify mobility and transition patterns
 - Set reasonable defaults for timeline tolerances
+
+**IMPORTANT SCHOOL FILTER EXAMPLES:**
+✅ CORRECT - Specific institutions:
+- "Georgetown University graduates" → school_filter: "Georgetown University"
+- "people from Harvard" → school_filter: "Harvard"
+- "MIT alumni" → school_filter: "MIT"
+- "Stanford MBA graduates" → school_filter: "Stanford"
+
+❌ INCORRECT - Generic terms (DO NOT extract):
+- "college graduates" → school_filter: null, degree_level_progression: ["Bachelor's"]
+- "university alumni" → school_filter: null, degree_level_progression: ["Bachelor's"]
+- "people who went to school" → school_filter: null
+- "people who went to college" → school_filter: null, degree_level_progression: ["Bachelor's"]
+- "business school graduates" → school_filter: null, degree_level_progression: ["Master's"]
+
+**ADDITIONAL EDGE CASES:**
+
+**Company Name Edge Cases:**
+✅ CORRECT:
+- "ex-Google employees" → company_filter: "Google"
+- "former Apple workers" → company_filter: "Apple"
+- "people who left Microsoft" → company_filter: "Microsoft"
+- "alumni from McKinsey" → company_filter: "McKinsey"
+
+❌ INCORRECT - Generic company terms:
+- "startup employees" → company_filter: null, company_size_progression: ["startup"]
+- "big tech workers" → company_filter: null, industry_filter: "technology"
+- "consulting firm alumni" → company_filter: null, industry_filter: "consulting"
+- "Fortune 500 employees" → company_filter: null, company_size_progression: ["large"]
+
+**Industry Edge Cases:**
+✅ CORRECT:
+- "tech professionals" → industry_filter: "technology"
+- "healthcare workers" → industry_filter: "healthcare"
+- "financial services" → industry_filter: "finance"
+
+❌ INCORRECT - Too generic:
+- "professionals" → industry_filter: null
+- "workers" → industry_filter: null
+- "employees" → industry_filter: null
+
+**Title/Role Edge Cases:**
+✅ CORRECT:
+- "software engineers" → title_filter: "software engineer"
+- "product managers" → title_filter: "product manager"
+- "data scientists" → title_filter: "data scientist"
+
+❌ INCORRECT - Too generic or ambiguous:
+- "managers" → title_filter: null, career_progression_pattern: "individual_contributor_to_management"
+- "executives" → title_filter: null, career_progression_pattern: "entry_level_to_senior"
+- "leaders" → title_filter: null, career_progression_pattern: "individual_contributor_to_management"
+- "professionals" → title_filter: null
+
+**Location Edge Cases:**
+✅ CORRECT:
+- "San Francisco Bay Area" → location_filter: "San Francisco"
+- "NYC" → location_filter: "New York"
+- "remote workers" → location_filter: "remote"
+
+❌ INCORRECT - Too generic:
+- "West Coast" → location_filter: null, geographic_mobility: true
+- "East Coast" → location_filter: null, geographic_mobility: true
+- "international" → location_filter: null, geographic_mobility: true
+
+**Experience Level Edge Cases:**
+✅ CORRECT:
+- "5+ years experience" → min_years_in_industry: 5
+- "senior level" → total_experience_years: 7
+- "experienced professionals" → total_experience_years: 5
+
+❌ INCORRECT - Ambiguous terms:
+- "seasoned" → total_experience_years: 7 (interpret as experienced)
+- "junior" → total_experience_years: 2 (interpret as early career)
+- "entry-level" → total_experience_years: 1
+
+**Degree Level Edge Cases:**
+✅ CORRECT:
+- "PhD holders" → degree_level_progression: ["Bachelor's", "Master's", "PhD"]
+- "MBA graduates" → degree_level_progression: ["Bachelor's", "Master's"]
+- "undergraduate alumni" → degree_level_progression: ["Bachelor's"]
+
+❌ INCORRECT - Generic education terms:
+- "educated professionals" → degree_level_progression: ["Bachelor's"]
+- "degree holders" → degree_level_progression: ["Bachelor's"]
+- "graduates" → degree_level_progression: ["Bachelor's"]
+
+**Temporal/Sequence Edge Cases:**
+✅ CORRECT:
+- "people who worked at X then Y" → career_progression_pattern: "startup_to_enterprise" (if applicable)
+- "went to school while working" → concurrent_activities: true
+- "career changers" → industry_transitions: ["previous", "current"]
+
+❌ INCORRECT - Don't over-interpret:
+- "career growth" → career_progression_pattern: "steady_progression"
+- "professional development" → career_progression_pattern: null
+- "advancement" → career_progression_pattern: "entry_level_to_senior"
+
+**Ambiguous Company References:**
+✅ CORRECT:
+- "FAANG employees" → industry_filter: "technology" (don't extract specific companies)
+- "Big 4 consultants" → industry_filter: "consulting"
+- "investment bank analysts" → industry_filter: "finance"
+
+❌ INCORRECT:
+- "FAANG" → company_filter: "FAANG" (this is not a real company)
+- "Big 4" → company_filter: "Big 4" (this is not a real company)
+
+**Salary/Compensation Edge Cases:**
+- "high earners" → total_experience_years: 7 (implies senior level)
+- "well-compensated" → career_progression_pattern: "entry_level_to_senior"
+- "six-figure salaries" → total_experience_years: 5
+
+**Geographic Mobility Edge Cases:**
+- "relocated for work" → geographic_mobility: true
+- "moved cities" → geographic_mobility: true
+- "international experience" → geographic_mobility: true
+- "worked abroad" → geographic_mobility: true
 
 Return comprehensive JSON with all applicable filters. If no chronological patterns detected, return: {"gap_tolerance": 6}`
       },
