@@ -15,6 +15,7 @@ import { useSearchHistory } from "../../hooks/useSearchHistory"
 import OAuthHandler from "../../components/OAuthHandler"
 import { useAuth } from "../../components/AuthProvider"
 import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
+import { InlineWidget } from "react-calendly"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -2024,6 +2025,18 @@ export default function DashboardPage() {
       setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
     }
   };
+
+  const [showCalendly, setShowCalendly] = useState(false)
+
+  useEffect(() => {
+    // Check if this is a new user from OAuth callback
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('new_user') === 'true') {
+      setShowCalendly(true)
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [])
 
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
