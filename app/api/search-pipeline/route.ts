@@ -64,13 +64,6 @@ interface TemporalElements {
   };
 }
 
-interface WeightAssignment {
-  career_quality: number;
-  education_quality: number;
-  timeline_precision: number;
-  filter_specificity: number;
-}
-
 interface TemporalConfig {
   type: 'temporal';
   temporalElements: TemporalElements;
@@ -82,11 +75,9 @@ interface TemporalConfig {
 interface ChronologicalConfig {
   type: 'chronological';
   filters: ChronologicalFilters;
-  weights: WeightAssignment;
   sqlFunction: string;
   sqlParameters: {
       chronological_filters: ChronologicalFilters;
-      weight_assignment: WeightAssignment;
     };
 }
 
@@ -166,16 +157,13 @@ export async function POST(req: NextRequest) {
         
       case 'chronological':
         console.log('📈 [STEP 2] Processing chronological search...');
-        console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation and weight assignment`);
+        console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation`);
         searchConfig = await processChronologicalSearch(query, classification, organizationName);
-        processingSteps.push('chronological_translation', 'weight_assignment');
-        llmCalls += 2;
+        processingSteps.push('chronological_translation');
+        llmCalls += 1;
         console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {
           sqlFunction: searchConfig.sqlFunction,
-          filterCount: Object.keys(searchConfig.filters || {}).length,
-          hasWeights: !!searchConfig.weights,
-          weightSum: searchConfig.weights ? 
-            Object.values(searchConfig.weights).reduce((sum, val) => sum + val, 0) : 0
+          filterCount: Object.keys(searchConfig.filters || {}).length
         });
         break;
         
@@ -422,19 +410,25 @@ async function processChronologicalSearch(
   classification: QueryClassification,
   organizationName: string
 ): Promise<ChronologicalConfig> {
-  const filters = await translateWithoutClassificationContext(query);
-  const weights = await assignWeightsWithContext(query, classification, filters);
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔄 Processing chronological search for: "${query}"`);
   
-  return {
+  // Step 1: Extract chronological filters using LLM
+  console.log(`[PIPELINE CHRONOLOGICAL] 📊 Extracting chronological filters`);
+  const filters = await translateWithoutClassificationContext(query);
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Filters extracted:`, filters);
+  
+  // Step 2: Create search configuration (removed weight assignment)
+  const searchConfig: ChronologicalConfig = {
     type: 'chronological',
-    filters,
-    weights,
-    sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+    filters: filters,
+    sqlFunction: 'llm_integrated_chronological_search_chick_fil_a',
     sqlParameters: {
-      chronological_filters: filters,
-      weight_assignment: weights
+      chronological_filters: filters
     }
   };
+  
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Chronological search config created:`, searchConfig);
+  return searchConfig;
 }
 
 // NEW: Process standard search 
@@ -839,8 +833,18 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
   });
 
   console.log(`[PIPELINE CHRONOLOGICAL] 🤖 OpenAI filter translation response received`);
-
+  
+  // ADD DETAILED DEBUGGING: Log the raw response
   const content = response.choices[0]?.message?.content;
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 RAW LLM RESPONSE:`, {
+    hasContent: !!content,
+    contentLength: content?.length || 0,
+    rawContent: content,
+    responseChoices: response.choices?.length || 0,
+    model: response.model,
+    usage: response.usage
+  });
+
   if (!content) {
     console.log(`[PIPELINE CHRONOLOGICAL] ⚠️ Empty response from OpenAI, returning default filters`);
     return { gap_tolerance: 6 };
@@ -848,6 +852,40 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
 
   try {
     const parsed = JSON.parse(content);
+    
+    // ADD DETAILED DEBUGGING: Log the parsed structure
+    console.log(`[PIPELINE CHRONOLOGICAL] 🔍 PARSED LLM STRUCTURE:`, {
+      parsedSuccessfully: true,
+      parsedKeys: Object.keys(parsed),
+      parsedValues: parsed,
+      hasBasicFilters: {
+        school_filter: !!parsed.school_filter,
+        company_filter: !!parsed.company_filter,
+        industry_filter: !!parsed.industry_filter,
+        title_filter: !!parsed.title_filter,
+        location_filter: !!parsed.location_filter
+      },
+      hasExperienceFilters: {
+        min_years_in_industry: !!parsed.min_years_in_industry,
+        min_years_in_function: !!parsed.min_years_in_function,
+        total_experience_years: !!parsed.total_experience_years,
+        career_progression_pattern: !!parsed.career_progression_pattern
+      },
+      hasEducationFilters: {
+        degree_level_progression: !!parsed.degree_level_progression,
+        education_industry_alignment: !!parsed.education_industry_alignment
+      },
+      hasTimelineFilters: {
+        gap_tolerance: parsed.gap_tolerance,
+        concurrent_activities: !!parsed.concurrent_activities
+      },
+      hasPatternFilters: {
+        industry_transitions: !!parsed.industry_transitions,
+        company_size_progression: !!parsed.company_size_progression,
+        geographic_mobility: !!parsed.geographic_mobility
+      }
+    });
+    
     console.log(`[PIPELINE CHRONOLOGICAL] ✅ Chronological filters extracted successfully:`, parsed);
     console.log(`[PIPELINE CHRONOLOGICAL] 📊 Filter summary:`, {
       experienceFilters: {
@@ -875,169 +913,25 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
   } catch (error) {
     console.error(`[PIPELINE CHRONOLOGICAL] ❌ Failed to parse filter translation response:`, {
       error: error,
-      rawContent: content
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : 'No stack',
+      rawContent: content,
+      contentPreview: content?.substring(0, 200) + (content?.length > 200 ? '...' : ''),
+      parseAttempt: 'JSON.parse failed'
     });
+    
+    // ADD DETAILED DEBUGGING: Try to identify the parsing issue
+    console.error(`[PIPELINE CHRONOLOGICAL] 🔍 PARSING DEBUG:`, {
+      contentType: typeof content,
+      isString: typeof content === 'string',
+      startsWithBrace: content?.startsWith('{'),
+      endsWithBrace: content?.endsWith('}'),
+      hasNewlines: content?.includes('\n'),
+      hasBackticks: content?.includes('```'),
+      firstChar: content?.[0],
+      lastChar: content?.[content.length - 1]
+    });
+    
     return { gap_tolerance: 6 };
   }
-}
-
-// STEP 3: Enhanced Weight Assignment with Query and Filter Context Only
-async function assignWeightsWithContext(
-  query: string,
-  classification: QueryClassification,
-  filters: ChronologicalFilters
-): Promise<WeightAssignment> {
-  console.log(`[PIPELINE WEIGHTS] ⚖️ Starting weight assignment for: "${query}"`);
-  console.log(`[PIPELINE WEIGHTS] 📊 Input context:`, {
-    searchType: classification.type,
-    filterCount: Object.keys(filters).length,
-    hasProgressionPattern: !!filters.career_progression_pattern,
-    hasExperienceFilters: !!(filters.min_years_in_industry || filters.min_years_in_function),
-    hasEducationFilters: !!(filters.degree_level_progression || filters.education_industry_alignment)
-  });
-  
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0,
-    messages: [
-      {
-        role: 'system',
-        content: `You are assigning importance weights for chronological career search based on query analysis and extracted filters.
-
-**CONTEXT PROVIDED:**
-Query: "${query}"
-Search Type: ${classification.type}
-Extracted Filters: ${JSON.stringify(filters)}
-
-Use this context to assign optimal weights (0-1, must sum to 1.0) across:
-
-**1. CAREER_QUALITY (0-1)**
-- Total years of experience
-- Job level advancement progression
-- Leadership roles and responsibilities
-- Industry expertise development
-
-**2. EDUCATION_QUALITY (0-1)**
-- Degree level progression
-- Institution reputation
-- Field relevance to career
-- Academic achievements
-
-**3. TIMELINE_PRECISION (0-1)**
-- How closely timeline matches patterns
-- Gap timing between transitions
-- Concurrent activities handling
-- Geographic mobility timing
-
-**4. FILTER_SPECIFICITY (0-1)**
-- Exact company matches
-- Specific school requirements
-- Precise job title matches
-- Location requirements
-
-**WEIGHT ASSIGNMENT LOGIC:**
-
-If query mentions experience/years → Higher career_quality weight
-If query mentions leadership/management → Higher career_quality + timeline_precision
-If filters have specific years → Higher filter_specificity
-If filters have education requirements → Higher education_quality
-If filters have specific companies/schools → Higher filter_specificity
-
-**EXAMPLES:**
-
-Query: "10+ years experienced technology leaders"
-Filters: min_years_in_function=10, career_progression_pattern="technical_to_leadership"
-{
-  "career_quality": 0.7,
-  "education_quality": 0.1,
-  "timeline_precision": 0.15,
-  "filter_specificity": 0.05
-}
-
-Query: "MBA graduates who became executives"
-Filters: degree_level_progression=["Bachelor's", "Master's"], career_progression_pattern="entry_level_to_senior"
-{
-  "career_quality": 0.4,
-  "education_quality": 0.35,
-  "timeline_precision": 0.2,
-  "filter_specificity": 0.05
-}
-
-Return ONLY the JSON object with four weights that sum to 1.0.`
-      },
-      {
-        role: 'user',
-        content: `Assign weights based on the full context provided above.`
-      }
-    ]
-  });
-
-  console.log(`[PIPELINE WEIGHTS] 🤖 OpenAI weight assignment response received`);
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    console.log(`[PIPELINE WEIGHTS] ⚠️ Empty response from OpenAI, using default weights`);
-    return getDefaultWeights();
-  }
-
-  try {
-    const weights = JSON.parse(content);
-    console.log(`[PIPELINE WEIGHTS] 📊 Raw weights received:`, weights);
-    
-    const validatedWeights = validateWeights(weights);
-    console.log(`[PIPELINE WEIGHTS] ✅ Weight assignment completed:`, validatedWeights);
-    console.log(`[PIPELINE WEIGHTS] 📈 Weight distribution:`, {
-      careerQuality: `${Math.round(validatedWeights.career_quality * 100)}%`,
-      educationQuality: `${Math.round(validatedWeights.education_quality * 100)}%`,
-      timelinePrecision: `${Math.round(validatedWeights.timeline_precision * 100)}%`,
-      filterSpecificity: `${Math.round(validatedWeights.filter_specificity * 100)}%`,
-      totalSum: Math.round((validatedWeights.career_quality + validatedWeights.education_quality + validatedWeights.timeline_precision + validatedWeights.filter_specificity) * 100) / 100
-    });
-    
-    return validatedWeights;
-  } catch (error) {
-    console.error(`[PIPELINE WEIGHTS] ❌ Failed to parse weight assignment response:`, {
-      error: error,
-      rawContent: content
-    });
-    return getDefaultWeights();
-  }
-}
-
-function validateWeights(weights: any): WeightAssignment {
-  const requiredFields = ['career_quality', 'education_quality', 'timeline_precision', 'filter_specificity'];
-  
-  for (const field of requiredFields) {
-    if (typeof weights[field] !== 'number') {
-      return getDefaultWeights();
-    }
-  }
-
-  const sum = weights.career_quality + weights.education_quality + weights.timeline_precision + weights.filter_specificity;
-  
-  if (Math.abs(sum - 1.0) > 0.01) {
-    // Normalize if close to 1.0
-    return {
-      career_quality: weights.career_quality / sum,
-      education_quality: weights.education_quality / sum,
-      timeline_precision: weights.timeline_precision / sum,
-      filter_specificity: weights.filter_specificity / sum
-    };
-  }
-
-  return {
-    career_quality: Math.max(0, weights.career_quality),
-    education_quality: Math.max(0, weights.education_quality),
-    timeline_precision: Math.max(0, weights.timeline_precision),
-    filter_specificity: Math.max(0, weights.filter_specificity)
-  };
-}
-
-function getDefaultWeights(): WeightAssignment {
-  return {
-    career_quality: 0.4,
-    education_quality: 0.25,
-    timeline_precision: 0.25,
-    filter_specificity: 0.1
-  };
 } 

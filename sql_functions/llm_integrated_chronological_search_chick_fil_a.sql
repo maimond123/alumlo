@@ -1,7 +1,6 @@
 CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
   -- LLM PIPELINE INPUTS
   chronological_filters jsonb DEFAULT '{}',  -- Output from translateWithoutClassificationContext
-  weight_assignment jsonb DEFAULT '{}',      -- Output from weight assignment LLM
   
   -- ADDITIONAL SEARCH PARAMETERS
   limit_count int DEFAULT 20,
@@ -34,40 +33,10 @@ RETURNS TABLE (
   sequence_gap_months int,
   has_concurrent_activities boolean,
   
-  -- Dynamic chronological relevance score using LLM weights
+  -- Dynamic chronological relevance score using default weights
   chronological_relevance_score float
 ) AS $$
 DECLARE
-  -- Extract LLM weights with defaults
-  weight_career_quality numeric := COALESCE((weight_assignment->>'career_quality')::numeric, 0.4);
-  weight_education_quality numeric := COALESCE((weight_assignment->>'education_quality')::numeric, 0.25);
-  weight_timeline_precision numeric := COALESCE((weight_assignment->>'timeline_precision')::numeric, 0.25);
-  weight_filter_specificity numeric := COALESCE((weight_assignment->>'filter_specificity')::numeric, 0.1);
-  
-  -- Extract filter values with fallbacks
-  min_years_in_industry numeric := COALESCE((chronological_filters->>'min_years_in_industry')::numeric, NULL);
-  min_years_in_function numeric := COALESCE((chronological_filters->>'min_years_in_function')::numeric, NULL);
-  total_experience_years numeric := COALESCE((chronological_filters->>'total_experience_years')::numeric, NULL);
-  career_progression_pattern text := chronological_filters->>'career_progression_pattern';
-  gap_tolerance numeric := COALESCE((chronological_filters->>'gap_tolerance')::numeric, 6);
-  concurrent_activities boolean := COALESCE((chronological_filters->>'concurrent_activities')::boolean, FALSE);
-  geographic_mobility boolean := COALESCE((chronological_filters->>'geographic_mobility')::boolean, FALSE);
-  
-  -- ADD MISSING BASIC FILTERS - This is the bug fix!
-  school_filter text := chronological_filters->>'school_filter';
-  company_filter text := chronological_filters->>'company_filter';
-  industry_filter text := chronological_filters->>'industry_filter';
-  title_filter text := chronological_filters->>'title_filter';
-  location_filter text := chronological_filters->>'location_filter';
-  
-  -- Education filters
-  degree_level_progression jsonb := chronological_filters->'degree_level_progression';
-  education_industry_alignment boolean := COALESCE((chronological_filters->>'education_industry_alignment')::boolean, FALSE);
-  
-  -- Industry and company transitions
-  industry_transitions jsonb := chronological_filters->'industry_transitions';
-  company_size_progression jsonb := chronological_filters->'company_size_progression';
-  
   -- Dynamic table name based on organization
   career_events_table text := organization_name || '_alumni_career_events';
   education_events_table text := organization_name || '_alumni_education_events';
@@ -113,7 +82,7 @@ BEGIN
       -- Industry experience calculation
       COALESCE(
         SUM(
-          CASE WHEN ($3 IS NULL OR ce.industry ILIKE ''%%'' || $3 || ''%%'') THEN
+          CASE WHEN (($1->>''industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'') THEN
             CASE WHEN ce.end_year = 9999 THEN 
               (EXTRACT(YEAR FROM NOW()) - ce.start_year) * 12 + 
               (EXTRACT(MONTH FROM NOW()) - ce.start_month)
@@ -124,10 +93,10 @@ BEGIN
         ) / 12.0, 0
       ) as years_in_target_industry,
       
-      -- Career progression score based on patterns and leadership
-      CASE 
-        WHEN $4 IS NOT NULL THEN
-          CASE $4
+      -- Career progression score based on patterns and leadership (CAST TO FLOAT)
+      (CASE 
+        WHEN ($1->>''career_progression_pattern'') IS NOT NULL THEN
+          CASE ($1->>''career_progression_pattern'')
             WHEN ''individual_contributor_to_management'' THEN
               CASE WHEN bool_or(ce.is_leadership_role) AND bool_or(NOT ce.management_responsibility) THEN 1.0 ELSE 0.3 END
             WHEN ''entry_level_to_senior'' THEN
@@ -146,7 +115,7 @@ BEGIN
               (CASE WHEN bool_or(ce.is_leadership_role) THEN 0.3 ELSE 0 END)
             ELSE 0.2
           END
-      END as career_progression_score,
+      END)::float as career_progression_score,
       
       -- Geographic mobility check
       COUNT(DISTINCT ce.location) > 1 as has_geographic_mobility,
@@ -157,11 +126,11 @@ BEGIN
       
     FROM %I ce
     WHERE 
-      -- Apply career filters
-      ($14 IS NULL OR ce.company ILIKE ''%%'' || $14 || ''%%'')
-      AND ($15 IS NULL OR ce.industry ILIKE ''%%'' || $15 || ''%%'')
-      AND ($16 IS NULL OR ce.title ILIKE ''%%'' || $16 || ''%%'')
-      AND ($17 IS NULL OR ce.location ILIKE ''%%'' || $17 || ''%%'')
+      -- Apply career filters using JSON extraction
+      (($1->>''company_filter'') IS NULL OR ce.company ILIKE ''%%'' || ($1->>''company_filter'') || ''%%'')
+      AND (($1->>''industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'')
+      AND (($1->>''title_filter'') IS NULL OR ce.title ILIKE ''%%'' || ($1->>''title_filter'') || ''%%'')
+      AND (($1->>''location_filter'') IS NULL OR ce.location ILIKE ''%%'' || ($1->>''location_filter'') || ''%%'')
     GROUP BY ce.profile_id
   ),
   
@@ -174,7 +143,7 @@ BEGIN
         ee.start_year::text || ''_'' || ee.start_month::text,
         jsonb_build_object(
           ''institution'', ee.institution,
-          ''degree'', ee.degree,
+          ''degree'', ee.degree_name,
           ''degree_level'', ee.degree_level,
           ''location'', ee.location,
           ''start_year'', ee.start_year,
@@ -196,14 +165,14 @@ BEGIN
         ELSE ''High School''
       END as highest_degree_level,
       
-      -- Education progression score with LLM pattern matching
-      CASE 
-        WHEN $6 IS NOT NULL THEN
+      -- Education progression score with LLM pattern matching (CAST TO FLOAT)
+      (CASE 
+        WHEN ($1->''degree_level_progression'') IS NOT NULL THEN
           -- Check if actual progression matches expected pattern
-          CASE WHEN jsonb_array_length($6) > 0 THEN
+          CASE WHEN jsonb_array_length($1->''degree_level_progression'') > 0 THEN
             CASE 
-              WHEN COUNT(DISTINCT ee.degree_level) >= jsonb_array_length($6) THEN 1.0
-              ELSE COUNT(DISTINCT ee.degree_level)::float / jsonb_array_length($6)
+              WHEN COUNT(DISTINCT ee.degree_level) >= jsonb_array_length($1->''degree_level_progression'') THEN 1.0
+              ELSE COUNT(DISTINCT ee.degree_level)::float / jsonb_array_length($1->''degree_level_progression'')
             END
           ELSE 0.5
           END
@@ -214,7 +183,7 @@ BEGIN
             WHEN COUNT(DISTINCT ee.degree_level) = 2 THEN 0.7   
             ELSE 0.3
           END
-      END as education_progression_score,
+      END)::float as education_progression_score,
       
       -- Latest and earliest education dates for timeline analysis
       MAX(ee.end_year * 12 + ee.end_month) as latest_education_end_month,
@@ -222,8 +191,8 @@ BEGIN
       
     FROM %I ee
     WHERE 
-      -- Apply school filter - comprehensive search across institution field
-      ($18 IS NULL OR ee.institution ILIKE ''%%'' || $18 || ''%%'')
+      -- Apply school filter using JSON extraction
+      (($1->>''school_filter'') IS NULL OR ee.institution ILIKE ''%%'' || ($1->>''school_filter'') || ''%%'')
     GROUP BY ee.profile_id
   ),
   
@@ -268,76 +237,76 @@ BEGIN
         ELSE FALSE
       END as has_concurrent_activities,
       
-      -- DYNAMIC CHRONOLOGICAL RELEVANCE SCORE using LLM weights
+      -- CHRONOLOGICAL RELEVANCE SCORE using default weights (CAST TO FLOAT)
       (
-        -- Career quality component (dynamic weight)
-        COALESCE(ca.career_progression_score, 0) * $7 +
+        -- Career quality component (default weight: 0.4)
+        COALESCE(ca.career_progression_score, 0) * 0.4 +
         
-        -- Education quality component (dynamic weight)
-        COALESCE(ea.education_progression_score, 0) * $8 +
+        -- Education quality component (default weight: 0.25)
+        COALESCE(ea.education_progression_score, 0) * 0.25 +
         
-        -- Timeline precision component (dynamic weight)
+        -- Timeline precision component (default weight: 0.25)
         CASE 
-          WHEN $5 IS NOT NULL THEN -- gap_tolerance provided
-            CASE WHEN ABS(COALESCE(ca.earliest_career_start_month, 0) - COALESCE(ea.latest_education_end_month, 0)) <= $5 THEN 1.0 ELSE 0.3 END
+          WHEN (($1->>''gap_tolerance'')::numeric) IS NOT NULL THEN -- gap_tolerance provided
+            CASE WHEN ABS(COALESCE(ca.earliest_career_start_month, 0) - COALESCE(ea.latest_education_end_month, 0)) <= (($1->>''gap_tolerance'')::numeric) THEN 1.0 ELSE 0.3 END
           ELSE 0.7 -- Default timeline score
-        END * $9 +
+        END * 0.25 +
         
-        -- Filter specificity component (dynamic weight)
+        -- Filter specificity component (default weight: 0.1)
         CASE 
           WHEN ca.total_years_experience IS NOT NULL AND ea.highest_degree_level IS NOT NULL THEN 1.0
           WHEN ca.total_years_experience IS NOT NULL OR ea.highest_degree_level IS NOT NULL THEN 0.7
           ELSE 0.4
-        END * $10
-      ) as chronological_relevance_score
+        END * 0.1
+      )::float as chronological_relevance_score
       
     FROM career_analysis ca
     FULL OUTER JOIN education_analysis ea ON ca.profile_id = ea.profile_id
     WHERE 
       -- STRICT FILTER ENFORCEMENT: All filters must be satisfied
       
-      -- Experience filters (existing)
-      ($2 IS NULL OR COALESCE(ca.total_years_experience, 0) >= $2)
-      AND ($3 IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= $3)
-      AND ($11 IS FALSE OR COALESCE(ca.has_geographic_mobility, FALSE) = $11)
-      AND ($12 IS FALSE OR 
+      -- Experience filters
+      ((($1->>''total_experience_years'')::numeric) IS NULL OR COALESCE(ca.total_years_experience, 0) >= (($1->>''total_experience_years'')::numeric))
+      AND ((($1->>''min_years_in_industry'')::numeric) IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= (($1->>''min_years_in_industry'')::numeric))
+      AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR (($1->>''geographic_mobility'')::boolean) = FALSE OR COALESCE(ca.has_geographic_mobility, FALSE) = (($1->>''geographic_mobility'')::boolean))
+      AND ((($1->>''concurrent_activities'')::boolean) IS NULL OR (($1->>''concurrent_activities'')::boolean) = FALSE OR 
            CASE 
              WHEN ea.earliest_education_start_month IS NOT NULL AND ca.latest_career_end_month IS NOT NULL AND
                   ca.earliest_career_start_month IS NOT NULL AND ea.latest_education_end_month IS NOT NULL THEN
                (ea.earliest_education_start_month <= ca.latest_career_end_month AND 
-                ca.earliest_career_start_month <= ea.latest_education_end_month) = $12
-             ELSE $12 = FALSE
+                ca.earliest_career_start_month <= ea.latest_education_end_month) = (($1->>''concurrent_activities'')::boolean)
+             ELSE (($1->>''concurrent_activities'')::boolean) = FALSE
            END)
       
-      -- NEW: HARD SCHOOL FILTER ENFORCEMENT
-      AND ($18 IS NULL OR 
+      -- HARD SCHOOL FILTER ENFORCEMENT
+      AND (($1->>''school_filter'') IS NULL OR 
            (ea.profile_id IS NOT NULL AND 
             EXISTS (SELECT 1 FROM %I ee2 WHERE ee2.profile_id = ea.profile_id 
-                    AND ee2.institution ILIKE ''%%'' || $18 || ''%%'')))
+                    AND ee2.institution ILIKE ''%%'' || ($1->>''school_filter'') || ''%%'')))
       
-      -- NEW: HARD COMPANY FILTER ENFORCEMENT  
-      AND ($14 IS NULL OR 
+      -- HARD COMPANY FILTER ENFORCEMENT  
+      AND (($1->>''company_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce2 WHERE ce2.profile_id = ca.profile_id
-                    AND ce2.company ILIKE ''%%'' || $14 || ''%%'')))
+                    AND ce2.company ILIKE ''%%'' || ($1->>''company_filter'') || ''%%'')))
       
-      -- NEW: HARD INDUSTRY FILTER ENFORCEMENT
-      AND ($15 IS NULL OR 
+      -- HARD INDUSTRY FILTER ENFORCEMENT
+      AND (($1->>''industry_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce3 WHERE ce3.profile_id = ca.profile_id
-                    AND ce3.industry ILIKE ''%%'' || $15 || ''%%'')))
+                    AND ce3.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'')))
       
-      -- NEW: HARD TITLE FILTER ENFORCEMENT
-      AND ($16 IS NULL OR 
+      -- HARD TITLE FILTER ENFORCEMENT
+      AND (($1->>''title_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce4 WHERE ce4.profile_id = ca.profile_id
-                    AND ce4.title ILIKE ''%%'' || $16 || ''%%'')))
+                    AND ce4.title ILIKE ''%%'' || ($1->>''title_filter'') || ''%%'')))
       
-      -- NEW: HARD LOCATION FILTER ENFORCEMENT
-      AND ($17 IS NULL OR 
+      -- HARD LOCATION FILTER ENFORCEMENT
+      AND (($1->>''location_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce5 WHERE ce5.profile_id = ca.profile_id
-                    AND ce5.location ILIKE ''%%'' || $17 || ''%%'')))
+                    AND ce5.location ILIKE ''%%'' || ($1->>''location_filter'') || ''%%'')))
   )
   
   SELECT 
@@ -355,12 +324,6 @@ BEGIN
       ''has_concurrent_activities'', cda.has_concurrent_activities,
       ''has_geographic_mobility'', cda.has_geographic_mobility,
       ''chronological_relevance_score'', cda.chronological_relevance_score,
-      ''applied_weights'', jsonb_build_object(
-        ''career_quality'', $7,
-        ''education_quality'', $8,
-        ''timeline_precision'', $9,
-        ''filter_specificity'', $10
-      ),
       ''applied_filters'', $1
     ) as comprehensive_analysis,
     COALESCE(av.post_company_current_company, ''Unknown'') as current_company,
@@ -379,7 +342,7 @@ BEGIN
   FROM cross_domain_analysis cda
   LEFT JOIN %I av ON cda.profile_id = av.profile_id
   ORDER BY cda.chronological_relevance_score DESC
-  LIMIT $13
+  LIMIT $2
   ', 
   career_events_table, 
   education_events_table, 
@@ -391,27 +354,11 @@ BEGIN
   vector_table
   ) 
   USING 
-    chronological_filters,           -- $1
-    total_experience_years,          -- $2 
-    min_years_in_industry,           -- $3
-    career_progression_pattern,      -- $4
-    gap_tolerance,                   -- $5
-    degree_level_progression,        -- $6
-    weight_career_quality,           -- $7
-    weight_education_quality,        -- $8  
-    weight_timeline_precision,       -- $9
-    weight_filter_specificity,       -- $10
-    geographic_mobility,             -- $11
-    concurrent_activities,           -- $12
-    limit_count,                     -- $13
-    company_filter,                  -- $14 - NEW
-    industry_filter,                 -- $15 - NEW
-    title_filter,                    -- $16 - NEW
-    location_filter,                 -- $17 - NEW
-    school_filter;                   -- $18 - NEW (This is the Georgetown fix!)
+    chronological_filters,           -- $1 (JSON with all filters)
+    limit_count;                     -- $2
     
 END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'LLM-integrated chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied before scoring. Scoring is used purely for ranking compliant profiles. No profile can bypass filter requirements through high scores.'; 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'LLM-integrated chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied before scoring. Scoring is used purely for ranking compliant profiles. No profile can bypass filter requirements through high scores. Removed weight assignment functionality and uses default weights (career: 0.4, education: 0.25, timeline: 0.25, specificity: 0.1).'; 

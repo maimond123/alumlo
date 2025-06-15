@@ -1387,8 +1387,7 @@ export default function DashboardPage() {
         organizationName: originalOrganizationName,
         isDemo: isDemoMode,
         queryClassification: queryClassification,
-          filters: apiFilters,
-        chronologicalWeights: searchConfig?.weights
+          filters: apiFilters
       };
       
       console.log(`🚀🚀🚀 [DASHBOARD] SEARCH REQUEST BODY:`, {
@@ -1765,38 +1764,6 @@ export default function DashboardPage() {
     } catch (error) {
       console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
       return {};
-    }
-  };
-
-  // Assign chronological weights using LLM
-  const assignChronologicalWeights = async (query: string): Promise<any> => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Assigning chronological weights for query: "${query}"`);
-    
-    try {
-      const response = await fetch('/api/assign-weights', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Weight assignment failed');
-      }
-
-      const weights = await response.json();
-      console.log(`[DEBUG ${new Date().toISOString()}] Assigned weights:`, weights);
-      return weights;
-    } catch (error) {
-      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in assignChronologicalWeights:`, error);
-      // Return default weights on error
-      return {
-        career_quality: 0.4,
-        education_quality: 0.25,
-        timeline_precision: 0.25,
-        filter_specificity: 0.1
-      };
     }
   };
 

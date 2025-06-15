@@ -1435,311 +1435,227 @@ export class LinkedInProfileSearchEngine {
     query: string,
     filters: ChronologicalSearchFilters = {},
     top_k: number = 10,
-    organizationName?: string,
-    chronologicalWeights?: any // Add support for LLM weights
+    organizationName?: string
   ): Promise<ChronologicalSearchResult[]> {
+    console.log(`[AI SEARCH] 📈 Starting chronological search for: "${query}"`);
+    console.log(`[AI SEARCH] 🔧 Chronological filters:`, filters);
+    console.log(`[AI SEARCH] 🏢 Organization: ${organizationName || 'default'}`);
+    
+    if (!organizationName) {
+      console.log(`[AI SEARCH] ⚠️ No organization name provided, falling back to legacy search`);
+      return this.searchChronologicalLegacy(query, filters, top_k, 'default');
+    }
+    
+    // Check if LLM integration function exists for this organization
+    const sqlFunctionName = `llm_integrated_chronological_search_${organizationName}`;
+    console.log(`[AI SEARCH] 🔍 Checking for LLM integration function: ${sqlFunctionName}`);
+    
     try {
-      console.log(`[AI_SEARCH DEBUG] 📊 searchChronological called with filters:`, filters);
-      console.log(`[AI_SEARCH DEBUG] 📊 chronologicalWeights:`, chronologicalWeights);
-      console.log(`[AI_SEARCH CHRONOLOGICAL] 🚀 Starting chronological search at ${new Date().toISOString()}`);
-      console.log(`[AI_SEARCH CHRONOLOGICAL] 📝 Search parameters:`, {
-        query: `"${query}"`,
-        filterCount: Object.keys(filters).length,
-        targetResults: top_k,
-        organizationName,
-        hasWeights: !!chronologicalWeights,
-        weightKeys: chronologicalWeights ? Object.keys(chronologicalWeights) : []
+      // Test if the function exists by calling it with minimal parameters
+      const { data: testData, error: testError } = await this.supabase.rpc(sqlFunctionName, {
+        chronological_filters: {},
+        limit_count: 1
       });
       
-      // Get the organization name
-      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
-        localStorage.getItem('organizationName') : null);
-      
-      console.log(`[AI_SEARCH CHRONOLOGICAL] 🏛️ Organization resolution:`, {
-        provided: organizationName,
-        stored: storedOrganizationName,
-        final: storedOrganizationName
-      });
-      
-      if (!storedOrganizationName) {
-        console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ Missing organization name`);
-        throw new Error('Organization name is required for chronological search');
+      if (testError) {
+        console.log(`[AI SEARCH] ❌ LLM integration function not available: ${testError.message}`);
+        console.log(`[AI SEARCH] 🔄 Falling back to legacy chronological search`);
+        return this.searchChronologicalLegacy(query, filters, top_k, organizationName);
       }
       
-      // Check if we have optimized LLM pipeline configuration
-      const hasLLMConfiguration = chronologicalWeights && 
-        (chronologicalWeights.career_quality !== undefined ||
-         chronologicalWeights.education_quality !== undefined ||
-         chronologicalWeights.timeline_precision !== undefined ||
-         chronologicalWeights.filter_specificity !== undefined);
-      
-      console.log(`[AI_SEARCH CHRONOLOGICAL] 🔍 Configuration check:`, {
-        hasLLMConfiguration,
-        weightsProvided: !!chronologicalWeights,
-        weightValidation: chronologicalWeights ? {
-          hasCareerQuality: chronologicalWeights.career_quality !== undefined,
-          hasEducationQuality: chronologicalWeights.education_quality !== undefined,
-          hasTimelinePrecision: chronologicalWeights.timeline_precision !== undefined,
-          hasFilterSpecificity: chronologicalWeights.filter_specificity !== undefined
-        } : 'no weights'
-      });
-      
-      if (hasLLMConfiguration) {
-        console.log(`[AI_SEARCH DEBUG] 📊 Using LLM-integrated chronological search`);
-        console.log(`[AI_SEARCH CHRONOLOGICAL] 🧠 Using LLM-integrated search path`);
-        return this.searchChronologicalWithLLMIntegration(
-          query, 
-          filters, 
-          chronologicalWeights, 
-          top_k, 
-          storedOrganizationName
-        );
-      } else {
-        console.log(`[AI_SEARCH DEBUG] 📊 Using legacy chronological search`);
-        console.log(`[AI_SEARCH CHRONOLOGICAL] 🔄 Using legacy search path`);
-        return this.searchChronologicalLegacy(
-          query, 
-          filters, 
-          top_k, 
-          storedOrganizationName
-        );
-      }
+      console.log(`[AI SEARCH] ✅ LLM integration function available, using enhanced search`);
+      return this.searchChronologicalWithLLMIntegration(query, filters, top_k, organizationName);
       
     } catch (error) {
-      console.error(`[AI_SEARCH DEBUG] 📊 Chronological search error:`, error);
-      console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ Critical chronological search error:`, {
-        error: error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        query: `"${query}"`,
-        organizationName
-      });
-      throw error;
+      console.error(`[AI SEARCH] ❌ Error testing LLM integration function:`, error);
+      console.log(`[AI SEARCH] 🔄 Falling back to legacy chronological search`);
+      return this.searchChronologicalLegacy(query, filters, top_k, organizationName);
     }
   }
-  
-  /**
-   * NEW: LLM-integrated chronological search using optimized SQL function
-   */
+
   private async searchChronologicalWithLLMIntegration(
     query: string,
     filters: ChronologicalSearchFilters,
-    weights: any,
     top_k: number,
     organizationName: string
   ): Promise<ChronologicalSearchResult[]> {
+    console.log(`[AI SEARCH LLM] 🚀 Starting LLM-integrated chronological search`);
+    console.log(`[AI SEARCH LLM] 📊 Input parameters:`, {
+      query: query,
+      filtersProvided: Object.keys(filters).length,
+      topK: top_k,
+      organization: organizationName
+    });
+    
+    const sqlFunctionName = `llm_integrated_chronological_search_${organizationName}`;
+    
     try {
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🧠 Starting LLM-integrated chronological search`);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📝 Input parameters:`, {
-        query: `"${query}"`,
-        filterCount: Object.keys(filters).length,
-        weightCount: Object.keys(weights).length,
-        targetResults: top_k,
-        organization: organizationName
-      });
-      
-      // Construct the LLM-integrated RPC function name
-      const rpcFunctionName = `llm_integrated_chronological_search_${organizationName}`;
-      console.log(`[AI_SEARCH DEBUG] 📊 Using LLM-integrated RPC function: ${rpcFunctionName}`);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🎯 Target SQL function: ${rpcFunctionName}`);
-      
-      // Prepare structured JSON parameters for the optimized SQL function
-      const chronologicalFilters = {
-        // ADD MISSING BASIC FILTERS - This is the bug fix!
-        school_filter: filters.school_filter || null,
-        company_filter: filters.company_filter || null,
-        industry_filter: filters.industry_filter || null,
-        title_filter: filters.title_filter || null,
-        location_filter: filters.location_filter || null,
-        
-        // Career progression filters
-        min_years_in_industry: filters.min_years_in_industry || null,
-        min_years_in_function: filters.min_years_in_function || null,
-        min_years_at_company_type: filters.min_years_at_company_type || null,
-        career_progression_pattern: filters.career_progression_pattern || null,
-        degree_level_progression: filters.degree_level_progression || null,
-        education_industry_alignment: filters.education_industry_alignment || false,
-        gap_tolerance: filters.gap_tolerance || 6,
-        concurrent_activities: filters.concurrent_activities || false,
-        industry_transitions: filters.industry_transitions || null,
-        company_size_progression: filters.company_size_progression || null,
-        geographic_mobility: filters.geographic_mobility || false
-      };
-      
-      const weightAssignment = {
-        career_quality: weights.career_quality || 0.4,
-        education_quality: weights.education_quality || 0.25,
-        timeline_precision: weights.timeline_precision || 0.25,
-        filter_specificity: weights.filter_specificity || 0.1
-      };
-      
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 Prepared filters:`, chronologicalFilters);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ⚖️ Prepared weights:`, weightAssignment);
-      
-      const rpcParams = {
-        chronological_filters: chronologicalFilters,
-        weight_assignment: weightAssignment,
-        limit_count: Math.max(top_k, 20), // Use minimum 20 for better results
+      console.log(`[AI SEARCH LLM] 📡 Calling SQL function: ${sqlFunctionName}`);
+      console.log(`[AI SEARCH LLM] 📝 Function parameters:`, {
+        chronological_filters: filters,
+        limit_count: top_k,
         organization_name: organizationName
-      };
-      
-      console.log(`[AI_SEARCH DEBUG] 📊 Calling ${rpcFunctionName} with LLM parameters:`, rpcParams);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📡 Executing RPC with parameters:`, {
-        filterKeys: Object.keys(chronologicalFilters),
-        weightKeys: Object.keys(weightAssignment),
-        limitCount: rpcParams.limit_count,
-        organization: rpcParams.organization_name
       });
       
-      // DETAILED LOGGING: Log the exact SQL function call parameters
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 DETAILED SQL PARAMETERS:`, {
-        function_name: rpcFunctionName,
-        chronological_filters: JSON.stringify(chronologicalFilters, null, 2),
-        weight_assignment: JSON.stringify(weightAssignment, null, 2),
-        limit_count: rpcParams.limit_count,
-        organization_name: rpcParams.organization_name,
-        school_filter_value: chronologicalFilters.school_filter,
-        company_filter_value: chronologicalFilters.company_filter,
-        has_basic_filters: !!(chronologicalFilters.school_filter || chronologicalFilters.company_filter || chronologicalFilters.industry_filter || chronologicalFilters.title_filter || chronologicalFilters.location_filter)
-      });
-      
-      // Call the LLM-integrated chronological search RPC function
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📞 Making Supabase RPC call to: ${rpcFunctionName}`);
-      const { data, error } = await this.supabase
-        .rpc(rpcFunctionName, rpcParams)
-        .returns<any[]>();
-      
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📈 RPC response:`, {
-        success: !error,
-        resultCount: data?.length || 0,
-        errorMessage: error?.message || null
-      });
-      
-      // DETAILED LOGGING: Log the raw response
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔍 DETAILED RPC RESPONSE:`, {
-        has_data: !!data,
-        data_is_array: Array.isArray(data),
-        data_length: data?.length || 0,
-        first_result_sample: data?.[0] ? {
-          id: data[0].profile_id || data[0].id,
-          name: data[0].name,
-          has_comprehensive_analysis: !!data[0].comprehensive_analysis,
-          chronological_relevance_score: data[0].chronological_relevance_score,
-          current_company: data[0].current_company,
-          undergraduate_school: data[0].undergraduate_school
-        } : null,
-        error_details: error ? {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        } : null
+      const { data, error } = await this.supabase.rpc(sqlFunctionName, {
+        chronological_filters: filters,
+        limit_count: top_k,
+        organization_name: organizationName
       });
       
       if (error) {
-        console.error(`[AI_SEARCH DEBUG] 📊 LLM chronological search error:`, error);
-        console.error(`[AI_SEARCH LLM_CHRONOLOGICAL] ❌ RPC error:`, {
-          function: rpcFunctionName,
+        console.error(`[AI SEARCH LLM] ❌ SQL function error:`, {
+          error: error,
           message: error.message,
           details: error.details,
           hint: error.hint,
           code: error.code
         });
-        throw new Error(`LLM chronological search failed: ${error.message}`);
+        
+        // Enhanced error analysis
+        if (error.message?.includes('structure of query does not match function result type')) {
+          console.error(`[AI SEARCH LLM] 🔍 STRUCTURE MISMATCH ERROR DETECTED:`, {
+            errorType: 'structure_mismatch',
+            errorMessage: error.message,
+            sqlFunction: sqlFunctionName,
+            parametersUsed: {
+              chronological_filters: typeof filters,
+              limit_count: typeof top_k,
+              organization_name: typeof organizationName
+            }
+          });
+        }
+        
+        if (error.message?.includes('parameter')) {
+          console.error(`[AI SEARCH LLM] 🔍 PARAMETER ERROR DETECTED:`, {
+            errorType: 'parameter_mismatch',
+            errorMessage: error.message,
+            parameterTypes: {
+              chronological_filters: typeof filters,
+              limit_count: typeof top_k,
+              organization_name: typeof organizationName
+            },
+            parameterValues: {
+              chronological_filters: JSON.stringify(filters),
+              limit_count: top_k,
+              organization_name: organizationName
+            }
+          });
+        }
+        
+        throw error;
       }
       
-      console.log(`[AI_SEARCH DEBUG] 📊 LLM chronological search returned ${data?.length || 0} results`);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ✅ Search completed: ${data?.length || 0} raw results`);
+      console.log(`[AI SEARCH LLM] ✅ SQL function executed successfully`);
+      console.log(`[AI SEARCH LLM] 📊 Raw results received:`, {
+        resultCount: data?.length || 0,
+        firstResult: data?.[0] ? {
+          profile_id: data[0].profile_id,
+          name: data[0].name,
+          hasCareerTimeline: !!data[0].career_timeline,
+          hasEducationTimeline: !!data[0].education_timeline,
+          chronological_relevance_score: data[0].chronological_relevance_score
+        } : null
+      });
       
       if (!data || data.length === 0) {
-        console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ⚠️ No results found`);
+        console.log(`[AI SEARCH LLM] ⚠️ No results returned from SQL function`);
         return [];
       }
       
-      // Process the results from the LLM-integrated SQL function
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 🔄 Processing results`);
-      const processedResults = data.map((item: any): ChronologicalSearchResult => {
-        // The comprehensive_analysis already contains processed timeline and scoring data
-        const analysis = item.comprehensive_analysis || {};
+      // Transform results to match expected interface
+      const transformedResults: ChronologicalSearchResult[] = data.map((row: any) => ({
+        // Base CompanySearchResult fields
+        id: row.profile_id,
+        profile_id: row.profile_id,
+        name: row.name,
+        profile_url: '', // Not provided by chronological search
+        post_company_current_company: row.current_company || '',
+        post_company_current_title: row.current_title || '',
+        post_company_current_industry: row.current_industry || '',
+        post_company_current_location: row.current_location || '',
+        picture_url: undefined,
+        similarity: row.chronological_relevance_score || 0,
+        industry: row.current_industry || '',
+        headline: '',
         
-        console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📝 Processing: ${item.name} (relevance: ${item.chronological_relevance_score || 'N/A'})`);
+        // Enhanced fields with defaults
+        current_job_level: '',
+        current_job_function: '',
+        career_stage: '',
+        highest_degree_level: row.highest_degree_level || '',
+        school_ranking_tier: '',
         
-        return {
-          // Standard CompanySearchResult fields
-          id: item.id,
-          profile_id: item.profile_id,
-          name: item.name,
-          profile_url: item.profile_url,
-          post_company_current_company: item.current_company,
-          post_company_current_title: item.current_title,
-          post_company_current_industry: item.current_industry,
-          post_company_current_location: item.current_location,
-          picture_url: item.picture_url,
-          similarity: item.chronological_relevance_score || 0.5, // Use chronological relevance as similarity
-          industry: item.current_industry || '',
-          headline: item.headline || '',
-          current_job_level: item.current_job_level || '',
-          current_job_function: item.current_job_function || '',
-          career_stage: item.career_stage || '',
-          highest_degree_level: item.highest_degree_level || '',
-          school_ranking_tier: item.school_ranking_tier || '',
-          is_current_leader: item.is_current_leader || false,
-          management_experience: item.management_experience || false,
-          technical_background: item.technical_background || false,
-          sales_experience: item.sales_experience || false,
-          has_startup_experience: item.has_startup_experience || false,
-          has_enterprise_experience: item.has_enterprise_experience || false,
-          is_remote_worker: item.is_remote_worker || false,
-          mentor_potential: item.mentor_potential || false,
-          undergraduate_school: item.undergraduate_school || [],
-          graduate_school: item.graduate_school || [],
-          high_school: item.high_school || [],
-          pre_company_education: item.pre_company_education || [],
-          during_company_education: item.during_company_education || [],
-          post_company_education: item.post_company_education || [],
-          post_company_companies: item.post_company_companies || [],
-          post_company_titles: item.post_company_titles || [],
-          post_company_industries: item.post_company_industries || [],
-          post_company_locations: item.post_company_locations || [],
-          functional_expertise: item.functional_expertise || [],
-          industry_expertise: item.industry_expertise || [],
-          current_estimated_salary: item.current_estimated_salary || 0,
-          highest_career_salary: item.highest_career_salary || 0,
-          major_category: item.major_category || '',
-          
-          // Chronological-specific fields
-          career_timeline: item.career_timeline || {},
-          education_timeline: item.education_timeline || {},
-          career_analysis: {
-            total_years_experience: analysis.total_years_experience || 0,
-            years_in_target_industry: analysis.years_in_target_industry || 0,
-            years_in_target_function: analysis.years_in_target_function || 0,
-            career_progression_score: analysis.career_progression_score || 0,
-            industry_diversity_score: analysis.industry_diversity_score || 0,
-            leadership_progression: analysis.leadership_progression || false,
-            education_career_alignment: analysis.education_career_alignment || 0
-          }
-        };
+        // Boolean characteristics with defaults
+        is_current_leader: false,
+        management_experience: false,
+        technical_background: false,
+        sales_experience: false,
+        has_startup_experience: false,
+        has_enterprise_experience: false,
+        is_remote_worker: false,
+        mentor_potential: false,
+        
+        // Array fields with defaults
+        undergraduate_school: [],
+        graduate_school: [],
+        high_school: [],
+        pre_company_education: [],
+        during_company_education: [],
+        post_company_education: [],
+        post_company_companies: [],
+        post_company_titles: [],
+        post_company_industries: [],
+        post_company_locations: [],
+        functional_expertise: [],
+        industry_expertise: [],
+        
+        // Salary fields with defaults
+        current_estimated_salary: 0,
+        highest_career_salary: 0,
+        major_category: '',
+        
+        // Chronological-specific fields
+        career_timeline: row.career_timeline || {},
+        education_timeline: row.education_timeline || {},
+        career_analysis: {
+          total_years_experience: row.total_years_experience || 0,
+          years_in_target_industry: row.years_in_target_industry || 0,
+          years_in_target_function: 0, // Not provided by current function
+          career_progression_score: row.career_progression_score || 0,
+          industry_diversity_score: 0, // Not provided by current function
+          leadership_progression: false, // Not provided by current function
+          education_career_alignment: 0 // Not provided by current function
+        }
+      }));
+      
+      console.log(`[AI SEARCH LLM] 🎯 Transformation completed:`, {
+        originalCount: data.length,
+        transformedCount: transformedResults.length,
+        sampleResult: transformedResults[0] ? {
+          id: transformedResults[0].id,
+          name: transformedResults[0].name,
+          similarity: transformedResults[0].similarity,
+          hasCareerTimeline: !!transformedResults[0].career_timeline,
+          hasEducationTimeline: !!transformedResults[0].education_timeline
+        } : null
       });
       
-      // Sort by chronological relevance score (highest first)
-      const sortedResults = processedResults.sort((a, b) => b.similarity - a.similarity);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] 📊 Results sorted by relevance score`);
-      
-      // Return up to top_k results
-      const finalResults = sortedResults.slice(0, top_k);
-      console.log(`[AI_SEARCH LLM_CHRONOLOGICAL] ✅ LLM chronological search completed: ${finalResults.length} final results`);
-      return finalResults;
+      return transformedResults;
       
     } catch (error) {
-      console.error(`[AI_SEARCH DEBUG] 📊 LLM chronological search error:`, error);
-      console.error(`[AI_SEARCH LLM_CHRONOLOGICAL] ❌ Critical error:`, {
+      console.error(`[AI SEARCH LLM] ❌ Critical error in LLM integration:`, {
         error: error,
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack',
+        sqlFunction: sqlFunctionName,
+        query: query,
+        filters: filters
       });
       throw error;
     }
   }
-
+  
   /**
    * LEGACY: Original chronological search implementation (fallback)
    */
