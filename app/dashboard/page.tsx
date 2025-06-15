@@ -1820,7 +1820,6 @@ export default function DashboardPage() {
 
     // Listen for custom event
     window.addEventListener('loadSearch', handleLoadSearch);
-    console.log(`[DASHBOARD DEBUG] Added loadSearch event listener`);
 
     // Check localStorage for pending search load (when navigating from other pages)
     const pendingSearch = localStorage.getItem('loadSearch');
@@ -1841,12 +1840,10 @@ export default function DashboardPage() {
         localStorage.removeItem('loadSearch');
       }
     } else {
-      console.log(`[DASHBOARD DEBUG] No pending search found in localStorage`);
     }
 
     return () => {
       window.removeEventListener('loadSearch', handleLoadSearch);
-      console.log(`[DASHBOARD DEBUG] Removed loadSearch event listener`);
     };
   }, [loadSearchDetails]);
 
