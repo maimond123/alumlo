@@ -135,7 +135,10 @@ export default function UploadDataPage() {
         setOrganizationName(data.organization_name)
       } catch (err) {
         console.error('Error fetching school name:', err)
-        setErrorMessage('Failed to load school data')
+        // Only set error message for non-demo users
+        if (!isDemoMode) {
+          setErrorMessage('Failed to load school data')
+        }
       }
     }
 
