@@ -13,7 +13,7 @@ import { useLearnConversations } from "../../hooks/useLearnConversations"
 import { useAuth } from "../../components/AuthProvider"
 import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
 
-// Add realistic question suggestion tags for learn mode
+// Add  realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
   "What's the average salary of our alumni?",
   "How do our alumni compare to the general population?",
