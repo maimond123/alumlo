@@ -528,21 +528,21 @@ export default function LearnPage() {
       <Sidebar />
       <main className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${isSidebarOpen ? "ml-72" : "ml-24"}`}>
         <div className="min-h-screen flex flex-col items-center justify-center px-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
-            Learn
-            {/* Conditional space, only if school name will be rendered */}
-            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-              <span className="text-black">{displayedOrganizationName}</span>
-            ) : null}
-            {/* Conditional space, only if school name was rendered */}
-            {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-            Alumni
-          </h1>
-
-          {/* Learn mode interface */}
           {conversations.length === 0 ? (
             <>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
+                Learn
+                {/* Conditional space, only if school name will be rendered */}
+                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
+                  <span className="text-black">{displayedOrganizationName}</span>
+                ) : null}
+                {/* Conditional space, only if school name was rendered */}
+                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                Alumni
+              </h1>
+
+              {/* Learn mode interface */}
               <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full max-w-2xl mb-2">
                 <div className="relative mb-6">
                   <input
@@ -653,48 +653,72 @@ export default function LearnPage() {
             </>
           ) : (
             <>
-              {/* Conversation history container  - Only show if there's content to display */}
-              <div className="w-full max-w-4xl flex flex-col gap-4 pb-32">
-                {/* Conversation messages without border */}
-                <div className="w-full space-y-4 mb-6">
-                  {conversations.map((msg, idx) => (
-                    <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                      <div 
-                        className={`inline-block p-3 rounded-lg max-w-[85%] ${
-                          msg.role === 'user' 
-                            ? 'bg-golden-yellow/30 text-gray-900' 
-                            : 'bg-green-800/10 text-gray-700'
-                        }`}
-                      >
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Show the in-progress answer */}
-                  {currentAnswer && (
-                    <div className="mb-4 text-left">
-                      <div className="inline-block p-3 rounded-lg max-w-[85%] bg-green-800/10 text-gray-700">
-                        {currentAnswer}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Show typing indicator when processing */}
-                  {isProcessing && !currentAnswer && (
-                    <div className="mb-4 text-left">
-                      <div className="inline-block p-3 rounded-lg max-w-[85%] bg-green-800/10 text-gray-700">
-                        <div className="flex space-x-2">
-                          <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                          <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                          <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              {/* Conversation view with vertical lines and centered title */}
+              <div className="w-full h-full relative">
+                {/* Left vertical line */}
+                <div className="absolute left-1/4 top-0 bottom-0 w-px bg-gray-400"></div>
+                
+                {/* Right vertical line */}
+                <div className="absolute right-1/4 top-0 bottom-0 w-px bg-gray-400"></div>
+                
+                {/* Centered title */}
+                <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center whitespace-nowrap">
+                    Learn
+                    {/* Conditional space, only if school name will be rendered */}
+                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
+                      <span className="text-black">{displayedOrganizationName}</span>
+                    ) : null}
+                    {/* Conditional space, only if school name was rendered */}
+                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                    Alumni
+                  </h1>
+                </div>
+                
+                {/* Conversation history container - Full width between the lines */}
+                <div className="w-full flex flex-col gap-4 pb-32 pt-24">
+                  {/* Conversation messages without border */}
+                  <div className="w-full space-y-4 mb-6 px-4">
+                    {conversations.map((msg, idx) => (
+                      <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                        <div 
+                          className={`inline-block p-3 rounded-lg ${
+                            msg.role === 'user' 
+                              ? 'bg-golden-yellow/30 text-gray-900 max-w-[85%]' 
+                              : 'bg-green-800/10 text-gray-700 w-full'
+                          }`}
+                        >
+                          {msg.content}
                         </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Invisible element to scroll to */}
-                  <div ref={messagesEndRef} />
+                    ))}
+                    
+                    {/* Show the in-progress answer */}
+                    {currentAnswer && (
+                      <div className="mb-4 text-left">
+                        <div className="inline-block p-3 rounded-lg w-full bg-green-800/10 text-gray-700">
+                          {currentAnswer}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show typing indicator when processing */}
+                    {isProcessing && !currentAnswer && (
+                      <div className="mb-4 text-left">
+                        <div className="inline-block p-3 rounded-lg bg-green-800/10 text-gray-700">
+                          <div className="flex space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Invisible element to scroll to */}
+                    <div ref={messagesEndRef} />
+                  </div>
                 </div>
               </div>
 
