@@ -655,9 +655,9 @@ export default function LearnPage() {
             <>
               {/* Conversation view with rounded rectangle border */}
               <div className="w-full h-full relative">
-                {/* Rounded rectangle border container - only rounded corners visible */}
+                {/* Rounded rectangle border container with glass effect background */}
                 <div 
-                  className="fixed top-4 bottom-4 z-0 rounded-lg shadow-lg" 
+                  className="fixed top-4 bottom-4 z-0 rounded-lg shadow-lg backdrop-blur-sm" 
                   style={{
                     left: '20%', 
                     right: '20%',
@@ -666,6 +666,8 @@ export default function LearnPage() {
                     borderBottom: '1px solid transparent',
                     borderLeft: '1px solid transparent',
                     borderRight: '1px solid transparent',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
                     boxShadow: '0 0 8px rgba(0,0,0,0.1)'
                   }}
                 ></div>
@@ -685,11 +687,8 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Horizontal line between title and conversations - matching border style */}
-                <div className="fixed top-36 z-10" style={{left: '20%', right: '20%', height: '1px', backgroundColor: '#9CA3AF'}}></div>
-                
                 {/* Conversation history container - Scrollable between vertical lines */}
-                <div className="fixed left-[20%] right-[20%] top-40 bottom-20 overflow-y-auto">
+                <div className="fixed left-[20%] right-[20%] top-28 bottom-20 overflow-y-auto">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="space-y-4 px-4 py-4">
                     {conversations.map((msg, idx) => (
