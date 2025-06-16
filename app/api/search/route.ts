@@ -187,11 +187,11 @@ export async function POST(req: NextRequest) {
         }
       }
       
-      else if (searchConfig.type === 'chronological' && searchConfig.filters && searchConfig.weights) {
+      else if (searchConfig.type === 'chronological' && searchConfig.filters) {
         console.log(`[API SEARCH] 📈 Executing chronological search from pipeline`);
         console.log(`[API SEARCH] 📈 DETAILED: Chronological search configuration:`, {
           filters: searchConfig.filters,
-          weights: searchConfig.weights,
+          hasWeights: !!searchConfig.weights,
           sqlFunction: searchConfig.sqlFunction,
           organizationName: organizationName
         });
@@ -200,38 +200,41 @@ export async function POST(req: NextRequest) {
           console.log(`[API SEARCH] 📈 DETAILED: Calling searchChronological with parameters:`, {
             query: `"${query}"`,
             filtersCount: Object.keys(searchConfig.filters).length,
-            weightsCount: Object.keys(searchConfig.weights).length,
+            weightsCount: searchConfig.weights ? Object.keys(searchConfig.weights).length : 0,
             limit: 50,
             organizationName: organizationName
           });
           
+          // Execute primary search only (expansion will be handled separately)
           results = await search_engine.searchChronological(
             query,
             searchConfig.filters,
             50,
             organizationName,
-            searchConfig.weights
+            searchConfig.weights // May be undefined for new pipeline
           );
           
-          console.log(`[API SEARCH] 📈 DETAILED: Chronological search completed:`, {
+          console.log(`[API SEARCH] 📈 DETAILED: Primary chronological search completed:`, {
             resultCount: results?.length || 0,
             hasResults: !!results,
             isArray: Array.isArray(results),
             firstResultId: results?.[0]?.id || 'none'
           });
           
-          // REMOVED FALLBACK LOGIC - Return results directly
-          console.log(`[API SEARCH] ✅ Chronological search completed with ${results?.length || 0} results - NO FALLBACK`);
-          searchType = 'chronological';
+          // Set metadata for primary search only
           searchMetadata = {
-            search_method: 'chronological_pipeline',
+            search_method: 'chronological_pipeline_primary',
             filters: searchConfig.filters,
             weights: searchConfig.weights,
             sql_function: searchConfig.sqlFunction,
             configuration_source: 'pipeline',
             strict_filtering: true,
-            fallback_disabled: true
+            fallback_disabled: true,
+            expansion_available: !!(body.expansionResults && body.expansionResults.variants && body.expansionResults.variants.length > 0)
           };
+          
+          console.log(`[API SEARCH] ✅ Primary chronological search completed with ${results?.length || 0} results`);
+          searchType = 'chronological';
           
         } catch (error) {
           console.error(`[API SEARCH] ❌ DETAILED: Chronological search from pipeline failed:`, {

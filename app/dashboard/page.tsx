@@ -592,7 +592,7 @@ export default function DashboardPage() {
   const [isLoadingCount, setIsLoadingCount] = useState(false);
 
   // Add these new states to your component
-  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'complete'>('idle');
+  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'expanding' | 'complete'>('idle');
   const [displayedText, setDisplayedText] = useState({
     analyzing: '',
     searching: '',
@@ -1371,7 +1371,9 @@ export default function DashboardPage() {
           organizationName: originalOrganizationName,
           isDemo: isDemoMode,
         searchConfig: searchConfig,
-        queryClassification: queryClassification
+        queryClassification: queryClassification,
+        // Include expansion results for metadata but don't execute expansion in main search
+        expansionResults: pipelineResult.expansionResults
       } : {
         query: currentQuery, 
         organizationName: originalOrganizationName,
@@ -1428,21 +1430,21 @@ export default function DashboardPage() {
         throw searchError;
       });
       
-      // Get search results
+      // Get initial search results
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Waiting for search promise to resolve for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD SEARCH] ⏳ Waiting for search results...`);
+      console.log(`[DASHBOARD SEARCH] ⏳ Waiting for initial search results...`);
       const searchData = await searchPromise;
-      const searchResultsData = searchData.results;
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search promise resolved with ${searchResultsData?.length || 0} results for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD SEARCH] ✅ Search results received: ${searchResultsData?.length || 0} results`);
+      const initialResults = searchData.results;
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search promise resolved with ${initialResults?.length || 0} results for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD SEARCH] ✅ Initial search results received: ${initialResults?.length || 0} results`);
       
-      // Phase 5: Display results
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 5: Displaying results`);
-      console.log(`[DASHBOARD RESULTS] 🎨 Starting results display phase`);
+      // Phase 3: Display initial results
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 3: Displaying initial results`);
+      console.log(`[DASHBOARD RESULTS] 🎨 Starting initial results display phase`);
       setSearchPhase('complete');
       
-      // Enhanced result display message based on search type
-      let displayMessage = `Displaying ${searchResultsData.length} optimized results based on relevance`;
+      // Display initial results message
+      let displayMessage = `Displaying ${initialResults.length} initial results`;
       if (searchData.searchType === 'chronological') {
         displayMessage += ' (using advanced chronological search for career progression analysis)';
       } else if (searchData.searchType === 'temporal') {
@@ -1452,26 +1454,126 @@ export default function DashboardPage() {
       }
       displayMessage += '...';
       
-      console.log(`[DASHBOARD RESULTS] 📄 Display message: ${displayMessage}`);
+      console.log(`[DASHBOARD RESULTS] 📄 Initial display message: ${displayMessage}`);
       await typewriterEffect(displayMessage, 
         (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
       );
       
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting search results state for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Results before setState:`, searchResultsData);
-      console.log(`[DASHBOARD RESULTS] 🔄 Processing results for display`);
-      console.log(`[DASHBOARD DEBUG] About to call ensureSearchResultCompatibility with ${searchResultsData.length} results`);
+      // Set initial results
+      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting initial search results state for query: "${currentQuery}"`);
+      console.log(`[DASHBOARD RESULTS] 🔄 Processing initial results for display`);
       
-      const compatibleResults = ensureSearchResultCompatibility(searchResultsData);
-      console.log(`[DASHBOARD DEBUG] After compatibility mapping, got ${compatibleResults.length} results`);
-      console.log(`[DASHBOARD DEBUG] Setting search results state now...`);
-      console.log(`[DASHBOARD RESULTS] ✅ Results processed and ready for display: ${compatibleResults.length} results`);
+      const compatibleInitialResults = ensureSearchResultCompatibility(initialResults);
+      console.log(`[DASHBOARD DEBUG] After compatibility mapping, got ${compatibleInitialResults.length} initial results`);
+      console.log(`[DASHBOARD RESULTS] ✅ Initial results processed and ready for display: ${compatibleInitialResults.length} results`);
       
-      setSearchResults(compatibleResults);
-      console.log(`[DASHBOARD DEBUG] Search results state has been set`);
+      setSearchResults(compatibleInitialResults);
+      console.log(`[DASHBOARD DEBUG] Initial search results state has been set`);
+      
+      // Phase 4: Execute expansion search if available (for chronological searches only)
+      if (searchData.searchType === 'chronological' && 
+          pipelineResult?.expansionResults && 
+          pipelineResult.expansionResults.variants && 
+          pipelineResult.expansionResults.variants.length > 0) {
+        
+        console.log(`[DASHBOARD EXPANSION] 🔍 Starting expansion search phase`);
+        console.log(`[DASHBOARD EXPANSION] 📊 Expansion variants available: ${pipelineResult.expansionResults.variants.length}`);
+        
+        // Update search phase to show expansion is happening
+        setSearchPhase('expanding');
+        
+        // Show expansion analysis with animated typing
+        await typewriterEffect('🔍 Performing deeper analysis with alternative search strategies...', 
+          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n\n' + text }))
+        );
+        
+        // Show the expansion queries being processed
+        for (let i = 0; i < pipelineResult.expansionResults.variants.length; i++) {
+          const variant = pipelineResult.expansionResults.variants[i];
+          console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
+          
+          await typewriterEffect(`• Searching: "${variant.natural_language_query}"`, 
+            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n' + text }))
+          );
+        }
+        
+        try {
+          console.log(`[DASHBOARD EXPANSION] 📡 Making expansion API request`);
+          
+          const expansionResponse = await fetch('/api/search-expansion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              expansionResults: pipelineResult.expansionResults,
+              organizationName: originalOrganizationName,
+              initialResults: initialResults
+            }),
+          });
+          
+          if (expansionResponse.ok) {
+            const expansionData = await expansionResponse.json();
+            console.log(`[DASHBOARD EXPANSION] ✅ Expansion search completed:`, {
+              expansionResultCount: expansionData.results?.length || 0,
+              metadata: expansionData.metadata
+            });
+            
+            if (expansionData.results && expansionData.results.length > 0) {
+              // Show expansion completion message
+              await typewriterEffect(`\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`, 
+                (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+              );
+              
+              // Combine initial and expansion results
+              const allResults = [...initialResults, ...expansionData.results];
+              const compatibleAllResults = ensureSearchResultCompatibility(allResults);
+              
+              console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
+                initialCount: initialResults.length,
+                expansionCount: expansionData.results.length,
+                totalCount: allResults.length,
+                compatibleCount: compatibleAllResults.length
+              });
+              
+              // Update results with combined data
+              setSearchResults(compatibleAllResults);
+              
+              // Update display message to show final count
+              const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialResults.length} primary + ${expansionData.results.length} expanded) based on relevance and alternative search strategies...`;
+              
+              await typewriterEffect(finalDisplayMessage, 
+                (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+              );
+              
+            } else {
+              console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
+              await typewriterEffect(`\n• No additional relevant profiles found from expanded search`, 
+                (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+              );
+            }
+            
+          } else {
+            console.error(`[DASHBOARD EXPANSION] ❌ Expansion API failed:`, expansionResponse.status);
+            await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
+              (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+            );
+          }
+          
+        } catch (expansionError) {
+          console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
+          await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
+            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+          );
+        }
+        
+        // Mark expansion as complete
+        setSearchPhase('complete');
+        console.log(`[DASHBOARD EXPANSION] ✅ Expansion phase completed`);
+      }
       
       // Automatically collapse the search analysis when results are presented
-      if (searchResultsData && searchResultsData.length > 0) {
+      if (initialResults && initialResults.length > 0) {
         setIsAnalysisCollapsed(true);
         console.log(`[DASHBOARD RESULTS] 📁 Analysis collapsed due to results being available`);
       }
@@ -1479,9 +1581,12 @@ export default function DashboardPage() {
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search process completed for query: "${currentQuery}"`);
       console.log(`[DASHBOARD RESULTS] 🎉 Search process completed successfully!`);
       
-      // Save search to history with complete session data
+      // Save search to history with complete session data (use final results)
       if (!isDemoMode) {
         console.log(`[DASHBOARD HISTORY] 💾 Saving search to history`);
+        // Get the final results (which may include expansion results)
+        const finalResults = searchResults.length > 0 ? searchResults : compatibleInitialResults;
+        
         // Capture current state at time of saving
         const currentDisplayedText = {
           analyzing: displayedText.analyzing,
@@ -1493,7 +1598,26 @@ export default function DashboardPage() {
         
         const searchId = await saveSearch({
           query: currentQuery,
-          results: searchResultsData,
+          results: finalResults.map(result => ({
+            id: result.id,
+            name: result.name,
+            linkedin_url: result.linkedin_url || result.profile_url || '', // Ensure linkedin_url is always a string
+            current_company: result.current_company || result.post_company_current_company || '',
+            current_title: result.current_title || result.post_company_current_title || '',
+            current_industry: result.current_industry || result.post_company_current_industry || '',
+            current_general_industry: result.current_general_industry || result.post_company_current_industry || '',
+            current_job_location: result.current_job_location || result.post_company_current_location || '',
+            years_experience: result.years_experience || 0,
+            similarity: result.similarity,
+            profile_photo_url: result.profile_photo_url || result.picture_url,
+            headline: result.headline,
+            current_job_level: result.current_job_level,
+            current_job_function: result.current_job_function,
+            undergraduate_school: result.undergraduate_school,
+            graduate_school: result.graduate_school,
+            highest_degree_level: result.highest_degree_level,
+            major_category: result.major_category
+          })),
           metadata: {
             source: directQuery ? 'tag_click' : 'search_input',
             expandedQueries: expandedQueries,
@@ -1519,8 +1643,9 @@ export default function DashboardPage() {
         console.log(`[DASHBOARD HISTORY] ✅ Search saved with ID: ${searchId}`);
       }
       
-      // Track search completion with result count
-      analytics.trackSearch(currentQuery, searchResultsData?.length || 0, { 
+      // Track search completion with result count (use final results)
+      const finalResultCount = searchResults.length > 0 ? searchResults.length : compatibleInitialResults.length;
+      analytics.trackSearch(currentQuery, finalResultCount, { 
         source: directQuery ? 'tag_click' : 'search_input',
         status: 'complete'
       });

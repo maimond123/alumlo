@@ -95,11 +95,26 @@ interface SearchPipelineResponse {
   searchConfig: SearchConfig;
   shouldExecuteSearch: boolean;
   fallbackToStandard?: boolean;
+  // NEW: Search expansion results
+  expansionResults?: {
+    variants: SearchExpansionVariant[];
+    additionalSearchConfigs: ChronologicalConfig[];
+  };
   metadata: {
     processingSteps: string[];
     llmCalls: number;
     processingTimeMs: number;
   };
+}
+
+// NEW: Search expansion interfaces
+interface SearchExpansionVariant {
+  natural_language_query: string;
+  filters: ChronologicalFilters;
+}
+
+interface SearchExpansionResponse {
+  expansion_variants: SearchExpansionVariant[];
 }
 
 export async function POST(req: NextRequest) {
@@ -140,6 +155,7 @@ export async function POST(req: NextRequest) {
     // STEP 2: Route to Appropriate Translation
     console.log(`[PIPELINE DEBUG] 🔀 Routing to ${classification.type} processing`);
     let searchConfig: SearchConfig;
+    let expansionResults: { variants: SearchExpansionVariant[]; additionalSearchConfigs: ChronologicalConfig[]; } | undefined;
     
     switch (classification.type) {
       case 'temporal':
@@ -158,12 +174,16 @@ export async function POST(req: NextRequest) {
       case 'chronological':
         console.log('📈 [STEP 2] Processing chronological search...');
         console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation`);
-        searchConfig = await processChronologicalSearch(query, classification, organizationName);
-        processingSteps.push('chronological_translation');
-        llmCalls += 1;
+        const { primaryConfig, expansionResults: chronologicalExpansion } = await processChronologicalSearchWithExpansion(query, classification, organizationName);
+        searchConfig = primaryConfig;
+        expansionResults = chronologicalExpansion;
+        processingSteps.push('chronological_translation', 'search_expansion');
+        llmCalls += 1 + chronologicalExpansion.variants.length; // +1 for primary filters, +1 for each expansion variant
         console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {
           sqlFunction: searchConfig.sqlFunction,
-          filterCount: Object.keys(searchConfig.filters || {}).length
+          filterCount: Object.keys(searchConfig.filters || {}).length,
+          expansionVariants: chronologicalExpansion.variants.length,
+          additionalConfigs: chronologicalExpansion.additionalSearchConfigs.length
         });
         break;
         
@@ -188,6 +208,7 @@ export async function POST(req: NextRequest) {
       classification,
       searchConfig,
       shouldExecuteSearch: true,
+      expansionResults,
       metadata: {
         processingSteps,
         llmCalls,
@@ -276,7 +297,7 @@ async function extractTemporalElements(query: string): Promise<TemporalElements>
   console.log(`[PIPELINE TEMPORAL] 🕐 Starting temporal element extraction for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     temperature: 0,
     messages: [
       {
@@ -431,6 +452,67 @@ async function processChronologicalSearch(
   return searchConfig;
 }
 
+// NEW: Process chronological search with expansion
+async function processChronologicalSearchWithExpansion(
+  query: string, 
+  classification: QueryClassification,
+  organizationName: string
+): Promise<{
+  primaryConfig: ChronologicalConfig;
+  expansionResults: {
+    variants: SearchExpansionVariant[];
+    additionalSearchConfigs: ChronologicalConfig[];
+  };
+}> {
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔄 Processing chronological search with expansion for: "${query}"`);
+  
+  // Step 1: Extract chronological filters using LLM
+  console.log(`[PIPELINE CHRONOLOGICAL] 📊 Extracting chronological filters`);
+  const filters = await translateWithoutClassificationContext(query);
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Filters extracted:`, filters);
+  
+  // Step 2: Create primary search configuration
+  const primaryConfig: ChronologicalConfig = {
+    type: 'chronological',
+    filters: filters,
+    sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+    sqlParameters: {
+      chronological_filters: filters
+    }
+  };
+  
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Primary chronological search config created:`, primaryConfig);
+  
+  // Step 3: Generate search expansion variants
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Generating search expansion variants`);
+  const expansionVariants = await generateSearchExpansionVariants(query, filters);
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Generated ${expansionVariants.length} expansion variants`);
+  
+  // Step 4: Create additional search configurations for each variant
+  const additionalSearchConfigs: ChronologicalConfig[] = expansionVariants.map((variant, index) => {
+    console.log(`[PIPELINE CHRONOLOGICAL] 🔧 Creating search config for variant ${index + 1}: "${variant.natural_language_query}"`);
+    
+    return {
+      type: 'chronological',
+      filters: variant.filters,
+      sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+      sqlParameters: {
+        chronological_filters: variant.filters
+      }
+    };
+  });
+  
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Created ${additionalSearchConfigs.length} additional search configurations`);
+  
+  return {
+    primaryConfig,
+    expansionResults: {
+      variants: expansionVariants,
+      additionalSearchConfigs
+    }
+  };
+}
+
 // NEW: Process standard search 
 async function processStandardSearch(
   query: string, 
@@ -482,7 +564,7 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
     
     // Fallback to direct OpenAI call with the same logic as classify-query/route.ts
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1-mini',
       temperature: 0,
       messages: [
         {
@@ -582,12 +664,51 @@ async function translateWithoutClassificationContext(
   console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     temperature: 0,
     messages: [
       {
         role: 'system',
         content: `You are translating natural language career progression queries into structured chronological filters.
+
+**ENHANCED ENTITY EXTRACTION PROCESS:**
+
+**STEP 1: EXTRACT ALL ENTITIES**
+First, identify EVERY entity mentioned in the query:
+- ALL COMPANIES: Extract every company name mentioned
+- ALL SCHOOLS: Extract every school/university name mentioned  
+- ALL TITLES: Extract every job title/role mentioned
+- ALL INDUSTRIES: Extract every industry mentioned
+- ALL LOCATIONS: Extract every location mentioned
+
+**STEP 2: SMART ENTITY SELECTION**
+Then choose the most relevant entity for each filter using these rules:
+
+**COMPANY SELECTION RULES:**
+- If multiple companies with "then/after": Choose the LAST mentioned (target destination)
+- If "former X employees": Choose X as company_filter
+- If "X alumni at Y": Choose X as company_filter (source company)
+- If "people who left X for Y": Choose X as company_filter (source company)
+- If "worked at X and Y": Choose the LAST mentioned
+
+**SCHOOL SELECTION RULES:**
+- If multiple schools with "then/after": Choose the LAST mentioned (most recent)
+- If "X graduates who went to Y": Choose X as school_filter (source school)
+- If "studied at X then Y": Choose Y as school_filter (most recent)
+- If undergraduate + graduate school mentioned: Choose graduate school
+
+**TITLE SELECTION RULES:**
+- If multiple titles: Choose the most SPECIFIC one
+- If progression mentioned (junior → senior): Choose the TARGET level
+- If "former X who became Y": Choose X as title_filter (source role)
+
+**INDUSTRY SELECTION RULES:**
+- If multiple industries with transition: Choose the TARGET industry
+- If "from X to Y industry": Choose Y as industry_filter
+
+**LOCATION SELECTION RULES:**
+- If multiple locations: Choose the most SPECIFIC one
+- If "moved from X to Y": Choose Y as location_filter (current location)
 
 **COMPREHENSIVE FILTER CATEGORIES:**
 
@@ -934,4 +1055,286 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
     
     return { gap_tolerance: 6 };
   }
-} 
+}
+
+// NEW: Generate intelligent search expansions (returns complete variants)
+async function generateSearchExpansionVariants(
+  originalQuery: string,
+  initialFilters: ChronologicalFilters,
+  initialResultCount?: number
+): Promise<SearchExpansionVariant[]> {
+  console.log(`[SEARCH EXPANSION] 🔍 Generating search expansion variants for: "${originalQuery}"`);
+  console.log(`[SEARCH EXPANSION] 📊 Initial filters:`, initialFilters);
+  console.log(`[SEARCH EXPANSION] 📈 Initial result count:`, initialResultCount);
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    temperature: 0.3, // Slightly higher for creative alternatives
+    messages: [
+      {
+        role: 'system',
+        content: `You are an intelligent search expansion system. Your job is to analyze an initial search query and its extracted filters, then generate 2-3 alternative filter sets that could capture different valid interpretations or relaxed versions of the original query.
+
+**YOUR GOAL:**
+Generate alternative search strategies that maintain the core intent while broadening the search space to find more relevant profiles. For each alternative filter set, also generate a natural language query that would produce those filters.
+
+**EXPANSION STRATEGIES:**
+
+1. **FILTER RELAXATION** - Make restrictive filters less strict:
+   - Remove specific company/school requirements → focus on industry/field
+   - Reduce experience minimums by 2-3 years
+   - Broaden specific titles to related roles
+   - Expand specific industries to related sectors
+
+2. **SEMANTIC EXPANSION** - Use related terms and concepts:
+   - "Engineering" → "Technical roles", "Software development", "Product development"
+   - "Consulting" → "Advisory", "Client services", "Strategy"
+   - "Finance" → "Banking", "Investment", "Financial services"
+   - "Marketing" → "Brand management", "Communications", "Growth"
+
+3. **ALTERNATIVE INTERPRETATIONS** - Find different valid readings:
+   - "Georgetown graduates at Google" could also mean:
+     - "Business school graduates in tech companies"
+     - "People with strong academic backgrounds in technology"
+   - "Experienced consultants" could expand to:
+     - "People with client-facing experience"
+     - "Strategic advisors and analysts"
+
+4. **HIERARCHICAL RELAXATION** - Remove filters in order of specificity:
+   - Most specific: Remove exact company/school names
+   - Moderately specific: Broaden title/industry terms  
+   - Least specific: Reduce experience requirements
+
+**FILTER CATEGORIES TO CONSIDER:**
+
+**Basic Filters (often too restrictive):**
+- school_filter: Remove specific institution, focus on degree level
+- company_filter: Remove specific company, focus on industry/size
+- industry_filter: Expand to related industries
+- title_filter: Broaden to related roles/functions
+- location_filter: Expand to broader geographic areas
+
+**Experience Filters (often need relaxation):**
+- min_years_in_industry: Reduce by 2-3 years
+- min_years_in_function: Reduce by 2-3 years  
+- total_experience_years: Reduce by 2-3 years
+
+**Pattern Filters (often need alternatives):**
+- career_progression_pattern: Try related progression types
+- industry_transitions: Expand to similar transition patterns
+
+**EXAMPLES:**
+
+**Original Query:** "Find Georgetown MBA graduates working at Google"
+**Initial Filters:** {"school_filter": "Georgetown", "company_filter": "Google", "degree_level_progression": ["Bachelor's", "Master's"]}
+
+**Expansion 1 - Remove Company Specificity:**
+{
+  "natural_language_query": "Georgetown MBA graduates working in technology companies",
+  "filters": {
+    "school_filter": "Georgetown",
+    "industry_filter": "technology", 
+    "degree_level_progression": ["Bachelor's", "Master's"]
+  }
+}
+
+**Expansion 2 - Remove School Specificity:**
+{
+  "natural_language_query": "MBA graduates working at Google",
+  "filters": {
+    "company_filter": "Google",
+    "degree_level_progression": ["Bachelor's", "Master's"]
+  }
+}
+
+**Expansion 3 - Semantic Expansion:**
+{
+  "natural_language_query": "Business school graduates working at major tech companies",
+  "filters": {
+    "industry_filter": "technology",
+    "degree_level_progression": ["Bachelor's", "Master's"],
+    "company_size_progression": ["large"]
+  }
+}
+
+**Original Query:** "People with 10+ years consulting experience who became executives"
+**Initial Filters:** {"industry_filter": "consulting", "min_years_in_industry": 10, "career_progression_pattern": "individual_contributor_to_management"}
+
+**Expansion 1 - Reduce Experience Requirement:**
+{
+  "natural_language_query": "People with 7+ years consulting experience who moved to leadership roles",
+  "filters": {
+    "industry_filter": "consulting",
+    "min_years_in_industry": 7,
+    "career_progression_pattern": "individual_contributor_to_management"
+  }
+}
+
+**Expansion 2 - Broaden Industry:**
+{
+  "natural_language_query": "Experienced client-facing professionals who became executives",
+  "filters": {
+    "min_years_in_industry": 8,
+    "career_progression_pattern": "individual_contributor_to_management",
+    "title_filter": "client"
+  }
+}
+
+**Expansion 3 - Alternative Progression Pattern:**
+{
+  "natural_language_query": "Experienced consultants who advanced to senior positions",
+  "filters": {
+    "industry_filter": "consulting", 
+    "min_years_in_industry": 8,
+    "career_progression_pattern": "entry_level_to_senior"
+  }
+}
+
+**IMPORTANT RULES:**
+1. **Always generate exactly 3 expansion variants**
+2. **Each natural language query must be clear and searchable**
+3. **The natural language query should naturally produce the corresponding filters**
+4. **Maintain the core intent of the original query**
+5. **Don't make filters MORE restrictive than the original**
+6. **Ensure each variant is meaningfully different from the others**
+7. **If original filters are already very broad, focus on semantic alternatives rather than relaxation**
+
+**OUTPUT FORMAT:**
+Return only valid JSON in this exact structure:
+
+{
+  "expansion_variants": [
+    {
+      "natural_language_query": "Clear, searchable natural language query",
+      "filters": { /* ChronologicalFilters object */ }
+    },
+    {
+      "natural_language_query": "Another clear, searchable natural language query", 
+      "filters": { /* ChronologicalFilters object */ }
+    },
+    {
+      "natural_language_query": "Third clear, searchable natural language query",
+      "filters": { /* ChronologicalFilters object */ }
+    }
+  ]
+}
+
+Respond only with valid JSON.`
+      },
+      {
+        role: 'user',
+        content: `Original Query: "${originalQuery}"
+
+Initial Filters: ${JSON.stringify(initialFilters, null, 2)}
+
+${initialResultCount !== undefined ? `Initial Result Count: ${initialResultCount}` : ''}
+
+Generate 3 intelligent search expansion variants that maintain the core intent while broadening the search space.`
+      }
+    ]
+  });
+
+  console.log(`[SEARCH EXPANSION] 🤖 OpenAI expansion response received`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[SEARCH EXPANSION] ⚠️ Empty response from OpenAI, returning empty expansions`);
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[SEARCH EXPANSION] ✅ Search expansion variants generated successfully:`, parsed);
+    
+    if (!parsed.expansion_variants || !Array.isArray(parsed.expansion_variants)) {
+      console.error(`[SEARCH EXPANSION] ❌ Invalid response structure, expected expansion_variants array`);
+      return [];
+    }
+
+    const variants = parsed.expansion_variants as SearchExpansionVariant[];
+    console.log(`[SEARCH EXPANSION] 📊 Expansion summary:`, {
+      totalVariants: variants.length,
+      generatedQueries: variants.map(v => v.natural_language_query),
+      hasFilters: variants.map(v => Object.keys(v.filters || {}).length > 0)
+    });
+
+    return variants;
+  } catch (error) {
+    console.error(`[SEARCH EXPANSION] ❌ Failed to parse expansion response:`, {
+      error: error,
+      rawContent: content
+    });
+    return [];
+  }
+}
+
+// NEW: Generate intelligent search expansions (backward compatibility - returns only filters)
+async function generateSearchExpansions(
+  originalQuery: string,
+  initialFilters: ChronologicalFilters,
+  initialResultCount?: number
+): Promise<ChronologicalFilters[]> {
+  const variants = await generateSearchExpansionVariants(originalQuery, initialFilters, initialResultCount);
+  return variants.map(variant => variant.filters);
+}
+
+// TEST FUNCTION: Demonstrate search expansion (can be removed later)
+async function testSearchExpansion() {
+  console.log('🧪 [TEST] Testing complete search expansion workflow...');
+  
+  // Test Case 1: Specific company + school query
+  const query1 = "Find Georgetown MBA graduates working at Google";
+  const filters1: ChronologicalFilters = {
+    school_filter: "Georgetown",
+    company_filter: "Google", 
+    degree_level_progression: ["Bachelor's", "Master's"]
+  };
+  
+  console.log('🧪 [TEST 1] Query:', query1);
+  console.log('🧪 [TEST 1] Initial filters:', filters1);
+  
+  const variants1 = await generateSearchExpansionVariants(query1, filters1);
+  console.log('🧪 [TEST 1] Generated variants:', variants1.length);
+  variants1.forEach((variant, index) => {
+    console.log(`🧪 [TEST 1.${index + 1}] Natural Language Query: "${variant.natural_language_query}"`);
+    console.log(`🧪 [TEST 1.${index + 1}] Filters:`, variant.filters);
+  });
+  
+  // Test Case 2: Experience-based query
+  const query2 = "People with 10+ years consulting experience who became executives";
+  const filters2: ChronologicalFilters = {
+    industry_filter: "consulting",
+    min_years_in_industry: 10,
+    career_progression_pattern: "individual_contributor_to_management"
+  };
+  
+  console.log('🧪 [TEST 2] Query:', query2);
+  console.log('🧪 [TEST 2] Initial filters:', filters2);
+  
+  const variants2 = await generateSearchExpansionVariants(query2, filters2);
+  console.log('🧪 [TEST 2] Generated variants:', variants2.length);
+  variants2.forEach((variant, index) => {
+    console.log(`🧪 [TEST 2.${index + 1}] Natural Language Query: "${variant.natural_language_query}"`);
+    console.log(`🧪 [TEST 2.${index + 1}] Filters:`, variant.filters);
+  });
+  
+  // Test Case 3: Complete workflow simulation
+  console.log('🧪 [TEST 3] Testing complete workflow with processChronologicalSearchWithExpansion');
+  const { primaryConfig, expansionResults } = await processChronologicalSearchWithExpansion(
+    query1, 
+    { type: 'chronological' }, 
+    'chick_fil_a'
+  );
+  
+  console.log('🧪 [TEST 3] Primary config:', primaryConfig);
+  console.log('🧪 [TEST 3] Expansion results:', {
+    variantCount: expansionResults.variants.length,
+    configCount: expansionResults.additionalSearchConfigs.length,
+    queries: expansionResults.variants.map(v => v.natural_language_query)
+  });
+  
+  console.log('🧪 [TEST] Complete search expansion workflow testing complete!');
+}
+
+// Uncomment to test the expansion functionality:
+// testSearchExpansion().catch(console.error); 
