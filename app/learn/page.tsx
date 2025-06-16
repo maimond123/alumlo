@@ -653,19 +653,17 @@ export default function LearnPage() {
             </>
           ) : (
             <>
-              {/* Conversation view with vertical lines and centered title */}
+              {/* Conversation view with rounded rectangle border */}
               <div className="w-full h-full relative">
-                {/* Top horizontal line with curved corners */}
-                <div className="fixed top-4 z-0 h-px bg-gray-400" style={{left: '20%', right: '20%', borderRadius: '8px 8px 0 0'}}></div>
-                
-                {/* Bottom horizontal line with curved corners */}
-                <div className="fixed bottom-4 z-0 h-px bg-gray-400" style={{left: '20%', right: '20%', borderRadius: '0 0 8px 8px'}}></div>
-                
-                {/* Left vertical line with rounded end caps and shadow effect */}
-                <div className="fixed left-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '-2px 0 4px rgba(0,0,0,0.1)', borderRadius: '8px'}}></div>
-                
-                {/* Right vertical line with rounded end caps and shadow effect */}
-                <div className="fixed right-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)', borderRadius: '8px'}}></div>
+                {/* Rounded rectangle border container */}
+                <div 
+                  className="fixed top-4 bottom-4 border border-gray-400 z-0 rounded-lg shadow-lg" 
+                  style={{
+                    left: '20%', 
+                    right: '20%',
+                    boxShadow: '0 0 8px rgba(0,0,0,0.1)'
+                  }}
+                ></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
                 <div className="fixed top-16 z-10 pt-4" style={{left: '20%', right: '20%'}}>
