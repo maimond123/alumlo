@@ -688,7 +688,7 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Scrollable between vertical lines */}
-                <div className="fixed left-[20%] right-[20%] top-28 bottom-20 overflow-y-auto">
+                <div className="fixed left-[20%] right-[20%] top-36 bottom-20 overflow-y-auto">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="space-y-4 px-4 py-4">
                     {conversations.map((msg, idx) => (
@@ -743,7 +743,7 @@ export default function LearnPage() {
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
                       placeholder="Ask about your alumni data..."
-                      className="flex-1 px-3 py-2 border-none text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                      className="flex-1 px-3 py-2 border-none text-black placeholder-gray-500 focus:outline-none focus:ring-0"
                       disabled={isProcessing}
                     />
                     
@@ -757,7 +757,7 @@ export default function LearnPage() {
                         setCurrentConversationId(null);
                         sessionStorage.removeItem('currentLearnConversationId');
                       }}
-                      className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300 border border-gray-300"
+                      className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300 border border-gray-300 focus:outline-none"
                       aria-label="Clear"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -769,7 +769,7 @@ export default function LearnPage() {
                     <button
                       type="submit"
                       disabled={isProcessing || !currentQuestion.trim()}
-                      className="w-10 h-10 flex items-center justify-center bg-gray-700 text-white rounded-lg hover:bg-gray-800 transform transition-all duration-300 disabled:opacity-50 border border-gray-700"
+                      className="w-10 h-10 flex items-center justify-center bg-gray-700 text-white rounded-lg hover:bg-gray-800 transform transition-all duration-300 disabled:opacity-50 border border-gray-700 focus:outline-none"
                     >
                       {isProcessing ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
