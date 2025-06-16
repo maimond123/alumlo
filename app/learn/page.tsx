@@ -661,8 +661,8 @@ export default function LearnPage() {
                 {/* Right vertical line with shadow effect */}
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
-                {/* Centered title - moved much higher */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 pt-4">
+                {/* Centered title - positioned between the vertical lines */}
+                <div className="absolute top-0 z-10 pt-4" style={{left: '20%', right: '20%', width: '60%'}}>
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center whitespace-nowrap">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
@@ -676,9 +676,9 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Conversation history container - Much higher up and equal padding */}
+                {/* Conversation history container - Centered between vertical lines */}
                 <div className="w-full flex flex-col gap-4 pb-32 pt-20">
-                  {/* Conversation messages with equal padding from both lines */}
+                  {/* Conversation messages centered between vertical lines */}
                   <div className="w-full space-y-4 mb-6" style={{marginLeft: '20%', marginRight: '20%', width: '60%', paddingLeft: '16px', paddingRight: '16px'}}>
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
