@@ -677,7 +677,7 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Centered between vertical lines */}
-                <div className="w-full flex flex-col gap-4 pb-32 pt-12">
+                <div className="w-full flex flex-col gap-4 pb-32 pt-6">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="fixed left-[20%] right-[20%] space-y-4 mb-6 px-4">
                     {conversations.map((msg, idx) => (
