@@ -1630,6 +1630,9 @@ export default function DashboardPage() {
     setIsExpanding(true);
     setSearchPhase('expanding');
     
+    // EXPAND the Search Analysis section to show the typewriter animation
+    setIsAnalysisCollapsed(false);
+    
     // Clear previous expansion messages
     setExpansionMessages('');
     
@@ -1736,6 +1739,12 @@ export default function DashboardPage() {
         analyzing: currentAnalyzing + '\n\n' + accumulatedExpansionText 
       }));
       
+      // COLLAPSE the Search Analysis section again after expansion is complete
+      // Add a small delay to let users see the completion message
+      setTimeout(() => {
+        setIsAnalysisCollapsed(true);
+      }, 2000); // 2 second delay before auto-collapsing
+      
     } catch (expansionError) {
       console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
       const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
@@ -1749,6 +1758,12 @@ export default function DashboardPage() {
         ...prev, 
         analyzing: prev.analyzing + '\n\n' + errorMessage 
       }));
+      
+      // COLLAPSE the Search Analysis section on error too
+      setTimeout(() => {
+        setIsAnalysisCollapsed(true);
+      }, 2000);
+      
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
@@ -2427,20 +2442,20 @@ export default function DashboardPage() {
                 {/* Results Header with Expansion Button */}
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-black">
-                    Found {searchResults.length} alumni matching your search
-                  </h2>
+                  Found {searchResults.length} alumni matching your search
+                </h2>
                   
                   {/* Expansion Button - Only show if expansion is available and not already expanded */}
                   {canExpand && !hasExpanded && !isExpanding && (
                     <button
                       onClick={handleExpandSearch}
-                      className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center space-x-2"
+                      className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
                       title="Find additional relevant profiles using alternative search strategies"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                      </svg>
                       <span>Expand Searches</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
                     </button>
                   )}
                   
@@ -2592,15 +2607,15 @@ export default function DashboardPage() {
                               handleSaveLead(result);
                             }}
                             disabled={isButtonDisabled}
-                            className={`px-4 py-1.5 text-sm font-medium rounded-full flex items-center space-x-1.5 transition-colors
+                            className={`px-4 py-2 text-sm font-medium rounded-lg border flex items-center space-x-2 transition-all duration-200
                               ${
                                 isButtonDisabled && (currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved')
-                                  ? 'bg-emerald-500 text-white cursor-not-allowed'
+                                  ? 'bg-emerald-500 text-white border-emerald-500 cursor-not-allowed'
                                   : isButtonDisabled && currentSaveStatus === 'saving'
-                                  ? 'bg-gray-200 text-gray-500 cursor-wait'
+                                  ? 'bg-gray-200 text-gray-500 border-gray-200 cursor-wait'
                                   : isButtonDisabled || currentSaveStatus === 'demo_no_save'
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-800'
+                                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                                  : 'bg-white text-black border-black hover:bg-gray-50 hover:scale-105'
                               }
                             `}
                             title={
