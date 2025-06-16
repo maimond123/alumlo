@@ -662,7 +662,7 @@ export default function LearnPage() {
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
-                <div className="absolute top-0 z-10 pt-4" style={{left: '20%', right: '20%'}}>
+                <div className="absolute top-0 z-10 pt-1" style={{left: '20%', right: '20%'}}>
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
@@ -677,16 +677,16 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Centered between vertical lines */}
-                <div className="w-full flex flex-col gap-4 pb-32 pt-20">
+                <div className="w-full flex flex-col gap-4 pb-32 pt-16">
                   {/* Conversation messages container - full width between lines */}
-                  <div className="absolute left-[20%] right-[20%] space-y-4 mb-6 px-4">
+                  <div className="absolute left-[20%] right-[20%] space-y-4 mb-6">
                     {conversations.map((msg, idx) => (
-                      <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      <div key={idx} className={`mb-4 w-full ${msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}`}>
                         <div 
                           className={`p-3 rounded-lg ${
                             msg.role === 'user' 
-                              ? 'bg-golden-yellow/30 text-gray-900 inline-block max-w-[85%]' 
-                              : 'bg-green-800/10 text-gray-700 block w-full'
+                              ? 'bg-golden-yellow/30 text-gray-900 max-w-[85%]' 
+                              : 'bg-green-800/10 text-gray-700 max-w-[85%]'
                           }`}
                         >
                           {msg.content}
@@ -696,8 +696,8 @@ export default function LearnPage() {
                     
                     {/* Show the in-progress answer */}
                     {currentAnswer && (
-                      <div className="mb-4 text-left">
-                        <div className="p-3 rounded-lg w-full bg-green-800/10 text-gray-700 block">
+                      <div className="mb-4 w-full flex justify-start">
+                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 max-w-[85%]">
                           {currentAnswer}
                         </div>
                       </div>
@@ -705,8 +705,8 @@ export default function LearnPage() {
                     
                     {/* Show typing indicator when processing */}
                     {isProcessing && !currentAnswer && (
-                      <div className="mb-4 text-left">
-                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 block">
+                      <div className="mb-4 w-full flex justify-start">
+                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700">
                           <div className="flex space-x-2">
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
