@@ -2434,13 +2434,13 @@ export default function DashboardPage() {
                   {canExpand && !hasExpanded && !isExpanding && (
                     <button
                       onClick={handleExpandSearch}
-                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium flex items-center space-x-2"
+                      className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center space-x-2"
                       title="Find additional relevant profiles using alternative search strategies"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                       </svg>
-                      <span>Expand Search Results</span>
+                      <span>Expand Searches</span>
                     </button>
                   )}
                   
