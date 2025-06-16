@@ -1244,7 +1244,7 @@ export default function DashboardPage() {
             );
             
           } else if (pipelineResult.searchType === 'chronological') {
-            console.log(`[DASHBOARD PIPELINE] 📈 Chronological search detected - processing filters and weights`);
+            console.log(`[DASHBOARD PIPELINE] 📈 Chronological search detected - processing filters`);
             await typewriterEffect('📈 Detected career progression query - using chronological search', 
               (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
             );
@@ -1253,20 +1253,10 @@ export default function DashboardPage() {
             setSearchPhase('searching');
             const filterCount = Object.keys(searchConfig.filters).length;
             console.log(`[DASHBOARD PIPELINE] 📈 Chronological filters applied:`, searchConfig.filters);
-            console.log(`[DASHBOARD PIPELINE] 📈 Chronological weights assigned:`, searchConfig.weights);
             
             await typewriterEffect(`Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`, 
               (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
             );
-            
-            // Show weight analysis
-            const weights = searchConfig.weights;
-            const weightSummary = `Career Quality: ${Math.round(weights.career_quality * 100)}%, Education: ${Math.round(weights.education_quality * 100)}%, Timeline: ${Math.round(weights.timeline_precision * 100)}%, Specificity: ${Math.round(weights.filter_specificity * 100)}%`;
-            console.log(`[DASHBOARD PIPELINE] 📈 Weight summary: ${weightSummary}`);
-            setDisplayedText(prev => ({ 
-              ...prev, 
-              filters: prev.filters + ` | Weight assignment: ${weightSummary}` 
-            }));
             
           } else if (pipelineResult.searchType === 'standard') {
             console.log(`[DASHBOARD PIPELINE] 📊 Standard search detected - processing semantic filters`);
