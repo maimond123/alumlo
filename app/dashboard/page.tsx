@@ -1165,6 +1165,7 @@ export default function DashboardPage() {
     setHasExpanded(false);
     setPipelineExpansionData(null);
     setInitialSearchResults([]);
+    setExpansionMessages(''); // Reset expansion messages
     
     // Reset analysis collapsed state when starting a new search
     setIsAnalysisCollapsed(false);
@@ -1615,6 +1616,9 @@ export default function DashboardPage() {
     handleSearch(new Event('submit') as any, query);
   };
   
+  // Add new state for expansion messages
+  const [expansionMessages, setExpansionMessages] = useState<string>('');
+
   // NEW: Manual expansion function
   const handleExpandSearch = async () => {
     if (!pipelineExpansionData || isExpanding || hasExpanded) {
@@ -1626,19 +1630,31 @@ export default function DashboardPage() {
     setIsExpanding(true);
     setSearchPhase('expanding');
     
+    // Clear previous expansion messages
+    setExpansionMessages('');
+    
     try {
-      // Show expansion analysis with animated typing
-      await typewriterEffect('🔍 Performing deeper analysis with alternative search strategies...', 
-        (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n\n' + text }))
+      // Store the current analyzing text to append to
+      const currentAnalyzing = displayedText.analyzing;
+      
+      // Show expansion header
+      const expansionHeader = '🔍 Performing deeper analysis with alternative search strategies...';
+      await typewriterEffect(expansionHeader, 
+        (text) => setExpansionMessages(text)
       );
       
       // Show the expansion queries being processed
+      let accumulatedExpansionText = expansionHeader;
+      
       for (let i = 0; i < pipelineExpansionData.variants.length; i++) {
         const variant = pipelineExpansionData.variants[i];
         console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
         
-        await typewriterEffect(`• Searching: "${variant.natural_language_query}"`, 
-          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n' + text }))
+        const queryMessage = `\n• Searching: "${variant.natural_language_query}"`;
+        accumulatedExpansionText += queryMessage;
+        
+        await typewriterEffect(queryMessage, 
+          (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - queryMessage.length) + text)
         );
       }
       
@@ -1665,8 +1681,11 @@ export default function DashboardPage() {
         
         if (expansionData.results && expansionData.results.length > 0) {
           // Show expansion completion message
-          await typewriterEffect(`\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`, 
-            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+          const completionMessage = `\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`;
+          accumulatedExpansionText += completionMessage;
+          
+          await typewriterEffect(completionMessage, 
+            (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - completionMessage.length) + text)
           );
           
           // Combine initial and expansion results
@@ -1693,23 +1712,43 @@ export default function DashboardPage() {
           
         } else {
           console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
-          await typewriterEffect(`\n• No additional relevant profiles found from expanded search`, 
-            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+          const noResultsMessage = `\n• No additional relevant profiles found from expanded search`;
+          accumulatedExpansionText += noResultsMessage;
+          
+          await typewriterEffect(noResultsMessage, 
+            (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - noResultsMessage.length) + text)
           );
         }
         
       } else {
         console.error(`[DASHBOARD EXPANSION] ❌ Expansion API failed:`, expansionResponse.status);
-        await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
-          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+        const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
+        accumulatedExpansionText += errorMessage;
+        
+        await typewriterEffect(errorMessage, 
+          (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - errorMessage.length) + text)
         );
       }
       
+      // Update the main analyzing text to include expansion messages
+      setDisplayedText(prev => ({ 
+        ...prev, 
+        analyzing: currentAnalyzing + '\n\n' + accumulatedExpansionText 
+      }));
+      
     } catch (expansionError) {
       console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
-      await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
-        (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+      const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
+      
+      await typewriterEffect(errorMessage, 
+        (text) => setExpansionMessages(text)
       );
+      
+      // Update the main analyzing text to include error message
+      setDisplayedText(prev => ({ 
+        ...prev, 
+        analyzing: prev.analyzing + '\n\n' + errorMessage 
+      }));
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
@@ -2346,7 +2385,12 @@ export default function DashboardPage() {
                 {/* Collapsible Content */}
                 <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
                   {displayedText.analyzing && (
-                    <p className="text-gray-700 mb-3">{displayedText.analyzing}</p>
+                    <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.analyzing}</p>
+                  )}
+                  
+                  {/* Show expansion messages in real-time during expansion */}
+                  {isExpanding && expansionMessages && (
+                    <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
                   )}
                   
                   {displayedText.searching && (
