@@ -662,8 +662,8 @@ export default function LearnPage() {
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
-                <div className="absolute top-0 z-10 pt-4" style={{left: '20%', right: '20%', width: '60%'}}>
-                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center whitespace-nowrap">
+                <div className="absolute top-0 z-10 pt-4" style={{left: '20%', right: '20%'}}>
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
                     {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
@@ -678,15 +678,15 @@ export default function LearnPage() {
                 
                 {/* Conversation history container - Centered between vertical lines */}
                 <div className="w-full flex flex-col gap-4 pb-32 pt-20">
-                  {/* Conversation messages centered between vertical lines */}
-                  <div className="w-full space-y-4 mb-6" style={{marginLeft: '20%', marginRight: '20%', width: '60%', paddingLeft: '16px', paddingRight: '16px'}}>
+                  {/* Conversation messages container - full width between lines */}
+                  <div className="absolute left-[20%] right-[20%] space-y-4 mb-6 px-4">
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         <div 
-                          className={`inline-block p-3 rounded-lg ${
+                          className={`p-3 rounded-lg ${
                             msg.role === 'user' 
-                              ? 'bg-golden-yellow/30 text-gray-900 max-w-[85%]' 
-                              : 'bg-green-800/10 text-gray-700 w-full'
+                              ? 'bg-golden-yellow/30 text-gray-900 inline-block max-w-[85%]' 
+                              : 'bg-green-800/10 text-gray-700 block w-full'
                           }`}
                         >
                           {msg.content}
@@ -697,7 +697,7 @@ export default function LearnPage() {
                     {/* Show the in-progress answer */}
                     {currentAnswer && (
                       <div className="mb-4 text-left">
-                        <div className="inline-block p-3 rounded-lg w-full bg-green-800/10 text-gray-700">
+                        <div className="p-3 rounded-lg w-full bg-green-800/10 text-gray-700 block">
                           {currentAnswer}
                         </div>
                       </div>
@@ -706,7 +706,7 @@ export default function LearnPage() {
                     {/* Show typing indicator when processing */}
                     {isProcessing && !currentAnswer && (
                       <div className="mb-4 text-left">
-                        <div className="inline-block p-3 rounded-lg bg-green-800/10 text-gray-700">
+                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 block">
                           <div className="flex space-x-2">
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -722,52 +722,50 @@ export default function LearnPage() {
                 </div>
               </div>
 
-              {/* Integrated input form at bottom - equal padding and aligned with content */}
-              <div className="fixed bottom-0 left-0 right-0 p-4 z-20">
-                <div className="w-full" style={{marginLeft: '20%', marginRight: '20%', width: '60%', paddingLeft: '16px', paddingRight: '16px'}}>
-                  <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full">
-                    <div className="flex gap-2 border border-black rounded-lg p-2 bg-white shadow-sm">
-                      <input
-                        type="text"
-                        value={currentQuestion}
-                        onChange={(e) => setCurrentQuestion(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
-                        placeholder="Ask about your alumni data..."
-                        className="flex-1 px-3 py-2 border-none text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-forest-green-500"
-                        disabled={isProcessing}
-                      />
-                      
-                      {/* Clear button */}
-                      <button
-                        type="button" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentQuestion('');
-                          setConversations([]);
-                          setCurrentConversationId(null);
-                          sessionStorage.removeItem('currentLearnConversationId');
-                        }}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"
-                        aria-label="Clear"
-                      >
-                        Clear
-                      </button>
-                      
-                      {/* Send button */}
-                      <button
-                        type="submit"
-                        disabled={isProcessing || !currentQuestion.trim()}
-                        className="px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transform transition-transform duration-300 disabled:opacity-50"
-                      >
-                        {isProcessing ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <span>Send</span>
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                </div>
+              {/* Integrated input form at bottom - full width between lines */}
+              <div className="fixed bottom-0 left-[20%] right-[20%] p-4 z-20">
+                <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full">
+                  <div className="flex gap-2 border border-black rounded-lg p-2 bg-white shadow-sm">
+                    <input
+                      type="text"
+                      value={currentQuestion}
+                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleLearnSubmit(e)}
+                      placeholder="Ask about your alumni data..."
+                      className="flex-1 px-3 py-2 border-none text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-forest-green-500"
+                      disabled={isProcessing}
+                    />
+                    
+                    {/* Clear button */}
+                    <button
+                      type="button" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentQuestion('');
+                        setConversations([]);
+                        setCurrentConversationId(null);
+                        sessionStorage.removeItem('currentLearnConversationId');
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"
+                      aria-label="Clear"
+                    >
+                      Clear
+                    </button>
+                    
+                    {/* Send button */}
+                    <button
+                      type="submit"
+                      disabled={isProcessing || !currentQuestion.trim()}
+                      className="px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transform transition-transform duration-300 disabled:opacity-50"
+                    >
+                      {isProcessing ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <span>Send</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             </>
           )}
