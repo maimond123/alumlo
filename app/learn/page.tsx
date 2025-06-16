@@ -662,8 +662,8 @@ export default function LearnPage() {
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
-                <div className="absolute top-0 z-10 pt-1" style={{left: '20%', right: '20%'}}>
-                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
+                <div className="absolute top-0 z-10" style={{left: '20%', right: '20%'}}>
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-left pl-4">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
                     {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
@@ -677,7 +677,7 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Centered between vertical lines */}
-                <div className="w-full flex flex-col gap-4 pb-32 pt-16">
+                <div className="w-full flex flex-col gap-4 pb-32 pt-12">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="fixed left-[20%] right-[20%] space-y-4 mb-6 px-4">
                     {conversations.map((msg, idx) => (
