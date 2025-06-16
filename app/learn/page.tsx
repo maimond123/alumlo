@@ -678,15 +678,15 @@ export default function LearnPage() {
                 
                 {/* Conversation history container - Centered between vertical lines */}
                 <div className="w-full flex flex-col gap-4 pb-32 pt-16">
-                  {/* Conversation messages container - full width between lines */}
-                  <div className="absolute left-[20%] right-[20%] space-y-4 mb-6">
+                  {/* Conversation messages container - full width between lines with proper centering */}
+                  <div className="fixed left-[20%] right-[20%] space-y-4 mb-6 px-4">
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 w-full ${msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}`}>
                         <div 
                           className={`p-3 rounded-lg ${
                             msg.role === 'user' 
-                              ? 'bg-golden-yellow/30 text-gray-900 max-w-[85%]' 
-                              : 'bg-green-800/10 text-gray-700 max-w-[85%]'
+                              ? 'bg-golden-yellow/30 text-gray-900 max-w-[80%]' 
+                              : 'bg-green-800/10 text-gray-700 max-w-[80%]'
                           }`}
                         >
                           {msg.content}
@@ -697,7 +697,7 @@ export default function LearnPage() {
                     {/* Show the in-progress answer */}
                     {currentAnswer && (
                       <div className="mb-4 w-full flex justify-start">
-                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 max-w-[85%]">
+                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 max-w-[80%]">
                           {currentAnswer}
                         </div>
                       </div>
@@ -706,7 +706,7 @@ export default function LearnPage() {
                     {/* Show typing indicator when processing */}
                     {isProcessing && !currentAnswer && (
                       <div className="mb-4 w-full flex justify-start">
-                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700">
+                        <div className="p-3 rounded-lg bg-green-800/10 text-gray-700 max-w-[80%]">
                           <div className="flex space-x-2">
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
                             <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
