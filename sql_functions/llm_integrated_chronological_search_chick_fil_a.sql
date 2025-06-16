@@ -1,3 +1,6 @@
+-- Drop the old version of the function with different parameters
+DROP FUNCTION IF EXISTS llm_integrated_chronological_search_chick_fil_a(jsonb, jsonb, int, text);
+
 CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
   -- LLM PIPELINE INPUTS
   chronological_filters jsonb DEFAULT '{}',  -- Output from translateWithoutClassificationContext
