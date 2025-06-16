@@ -657,7 +657,7 @@ export default function LearnPage() {
               <div className="w-full h-full relative">
                 {/* Rounded rectangle border container with glass effect background - starts below title */}
                 <div 
-                  className="fixed top-32 bottom-4 z-0 rounded-lg shadow-lg backdrop-blur-sm" 
+                  className="fixed top-40 bottom-4 z-0 rounded-lg shadow-lg backdrop-blur-sm" 
                   style={{
                     left: '20%', 
                     right: '20%',
