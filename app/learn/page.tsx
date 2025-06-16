@@ -677,7 +677,7 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Scrollable between vertical lines */}
-                <div className="fixed left-[20%] right-[20%] top-24 bottom-20 overflow-y-auto">
+                <div className="fixed left-[20%] right-[20%] top-32 bottom-20 overflow-y-auto">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="space-y-4 px-4 py-4">
                     {conversations.map((msg, idx) => (
