@@ -661,11 +661,7 @@ export default function LearnPage() {
                   style={{
                     left: '20%', 
                     right: '20%',
-                    border: '1px solid transparent',
-                    borderTop: '1px solid transparent',
-                    borderBottom: '1px solid transparent',
-                    borderLeft: '1px solid transparent',
-                    borderRight: '1px solid transparent',
+                    border: '1px solid black',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(10px)',
                     boxShadow: '0 0 8px rgba(0,0,0,0.1)'
