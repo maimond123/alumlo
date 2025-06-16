@@ -224,6 +224,23 @@ export default function Sidebar() {
     }
   }
 
+  // Function to load a conversation into the learn page
+  const loadConversationInLearn = (conversationId: string, title: string) => {
+    console.log(`[SIDEBAR DEBUG] Loading conversation: ${conversationId} with title: "${title}"`);
+    
+    // Navigate to learn page if not already there
+    if (pathname !== '/learn') {
+      console.log(`[SIDEBAR DEBUG] Navigating to learn from ${pathname}`);
+      router.push(`/learn?conversation=${conversationId}`)
+    } else {
+      // If already on learn, trigger a custom event to load the conversation
+      console.log(`[SIDEBAR DEBUG] Already on learn, dispatching loadConversation event`);
+      window.dispatchEvent(new CustomEvent('loadConversation', {
+        detail: { conversationId: conversationId }
+      }))
+    }
+  }
+
   // Add sign out function
   const handleSignOut = async () => {
     try {
@@ -315,9 +332,8 @@ export default function Sidebar() {
                         // Load the search into the dashboard
                         loadSearchInDashboard(item.id, item.query || '')
                       } else {
-                        // For conversations, we could potentially load the conversation
-                        // For now, just navigate to learn
-                        router.push('/learn')
+                        // Load the conversation into the learn page
+                        loadConversationInLearn(item.id, item.title || '')
                       }
                     }}
                   />

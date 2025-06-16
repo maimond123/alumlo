@@ -120,7 +120,9 @@ export default function LearnPage() {
   const { 
     createConversation, 
     addMessage, 
-    generateConversationTitle 
+    generateConversationTitle,
+    loadMessages,
+    currentMessages
   } = useLearnConversations();
   
   // Add state for current conversation ID
@@ -507,6 +509,65 @@ export default function LearnPage() {
     }
   }, [displayOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
 
+  // Add function to load a conversation from the sidebar or URL
+  const loadConversation = async (conversationId: string) => {
+    try {
+      // Don't load conversations in demo mode
+      if (isDemoMode) {
+        console.log('[DEBUG] Cannot load conversations in demo mode');
+        return;
+      }
+      
+      console.log(`[DEBUG] Loading conversation: ${conversationId}`);
+      setCurrentConversationId(conversationId);
+      
+      // Load messages and wait for them
+      await loadMessages(conversationId);
+      
+      // Note: currentMessages will be updated by the useLearnConversations hook
+      // The conversion to conversations format will happen in the useEffect below
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  };
+
+  // Listen for conversation load events from the sidebar
+  useEffect(() => {
+    const handleLoadConversation = (event: CustomEvent) => {
+      const { conversationId } = event.detail;
+      loadConversation(conversationId);
+    };
+
+    window.addEventListener('loadConversation', handleLoadConversation as EventListener);
+    
+    return () => {
+      window.removeEventListener('loadConversation', handleLoadConversation as EventListener);
+    };
+  }, [loadMessages]);
+
+  // Check URL parameters for conversation ID on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const conversationId = urlParams.get('conversation');
+      if (conversationId && conversationId !== currentConversationId) {
+        loadConversation(conversationId);
+      }
+    }
+  }, [currentConversationId, loadMessages]);
+
+  // Update conversations when currentMessages changes
+  useEffect(() => {
+    if (currentMessages.length > 0) {
+      const convertedMessages = currentMessages.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
+      setConversations(convertedMessages);
+      console.log(`[DEBUG] Loaded ${currentMessages.length} messages for conversation`);
+    }
+  }, [currentMessages]);
+
   if (authState.isLoading) {
     return <div>Loading authentication status...</div>
   }
@@ -565,6 +626,13 @@ export default function LearnPage() {
                         setConversations([]);
                         setCurrentConversationId(null);
                         sessionStorage.removeItem('currentLearnConversationId');
+                        
+                        // Clear URL parameters if any
+                        if (typeof window !== 'undefined') {
+                          const url = new URL(window.location.href);
+                          url.searchParams.delete('conversation');
+                          window.history.replaceState({}, document.title, url.pathname);
+                        }
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Clear"
@@ -752,6 +820,13 @@ export default function LearnPage() {
                         setConversations([]);
                         setCurrentConversationId(null);
                         sessionStorage.removeItem('currentLearnConversationId');
+                        
+                        // Clear URL parameters if any
+                        if (typeof window !== 'undefined') {
+                          const url = new URL(window.location.href);
+                          url.searchParams.delete('conversation');
+                          window.history.replaceState({}, document.title, url.pathname);
+                        }
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300 border border-gray-300 focus:outline-none"
                       aria-label="Clear"
