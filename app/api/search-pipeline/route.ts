@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
           
           searchConfig = primaryConfig;
           expansionResults = chronologicalExpansion;
-          processingSteps.push('chronological_translation', 'search_expansion');
+          processingSteps.push('chronological_translation', 'search_expansion_prepared');
           llmCalls += 1 + chronologicalExpansion.variants.length; // +1 for primary filters, +1 for each expansion variant
           
           console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {

@@ -606,6 +606,13 @@ export default function DashboardPage() {
 
   // Add a new state variable for collapsing the analysis
   const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState(false);
+  
+  // NEW: Expansion control states
+  const [canExpand, setCanExpand] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [hasExpanded, setHasExpanded] = useState(false);
+  const [pipelineExpansionData, setPipelineExpansionData] = useState<any>(null);
+  const [initialSearchResults, setInitialSearchResults] = useState<SearchResult[]>([]);
 
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
@@ -1152,6 +1159,13 @@ export default function DashboardPage() {
     setSearchPhase('analyzing');
     setSavedStatusMap({}); // Reset saved statuses on new search
     
+    // Reset expansion states for new search
+    setCanExpand(false);
+    setIsExpanding(false);
+    setHasExpanded(false);
+    setPipelineExpansionData(null);
+    setInitialSearchResults([]);
+    
     // Reset analysis collapsed state when starting a new search
     setIsAnalysisCollapsed(false);
     
@@ -1468,16 +1482,16 @@ export default function DashboardPage() {
       console.log(`[DASHBOARD RESULTS] ✅ Initial results processed and ready for display: ${compatibleInitialResults.length} results`);
       
       setSearchResults(compatibleInitialResults);
+      setInitialSearchResults(compatibleInitialResults); // Store initial results separately
       console.log(`[DASHBOARD DEBUG] Initial search results state has been set`);
       
-      // Phase 4: Execute expansion search if available (for chronological searches only)
-      console.log(`[DASHBOARD EXPANSION] 🔍 Checking expansion conditions:`, {
+      // Phase 4: Check if expansion is available (for chronological searches only)
+      console.log(`[DASHBOARD EXPANSION] 🔍 Checking expansion availability:`, {
         searchType: searchData.searchType,
         hasPipelineResult: !!pipelineResult,
         hasExpansionResults: !!pipelineResult?.expansionResults,
         hasVariants: !!pipelineResult?.expansionResults?.variants,
-        variantCount: pipelineResult?.expansionResults?.variants?.length || 0,
-        pipelineResult: pipelineResult
+        variantCount: pipelineResult?.expansionResults?.variants?.length || 0
       });
       
       if (searchData.searchType === 'chronological' && 
@@ -1485,238 +1499,22 @@ export default function DashboardPage() {
           pipelineResult.expansionResults.variants && 
           pipelineResult.expansionResults.variants.length > 0) {
         
-        console.log(`[DASHBOARD EXPANSION] 🔍 Starting expansion search phase`);
-        console.log(`[DASHBOARD EXPANSION] 📊 Expansion variants available: ${pipelineResult.expansionResults.variants.length}`);
+        console.log(`[DASHBOARD EXPANSION] ✅ Expansion available: ${pipelineResult.expansionResults.variants.length} variants`);
         
-        // Update search phase to show expansion is happening
-        setSearchPhase('expanding');
+        // Store expansion data and enable the expand button
+        setPipelineExpansionData(pipelineResult.expansionResults);
+        setCanExpand(true);
+        setHasExpanded(false); // Reset expansion state
         
-        // Show expansion analysis with animated typing
-        await typewriterEffect('🔍 Performing deeper analysis with alternative search strategies...', 
-          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n\n' + text }))
-        );
+        console.log(`[DASHBOARD EXPANSION] 🎯 Expansion button enabled with ${pipelineResult.expansionResults.variants.length} variants ready`);
         
-        // Show the expansion queries being processed
-        for (let i = 0; i < pipelineResult.expansionResults.variants.length; i++) {
-          const variant = pipelineResult.expansionResults.variants[i];
-          console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
-          
-          await typewriterEffect(`• Searching: "${variant.natural_language_query}"`, 
-            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n' + text }))
-          );
-        }
-        
-        try {
-          console.log(`[DASHBOARD EXPANSION] 📡 Making expansion API request`);
-          
-          const expansionResponse = await fetch('/api/search-expansion', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              expansionResults: pipelineResult.expansionResults,
-              organizationName: originalOrganizationName,
-              initialResults: initialResults
-            }),
-          });
-          
-          if (expansionResponse.ok) {
-            const expansionData = await expansionResponse.json();
-            console.log(`[DASHBOARD EXPANSION] ✅ Expansion search completed:`, {
-              expansionResultCount: expansionData.results?.length || 0,
-              metadata: expansionData.metadata
-            });
-            
-            if (expansionData.results && expansionData.results.length > 0) {
-              // Show expansion completion message
-              await typewriterEffect(`\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`, 
-                (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-              );
-              
-              // Combine initial and expansion results
-              const allResults = [...initialResults, ...expansionData.results];
-              const compatibleAllResults = ensureSearchResultCompatibility(allResults);
-              
-              console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
-                initialCount: initialResults.length,
-                expansionCount: expansionData.results.length,
-                totalCount: allResults.length,
-                compatibleCount: compatibleAllResults.length
-              });
-              
-              // Update results with combined data
-              setSearchResults(compatibleAllResults);
-              
-              // Update display message to show final count
-              const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialResults.length} primary + ${expansionData.results.length} expanded) based on relevance and alternative search strategies...`;
-              
-              await typewriterEffect(finalDisplayMessage, 
-                (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
-              );
-              
-            } else {
-              console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
-              await typewriterEffect(`\n• No additional relevant profiles found from expanded search`, 
-                (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-              );
-            }
-            
-          } else {
-            console.error(`[DASHBOARD EXPANSION] ❌ Expansion API failed:`, expansionResponse.status);
-            await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-            );
-          }
-          
-        } catch (expansionError) {
-          console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
-          await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
-            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-          );
-        }
-        
-        // Mark expansion as complete
-        setSearchPhase('complete');
-        console.log(`[DASHBOARD EXPANSION] ✅ Expansion phase completed`);
       } else {
-        console.log(`[DASHBOARD EXPANSION] ❌ Expansion conditions not met:`, {
-          isChronological: searchData.searchType === 'chronological',
-          hasPipelineResult: !!pipelineResult,
-          hasExpansionResults: !!pipelineResult?.expansionResults,
-          hasVariants: !!pipelineResult?.expansionResults?.variants,
-          variantLength: pipelineResult?.expansionResults?.variants?.length || 0
-        });
+        console.log(`[DASHBOARD EXPANSION] ❌ No expansion available - disabling expand option`);
         
-        // If it's a chronological search but no expansion is available, let's generate it manually
-        if (searchData.searchType === 'chronological') {
-          console.log(`[DASHBOARD EXPANSION] 🔄 Attempting manual expansion generation for chronological search`);
-          
-          try {
-            // Update search phase to show expansion is happening
-            setSearchPhase('expanding');
-            
-            // Show expansion analysis with animated typing
-            await typewriterEffect('🔍 Generating additional search strategies for deeper analysis...', 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n\n' + text }))
-            );
-            
-            // Call the search pipeline again to get expansion results
-            const manualExpansionResponse = await fetch('/api/search-pipeline', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                query: currentQuery, 
-                organizationName: originalOrganizationName,
-                isDemo: isDemoMode
-              }),
-            });
-            
-            if (manualExpansionResponse.ok) {
-              const manualExpansionResult = await manualExpansionResponse.json();
-              console.log(`[DASHBOARD EXPANSION] 🔄 Manual expansion result:`, manualExpansionResult);
-              
-              if (manualExpansionResult.expansionResults && 
-                  manualExpansionResult.expansionResults.variants && 
-                  manualExpansionResult.expansionResults.variants.length > 0) {
-                
-                console.log(`[DASHBOARD EXPANSION] ✅ Manual expansion successful: ${manualExpansionResult.expansionResults.variants.length} variants`);
-                
-                // Show the expansion queries being processed
-                for (let i = 0; i < manualExpansionResult.expansionResults.variants.length; i++) {
-                  const variant = manualExpansionResult.expansionResults.variants[i];
-                  console.log(`[DASHBOARD EXPANSION] 📝 Processing manual expansion query ${i + 1}: "${variant.natural_language_query}"`);
-                  
-                  await typewriterEffect(`• Searching: "${variant.natural_language_query}"`, 
-                    (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n' + text }))
-                  );
-                }
-                
-                // Execute the manual expansion search
-                const manualExpansionSearchResponse = await fetch('/api/search-expansion', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    expansionResults: manualExpansionResult.expansionResults,
-                    organizationName: originalOrganizationName,
-                    initialResults: initialResults
-                  }),
-                });
-                
-                if (manualExpansionSearchResponse.ok) {
-                  const manualExpansionData = await manualExpansionSearchResponse.json();
-                  console.log(`[DASHBOARD EXPANSION] ✅ Manual expansion search completed:`, {
-                    expansionResultCount: manualExpansionData.results?.length || 0,
-                    metadata: manualExpansionData.metadata
-                  });
-                  
-                  if (manualExpansionData.results && manualExpansionData.results.length > 0) {
-                    // Show expansion completion message
-                    await typewriterEffect(`\n✅ Found ${manualExpansionData.results.length} additional relevant profiles from expanded search`, 
-                      (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-                    );
-                    
-                    // Combine initial and expansion results
-                    const allResults = [...initialResults, ...manualExpansionData.results];
-                    const compatibleAllResults = ensureSearchResultCompatibility(allResults);
-                    
-                    console.log(`[DASHBOARD EXPANSION] 🔄 Combining manual expansion results:`, {
-                      initialCount: initialResults.length,
-                      expansionCount: manualExpansionData.results.length,
-                      totalCount: allResults.length,
-                      compatibleCount: compatibleAllResults.length
-                    });
-                    
-                    // Update results with combined data
-                    setSearchResults(compatibleAllResults);
-                    
-                    // Update display message to show final count
-                    const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialResults.length} primary + ${manualExpansionData.results.length} expanded) based on relevance and alternative search strategies...`;
-                    
-                    await typewriterEffect(finalDisplayMessage, 
-                      (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
-                    );
-                  } else {
-                    console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from manual expansion search`);
-                    await typewriterEffect(`\n• No additional relevant profiles found from expanded search`, 
-                      (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-                    );
-                  }
-                } else {
-                  console.error(`[DASHBOARD EXPANSION] ❌ Manual expansion search API failed:`, manualExpansionSearchResponse.status);
-                  await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
-                    (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-                  );
-                }
-              } else {
-                console.log(`[DASHBOARD EXPANSION] ❌ Manual expansion generation failed - no variants generated`);
-                await typewriterEffect(`\n• Unable to generate additional search strategies`, 
-                  (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-                );
-              }
-            } else {
-              console.error(`[DASHBOARD EXPANSION] ❌ Manual expansion pipeline failed:`, manualExpansionResponse.status);
-              await typewriterEffect(`\n• Unable to generate additional search strategies`, 
-                (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-              );
-            }
-            
-            // Mark expansion as complete
-            setSearchPhase('complete');
-            console.log(`[DASHBOARD EXPANSION] ✅ Manual expansion phase completed`);
-            
-          } catch (manualExpansionError) {
-            console.error(`[DASHBOARD EXPANSION] ❌ Manual expansion error:`, manualExpansionError);
-            await typewriterEffect(`\n• Unable to perform expanded search - showing initial results`, 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
-            );
-            setSearchPhase('complete');
-          }
-        } else {
-          console.log(`[DASHBOARD EXPANSION] ℹ️ Non-chronological search - skipping expansion`);
-        }
+        // Reset expansion states
+        setPipelineExpansionData(null);
+        setCanExpand(false);
+        setHasExpanded(false);
       }
       
       // Automatically collapse the search analysis when results are presented
@@ -1814,26 +1612,109 @@ export default function DashboardPage() {
   // Fix the handleTagClick function
   const handleTagClick = async (query: string) => {
     console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
+    handleSearch(new Event('submit') as any, query);
+  };
+  
+  // NEW: Manual expansion function
+  const handleExpandSearch = async () => {
+    if (!pipelineExpansionData || isExpanding || hasExpanded) {
+      console.log(`[DASHBOARD EXPANSION] ❌ Cannot expand: no data, already expanding, or already expanded`);
+      return;
+    }
     
-    // Track tag click
-    analytics.trackTagClick(query);
+    console.log(`[DASHBOARD EXPANSION] 🔍 Starting manual expansion search`);
+    setIsExpanding(true);
+    setSearchPhase('expanding');
     
-    // Set the query first
-    setSearchQuery(query);
-    
-    // Use setTimeout to ensure state update has completed
-    setTimeout(() => {
-      console.log(`[DEBUG ${new Date().toISOString()}] Executing search after tag click for: "${query}"`);
-      // Create a proper synthetic event
-      const fakeEvent = {
-        preventDefault: () => {},
-        target: { value: query },
-        currentTarget: { value: query }
-      } as unknown as React.FormEvent;
+    try {
+      // Show expansion analysis with animated typing
+      await typewriterEffect('🔍 Performing deeper analysis with alternative search strategies...', 
+        (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n\n' + text }))
+      );
       
-      // Call the search function directly with the query value, not depending on the state
-      handleSearch(fakeEvent, query);
-    }, 50);
+      // Show the expansion queries being processed
+      for (let i = 0; i < pipelineExpansionData.variants.length; i++) {
+        const variant = pipelineExpansionData.variants[i];
+        console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
+        
+        await typewriterEffect(`• Searching: "${variant.natural_language_query}"`, 
+          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + '\n' + text }))
+        );
+      }
+      
+      console.log(`[DASHBOARD EXPANSION] 📡 Making expansion API request`);
+      
+      const expansionResponse = await fetch('/api/search-expansion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          expansionResults: pipelineExpansionData,
+          organizationName: localStorage.getItem('organizationName'),
+          initialResults: initialSearchResults
+        }),
+      });
+      
+      if (expansionResponse.ok) {
+        const expansionData = await expansionResponse.json();
+        console.log(`[DASHBOARD EXPANSION] ✅ Expansion search completed:`, {
+          expansionResultCount: expansionData.results?.length || 0,
+          metadata: expansionData.metadata
+        });
+        
+        if (expansionData.results && expansionData.results.length > 0) {
+          // Show expansion completion message
+          await typewriterEffect(`\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`, 
+            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+          );
+          
+          // Combine initial and expansion results
+          const allResults = [...initialSearchResults, ...expansionData.results];
+          const compatibleAllResults = ensureSearchResultCompatibility(allResults);
+          
+          console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
+            initialCount: initialSearchResults.length,
+            expansionCount: expansionData.results.length,
+            totalCount: allResults.length,
+            compatibleCount: compatibleAllResults.length
+          });
+          
+          // Update results with combined data
+          setSearchResults(compatibleAllResults);
+          setHasExpanded(true);
+          
+          // Update display message to show final count
+          const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialSearchResults.length} primary + ${expansionData.results.length} expanded) based on relevance and alternative search strategies...`;
+          
+          await typewriterEffect(finalDisplayMessage, 
+            (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+          );
+          
+        } else {
+          console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
+          await typewriterEffect(`\n• No additional relevant profiles found from expanded search`, 
+            (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+          );
+        }
+        
+      } else {
+        console.error(`[DASHBOARD EXPANSION] ❌ Expansion API failed:`, expansionResponse.status);
+        await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
+          (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+        );
+      }
+      
+    } catch (expansionError) {
+      console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
+      await typewriterEffect(`\n⚠️ Expansion search encountered an issue - showing initial results`, 
+        (text) => setDisplayedText(prev => ({ ...prev, analyzing: prev.analyzing + text }))
+      );
+    } finally {
+      setIsExpanding(false);
+      setSearchPhase('complete');
+      console.log(`[DASHBOARD EXPANSION] ✅ Manual expansion phase completed`);
+    }
   };
 
   // Replace the existing generateExpandedQueries function with this AI-powered version
@@ -2499,9 +2380,47 @@ export default function DashboardPage() {
             {/* Search Results Section - Show below the analysis */}
             {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
               <div className="w-full pb-8">
-                <h2 className="text-xl font-semibold mb-4 text-black">
-                  Found {searchResults.length} alumni matching your search
-                </h2>
+                {/* Results Header with Expansion Button */}
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-black">
+                    Found {searchResults.length} alumni matching your search
+                  </h2>
+                  
+                  {/* Expansion Button - Only show if expansion is available and not already expanded */}
+                  {canExpand && !hasExpanded && !isExpanding && (
+                    <button
+                      onClick={handleExpandSearch}
+                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium flex items-center space-x-2"
+                      title="Find additional relevant profiles using alternative search strategies"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                      </svg>
+                      <span>Expand Search Results</span>
+                    </button>
+                  )}
+                  
+                  {/* Show expanding state */}
+                  {isExpanding && (
+                    <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium flex items-center space-x-2">
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Expanding Search...</span>
+                    </div>
+                  )}
+                  
+                  {/* Show expanded state */}
+                  {hasExpanded && (
+                    <div className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-medium flex items-center space-x-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Search Expanded</span>
+                    </div>
+                  )}
+                </div>
                 
                 {/* Add instruction message for clickability - only in demo mode */}
                 {isDemoMode && (
