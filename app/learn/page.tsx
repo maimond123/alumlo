@@ -655,11 +655,11 @@ export default function LearnPage() {
             <>
               {/* Conversation view with vertical lines and centered title */}
               <div className="w-full h-full relative">
-                {/* Left vertical line - moved farther left */}
-                <div className="fixed left-[15%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
+                {/* Left vertical line - adjusted positioning */}
+                <div className="fixed left-[12%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
-                {/* Right vertical line - moved farther right */}
-                <div className="fixed right-[15%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
+                {/* Right vertical line - adjusted positioning */}
+                <div className="fixed right-[12%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
                 {/* Centered title */}
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -676,10 +676,10 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Conversation history container - Constrained between the lines */}
+                {/* Conversation history container - Better positioned between the lines */}
                 <div className="w-full flex flex-col gap-4 pb-32 pt-24">
                   {/* Conversation messages constrained between vertical lines */}
-                  <div className="w-full space-y-4 mb-6" style={{marginLeft: '15%', marginRight: '15%', width: '70%'}}>
+                  <div className="w-full space-y-4 mb-6 px-4" style={{marginLeft: '12%', marginRight: '12%', width: '76%'}}>
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         <div 
@@ -722,11 +722,11 @@ export default function LearnPage() {
                 </div>
               </div>
 
-              {/* Fixed input form at bottom when there's conversation history */}
-              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-                <div className="max-w-4xl mx-auto">
+              {/* Integrated input form at bottom - no background container */}
+              <div className="fixed bottom-0 left-0 right-0 p-4 z-20">
+                <div className="w-full" style={{marginLeft: '12%', marginRight: '12%', width: '76%'}}>
                   <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full">
-                    <div className="flex gap-2 border border-black rounded-lg p-2">
+                    <div className="flex gap-2 border border-black rounded-lg p-2 bg-white shadow-sm">
                       <input
                         type="text"
                         value={currentQuestion}
