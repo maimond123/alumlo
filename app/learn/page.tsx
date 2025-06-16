@@ -655,14 +655,14 @@ export default function LearnPage() {
             <>
               {/* Conversation view with vertical lines and centered title */}
               <div className="w-full h-full relative">
-                {/* Left vertical line - moved right to be left of green text */}
-                <div className="fixed left-[18%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
+                {/* Left vertical line - moved closer to center */}
+                <div className="fixed left-[20%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
-                {/* Right vertical line - adjusted for more spacing */}
-                <div className="fixed right-[10%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
+                {/* Right vertical line - moved closer to center */}
+                <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
                 {/* Centered title - moved higher */}
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center whitespace-nowrap">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
@@ -676,10 +676,10 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Conversation history container - Moved higher up and better spacing */}
-                <div className="w-full flex flex-col gap-4 pb-32 pt-16">
-                  {/* Conversation messages with adjusted spacing - content starts just right of left line */}
-                  <div className="w-full space-y-4 mb-6" style={{marginLeft: 'calc(18% + 8px)', marginRight: '10%', width: 'calc(72% - 8px)', paddingLeft: '8px', paddingRight: '24px'}}>
+                {/* Conversation history container - Much higher up */}
+                <div className="w-full flex flex-col gap-4 pb-32 pt-12">
+                  {/* Conversation messages with equal padding from both lines */}
+                  <div className="w-full space-y-4 mb-6" style={{marginLeft: 'calc(20% + 12px)', marginRight: 'calc(20% + 12px)', width: 'calc(60% - 24px)'}}>
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         <div 
@@ -722,9 +722,9 @@ export default function LearnPage() {
                 </div>
               </div>
 
-              {/* Integrated input form at bottom - aligned with new spacing */}
+              {/* Integrated input form at bottom - narrower and aligned with content */}
               <div className="fixed bottom-0 left-0 right-0 p-4 z-20">
-                <div className="w-full" style={{marginLeft: 'calc(18% + 8px)', marginRight: '10%', width: 'calc(72% - 8px)', paddingLeft: '8px', paddingRight: '24px'}}>
+                <div className="w-full" style={{marginLeft: 'calc(20% + 12px)', marginRight: 'calc(20% + 12px)', width: 'calc(60% - 24px)'}}>
                   <form onSubmit={(e) => handleLearnSubmit(e)} className="w-full">
                     <div className="flex gap-2 border border-black rounded-lg p-2 bg-white shadow-sm">
                       <input
