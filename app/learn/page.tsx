@@ -340,7 +340,7 @@ export default function LearnPage() {
           const userEmail = await getUserEmail();
           if (userEmail) {
             if (isDemoMode) {
-              // For demo users, we already identified them in the checkAuth function
+              // For demo users, we already identinted them in the checkAuth function
               // This ensures we maintain the visitor ID while still using the demo email
               // for Supabase data retrieval
               console.log("Demo user already identified with unique visitor ID");
@@ -662,7 +662,7 @@ export default function LearnPage() {
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
-                <div className="fixed top-8 z-10" style={{left: '20%', right: '20%'}}>
+                <div className="fixed top-12 z-10" style={{left: '20%', right: '20%'}}>
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
@@ -677,7 +677,7 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Conversation history container - Scrollable between vertical lines */}
-                <div className="fixed left-[20%] right-[20%] top-20 bottom-20 overflow-y-auto">
+                <div className="fixed left-[20%] right-[20%] top-24 bottom-20 overflow-y-auto">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="space-y-4 px-4 py-4">
                     {conversations.map((msg, idx) => (
