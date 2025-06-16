@@ -655,12 +655,15 @@ export default function LearnPage() {
             <>
               {/* Conversation view with rounded rectangle border */}
               <div className="w-full h-full relative">
-                {/* Rounded rectangle border container */}
+                {/* Rounded rectangle border container - only left and right sides visible */}
                 <div 
-                  className="fixed top-4 bottom-4 border border-gray-400 z-0 rounded-lg shadow-lg" 
+                  className="fixed top-4 bottom-4 z-0 rounded-lg shadow-lg" 
                   style={{
                     left: '20%', 
                     right: '20%',
+                    border: '1px solid #9CA3AF',
+                    borderTop: '1px solid transparent',
+                    borderBottom: '1px solid transparent',
                     boxShadow: '0 0 8px rgba(0,0,0,0.1)'
                   }}
                 ></div>
@@ -680,8 +683,8 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Horizontal line between title and conversations */}
-                <div className="fixed top-36 z-10 h-px bg-gray-400" style={{left: '20%', right: '20%'}}></div>
+                {/* Horizontal line between title and conversations - matching border style */}
+                <div className="fixed top-36 z-10" style={{left: '20%', right: '20%', height: '1px', backgroundColor: '#9CA3AF'}}></div>
                 
                 {/* Conversation history container - Scrollable between vertical lines */}
                 <div className="fixed left-[20%] right-[20%] top-40 bottom-20 overflow-y-auto">
