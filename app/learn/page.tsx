@@ -655,15 +655,17 @@ export default function LearnPage() {
             <>
               {/* Conversation view with rounded rectangle border */}
               <div className="w-full h-full relative">
-                {/* Rounded rectangle border container - only left and right sides visible */}
+                {/* Rounded rectangle border container - only rounded corners visible */}
                 <div 
                   className="fixed top-4 bottom-4 z-0 rounded-lg shadow-lg" 
                   style={{
                     left: '20%', 
                     right: '20%',
-                    border: '1px solid #9CA3AF',
+                    border: '1px solid transparent',
                     borderTop: '1px solid transparent',
                     borderBottom: '1px solid transparent',
+                    borderLeft: '1px solid transparent',
+                    borderRight: '1px solid transparent',
                     boxShadow: '0 0 8px rgba(0,0,0,0.1)'
                   }}
                 ></div>
