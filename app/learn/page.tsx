@@ -655,11 +655,11 @@ export default function LearnPage() {
             <>
               {/* Conversation view with vertical lines and centered title */}
               <div className="w-full h-full relative">
-                {/* Left vertical line with rounded corners and shadow effect */}
-                <div className="fixed left-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg rounded-full" style={{boxShadow: '-2px 0 4px rgba(0,0,0,0.1)'}}></div>
+                {/* Left vertical line with rounded ends and shadow effect */}
+                <div className="fixed left-[20%] top-4 bottom-4 w-1 bg-gray-400 z-0 shadow-lg" style={{boxShadow: '-2px 0 4px rgba(0,0,0,0.1)', borderRadius: '50px'}}></div>
                 
-                {/* Right vertical line with rounded corners and shadow effect */}
-                <div className="fixed right-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg rounded-full" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
+                {/* Right vertical line with rounded ends and shadow effect */}
+                <div className="fixed right-[20%] top-4 bottom-4 w-1 bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)', borderRadius: '50px'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
                 <div className="fixed top-16 z-10 pt-4" style={{left: '20%', right: '20%'}}>
@@ -677,10 +677,10 @@ export default function LearnPage() {
                 </div>
                 
                 {/* Horizontal line between title and conversations */}
-                <div className="fixed top-28 z-10 h-px bg-gray-400" style={{left: '20%', right: '20%'}}></div>
+                <div className="fixed top-36 z-10 h-px bg-gray-400" style={{left: '20%', right: '20%'}}></div>
                 
                 {/* Conversation history container - Scrollable between vertical lines */}
-                <div className="fixed left-[20%] right-[20%] top-32 bottom-20 overflow-y-auto">
+                <div className="fixed left-[20%] right-[20%] top-40 bottom-20 overflow-y-auto">
                   {/* Conversation messages container - full width between lines with proper centering */}
                   <div className="space-y-4 px-4 py-4">
                     {conversations.map((msg, idx) => (
