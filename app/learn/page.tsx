@@ -655,11 +655,11 @@ export default function LearnPage() {
             <>
               {/* Conversation view with vertical lines and centered title */}
               <div className="w-full h-full relative">
-                {/* Left vertical line */}
-                <div className="absolute left-1/4 top-0 bottom-0 w-px bg-gray-400"></div>
+                {/* Left vertical line - moved farther left */}
+                <div className="fixed left-[15%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
-                {/* Right vertical line */}
-                <div className="absolute right-1/4 top-0 bottom-0 w-px bg-gray-400"></div>
+                {/* Right vertical line - moved farther right */}
+                <div className="fixed right-[15%] top-0 bottom-0 w-px bg-gray-400 z-0"></div>
                 
                 {/* Centered title */}
                 <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
@@ -676,10 +676,10 @@ export default function LearnPage() {
                   </h1>
                 </div>
                 
-                {/* Conversation history container - Full width between the lines */}
+                {/* Conversation history container - Constrained between the lines */}
                 <div className="w-full flex flex-col gap-4 pb-32 pt-24">
-                  {/* Conversation messages without border */}
-                  <div className="w-full space-y-4 mb-6 px-4">
+                  {/* Conversation messages constrained between vertical lines */}
+                  <div className="w-full space-y-4 mb-6" style={{marginLeft: '15%', marginRight: '15%', width: '70%'}}>
                     {conversations.map((msg, idx) => (
                       <div key={idx} className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                         <div 
