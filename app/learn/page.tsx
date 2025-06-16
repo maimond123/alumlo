@@ -736,7 +736,7 @@ export default function LearnPage() {
                       disabled={isProcessing}
                     />
                     
-                    {/* Clear button */}
+                    {/* Clear button with X icon */}
                     <button
                       type="button" 
                       onClick={(e) => {
@@ -746,22 +746,26 @@ export default function LearnPage() {
                         setCurrentConversationId(null);
                         sessionStorage.removeItem('currentLearnConversationId');
                       }}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300"
+                      className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300 border border-gray-300"
                       aria-label="Clear"
                     >
-                      Clear
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                     
-                    {/* Send button */}
+                    {/* Send button with up arrow icon */}
                     <button
                       type="submit"
                       disabled={isProcessing || !currentQuestion.trim()}
-                      className="px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transform transition-transform duration-300 disabled:opacity-50"
+                      className="w-10 h-10 flex items-center justify-center bg-gray-700 text-white rounded-lg hover:bg-gray-800 transform transition-all duration-300 disabled:opacity-50 border border-gray-700"
                     >
                       {isProcessing ? (
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       ) : (
-                        <span>Send</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
                       )}
                     </button>
                   </div>
