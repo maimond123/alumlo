@@ -662,7 +662,7 @@ export default function LearnPage() {
                 <div className="fixed right-[20%] top-0 bottom-0 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
-                <div className="fixed top-12 z-10" style={{left: '20%', right: '20%'}}>
+                <div className="fixed top-16 z-10 pt-4" style={{left: '20%', right: '20%'}}>
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
                     Learn
                     {/* Conditional space, only if school name will be rendered */}
