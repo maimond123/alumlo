@@ -478,7 +478,7 @@ function mapTemporalParameters(temporalElements: TemporalElements): any {
   return params;
 }
 
-// EXISTING: Process chronological search
+// EXISTING: Process chronologeal search
 async function processChronologicalSearch(
   query: string, 
   classification: QueryClassification,
