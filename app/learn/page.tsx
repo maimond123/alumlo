@@ -655,11 +655,11 @@ export default function LearnPage() {
             <>
               {/* Conversation view with vertical lines and centered title */}
               <div className="w-full h-full relative">
-                {/* Left vertical line with rounded ends and shadow effect */}
-                <div className="fixed left-[20%] top-4 bottom-4 w-1 bg-gray-400 z-0 shadow-lg" style={{boxShadow: '-2px 0 4px rgba(0,0,0,0.1)', borderRadius: '50px'}}></div>
+                {/* Left vertical line with rounded end caps and shadow effect */}
+                <div className="fixed left-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '-2px 0 4px rgba(0,0,0,0.1)', borderRadius: '8px'}}></div>
                 
-                {/* Right vertical line with rounded ends and shadow effect */}
-                <div className="fixed right-[20%] top-4 bottom-4 w-1 bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)', borderRadius: '50px'}}></div>
+                {/* Right vertical line with rounded end caps and shadow effect */}
+                <div className="fixed right-[20%] top-4 bottom-4 w-px bg-gray-400 z-0 shadow-lg" style={{boxShadow: '2px 0 4px rgba(0,0,0,0.1)', borderRadius: '8px'}}></div>
                 
                 {/* Centered title - positioned between the vertical lines */}
                 <div className="fixed top-16 z-10 pt-4" style={{left: '20%', right: '20%'}}>
