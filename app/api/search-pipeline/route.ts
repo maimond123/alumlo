@@ -174,17 +174,51 @@ export async function POST(req: NextRequest) {
       case 'chronological':
         console.log('📈 [STEP 2] Processing chronological search...');
         console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation`);
-        const { primaryConfig, expansionResults: chronologicalExpansion } = await processChronologicalSearchWithExpansion(query, classification, organizationName);
-        searchConfig = primaryConfig;
-        expansionResults = chronologicalExpansion;
-        processingSteps.push('chronological_translation', 'search_expansion');
-        llmCalls += 1 + chronologicalExpansion.variants.length; // +1 for primary filters, +1 for each expansion variant
-        console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {
-          sqlFunction: searchConfig.sqlFunction,
-          filterCount: Object.keys(searchConfig.filters || {}).length,
-          expansionVariants: chronologicalExpansion.variants.length,
-          additionalConfigs: chronologicalExpansion.additionalSearchConfigs.length
-        });
+        
+        try {
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: About to call processChronologicalSearchWithExpansion`);
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: Input parameters:`, {
+            query: `"${query}"`,
+            classification: classification,
+            organizationName: organizationName
+          });
+          
+          const { primaryConfig, expansionResults: chronologicalExpansion } = await processChronologicalSearchWithExpansion(query, classification, organizationName);
+          
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: processChronologicalSearchWithExpansion completed successfully`);
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: Primary config:`, primaryConfig);
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: Expansion results:`, chronologicalExpansion);
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: Expansion variants count:`, chronologicalExpansion?.variants?.length || 0);
+          console.log(`[PIPELINE DEBUG] 📈 DETAILED: First variant:`, chronologicalExpansion?.variants?.[0] || 'none');
+          
+          searchConfig = primaryConfig;
+          expansionResults = chronologicalExpansion;
+          processingSteps.push('chronological_translation', 'search_expansion');
+          llmCalls += 1 + chronologicalExpansion.variants.length; // +1 for primary filters, +1 for each expansion variant
+          
+          console.log(`[PIPELINE DEBUG] ✅ Chronological processing completed:`, {
+            sqlFunction: searchConfig.sqlFunction,
+            filterCount: Object.keys(searchConfig.filters || {}).length,
+            expansionVariants: chronologicalExpansion.variants.length,
+            additionalConfigs: chronologicalExpansion.additionalSearchConfigs.length,
+            hasExpansionResults: !!expansionResults,
+            expansionResultsVariantCount: expansionResults?.variants?.length || 0
+          });
+          
+        } catch (chronologicalError) {
+          console.error(`[PIPELINE DEBUG] ❌ Chronological processing failed:`, {
+            error: chronologicalError,
+            message: chronologicalError instanceof Error ? chronologicalError.message : 'Unknown error',
+            stack: chronologicalError instanceof Error ? chronologicalError.stack : 'No stack'
+          });
+          
+          // Fallback to basic chronological processing without expansion
+          console.log(`[PIPELINE DEBUG] 🔄 Falling back to basic chronological processing`);
+          searchConfig = await processChronologicalSearch(query, classification, organizationName);
+          expansionResults = undefined;
+          processingSteps.push('chronological_translation', 'expansion_fallback');
+          llmCalls += 1;
+        }
         break;
         
       case 'standard':
@@ -203,6 +237,16 @@ export async function POST(req: NextRequest) {
 
     // STEP 3: Return Unified Response
     console.log(`[PIPELINE DEBUG] 📤 Preparing unified response`);
+    console.log(`[PIPELINE DEBUG] 📤 DETAILED: Response preparation details:`, {
+      searchType: classification.type,
+      hasSearchConfig: !!searchConfig,
+      hasExpansionResults: !!expansionResults,
+      expansionVariantCount: expansionResults?.variants?.length || 0,
+      expansionConfigCount: expansionResults?.additionalSearchConfigs?.length || 0,
+      processingSteps: processingSteps,
+      llmCalls: llmCalls
+    });
+    
     const response: SearchPipelineResponse = {
       searchType: classification.type,
       classification,
@@ -228,6 +272,15 @@ export async function POST(req: NextRequest) {
       totalProcessingTime: response.metadata.processingTimeMs + 'ms',
       totalLLMCalls: response.metadata.llmCalls,
       configReady: true
+    });
+    
+    console.log(`[PIPELINE DEBUG] 📤 FINAL RESPONSE INSPECTION:`, {
+      hasExpansionResults: !!response.expansionResults,
+      expansionVariantCount: response.expansionResults?.variants?.length || 0,
+      expansionConfigCount: response.expansionResults?.additionalSearchConfigs?.length || 0,
+      firstVariant: response.expansionResults?.variants?.[0] || 'none',
+      responseKeys: Object.keys(response),
+      expansionResultsKeys: response.expansionResults ? Object.keys(response.expansionResults) : 'none'
     });
 
     return NextResponse.json(response);
