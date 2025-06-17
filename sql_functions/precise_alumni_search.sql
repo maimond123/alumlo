@@ -328,12 +328,14 @@ BEGIN
          (v.current_estimated_salary > 0 AND v.highest_career_salary > 0 AND 
           v.current_estimated_salary >= (v.highest_career_salary * 0.9))) -- Within 90% of peak
     
-    -- Salary range comparisons
-    AND ((search_filters->>'salary_range_pre_company') IS NULL OR 
+    -- Salary range comparisons (fixed: check if the field is an array before accessing elements)
+    AND ((search_filters->'salary_range_pre_company') IS NULL OR 
+         jsonb_typeof(search_filters->'salary_range_pre_company') != 'array' OR
          (v.pre_chick_fil_a_salary >= (search_filters->'salary_range_pre_company'->0)::decimal AND 
           v.pre_chick_fil_a_salary <= (search_filters->'salary_range_pre_company'->1)::decimal))
     
-    AND ((search_filters->>'salary_range_post_company') IS NULL OR 
+    AND ((search_filters->'salary_range_post_company') IS NULL OR 
+         jsonb_typeof(search_filters->'salary_range_post_company') != 'array' OR
          (v.first_post_chick_fil_a_salary >= (search_filters->'salary_range_post_company'->0)::decimal AND 
           v.first_post_chick_fil_a_salary <= (search_filters->'salary_range_post_company'->1)::decimal))
     
