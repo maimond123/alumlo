@@ -511,6 +511,19 @@ export class LinkedInProfileSearchEngine {
         max_highest_career_salary: filters.max_highest_career_salary || null,
         salary_growth_indicator: filters.salary_growth_indicator || false,
         
+        // NEW: MATHEMATICAL SALARY COMPARISON FIELDS
+        post_salary_greater_than_pre: filters.post_salary_greater_than_pre || false,
+        current_salary_greater_than_first_post: filters.current_salary_greater_than_first_post || false,
+        min_salary_growth_percentage: filters.min_salary_growth_percentage || null,
+        max_salary_growth_percentage: filters.max_salary_growth_percentage || null,
+        min_salary_increase_amount: filters.min_salary_increase_amount || null,
+        min_salary_multiplier: filters.min_salary_multiplier || null,
+        current_salary_near_peak: filters.current_salary_near_peak || false,
+        salary_range_pre_company: filters.salary_range_pre_company || null,
+        salary_range_post_company: filters.salary_range_post_company || null,
+        min_pre_chick_fil_a_salary: filters.min_pre_chick_fil_a_salary || null,
+        min_first_post_chick_fil_a_salary: filters.min_first_post_chick_fil_a_salary || null,
+        
         // 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY)
         // PRE-COMPANY FIELDS (Background/Network Analysis)
         pre_company_companies_filter: filters.pre_company_companies_filter || null,

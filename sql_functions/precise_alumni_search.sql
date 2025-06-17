@@ -51,6 +51,8 @@ RETURNS TABLE(
   average_tenure_months DECIMAL,
   current_estimated_salary DECIMAL,
   highest_career_salary DECIMAL,
+  pre_chick_fil_a_salary DECIMAL,
+  first_post_chick_fil_a_salary DECIMAL,
   chick_fil_a_provided_salary_lift BOOLEAN,
   achieved_six_figure_post_chick_fil_a BOOLEAN,
   doubled_salary_post_chick_fil_a BOOLEAN,
@@ -80,7 +82,8 @@ RETURNS TABLE(
   chick_fil_a_exit_year INTEGER,
   had_multiple_company_stints BOOLEAN,
   years_since_chick_fil_a INTEGER,
-  total_years_at_chick_fil_a INTEGER
+  is_new BOOLEAN,
+  created_at TIMESTAMPTZ
 )
 LANGUAGE plpgsql
 AS $$
@@ -133,6 +136,8 @@ BEGIN
     COALESCE(v.average_tenure_months, 0) as average_tenure_months,
     COALESCE(v.current_estimated_salary, 0) as current_estimated_salary,
     COALESCE(v.highest_career_salary, 0) as highest_career_salary,
+    COALESCE(v.pre_chick_fil_a_salary, 0) as pre_chick_fil_a_salary,
+    COALESCE(v.first_post_chick_fil_a_salary, 0) as first_post_chick_fil_a_salary,
     COALESCE(v.chick_fil_a_provided_salary_lift, FALSE) as chick_fil_a_provided_salary_lift,
     COALESCE(v.achieved_six_figure_post_chick_fil_a, FALSE) as achieved_six_figure_post_chick_fil_a,
     COALESCE(v.doubled_salary_post_chick_fil_a, FALSE) as doubled_salary_post_chick_fil_a,
@@ -144,7 +149,7 @@ BEGIN
     COALESCE(v.pre_company_education, ARRAY[]::TEXT[]) as pre_company_education,
     COALESCE(v.during_company_education, ARRAY[]::TEXT[]) as during_company_education,
     COALESCE(v.post_company_education, ARRAY[]::TEXT[]) as post_company_education,
-    -- PRE-COMPANY CAREER FIELDS (if they exist in the table, otherwise empty arrays)
+    -- PRE-COMPANY CAREER FIELDS
     COALESCE(v.pre_company_companies, ARRAY[]::TEXT[]) as pre_company_companies,
     COALESCE(v.pre_company_titles, ARRAY[]::TEXT[]) as pre_company_titles,
     COALESCE(v.pre_company_industries, ARRAY[]::TEXT[]) as pre_company_industries,
@@ -162,8 +167,9 @@ BEGIN
     v.chick_fil_a_exit_year,
     COALESCE(v.had_multiple_company_stints, FALSE) as had_multiple_company_stints,
     v.years_since_chick_fil_a,
-    v.total_years_at_chick_fil_a
-  FROM chick_fil_a_alumni_vector v
+    COALESCE(v.is_new, FALSE) as is_new,
+    v.created_at
+  FROM chick_fil_a_alumni_standard_search v
   WHERE 1=1
     -- 1. BASIC ENTITY FILTERS (searches current state first, then arrays)
     AND ((search_filters->>'company_filter') IS NULL OR 
@@ -283,12 +289,57 @@ BEGIN
     
     AND ((search_filters->'education_geography_filter') IS NULL OR v.education_geography && ARRAY(SELECT jsonb_array_elements_text(search_filters->'education_geography_filter')))
     
-    -- 9. SALARY ANALYSIS FIELDS
+    -- 9. SALARY ANALYSIS FIELDS (including new salary fields)
     AND ((search_filters->>'min_current_salary')::decimal IS NULL OR v.current_estimated_salary >= (search_filters->>'min_current_salary')::decimal)
     AND ((search_filters->>'max_current_salary')::decimal IS NULL OR v.current_estimated_salary <= (search_filters->>'max_current_salary')::decimal)
     AND ((search_filters->>'min_highest_career_salary')::decimal IS NULL OR v.highest_career_salary >= (search_filters->>'min_highest_career_salary')::decimal)
     AND ((search_filters->>'max_highest_career_salary')::decimal IS NULL OR v.highest_career_salary <= (search_filters->>'max_highest_career_salary')::decimal)
+    AND ((search_filters->>'min_pre_chick_fil_a_salary')::decimal IS NULL OR v.pre_chick_fil_a_salary >= (search_filters->>'min_pre_chick_fil_a_salary')::decimal)
+    AND ((search_filters->>'min_first_post_chick_fil_a_salary')::decimal IS NULL OR v.first_post_chick_fil_a_salary >= (search_filters->>'min_first_post_chick_fil_a_salary')::decimal)
     AND ((search_filters->>'salary_growth_indicator')::boolean = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
+    
+    -- NEW: MATHEMATICAL SALARY COMPARISONS
+    -- Compare post-company salary vs pre-company salary
+    AND ((search_filters->>'post_salary_greater_than_pre')::boolean = FALSE OR 
+         (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND v.first_post_chick_fil_a_salary > v.pre_chick_fil_a_salary))
+    
+    -- Current salary greater than first post-company salary (continued growth)
+    AND ((search_filters->>'current_salary_greater_than_first_post')::boolean = FALSE OR 
+         (v.current_estimated_salary > 0 AND v.first_post_chick_fil_a_salary > 0 AND v.current_estimated_salary > v.first_post_chick_fil_a_salary))
+    
+    -- Minimum salary growth percentage from pre to post company
+    AND ((search_filters->>'min_salary_growth_percentage')::decimal IS NULL OR 
+         (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND 
+          ((v.first_post_chick_fil_a_salary - v.pre_chick_fil_a_salary) / v.pre_chick_fil_a_salary * 100) >= (search_filters->>'min_salary_growth_percentage')::decimal))
+    
+    -- Maximum salary growth percentage (to find modest increases)
+    AND ((search_filters->>'max_salary_growth_percentage')::decimal IS NULL OR 
+         (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND 
+          ((v.first_post_chick_fil_a_salary - v.pre_chick_fil_a_salary) / v.pre_chick_fil_a_salary * 100) <= (search_filters->>'max_salary_growth_percentage')::decimal))
+    
+    -- Absolute salary increase amount (dollar amount increase)
+    AND ((search_filters->>'min_salary_increase_amount')::decimal IS NULL OR 
+         (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND 
+          (v.first_post_chick_fil_a_salary - v.pre_chick_fil_a_salary) >= (search_filters->>'min_salary_increase_amount')::decimal))
+    
+    -- Salary multiplier (e.g., "doubled" = 2.0, "tripled" = 3.0)
+    AND ((search_filters->>'min_salary_multiplier')::decimal IS NULL OR 
+         (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND 
+          (v.first_post_chick_fil_a_salary / v.pre_chick_fil_a_salary) >= (search_filters->>'min_salary_multiplier')::decimal))
+    
+    -- Career peak salary comparison to current
+    AND ((search_filters->>'current_salary_near_peak')::boolean = FALSE OR 
+         (v.current_estimated_salary > 0 AND v.highest_career_salary > 0 AND 
+          v.current_estimated_salary >= (v.highest_career_salary * 0.9))) -- Within 90% of peak
+    
+    -- Salary range comparisons
+    AND ((search_filters->>'salary_range_pre_company') IS NULL OR 
+         (v.pre_chick_fil_a_salary >= (search_filters->'salary_range_pre_company'->0)::decimal AND 
+          v.pre_chick_fil_a_salary <= (search_filters->'salary_range_pre_company'->1)::decimal))
+    
+    AND ((search_filters->>'salary_range_post_company') IS NULL OR 
+         (v.first_post_chick_fil_a_salary >= (search_filters->'salary_range_post_company'->0)::decimal AND 
+          v.first_post_chick_fil_a_salary <= (search_filters->'salary_range_post_company'->1)::decimal))
     
     -- 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY)
     -- PRE-COMPANY FILTERS (Background/Network Analysis)

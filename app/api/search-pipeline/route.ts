@@ -1496,6 +1496,103 @@ async function translateStandardSearchQuery(
 - max_highest_career_salary: number
 - salary_growth_indicator: boolean (for people with significant salary increases)
 
+**NEW: MATHEMATICAL SALARY COMPARISON FIELDS - ADVANCED DETECTION:**
+
+**STEP 1: DETECT SALARY NUMBERS AND COMPARISONS**
+- Extract ALL numbers from query (e.g., "100,000", "100k", "$75K", "six figures")
+- Convert text numbers to numeric values:
+  - "six figures" → 100000
+  - "100k" → 100000  
+  - "$75K" → 75000
+  - "quarter million" → 250000
+  - "half a million" → 500000
+
+**STEP 2: DETECT COMPARISON OPERATIONS**
+- "above", "over", "more than", "greater than", "exceeds" → Use min_* fields
+- "below", "under", "less than", "lower than" → Use max_* fields  
+- "between X and Y" → Use min_* and max_* fields
+- "around", "approximately", "about" → Use ±10% range
+
+**STEP 3: DETECT SALARY RELATIONSHIPS**
+- "after [company] vs before [company]" → post_salary_greater_than_pre: true
+- "doubled their salary" → min_salary_multiplier: 2.0
+- "tripled their income" → min_salary_multiplier: 3.0
+- "50% increase" → min_salary_growth_percentage: 50
+- "salary grew by $20,000" → min_salary_increase_amount: 20000
+
+**MATHEMATICAL SALARY FIELDS:**
+- post_salary_greater_than_pre: boolean (salary after target company > before)
+- current_salary_greater_than_first_post: boolean (continued salary growth)
+- min_salary_growth_percentage: number (e.g., 25 for 25% increase)
+- max_salary_growth_percentage: number (e.g., 100 for max 100% increase)
+- min_salary_increase_amount: number (e.g., 20000 for $20k increase)
+- min_salary_multiplier: number (e.g., 2.0 for "doubled", 1.5 for "50% increase")
+- current_salary_near_peak: boolean (within 90% of career peak)
+- salary_range_pre_company: [number, number] (salary range before target company)
+- salary_range_post_company: [number, number] (salary range after target company)
+- min_pre_chick_fil_a_salary: number (minimum salary before Chick-fil-A)
+- min_first_post_chick_fil_a_salary: number (minimum first salary after Chick-fil-A)
+
+**COMPREHENSIVE SALARY EXAMPLES:**
+
+Query: "Find me alumni currently making above $100,000"
+{
+  "min_current_salary": 100000
+}
+
+Query: "Alumni whose job after Chick-fil-A pays more than their job before"
+{
+  "post_salary_greater_than_pre": true
+}
+
+Query: "People who doubled their salary after leaving"
+{
+  "min_salary_multiplier": 2.0,
+  "post_salary_greater_than_pre": true
+}
+
+Query: "Alumni making between $75k and $150k currently"
+{
+  "min_current_salary": 75000,
+  "max_current_salary": 150000
+}
+
+Query: "Find people whose salary increased by at least 50% after Chick-fil-A"
+{
+  "min_salary_growth_percentage": 50,
+  "post_salary_greater_than_pre": true
+}
+
+Query: "Alumni who got at least a $25,000 raise after leaving"
+{
+  "min_salary_increase_amount": 25000,
+  "post_salary_greater_than_pre": true
+}
+
+Query: "People making six figures who are near their career peak"
+{
+  "min_current_salary": 100000,
+  "current_salary_near_peak": true
+}
+
+Query: "Alumni whose first job after Chick-fil-A paid over $80k"
+{
+  "min_first_post_chick_fil_a_salary": 80000
+}
+
+Query: "Find high earners who tripled their income"
+{
+  "min_salary_multiplier": 3.0,
+  "min_current_salary": 150000
+}
+
+Query: "People who had modest salary growth (10-30%)"
+{
+  "min_salary_growth_percentage": 10,
+  "max_salary_growth_percentage": 30,
+  "post_salary_greater_than_pre": true
+}
+
 **10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic) - CURRENT STATE ONLY:**
 - post_company_companies_filter: string[] with post_company_companies_or_logic: boolean
 - post_company_titles_filter: string[] with post_company_titles_or_logic: boolean
@@ -1834,6 +1931,32 @@ interface StandardSearchFilters {
   min_highest_career_salary?: number;
   max_highest_career_salary?: number;
   salary_growth_indicator?: boolean;
+  
+  // NEW: MATHEMATICAL SALARY COMPARISON FIELDS
+  // Dynamic salary comparisons
+  post_salary_greater_than_pre?: boolean;
+  current_salary_greater_than_first_post?: boolean;
+  
+  // Percentage-based growth
+  min_salary_growth_percentage?: number; // e.g., 25 for 25% increase
+  max_salary_growth_percentage?: number; // e.g., 100 for max 100% increase
+  
+  // Absolute dollar amount increases
+  min_salary_increase_amount?: number; // e.g., 20000 for $20k increase
+  
+  // Salary multipliers
+  min_salary_multiplier?: number; // e.g., 2.0 for "doubled", 1.5 for "50% increase"
+  
+  // Career peak comparisons
+  current_salary_near_peak?: boolean; // Within 90% of career peak
+  
+  // Salary range comparisons (arrays: [min, max])
+  salary_range_pre_company?: [number, number]; // [min, max] for pre-company salary
+  salary_range_post_company?: [number, number]; // [min, max] for post-company salary
+  
+  // Specific company salary fields
+  min_pre_chick_fil_a_salary?: number;
+  min_first_post_chick_fil_a_salary?: number;
   
   // 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY):**
   // PRE-COMPANY FIELDS (Background/Network Analysis)
