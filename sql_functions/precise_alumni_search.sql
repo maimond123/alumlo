@@ -62,18 +62,25 @@ RETURNS TABLE(
   pre_company_education TEXT[],
   during_company_education TEXT[],
   post_company_education TEXT[],
-  post_company_companies TEXT[],
-  post_company_titles TEXT[],
-  post_company_industries TEXT[],
-  post_company_locations TEXT[],
+  -- PRE-COMPANY CAREER TRACKING (before Chick-fil-A)
   pre_company_companies TEXT[],
   pre_company_titles TEXT[],
   pre_company_industries TEXT[],
   pre_company_locations TEXT[],
+  -- POST-COMPANY CAREER TRACKING (after Chick-fil-A)
+  post_company_companies TEXT[],
+  post_company_titles TEXT[],
+  post_company_industries TEXT[],
+  post_company_locations TEXT[],
   functional_expertise TEXT[],
   industry_expertise TEXT[],
   industry_transitions TEXT[],
-  education_geography TEXT[]
+  education_geography TEXT[],
+  -- Additional fields that exist in the table
+  chick_fil_a_exit_year INTEGER,
+  had_multiple_company_stints BOOLEAN,
+  years_since_chick_fil_a INTEGER,
+  total_years_at_chick_fil_a INTEGER
 )
 LANGUAGE plpgsql
 AS $$
@@ -137,21 +144,28 @@ BEGIN
     COALESCE(v.pre_company_education, ARRAY[]::TEXT[]) as pre_company_education,
     COALESCE(v.during_company_education, ARRAY[]::TEXT[]) as during_company_education,
     COALESCE(v.post_company_education, ARRAY[]::TEXT[]) as post_company_education,
-    COALESCE(v.post_company_companies, ARRAY[]::TEXT[]) as post_company_companies,
-    COALESCE(v.post_company_titles, ARRAY[]::TEXT[]) as post_company_titles,
-    COALESCE(v.post_company_industries, ARRAY[]::TEXT[]) as post_company_industries,
-    COALESCE(v.post_company_locations, ARRAY[]::TEXT[]) as post_company_locations,
+    -- PRE-COMPANY CAREER FIELDS (if they exist in the table, otherwise empty arrays)
     COALESCE(v.pre_company_companies, ARRAY[]::TEXT[]) as pre_company_companies,
     COALESCE(v.pre_company_titles, ARRAY[]::TEXT[]) as pre_company_titles,
     COALESCE(v.pre_company_industries, ARRAY[]::TEXT[]) as pre_company_industries,
     COALESCE(v.pre_company_locations, ARRAY[]::TEXT[]) as pre_company_locations,
+    -- POST-COMPANY CAREER FIELDS
+    COALESCE(v.post_company_companies, ARRAY[]::TEXT[]) as post_company_companies,
+    COALESCE(v.post_company_titles, ARRAY[]::TEXT[]) as post_company_titles,
+    COALESCE(v.post_company_industries, ARRAY[]::TEXT[]) as post_company_industries,
+    COALESCE(v.post_company_locations, ARRAY[]::TEXT[]) as post_company_locations,
     COALESCE(v.functional_expertise, ARRAY[]::TEXT[]) as functional_expertise,
     COALESCE(v.industry_expertise, ARRAY[]::TEXT[]) as industry_expertise,
     COALESCE(v.industry_transitions, ARRAY[]::TEXT[]) as industry_transitions,
-    COALESCE(v.education_geography, ARRAY[]::TEXT[]) as education_geography
+    COALESCE(v.education_geography, ARRAY[]::TEXT[]) as education_geography,
+    -- Additional fields
+    v.chick_fil_a_exit_year,
+    COALESCE(v.had_multiple_company_stints, FALSE) as had_multiple_company_stints,
+    v.years_since_chick_fil_a,
+    v.total_years_at_chick_fil_a
   FROM chick_fil_a_alumni_vector v
   WHERE 1=1
-    -- 1. BASIC ENTITY FILTERS
+    -- 1. BASIC ENTITY FILTERS (searches current state first, then arrays)
     AND ((search_filters->>'company_filter') IS NULL OR 
          ((search_filters->>'company_or_logic')::boolean = FALSE AND v.post_company_current_company ILIKE '%' || (search_filters->>'company_filter') || '%') OR
          ((search_filters->>'company_or_logic')::boolean = TRUE AND (search_filters->'company_filters') IS NOT NULL AND 
@@ -276,20 +290,28 @@ BEGIN
     AND ((search_filters->>'max_highest_career_salary')::decimal IS NULL OR v.highest_career_salary <= (search_filters->>'max_highest_career_salary')::decimal)
     AND ((search_filters->>'salary_growth_indicator')::boolean = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
     
-    -- 10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH
+    -- 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY)
+    -- PRE-COMPANY FILTERS (Background/Network Analysis)
+    AND ((search_filters->'pre_company_companies_filter') IS NULL OR v.pre_company_companies && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_companies_filter')))
+    AND ((search_filters->'pre_company_titles_filter') IS NULL OR v.pre_company_titles && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_titles_filter')))
+    AND ((search_filters->'pre_company_industries_filter') IS NULL OR v.pre_company_industries && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_industries_filter')))
+    AND ((search_filters->'pre_company_locations_filter') IS NULL OR v.pre_company_locations && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_locations_filter')))
+    
+    -- POST-COMPANY FILTERS (Current/Recent Career Path)
     AND ((search_filters->'post_company_companies_filter') IS NULL OR v.post_company_companies && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_companies_filter')))
     AND ((search_filters->'post_company_titles_filter') IS NULL OR v.post_company_titles && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_titles_filter')))
     AND ((search_filters->'post_company_industries_filter') IS NULL OR v.post_company_industries && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_industries_filter')))
-    AND ((search_filters->'pre_company_companies_filter') IS NULL OR v.pre_company_companies && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_companies_filter')))
-    AND ((search_filters->'pre_company_titles_filter') IS NULL OR v.pre_company_titles && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_titles_filter')))
+    AND ((search_filters->'post_company_locations_filter') IS NULL OR v.post_company_locations && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_locations_filter')))
+    
+    -- EDUCATION FILTERS
     AND ((search_filters->'undergraduate_schools_filter') IS NULL OR v.undergraduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'undergraduate_schools_filter')))
     AND ((search_filters->'graduate_schools_filter') IS NULL OR v.graduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'graduate_schools_filter')))
     
     -- Optional: Text search in natural language fields if search_query is provided
     AND (search_query IS NULL OR 
-         v.natural_language_experiences ILIKE '%' || search_query || '%' OR 
-         v.natural_language_education ILIKE '%' || search_query || '%' OR
-         v.name ILIKE '%' || search_query || '%')
+         v.name ILIKE '%' || search_query || '%' OR
+         v.post_company_current_title ILIKE '%' || search_query || '%' OR
+         v.post_company_current_company ILIKE '%' || search_query || '%')
   
   ORDER BY 
     -- Prioritize exact matches, then partial matches

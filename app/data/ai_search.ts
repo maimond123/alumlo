@@ -64,6 +64,12 @@ export interface SearchResult {
   functional_expertise?: string[];
   industry_expertise?: string[];
   
+  // PRE-COMPANY CAREER FIELDS (Background/Network Analysis)
+  pre_company_companies?: string[];
+  pre_company_titles?: string[];
+  pre_company_industries?: string[];
+  pre_company_locations?: string[];
+  
   // Dynamic company-specific fields
   [key: string]: any;
 }
@@ -127,10 +133,19 @@ interface ComprehensiveSearchResult {
   pre_company_education?: string[];
   during_company_education?: string[];
   post_company_education?: string[];
+  
+  // PRE-COMPANY CAREER FIELDS (Background/Network Analysis)
+  pre_company_companies?: string[];
+  pre_company_titles?: string[];
+  pre_company_industries?: string[];
+  pre_company_locations?: string[];
+  
+  // POST-COMPANY CAREER FIELDS (Current/Recent Career Path)
   post_company_companies?: string[];
   post_company_titles?: string[];
   post_company_industries?: string[];
   post_company_locations?: string[];
+  
   functional_expertise?: string[];
   industry_expertise?: string[];
   
@@ -496,7 +511,21 @@ export class LinkedInProfileSearchEngine {
         max_highest_career_salary: filters.max_highest_career_salary || null,
         salary_growth_indicator: filters.salary_growth_indicator || false,
         
-        // 10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic)
+        // 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY)
+        // PRE-COMPANY FIELDS (Background/Network Analysis)
+        pre_company_companies_filter: filters.pre_company_companies_filter || null,
+        pre_company_companies_or_logic: filters.pre_company_companies_or_logic || false,
+        
+        pre_company_titles_filter: filters.pre_company_titles_filter || null,
+        pre_company_titles_or_logic: filters.pre_company_titles_or_logic || false,
+        
+        pre_company_industries_filter: filters.pre_company_industries_filter || null,
+        pre_company_industries_or_logic: filters.pre_company_industries_or_logic || false,
+        
+        pre_company_locations_filter: filters.pre_company_locations_filter || null,
+        pre_company_locations_or_logic: filters.pre_company_locations_or_logic || false,
+        
+        // POST-COMPANY FIELDS (Current/Recent Career Path)
         post_company_companies_filter: filters.post_company_companies_filter || null,
         post_company_companies_or_logic: filters.post_company_companies_or_logic || false,
         
@@ -506,12 +535,10 @@ export class LinkedInProfileSearchEngine {
         post_company_industries_filter: filters.post_company_industries_filter || null,
         post_company_industries_or_logic: filters.post_company_industries_or_logic || false,
         
-        pre_company_companies_filter: filters.pre_company_companies_filter || null,
-        pre_company_companies_or_logic: filters.pre_company_companies_or_logic || false,
+        post_company_locations_filter: filters.post_company_locations_filter || null,
+        post_company_locations_or_logic: filters.post_company_locations_or_logic || false,
         
-        pre_company_titles_filter: filters.pre_company_titles_filter || null,
-        pre_company_titles_or_logic: filters.pre_company_titles_or_logic || false,
-        
+        // EDUCATION FIELDS
         undergraduate_schools_filter: filters.undergraduate_schools_filter || null,
         undergraduate_schools_or_logic: filters.undergraduate_schools_or_logic || false,
         
@@ -611,10 +638,19 @@ export class LinkedInProfileSearchEngine {
           pre_company_education: item.pre_company_education || [],
           during_company_education: item.during_company_education || [],
           post_company_education: item.post_company_education || [],
+          
+          // PRE-COMPANY CAREER FIELDS (Background/Network Analysis)
+          pre_company_companies: item.pre_company_companies || [],
+          pre_company_titles: item.pre_company_titles || [],
+          pre_company_industries: item.pre_company_industries || [],
+          pre_company_locations: item.pre_company_locations || [],
+          
+          // POST-COMPANY CAREER FIELDS (Current/Recent Career Path)
           post_company_companies: item.post_company_companies || [],
           post_company_titles: item.post_company_titles || [],
           post_company_industries: item.post_company_industries || [],
           post_company_locations: item.post_company_locations || [],
+          
           functional_expertise: item.functional_expertise || [],
           industry_expertise: item.industry_expertise || [],
           current_estimated_salary: item.current_estimated_salary || 0,

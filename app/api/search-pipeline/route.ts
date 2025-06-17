@@ -1496,12 +1496,10 @@ async function translateStandardSearchQuery(
 - max_highest_career_salary: number
 - salary_growth_indicator: boolean (for people with significant salary increases)
 
-**10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic):**
+**10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic) - CURRENT STATE ONLY:**
 - post_company_companies_filter: string[] with post_company_companies_or_logic: boolean
 - post_company_titles_filter: string[] with post_company_titles_or_logic: boolean
 - post_company_industries_filter: string[] with post_company_industries_or_logic: boolean
-- pre_company_companies_filter: string[] with pre_company_companies_or_logic: boolean
-- pre_company_titles_filter: string[] with pre_company_titles_or_logic: boolean
 - undergraduate_schools_filter: string[] with undergraduate_schools_or_logic: boolean
 - graduate_schools_filter: string[] with graduate_schools_or_logic: boolean
 
@@ -1635,6 +1633,11 @@ Query: "Data scientists and ML engineers"
 6. **Identify geographic patterns** and map to location arrays
 7. **Recognize company impact** indicators and map to outcome metrics
 
+**IMPORTANT: REMOVED FIELDS (DO NOT USE):**
+- pre_company_* fields (these belong in chronological search)
+- Timeline/progression fields (these belong in chronological/temporal search)
+- Temporal analysis fields (these belong in temporal search)
+
 Return comprehensive JSON with all applicable filters. Default OR logic to true when using multiple values.`
       },
       {
@@ -1711,7 +1714,7 @@ Return comprehensive JSON with all applicable filters. Default OR logic to true 
   }
 }
 
-// Interface for Standard Search Filters
+// Interface for Standard Search Filters - UPDATED TO REMOVE CHRONOLOGICAL/TEMPORAL FIELDS
 interface StandardSearchFilters {
   // 1. BASIC ENTITY FILTERS (single or multiple with OR logic)
   company_filter?: string;
@@ -1832,7 +1835,21 @@ interface StandardSearchFilters {
   max_highest_career_salary?: number;
   salary_growth_indicator?: boolean;
   
-  // 10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic)
+  // 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY):**
+  // PRE-COMPANY FIELDS (Background/Network Analysis)
+  pre_company_companies_filter?: string[];
+  pre_company_companies_or_logic?: boolean;
+  
+  pre_company_titles_filter?: string[];
+  pre_company_titles_or_logic?: boolean;
+  
+  pre_company_industries_filter?: string[];
+  pre_company_industries_or_logic?: boolean;
+  
+  pre_company_locations_filter?: string[];
+  pre_company_locations_or_logic?: boolean;
+  
+  // POST-COMPANY FIELDS (Current/Recent Career Path)
   post_company_companies_filter?: string[];
   post_company_companies_or_logic?: boolean;
   
@@ -1842,12 +1859,10 @@ interface StandardSearchFilters {
   post_company_industries_filter?: string[];
   post_company_industries_or_logic?: boolean;
   
-  pre_company_companies_filter?: string[];
-  pre_company_companies_or_logic?: boolean;
+  post_company_locations_filter?: string[];
+  post_company_locations_or_logic?: boolean;
   
-  pre_company_titles_filter?: string[];
-  pre_company_titles_or_logic?: boolean;
-  
+  // EDUCATION FIELDS
   undergraduate_schools_filter?: string[];
   undergraduate_schools_or_logic?: boolean;
   
