@@ -1275,48 +1275,94 @@ export default function DashboardPage() {
             
           } else if (pipelineResult.searchType === 'standard') {
             console.log(`[DASHBOARD PIPELINE] 📊 Standard search detected - processing semantic filters`);
-            await typewriterEffect('📊 Using standard semantic search with enhanced filtering', 
+            await typewriterEffect('📊 Using comprehensive standard search with intelligent filtering', 
               (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
             );
             
-            // For standard search, still run the expanded queries and filter extraction
+            // Show standard search analysis
             setSearchPhase('profiling');
-            console.log(`[DASHBOARD PIPELINE] 📊 Running expanded query generation for standard search`);
-      try {
-        await generateExpandedQueries(currentQuery);
-              console.log(`[DASHBOARD PIPELINE] 📊 Expanded queries generated successfully`);
-      } catch (error) {
-              console.error(`[DASHBOARD PIPELINE] ❌ Error in generateExpandedQueries:`, error);
-        await typewriterEffect("Alternative search suggestions unavailable", 
-          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-        );
-      }
-      
-            // Extract filters for standard search
-      let currentExtractedFilters: {[key: string]: string[]} = {};
-            console.log(`[DASHBOARD PIPELINE] 📊 Extracting metadata filters for standard search`);
-      try {
-        currentExtractedFilters = await extractMetadataFilters(currentQuery);
-              console.log(`[DASHBOARD PIPELINE] 📊 Extracted filters:`, currentExtractedFilters);
+            console.log(`[DASHBOARD PIPELINE] 📊 Processing standard search filters`);
+            
+            const enhancedFilters = searchConfig.enhancedFilters;
+            console.log(`[DASHBOARD PIPELINE] 📊 Enhanced filters extracted:`, enhancedFilters);
+            
+            // Analyze and display filter categories applied
+            const filterCategories = [];
+            let totalActiveFilters = 0;
+            
+            // Count and categorize active filters
+            const activeFilters = Object.entries(enhancedFilters || {}).filter(([key, value]) => {
+              if (typeof value === 'boolean') return value === true;
+              if (Array.isArray(value)) return value.length > 0;
+              if (typeof value === 'number') return value !== null && value !== undefined;
+              if (typeof value === 'string') return value !== null && value !== '';
+              return value !== null && value !== undefined;
+            });
+            
+            totalActiveFilters = activeFilters.length;
+            
+            // Categorize filters for user-friendly display
+            if (enhancedFilters.company_filter || enhancedFilters.industry_filter || enhancedFilters.title_filter || enhancedFilters.location_filter || enhancedFilters.school_filter) {
+              filterCategories.push('entity matching');
+            }
+            if (enhancedFilters.current_job_level_filter || enhancedFilters.is_current_leader || enhancedFilters.management_experience) {
+              filterCategories.push('career progression');
+            }
+            if (enhancedFilters.technical_background || enhancedFilters.sales_experience || enhancedFilters.functional_expertise_filter) {
+              filterCategories.push('skills & experience');
+            }
+            if (enhancedFilters.highest_degree_level_filter || enhancedFilters.stem_education || enhancedFilters.elite_education) {
+              filterCategories.push('education');
+            }
+            if (enhancedFilters.min_current_salary || enhancedFilters.salary_growth_indicator) {
+              filterCategories.push('salary analysis');
+            }
+            if (enhancedFilters.has_startup_experience || enhancedFilters.has_enterprise_experience) {
+              filterCategories.push('company intelligence');
+            }
+            
+            console.log(`[DASHBOARD PIPELINE] 📊 Filter analysis:`, {
+              totalActiveFilters,
+              filterCategories,
+              usesOrLogic: !!(enhancedFilters.company_or_logic || enhancedFilters.industry_or_logic),
+              hasArrayFilters: !!(enhancedFilters.company_filters || enhancedFilters.title_filters)
+            });
+            
+            // Display filter analysis to user
+            if (totalActiveFilters > 0) {
+              const filterSummary = `Applied ${totalActiveFilters} intelligent filters across ${filterCategories.length} categories: ${filterCategories.join(', ')}`;
+              await typewriterEffect(filterSummary, 
+                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+              );
               
-              apiFilters = convertFiltersToAPI(currentExtractedFilters);
-              console.log(`[DASHBOARD PIPELINE] 📊 Converted API filters:`, apiFilters);
-              
-              const filterCount = Object.keys(apiFilters).length;
-              if (filterCount > 0) {
-                await typewriterEffect(`Applied ${filterCount} semantic filters`, 
+              // Add additional context about OR logic if used
+              if (enhancedFilters.company_or_logic || enhancedFilters.industry_or_logic || enhancedFilters.title_or_logic) {
+                await typewriterEffect('Using flexible OR logic for broader matching where appropriate', 
                   (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
                 );
               } else {
-                await typewriterEffect("No specific filters detected - using broad semantic search", 
+                await typewriterEffect('Using precise filtering for targeted results', 
                   (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
                 );
               }
-      } catch (error) {
-              console.error(`[DASHBOARD PIPELINE] ❌ Error in extractMetadataFilters:`, error);
-        await typewriterEffect("No specific filters detected", 
-          (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-        );
+            } else {
+              await typewriterEffect('No specific filters detected - using broad semantic search across all profiles', 
+                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
+              );
+              await typewriterEffect('Leveraging natural language understanding for best matches', 
+                (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
+              );
+            }
+            
+            // Show search method being used
+            if (searchConfig.searchMethod === 'comprehensive_sql_filtering') {
+              await typewriterEffect('Executing SQL-based comprehensive search (no embeddings required)', 
+                (text) => setDisplayedText(prev => ({ ...prev, filters: prev.filters + ' • ' + text }))
+              );
+            } else {
+              await typewriterEffect('Executing semantic search with enhanced filtering capabilities', 
+                (text) => setDisplayedText(prev => ({ ...prev, filters: prev.filters + ' • ' + text }))
+              );
             }
           }
           
@@ -2009,7 +2055,7 @@ export default function DashboardPage() {
     return () => {
       window.removeEventListener('loadSearch', handleLoadSearch);
     };
-  }, [loadSearchDetails]);
+  }, []); // Fix: removed problematic dependency
 
   // Function to load a past search
   const loadPastSearch = async (searchId: string, query: string) => {
