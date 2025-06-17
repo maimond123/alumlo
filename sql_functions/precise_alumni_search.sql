@@ -81,9 +81,7 @@ RETURNS TABLE(
   -- Additional fields that exist in the table
   chick_fil_a_exit_year INTEGER,
   had_multiple_company_stints BOOLEAN,
-  years_since_chick_fil_a INTEGER,
-  is_new BOOLEAN,
-  created_at TIMESTAMPTZ
+  years_since_chick_fil_a INTEGER
 )
 LANGUAGE plpgsql
 AS $$
@@ -166,9 +164,7 @@ BEGIN
     -- Additional fields
     v.chick_fil_a_exit_year,
     COALESCE(v.had_multiple_company_stints, FALSE) as had_multiple_company_stints,
-    v.years_since_chick_fil_a,
-    COALESCE(v.is_new, FALSE) as is_new,
-    v.created_at
+    v.years_since_chick_fil_a
   FROM chick_fil_a_alumni_standard_search v
   WHERE 1=1
     -- 1. BASIC ENTITY FILTERS (searches current state first, then arrays)
