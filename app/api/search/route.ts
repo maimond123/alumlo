@@ -109,14 +109,6 @@ export async function POST(req: NextRequest) {
     console.log(`[API SEARCH] 🔧 Initializing search engine`);
     const search_engine = new LinkedInProfileSearchEngine();
     
-    console.log('[API] Initializing embedder');
-    console.log(`[API SEARCH] 🧠 Initializing embedder`);
-    await search_engine.initializeEmbedder().catch((error: unknown) => {
-      console.error('[API] Error initializing embedder:', error);
-      console.error(`[API SEARCH] ❌ Embedder initialization failed:`, error);
-      throw new Error(`Embedder initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    });
-    
     console.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     console.log(`[API DEBUG] Organization context: "${organizationName}"`);
     console.log(`[API SEARCH] 🎯 Starting search execution`);
@@ -264,14 +256,6 @@ export async function POST(req: NextRequest) {
           console.log(`[API SEARCH] 🎯 Using comprehensive SQL filtering for standard search`);
           
           try {
-            console.log(`[API SEARCH] 📊 DETAILED: Calling standardSearch with parameters:`, {
-              query: `"${query}"`,
-              filtersCount: Object.keys(searchConfig.enhancedFilters).length,
-              limit: 50,
-              organizationName: organizationName,
-              enhancedFilters: searchConfig.enhancedFilters
-            });
-            
             results = await search_engine.standardSearch(
               query,
               searchConfig.enhancedFilters,
@@ -279,49 +263,21 @@ export async function POST(req: NextRequest) {
               organizationName
             );
             
-            console.log(`[API SEARCH] 📊 DETAILED: Comprehensive standard search completed:`, {
-              resultCount: results?.length || 0,
-              hasResults: !!results,
-              isArray: Array.isArray(results),
-              firstResultId: results?.[0]?.id || 'none',
-              searchMethod: 'comprehensive_sql_filtering'
-            });
-            
-            // Count active filters for metadata
-            const activeFilters = Object.entries(searchConfig.enhancedFilters || {}).filter(([key, value]) => {
-              if (typeof value === 'boolean') return value === true;
-              if (Array.isArray(value)) return value.length > 0;
-              if (typeof value === 'number') return value !== null && value !== undefined;
-              if (typeof value === 'string') return value !== null && value !== '';
-              return value !== null && value !== undefined;
-            });
+            console.log(`[API SEARCH] ✅ Comprehensive SQL filtering completed: ${results?.length || 0} results`);
             
             searchMetadata = {
               search_method: 'comprehensive_sql_filtering',
               enhanced_filters: searchConfig.enhancedFilters,
-              active_filter_count: activeFilters.length,
-              filter_categories: {
-                basic_entity: !!(searchConfig.enhancedFilters.company_filter || searchConfig.enhancedFilters.industry_filter || searchConfig.enhancedFilters.title_filter || searchConfig.enhancedFilters.location_filter || searchConfig.enhancedFilters.school_filter),
-                career_progression: !!(searchConfig.enhancedFilters.current_job_level_filter || searchConfig.enhancedFilters.is_current_leader || searchConfig.enhancedFilters.management_experience),
-                company_intelligence: !!(searchConfig.enhancedFilters.has_startup_experience || searchConfig.enhancedFilters.has_enterprise_experience || searchConfig.enhancedFilters.current_company_size_category_filter),
-                skills_patterns: !!(searchConfig.enhancedFilters.technical_background || searchConfig.enhancedFilters.sales_experience || searchConfig.enhancedFilters.functional_expertise_filter),
-                education: !!(searchConfig.enhancedFilters.highest_degree_level_filter || searchConfig.enhancedFilters.stem_education || searchConfig.enhancedFilters.elite_education),
-                salary_analysis: !!(searchConfig.enhancedFilters.min_current_salary || searchConfig.enhancedFilters.salary_growth_indicator),
-                geographic: !!(searchConfig.enhancedFilters.home_location_filter || searchConfig.enhancedFilters.education_geography_filter),
-                array_fields: !!(searchConfig.enhancedFilters.post_company_companies_filter || searchConfig.enhancedFilters.functional_expertise_filter || searchConfig.enhancedFilters.industry_expertise_filter)
-              },
+              filter_count: Object.keys(searchConfig.enhancedFilters || {}).length,
               configuration_source: 'pipeline',
-              sql_based: true,
-              no_embeddings: true,
-              uses_or_logic: !!(searchConfig.enhancedFilters.company_or_logic || searchConfig.enhancedFilters.industry_or_logic || searchConfig.enhancedFilters.title_or_logic),
-              text_search_enabled: !!query && query.trim().length > 0
+              sql_function: `comprehensive_standard_search_${organizationName}`,
+              organization_specific: true
             };
             
-            console.log(`[API SEARCH] ✅ Comprehensive standard search completed with ${results?.length || 0} results`);
             searchType = 'standard';
             
           } catch (error) {
-            console.error(`[API SEARCH] ❌ DETAILED: Comprehensive standard search failed:`, {
+            console.error(`[API SEARCH] ❌ Comprehensive SQL filtering failed:`, {
               error: error,
               errorMessage: error instanceof Error ? error.message : 'Unknown error',
               errorStack: error instanceof Error ? error.stack : 'No stack',
@@ -329,62 +285,51 @@ export async function POST(req: NextRequest) {
               organizationName: organizationName
             });
             
-            // Fallback to embedding-based search
-            console.log(`[API SEARCH] 🔄 Falling back to embedding-based search due to comprehensive search failure`);
-            results = null;
+            console.log(`[API SEARCH] 🔄 Falling back to standard search fallback`);
+            results = null; // Will fall through to standard search fallback below
           }
         } else {
-          console.log(`[API SEARCH] 📊 Standard search using semantic_with_filters method`);
+          console.log(`[API SEARCH] 🔄 Using standard search fallback`);
           
-          // Convert enhanced filters to basic filters for legacy compatibility
+          // Convert enhanced filters to basic filters for standard search fallback
           const basicFilters = {
-            company: searchConfig.enhancedFilters.company_filter || null,
-            industry: searchConfig.enhancedFilters.industry_filter || null,
-            title: searchConfig.enhancedFilters.title_filter || null,
-            location: searchConfig.enhancedFilters.location_filter || null,
-            school: searchConfig.enhancedFilters.school_filter || null
+            company_filter: searchConfig.enhancedFilters.company_filter || null,
+            industry_filter: searchConfig.enhancedFilters.industry_filter || null,
+            title_filter: searchConfig.enhancedFilters.title_filter || null,
+            location_filter: searchConfig.enhancedFilters.location_filter || null,
+            school_filter: searchConfig.enhancedFilters.school_filter || null
           };
           
-          console.log(`[API SEARCH] 📊 DETAILED: Using semantic search with basic filters:`, basicFilters);
+          console.log(`[API SEARCH] 📊 DETAILED: Using standard search with basic filters:`, basicFilters);
           
           try {
-            results = await search_engine.search(
+            results = await search_engine.standardSearch(
               query,
-              50,
               basicFilters,
-              isDemo,
-              organizationName,
-              queryClassification
+              50,
+              organizationName
             );
             
-            console.log(`[API SEARCH] 📊 DETAILED: Semantic standard search completed:`, {
-              resultCount: results?.length || 0,
-              hasResults: !!results,
-              isArray: Array.isArray(results),
-              searchMethod: 'semantic_with_filters'
-            });
+            console.log(`[API SEARCH] ✅ Standard search fallback completed: ${results?.length || 0} results`);
             
             searchMetadata = {
-              search_method: 'semantic_with_filters',
+              search_method: 'standard_search_fallback',
               basic_filters: basicFilters,
               enhanced_filters_available: Object.keys(searchConfig.enhancedFilters || {}).length,
               configuration_source: 'pipeline',
-              embedding_based: true,
               fallback_reason: !organizationName ? 'no_organization' : 'basic_filters_only'
             };
             
-            console.log(`[API SEARCH] ✅ Semantic standard search completed with ${results?.length || 0} results`);
             searchType = 'standard';
             
           } catch (error) {
-            console.error(`[API SEARCH] ❌ DETAILED: Semantic standard search failed:`, {
+            console.error(`[API SEARCH] ❌ Standard search fallback failed:`, {
               error: error,
               errorMessage: error instanceof Error ? error.message : 'Unknown error',
               basicFilters: basicFilters
             });
             
-            // This will fall through to the final fallback below
-            results = null;
+            results = null; // Will fall through to final fallback
           }
         }
       }
@@ -558,100 +503,79 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // 3. STANDARD SEARCH - For basic semantic queries OR fallback
+    // 3. FINAL FALLBACK - Use standard search with basic filters
     if (!results) {
-      console.log(`[API DEBUG] 📊 Using STANDARD search with enhanced filters`);
-      console.log(`[API SEARCH] 📊 Executing fallback standard search`);
+      console.log(`[API SEARCH] 📊 Executing final fallback search`);
       
-      // Auth-based routing: Any authenticated user with organizationName gets company search
-      if (!isDemo && organizationName) {
-        console.log(`[API DEBUG] ✅ Authenticated user detected with organization: "${organizationName}"`);
-        console.log(`[API SEARCH] 👤 Authenticated user search for organization: ${organizationName}`);
-      } else {
-        console.log(`[API DEBUG] ℹ️ Using demo search - isDemo: ${isDemo}, organizationName: "${organizationName}"`);
-        console.log(`[API SEARCH] 🎭 Demo mode search - isDemo: ${isDemo}`);
-      }
+      // Determine effective organization name
+      const effectiveOrgName = organizationName || (isDemo ? 'chick_fil_a' : null);
       
-      // Use the filters directly (they already contain the advanced filters from the dashboard)
-      console.log(`[API DEBUG] Filters for company search:`, filters);
-      console.log(`[API SEARCH] 🔍 Using filters:`, {
-        filterCount: Object.keys(filters).length,
-        hasAdvancedFilters: Object.keys(filters).length > 0,
-        filterKeys: Object.keys(filters)
-      });
-      
-      console.log(`[API DEBUG] 🚀 About to call search_engine.searchCompany with:`, {
-        query,
-        limit: 50,
-        filters,
-        organizationName,
-        chronologicalWeights,
-        searchEngineType: typeof search_engine,
-        hasSearchCompanyMethod: typeof search_engine.searchCompany === 'function'
-      });
-      
-      // For standard search, only apply chronological weights if explicitly provided from dashboard
-      const enhancedFilters = chronologicalWeights ? 
-        { ...filters, chronological_weights: chronologicalWeights } : 
-        filters;
-      
-      console.log(`[API DEBUG] Enhanced filters with weights:`, enhancedFilters);
-      console.log(`[API SEARCH] 📋 Final filter configuration:`, {
-        baseFilters: Object.keys(filters).length,
-        hasChronologicalWeights: !!chronologicalWeights,
-        finalFilterCount: Object.keys(enhancedFilters).length
-      });
-      
-      try {
-        console.log(`[API SEARCH] 🚀 Executing searchCompany as fallback standard search`);
+      if (effectiveOrgName) {
+        console.log(`[API SEARCH] 🏢 Using standard search fallback for organization: ${effectiveOrgName}`);
         
-        // Use gap-based filtering instead of fixed limit, always use company search for enhanced capabilities
-        results = await search_engine.searchCompany(query, 50, enhancedFilters, organizationName);
+        // Use basic filters for fallback
+        const basicFallbackFilters = {
+          company_filter: filters.company || null,
+          industry_filter: filters.industry || null,
+          title_filter: filters.title || null,
+          location_filter: filters.location || null,
+          school_filter: filters.school || null
+        };
         
-        console.log(`[API SEARCH] ✅ Fallback standard search completed:`, {
-          resultCount: results?.length || 0,
-          hasResults: !!results,
-          isArray: Array.isArray(results),
-          searchMethod: 'searchCompany_fallback'
-        });
+        console.log(`[API SEARCH] 🔍 Fallback filters:`, basicFallbackFilters);
         
-        // Set proper metadata for fallback standard search
-        if (!searchMetadata || Object.keys(searchMetadata).length === 0) {
+        try {
+          results = await search_engine.standardSearch(
+            query,
+            basicFallbackFilters,
+            50,
+            effectiveOrgName
+          );
+          
+          console.log(`[API SEARCH] ✅ Final fallback completed: ${results?.length || 0} results`);
+          
           searchType = 'standard';
           searchMetadata = {
-            search_method: 'searchCompany_fallback',
-            filters: enhancedFilters,
-            filter_count: Object.keys(enhancedFilters).length,
-            has_chronological_weights: !!chronologicalWeights,
-            configuration_source: 'fallback',
-            embedding_based: true,
-            organization_name: organizationName,
+            search_method: 'standard_search_final_fallback',
+            filters: basicFallbackFilters,
+            configuration_source: 'final_fallback',
+            organization_name: effectiveOrgName,
             is_demo_mode: isDemo,
-            fallback_reason: 'no_pipeline_config_or_pipeline_failed'
+            fallback_reason: 'no_pipeline_config_or_previous_search_failed'
           };
+          
+        } catch (error) {
+          console.error(`[API SEARCH] ❌ Final standard search fallback failed:`, {
+            error: error,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            organization: effectiveOrgName
+          });
+          
+          // Set error metadata and re-throw
+          searchType = 'standard';
+          searchMetadata = {
+            search_method: 'failed_final_fallback',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            configuration_source: 'final_fallback_failed',
+            organization_name: effectiveOrgName,
+            is_demo_mode: isDemo
+          };
+          
+          throw error;
         }
+      } else {
+        console.error(`[API SEARCH] ❌ No organization available for search - cannot proceed`);
         
-      } catch (error) {
-        console.error(`[API SEARCH] ❌ Fallback standard search failed:`, {
-          error: error,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          filters: enhancedFilters,
-          organizationName: organizationName
-        });
-        
-        // Final fallback metadata
         searchType = 'standard';
         searchMetadata = {
-          search_method: 'failed_fallback',
-          filters: enhancedFilters,
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-          configuration_source: 'fallback_failed',
-          organization_name: organizationName,
+          search_method: 'no_organization_error',
+          error_message: 'No organization name available for search',
+          configuration_source: 'final_fallback_failed',
           is_demo_mode: isDemo
         };
         
-        // Re-throw to be caught by outer try-catch
-        throw error;
+        // Return empty results instead of throwing
+        results = [];
       }
     }
     

@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
     
     console.log('[EXPANSION API] 🔧 Initializing search engine');
     const search_engine = new LinkedInProfileSearchEngine();
-    await search_engine.initializeEmbedder();
     
     console.log('[EXPANSION API] 🔍 Starting expansion searches');
     const expansionSearchResults: any[] = [];

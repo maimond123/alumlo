@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
       searchConfig: {
         type: 'standard',
         enhancedFilters: {},
-        searchMethod: 'semantic_with_filters'
+        searchMethod: 'comprehensive_sql_filtering' // Use SQL filtering instead of semantic search even for errors
       },
       shouldExecuteSearch: true,
       fallbackToStandard: true,
@@ -580,7 +580,7 @@ async function processStandardSearch(
   return {
     type: 'standard',
     enhancedFilters,
-    searchMethod: 'comprehensive_sql_filtering'
+    searchMethod: 'comprehensive_sql_filtering' // Always use SQL filtering instead of semantic search
   };
 }
 

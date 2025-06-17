@@ -1383,14 +1383,14 @@ export default function DashboardPage() {
         });
         
         // Fallback to basic search
-        await typewriterEffect('Pipeline failed - using basic semantic search...', 
+        await typewriterEffect('Pipeline failed - using basic SQL search...', 
           (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
         );
         
         console.log(`[DASHBOARD PIPELINE] 🔄 Creating fallback pipeline result`);
         pipelineResult = {
           searchType: 'standard',
-          searchConfig: { type: 'standard', enhancedFilters: {}, searchMethod: 'semantic_with_filters' },
+          searchConfig: { type: 'standard', enhancedFilters: {}, searchMethod: 'comprehensive_sql_filtering' },
           classification: { type: 'standard' },
           shouldExecuteSearch: true,
           fallbackToStandard: true
