@@ -375,8 +375,8 @@ export class LinkedInProfileSearchEngine {
       const rpcFunctionName = `comprehensive_standard_search_${storedOrganizationName}`;
       console.log(`[AI_SEARCH STANDARD] 🎯 Target SQL function: ${rpcFunctionName}`);
       
-      // Build comprehensive RPC parameters with all 73+ filter options
-      const rpcParams: any = {
+      // Build comprehensive search filters as a single JSON object
+      const searchFilters = {
         // 1. BASIC ENTITY FILTERS
         company_filter: filters.company_filter || null,
         company_filters: filters.company_filters || null,
@@ -516,30 +516,30 @@ export class LinkedInProfileSearchEngine {
         undergraduate_schools_or_logic: filters.undergraduate_schools_or_logic || false,
         
         graduate_schools_filter: filters.graduate_schools_filter || null,
-        graduate_schools_or_logic: filters.graduate_schools_or_logic || false,
-        
-        // Query parameters
-        search_query: query,
-        limit_count: top_k
+        graduate_schools_or_logic: filters.graduate_schools_or_logic || false
       };
       
-      console.log(`[AI_SEARCH STANDARD] 📡 Calling ${rpcFunctionName} with comprehensive filters`);
-      console.log(`[AI_SEARCH STANDARD] 📊 Parameter summary:`, {
-        totalParams: Object.keys(rpcParams).length,
-        nonNullParams: Object.entries(rpcParams).filter(([key, value]) => 
+      console.log(`[AI_SEARCH STANDARD] 📡 Calling ${rpcFunctionName} with JSON filters`);
+      console.log(`[AI_SEARCH STANDARD] 📊 Filter summary:`, {
+        totalFilterKeys: Object.keys(searchFilters).length,
+        nonNullFilters: Object.entries(searchFilters).filter(([key, value]) => 
           value !== null && value !== false && (Array.isArray(value) ? value.length > 0 : true)
         ).length,
-        hasBasicFilters: !!(rpcParams.company_filter || rpcParams.industry_filter || rpcParams.title_filter),
-        hasCareerFilters: !!(rpcParams.current_job_level_filter || rpcParams.is_current_leader),
-        hasSkillsFilters: !!(rpcParams.technical_background || rpcParams.sales_experience),
-        hasEducationFilters: !!(rpcParams.highest_degree_level_filter || rpcParams.stem_education),
-        hasSalaryFilters: !!(rpcParams.min_current_salary || rpcParams.salary_growth_indicator),
-        hasArrayFilters: !!(rpcParams.functional_expertise_filter || rpcParams.post_company_companies_filter)
+        hasBasicFilters: !!(searchFilters.company_filter || searchFilters.industry_filter || searchFilters.title_filter),
+        hasCareerFilters: !!(searchFilters.current_job_level_filter || searchFilters.is_current_leader),
+        hasSkillsFilters: !!(searchFilters.technical_background || searchFilters.sales_experience),
+        hasEducationFilters: !!(searchFilters.highest_degree_level_filter || searchFilters.stem_education),
+        hasSalaryFilters: !!(searchFilters.min_current_salary || searchFilters.salary_growth_indicator),
+        hasArrayFilters: !!(searchFilters.functional_expertise_filter || searchFilters.post_company_companies_filter)
       });
       
-      // Call the comprehensive standard search RPC function
+      // Call the comprehensive standard search RPC function with JSON parameter
       const { data, error } = await this.supabase
-        .rpc(rpcFunctionName, rpcParams)
+        .rpc(rpcFunctionName, {
+          search_filters: searchFilters,
+          search_query: query,
+          limit_count: top_k
+        })
         .returns<ComprehensiveSearchResult[]>();
       
       if (error) {
