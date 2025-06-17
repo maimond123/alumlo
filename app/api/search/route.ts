@@ -253,7 +253,64 @@ export async function POST(req: NextRequest) {
       
       else if (searchConfig.type === 'standard') {
         console.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
-        // Will fall through to standard search below
+        console.log(`[API SEARCH] 📊 DETAILED: Standard search configuration:`, {
+          enhancedFilters: searchConfig.enhancedFilters,
+          searchMethod: searchConfig.searchMethod,
+          filterCount: Object.keys(searchConfig.enhancedFilters || {}).length,
+          organizationName: organizationName
+        });
+        
+        if (searchConfig.searchMethod === 'comprehensive_sql_filtering' && organizationName) {
+          console.log(`[API SEARCH] 🎯 Using comprehensive SQL filtering for standard search`);
+          
+          try {
+            console.log(`[API SEARCH] 📊 DETAILED: Calling standardSearch with parameters:`, {
+              query: `"${query}"`,
+              filtersCount: Object.keys(searchConfig.enhancedFilters).length,
+              limit: 50,
+              organizationName: organizationName
+            });
+            
+            results = await search_engine.standardSearch(
+              query,
+              searchConfig.enhancedFilters,
+              50,
+              organizationName
+            );
+            
+            console.log(`[API SEARCH] 📊 DETAILED: Standard search completed:`, {
+              resultCount: results?.length || 0,
+              hasResults: !!results,
+              isArray: Array.isArray(results),
+              firstResultId: results?.[0]?.id || 'none'
+            });
+            
+            searchMetadata = {
+              search_method: 'comprehensive_sql_filtering',
+              enhanced_filters: searchConfig.enhancedFilters,
+              configuration_source: 'pipeline',
+              sql_based: true,
+              no_embeddings: true
+            };
+            
+            console.log(`[API SEARCH] ✅ Comprehensive standard search completed with ${results?.length || 0} results`);
+            searchType = 'standard';
+            
+          } catch (error) {
+            console.error(`[API SEARCH] ❌ DETAILED: Comprehensive standard search failed:`, {
+              error: error,
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+              errorStack: error instanceof Error ? error.stack : 'No stack',
+              searchConfig: searchConfig,
+              organizationName: organizationName
+            });
+            
+            // Fallback to standard search will be handled below
+            console.log(`[API SEARCH] 🔄 Falling back to embedding-based search`);
+            results = null;
+          }
+        }
+        // Will fall through to standard search below if not using comprehensive SQL filtering
       }
     }
     

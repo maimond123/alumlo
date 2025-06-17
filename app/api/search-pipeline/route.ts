@@ -84,7 +84,7 @@ interface ChronologicalConfig {
 interface StandardConfig {
   type: 'standard';
   enhancedFilters: any;
-  searchMethod: 'semantic_with_filters';
+  searchMethod: 'semantic_with_filters' | 'comprehensive_sql_filtering';
 }
 
 type SearchConfig = TemporalConfig | ChronologicalConfig | StandardConfig;
@@ -571,13 +571,16 @@ async function processStandardSearch(
   query: string, 
   classification: QueryClassification
 ): Promise<StandardConfig> {
-  // For now, standard search uses basic semantic matching
-  // Could be enhanced with filter extraction in the future
+  console.log(`[PIPELINE STANDARD] 📊 Processing standard search for: "${query}"`);
+  
+  // Extract comprehensive standard filters using LLM
+  const enhancedFilters = await translateStandardSearchQuery(query);
+  console.log(`[PIPELINE STANDARD] ✅ Enhanced filters extracted:`, enhancedFilters);
   
   return {
     type: 'standard',
-    enhancedFilters: {},
-    searchMethod: 'semantic_with_filters'
+    enhancedFilters,
+    searchMethod: 'comprehensive_sql_filtering'
   };
 }
 
@@ -1054,8 +1057,8 @@ Return comprehensive JSON with all applicable filters. If no chronological patte
         concurrent_activities: !!parsed.concurrent_activities
       },
       hasPatternFilters: {
-        industry_transitions: !!parsed.industry_transitions,
-        company_size_progression: !!parsed.company_size_progression,
+        industry_transitions: !!parsed.industry_transitions?.length,
+        company_size_progression: !!parsed.company_size_progression?.length,
         geographic_mobility: !!parsed.geographic_mobility
       }
     });
@@ -1391,3 +1394,463 @@ async function testSearchExpansion() {
 
 // Uncomment to test the expansion functionality:
 // testSearchExpansion().catch(console.error); 
+
+async function translateStandardSearchQuery(
+  query: string
+): Promise<StandardSearchFilters> {
+  console.log(`[PIPELINE STANDARD] 📊 Starting standard search translation for: "${query}"`);
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are translating natural language queries into structured filters for comprehensive standard alumni search.
+
+**FOCUS: CURRENT STATE ATTRIBUTES ONLY**
+- No progression patterns ("then became", "moved from X to Y")
+- No timeline analysis or career advancement logic
+- No experience depth requirements ("10+ years")
+- Just semantic matching of current attributes with intelligent OR logic
+
+**COMPREHENSIVE FILTER CATEGORIES:**
+
+**1. BASIC ENTITY FILTERS (Single or Multiple with OR logic):**
+- company_filter: string OR company_filters: string[] with company_or_logic: boolean
+- industry_filter: string OR industry_filters: string[] with industry_or_logic: boolean  
+- title_filter: string OR title_filters: string[] with title_or_logic: boolean
+- location_filter: string OR location_filters: string[] with location_or_logic: boolean
+- school_filter: string OR school_filters: string[] with school_or_logic: boolean
+
+**2. CAREER PROGRESSION & LEADERSHIP FILTERS:**
+- current_job_level_filter: string OR current_job_level_filters: string[] with current_job_level_or_logic: boolean
+  Values: "Entry Level", "Mid Level", "Senior", "Executive", "C-Suite", "Director", "Manager", "Individual Contributor"
+- current_job_function_filter: string OR current_job_function_filters: string[] with current_job_function_or_logic: boolean
+  Values: "Engineering", "Sales", "Marketing", "Finance", "Operations", "HR", "Legal", "Consulting", "Product", "Design"
+- career_stage_filter: string ("Early Career", "Mid Career", "Senior Career", "Executive")
+- career_trajectory_filter: string OR career_trajectory_filters: string[] with career_trajectory_or_logic: boolean
+  Values: "Fast Growth", "Steady Progression", "Industry Switcher", "Entrepreneur", "Corporate Climber"
+- is_current_leader: boolean
+- management_experience: boolean
+- revenue_responsibility: boolean
+
+**3. COMPANY & INDUSTRY INTELLIGENCE:**
+- current_company_size_category_filter: string OR current_company_size_category_filters: string[] with current_company_size_category_or_logic: boolean
+  Values: "Startup", "Small", "Medium", "Large", "Enterprise", "Fortune 500"
+- has_startup_experience: boolean
+- has_enterprise_experience: boolean
+- industry_transitions_filter: string[] (for people who changed industries)
+
+**4. SKILLS & EXPERIENCE PATTERNS:**
+- technical_background: boolean
+- sales_experience: boolean
+- consulting_experience: boolean
+- restaurant_operations_experience: boolean
+- is_remote_worker: boolean
+- functional_expertise_filter: string[] with functional_expertise_or_logic: boolean
+  Values: ["product management", "engineering", "sales", "marketing", "finance", "operations", "consulting", "design", "data science"]
+- industry_expertise_filter: string[] with industry_expertise_or_logic: boolean
+  Values: ["technology", "finance", "healthcare", "retail", "consulting", "media", "manufacturing", "real estate"]
+
+**5. EDUCATIONAL BACKGROUND & CONTEXT:**
+- highest_degree_level_filter: string OR highest_degree_level_filters: string[] with highest_degree_level_or_logic: boolean
+  Values: "High School", "Associate", "Bachelor's", "Master's", "PhD", "JD", "MD", "MBA"
+- school_ranking_tier_filter: string OR school_ranking_tier_filters: string[] with school_ranking_tier_or_logic: boolean
+  Values: "Ivy League", "Top 10", "Top 20", "Top 50", "Public Ivy", "Liberal Arts", "Technical", "International"
+- major_category_filter: string OR major_category_filters: string[] with major_category_or_logic: boolean
+  Values: "STEM", "Business", "Liberal Arts", "Engineering", "Computer Science", "Medicine", "Law", "Arts"
+- undergraduate_major_filter: string OR undergraduate_major_filters: string[] with undergraduate_major_or_logic: boolean
+- graduate_specialization_filter: string OR graduate_specialization_filters: string[] with graduate_specialization_or_logic: boolean
+- stem_education: boolean
+- business_education: boolean
+- elite_education: boolean
+- continued_education: boolean
+- executive_education: boolean
+- technical_certifications: boolean
+
+**6. ENHANCED SEARCH CATEGORIES:**
+- mentor_potential: boolean
+- likely_job_seeking: boolean
+- total_positions_min: number (minimum number of positions held)
+- total_positions_max: number (maximum number of positions held)
+- average_tenure_min_months: number (minimum average tenure)
+- average_tenure_max_months: number (maximum average tenure)
+
+**7. COMPANY IMPACT METRICS (Organization-specific):**
+- company_provided_salary_lift: boolean
+- achieved_six_figure_post_company: boolean
+- doubled_salary_post_company: boolean
+- moved_to_leadership_post_company: boolean
+- career_level_increase_post_company: boolean
+
+**8. GEOGRAPHIC & LOCATION:**
+- home_location_filter: string OR home_location_filters: string[] with home_location_or_logic: boolean
+- education_geography_filter: string[] with education_geography_or_logic: boolean
+  Values: ["Domestic", "International", "East Coast", "West Coast", "Midwest", "South", "Europe", "Asia"]
+
+**9. SALARY ANALYSIS FIELDS:**
+- min_current_salary: number
+- max_current_salary: number
+- min_highest_career_salary: number
+- max_highest_career_salary: number
+- salary_growth_indicator: boolean (for people with significant salary increases)
+
+**10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic):**
+- post_company_companies_filter: string[] with post_company_companies_or_logic: boolean
+- post_company_titles_filter: string[] with post_company_titles_or_logic: boolean
+- post_company_industries_filter: string[] with post_company_industries_or_logic: boolean
+- pre_company_companies_filter: string[] with pre_company_companies_or_logic: boolean
+- pre_company_titles_filter: string[] with pre_company_titles_or_logic: boolean
+- undergraduate_schools_filter: string[] with undergraduate_schools_or_logic: boolean
+- graduate_schools_filter: string[] with graduate_schools_or_logic: boolean
+
+**INTELLIGENT OR LOGIC EXAMPLES:**
+
+Query: "Senior software engineers at tech companies"
+{
+  "current_job_level_filters": ["Senior", "Staff", "Principal", "Lead"],
+  "current_job_level_or_logic": true,
+  "title_filters": ["software engineer", "software developer", "SWE", "engineer"],
+  "title_or_logic": true,
+  "industry_filters": ["technology", "software", "internet", "tech"],
+  "industry_or_logic": true,
+  "technical_background": true
+}
+
+Query: "MBA graduates with consulting experience"
+{
+  "highest_degree_level_filter": "MBA",
+  "consulting_experience": true,
+  "functional_expertise_filter": ["consulting", "strategy", "advisory"],
+  "functional_expertise_or_logic": true,
+  "business_education": true
+}
+
+Query: "Startup founders and entrepreneurs"
+{
+  "title_filters": ["founder", "CEO", "co-founder", "entrepreneur", "chief executive"],
+  "title_or_logic": true,
+  "has_startup_experience": true,
+  "is_current_leader": true,
+  "career_trajectory_filter": "Entrepreneur"
+}
+
+Query: "High-earning tech executives"
+{
+  "min_current_salary": 200000,
+  "current_job_level_filters": ["Executive", "C-Suite", "VP", "Director"],
+  "current_job_level_or_logic": true,
+  "industry_filters": ["technology", "software", "tech"],
+  "industry_or_logic": true,
+  "is_current_leader": true,
+  "management_experience": true
+}
+
+Query: "Ivy League graduates in finance"
+{
+  "school_ranking_tier_filter": "Ivy League",
+  "industry_filter": "finance",
+  "elite_education": true,
+  "industry_expertise_filter": ["finance", "banking", "investment"],
+  "industry_expertise_or_logic": true
+}
+
+Query: "Remote workers with technical backgrounds"
+{
+  "is_remote_worker": true,
+  "technical_background": true,
+  "functional_expertise_filter": ["engineering", "software development", "data science", "product"],
+  "functional_expertise_or_logic": true
+}
+
+Query: "People who achieved significant salary growth"
+{
+  "company_provided_salary_lift": true,
+  "salary_growth_indicator": true,
+  "achieved_six_figure_post_company": true,
+  "min_highest_career_salary": 100000
+}
+
+Query: "International education backgrounds"
+{
+  "education_geography_filter": ["International", "Europe", "Asia"],
+  "education_geography_or_logic": true,
+  "continued_education": true
+}
+
+Query: "FAANG alumni in leadership roles"
+{
+  "post_company_companies_filter": ["Google", "Apple", "Facebook", "Meta", "Amazon", "Netflix"],
+  "post_company_companies_or_logic": true,
+  "is_current_leader": true,
+  "management_experience": true,
+  "technical_background": true
+}
+
+Query: "Data scientists and ML engineers"
+{
+  "title_filters": ["data scientist", "ML engineer", "machine learning engineer", "AI engineer", "data engineer"],
+  "title_or_logic": true,
+  "technical_background": true,
+  "functional_expertise_filter": ["data science", "machine learning", "AI"],
+  "functional_expertise_or_logic": true,
+  "stem_education": true
+}
+
+**MAPPING GUIDELINES:**
+
+**Abstract Concepts to Concrete Filters:**
+- "Creative professionals" → industry_expertise: ["design", "media", "arts"], functional_expertise: ["creative", "design", "marketing"]
+- "Tech leaders" → technical_background: true, is_current_leader: true, industry: "technology"
+- "High performers" → salary_growth_indicator: true, moved_to_leadership_post_company: true
+- "Well-connected" → mentor_potential: true, has_enterprise_experience: true
+
+**Experience Level Mapping:**
+- "Entry-level" → current_job_level: "Entry Level", career_stage: "Early Career"
+- "Senior" → current_job_level_filters: ["Senior", "Staff", "Principal"], current_job_level_or_logic: true
+- "Executive" → current_job_level_filters: ["Executive", "C-Suite", "VP"], is_current_leader: true
+
+**Industry Expansion:**
+- "Tech" → ["technology", "software", "internet", "computer", "AI", "fintech"]
+- "Finance" → ["finance", "banking", "investment", "fintech", "insurance", "real estate"]
+- "Healthcare" → ["healthcare", "medical", "pharmaceutical", "biotech", "medtech"]
+
+**Company Size Mapping:**
+- "Big tech" → current_company_size_category: "Enterprise", industry: "technology"
+- "Startups" → current_company_size_category_filters: ["Startup", "Small"], has_startup_experience: true
+- "Fortune 500" → current_company_size_category: "Fortune 500", has_enterprise_experience: true
+
+**Salary Indicators:**
+- "High earners" → min_current_salary: 150000, salary_growth_indicator: true
+- "Six-figure" → min_current_salary: 100000, achieved_six_figure_post_company: true
+- "Well-compensated" → min_highest_career_salary: 120000, company_provided_salary_lift: true
+
+**EXTRACTION RULES:**
+1. **Always prefer OR logic** for broader, more inclusive matching
+2. **Use arrays for synonyms** and related terms
+3. **Combine boolean flags** for implied characteristics
+4. **Map salary mentions** to specific numeric ranges
+5. **Extract education levels** and map to degree hierarchies
+6. **Identify geographic patterns** and map to location arrays
+7. **Recognize company impact** indicators and map to outcome metrics
+
+Return comprehensive JSON with all applicable filters. Default OR logic to true when using multiple values.`
+      },
+      {
+        role: 'user',
+        content: `Query: "${query}"`
+      }
+    ]
+  });
+
+  console.log(`[PIPELINE STANDARD] 🤖 OpenAI standard translation response received`);
+
+  const content = response.choices[0]?.message?.content;
+  console.log(`[PIPELINE STANDARD] 🔍 RAW LLM RESPONSE:`, {
+    hasContent: !!content,
+    contentLength: content?.length || 0,
+    rawContent: content
+  });
+
+  if (!content) {
+    console.log(`[PIPELINE STANDARD] ⚠️ Empty response from OpenAI, returning default filters`);
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    
+    console.log(`[PIPELINE STANDARD] 🔍 PARSED STANDARD FILTERS:`, {
+      parsedSuccessfully: true,
+      parsedKeys: Object.keys(parsed),
+      parsedValues: parsed,
+      hasBasicFilters: {
+        company_filter: !!parsed.company_filter,
+        company_filters: !!parsed.company_filters,
+        industry_filter: !!parsed.industry_filter,
+        industry_filters: !!parsed.industry_filters,
+        title_filter: !!parsed.title_filter,
+        title_filters: !!parsed.title_filters
+      },
+      hasCareerFilters: {
+        current_job_level_filter: !!parsed.current_job_level_filter,
+        current_job_function_filter: !!parsed.current_job_function_filter,
+        career_stage_filter: !!parsed.career_stage_filter,
+        is_current_leader: !!parsed.is_current_leader,
+        management_experience: !!parsed.management_experience
+      },
+      hasEducationFilters: {
+        highest_degree_level_filter: !!parsed.highest_degree_level_filter,
+        school_ranking_tier_filter: !!parsed.school_ranking_tier_filter,
+        major_category_filter: !!parsed.major_category_filter,
+        stem_education: !!parsed.stem_education,
+        elite_education: !!parsed.elite_education
+      },
+      hasSalaryFilters: {
+        min_current_salary: !!parsed.min_current_salary,
+        salary_growth_indicator: !!parsed.salary_growth_indicator,
+        company_provided_salary_lift: !!parsed.company_provided_salary_lift
+      },
+      hasArrayFilters: {
+        functional_expertise_filter: !!parsed.functional_expertise_filter,
+        industry_expertise_filter: !!parsed.industry_expertise_filter,
+        post_company_companies_filter: !!parsed.post_company_companies_filter
+      }
+    });
+    
+    console.log(`[PIPELINE STANDARD] ✅ Standard filters extracted successfully:`, parsed);
+    return parsed;
+  } catch (error) {
+    console.error(`[PIPELINE STANDARD] ❌ Failed to parse standard translation response:`, {
+      error: error,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      rawContent: content
+    });
+    return {};
+  }
+}
+
+// Interface for Standard Search Filters
+interface StandardSearchFilters {
+  // 1. BASIC ENTITY FILTERS (single or multiple with OR logic)
+  company_filter?: string;
+  company_filters?: string[];
+  company_or_logic?: boolean;
+  
+  industry_filter?: string;
+  industry_filters?: string[];
+  industry_or_logic?: boolean;
+  
+  title_filter?: string;
+  title_filters?: string[];
+  title_or_logic?: boolean;
+  
+  location_filter?: string;
+  location_filters?: string[];
+  location_or_logic?: boolean;
+  
+  school_filter?: string;
+  school_filters?: string[];
+  school_or_logic?: boolean;
+  
+  // 2. CAREER PROGRESSION & LEADERSHIP FILTERS
+  current_job_level_filter?: string;
+  current_job_level_filters?: string[];
+  current_job_level_or_logic?: boolean;
+  
+  current_job_function_filter?: string;
+  current_job_function_filters?: string[];
+  current_job_function_or_logic?: boolean;
+  
+  career_stage_filter?: string;
+  career_trajectory_filter?: string;
+  career_trajectory_filters?: string[];
+  career_trajectory_or_logic?: boolean;
+  
+  is_current_leader?: boolean;
+  management_experience?: boolean;
+  revenue_responsibility?: boolean;
+  
+  // 3. COMPANY & INDUSTRY INTELLIGENCE
+  current_company_size_category_filter?: string;
+  current_company_size_category_filters?: string[];
+  current_company_size_category_or_logic?: boolean;
+  
+  has_startup_experience?: boolean;
+  has_enterprise_experience?: boolean;
+  industry_transitions_filter?: string[];
+  
+  // 4. SKILLS & EXPERIENCE PATTERNS
+  technical_background?: boolean;
+  sales_experience?: boolean;
+  consulting_experience?: boolean;
+  restaurant_operations_experience?: boolean;
+  is_remote_worker?: boolean;
+  
+  functional_expertise_filter?: string[];
+  functional_expertise_or_logic?: boolean;
+  
+  industry_expertise_filter?: string[];
+  industry_expertise_or_logic?: boolean;
+  
+  // 5. EDUCATIONAL BACKGROUND & CONTEXT
+  highest_degree_level_filter?: string;
+  highest_degree_level_filters?: string[];
+  highest_degree_level_or_logic?: boolean;
+  
+  school_ranking_tier_filter?: string;
+  school_ranking_tier_filters?: string[];
+  school_ranking_tier_or_logic?: boolean;
+  
+  major_category_filter?: string;
+  major_category_filters?: string[];
+  major_category_or_logic?: boolean;
+  
+  undergraduate_major_filter?: string;
+  undergraduate_major_filters?: string[];
+  undergraduate_major_or_logic?: boolean;
+  
+  graduate_specialization_filter?: string;
+  graduate_specialization_filters?: string[];
+  graduate_specialization_or_logic?: boolean;
+  
+  stem_education?: boolean;
+  business_education?: boolean;
+  elite_education?: boolean;
+  continued_education?: boolean;
+  executive_education?: boolean;
+  technical_certifications?: boolean;
+  
+  // 6. ENHANCED SEARCH CATEGORIES
+  mentor_potential?: boolean;
+  likely_job_seeking?: boolean;
+  total_positions_min?: number;
+  total_positions_max?: number;
+  average_tenure_min_months?: number;
+  average_tenure_max_months?: number;
+  
+  // 7. COMPANY IMPACT METRICS (Organization-specific)
+  company_provided_salary_lift?: boolean;
+  achieved_six_figure_post_company?: boolean;
+  doubled_salary_post_company?: boolean;
+  moved_to_leadership_post_company?: boolean;
+  career_level_increase_post_company?: boolean;
+  
+  // 8. GEOGRAPHIC & LOCATION
+  home_location_filter?: string;
+  home_location_filters?: string[];
+  home_location_or_logic?: boolean;
+  
+  education_geography_filter?: string[];
+  education_geography_or_logic?: boolean;
+  
+  // 9. SALARY ANALYSIS FIELDS
+  min_current_salary?: number;
+  max_current_salary?: number;
+  min_highest_career_salary?: number;
+  max_highest_career_salary?: number;
+  salary_growth_indicator?: boolean;
+  
+  // 10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic)
+  post_company_companies_filter?: string[];
+  post_company_companies_or_logic?: boolean;
+  
+  post_company_titles_filter?: string[];
+  post_company_titles_or_logic?: boolean;
+  
+  post_company_industries_filter?: string[];
+  post_company_industries_or_logic?: boolean;
+  
+  pre_company_companies_filter?: string[];
+  pre_company_companies_or_logic?: boolean;
+  
+  pre_company_titles_filter?: string[];
+  pre_company_titles_or_logic?: boolean;
+  
+  undergraduate_schools_filter?: string[];
+  undergraduate_schools_or_logic?: boolean;
+  
+  graduate_schools_filter?: string[];
+  graduate_schools_or_logic?: boolean;
+} 

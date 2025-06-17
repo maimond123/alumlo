@@ -1843,6 +1843,292 @@ export class LinkedInProfileSearchEngine {
     // Calculate how well education aligns with career choices
     return 0.5; // Placeholder
   }
+
+  // NEW: Comprehensive Standard Search using SQL filtering (no embeddings)
+  async standardSearch(
+    query: string,
+    filters: any = {},
+    top_k: number = 50,
+    organizationName?: string
+  ): Promise<CompanySearchResult[]> {
+    console.log(`[AI_SEARCH STANDARD] 🚀 Starting comprehensive standard search for: "${query}"`);
+    console.log(`[AI_SEARCH STANDARD] 📊 Filters provided:`, filters);
+    console.log(`[AI_SEARCH STANDARD] 🏢 Organization: ${organizationName}`);
+    
+    try {
+      // Get the organization name for dynamic table naming
+      const storedOrganizationName = organizationName || (typeof window !== 'undefined' ? 
+        localStorage.getItem('organizationName') : null);
+      
+      if (!storedOrganizationName) {
+        console.error(`[AI_SEARCH STANDARD] ❌ Organization name is required for standard search`);
+        throw new Error('Organization name is required for standard search');
+      }
+      
+      // Construct dynamic RPC function name
+      const rpcFunctionName = `comprehensive_standard_search_${storedOrganizationName}`;
+      console.log(`[AI_SEARCH STANDARD] 🎯 Target SQL function: ${rpcFunctionName}`);
+      
+      // Build comprehensive RPC parameters
+      const rpcParams: any = {
+        // 1. BASIC ENTITY FILTERS
+        company_filter: filters.company_filter || null,
+        company_filters: filters.company_filters || null,
+        company_or_logic: filters.company_or_logic || false,
+        
+        industry_filter: filters.industry_filter || null,
+        industry_filters: filters.industry_filters || null,
+        industry_or_logic: filters.industry_or_logic || false,
+        
+        title_filter: filters.title_filter || null,
+        title_filters: filters.title_filters || null,
+        title_or_logic: filters.title_or_logic || false,
+        
+        location_filter: filters.location_filter || null,
+        location_filters: filters.location_filters || null,
+        location_or_logic: filters.location_or_logic || false,
+        
+        school_filter: filters.school_filter || null,
+        school_filters: filters.school_filters || null,
+        school_or_logic: filters.school_or_logic || false,
+        
+        // 2. CAREER PROGRESSION & LEADERSHIP FILTERS
+        current_job_level_filter: filters.current_job_level_filter || null,
+        current_job_level_filters: filters.current_job_level_filters || null,
+        current_job_level_or_logic: filters.current_job_level_or_logic || false,
+        
+        current_job_function_filter: filters.current_job_function_filter || null,
+        current_job_function_filters: filters.current_job_function_filters || null,
+        current_job_function_or_logic: filters.current_job_function_or_logic || false,
+        
+        career_stage_filter: filters.career_stage_filter || null,
+        career_trajectory_filter: filters.career_trajectory_filter || null,
+        career_trajectory_filters: filters.career_trajectory_filters || null,
+        career_trajectory_or_logic: filters.career_trajectory_or_logic || false,
+        
+        is_current_leader: filters.is_current_leader || false,
+        management_experience: filters.management_experience || false,
+        revenue_responsibility: filters.revenue_responsibility || false,
+        
+        // 3. COMPANY & INDUSTRY INTELLIGENCE
+        current_company_size_category_filter: filters.current_company_size_category_filter || null,
+        current_company_size_category_filters: filters.current_company_size_category_filters || null,
+        current_company_size_category_or_logic: filters.current_company_size_category_or_logic || false,
+        
+        has_startup_experience: filters.has_startup_experience || false,
+        has_enterprise_experience: filters.has_enterprise_experience || false,
+        industry_transitions_filter: filters.industry_transitions_filter || null,
+        
+        // 4. SKILLS & EXPERIENCE PATTERNS
+        technical_background: filters.technical_background || false,
+        sales_experience: filters.sales_experience || false,
+        consulting_experience: filters.consulting_experience || false,
+        restaurant_operations_experience: filters.restaurant_operations_experience || false,
+        is_remote_worker: filters.is_remote_worker || false,
+        
+        functional_expertise_filter: filters.functional_expertise_filter || null,
+        functional_expertise_or_logic: filters.functional_expertise_or_logic || false,
+        
+        industry_expertise_filter: filters.industry_expertise_filter || null,
+        industry_expertise_or_logic: filters.industry_expertise_or_logic || false,
+        
+        // 5. EDUCATIONAL BACKGROUND & CONTEXT
+        highest_degree_level_filter: filters.highest_degree_level_filter || null,
+        highest_degree_level_filters: filters.highest_degree_level_filters || null,
+        highest_degree_level_or_logic: filters.highest_degree_level_or_logic || false,
+        
+        school_ranking_tier_filter: filters.school_ranking_tier_filter || null,
+        school_ranking_tier_filters: filters.school_ranking_tier_filters || null,
+        school_ranking_tier_or_logic: filters.school_ranking_tier_or_logic || false,
+        
+        major_category_filter: filters.major_category_filter || null,
+        major_category_filters: filters.major_category_filters || null,
+        major_category_or_logic: filters.major_category_or_logic || false,
+        
+        undergraduate_major_filter: filters.undergraduate_major_filter || null,
+        undergraduate_major_filters: filters.undergraduate_major_filters || null,
+        undergraduate_major_or_logic: filters.undergraduate_major_or_logic || false,
+        
+        graduate_specialization_filter: filters.graduate_specialization_filter || null,
+        graduate_specialization_filters: filters.graduate_specialization_filters || null,
+        graduate_specialization_or_logic: filters.graduate_specialization_or_logic || false,
+        
+        stem_education: filters.stem_education || false,
+        business_education: filters.business_education || false,
+        elite_education: filters.elite_education || false,
+        continued_education: filters.continued_education || false,
+        executive_education: filters.executive_education || false,
+        technical_certifications: filters.technical_certifications || false,
+        
+        // 6. ENHANCED SEARCH CATEGORIES
+        mentor_potential: filters.mentor_potential || false,
+        likely_job_seeking: filters.likely_job_seeking || false,
+        total_positions_min: filters.total_positions_min || null,
+        total_positions_max: filters.total_positions_max || null,
+        average_tenure_min_months: filters.average_tenure_min_months || null,
+        average_tenure_max_months: filters.average_tenure_max_months || null,
+        
+        // 7. COMPANY IMPACT METRICS (Organization-specific)
+        company_provided_salary_lift: filters.company_provided_salary_lift || false,
+        achieved_six_figure_post_company: filters.achieved_six_figure_post_company || false,
+        doubled_salary_post_company: filters.doubled_salary_post_company || false,
+        moved_to_leadership_post_company: filters.moved_to_leadership_post_company || false,
+        career_level_increase_post_company: filters.career_level_increase_post_company || false,
+        
+        // 8. GEOGRAPHIC & LOCATION
+        home_location_filter: filters.home_location_filter || null,
+        home_location_filters: filters.home_location_filters || null,
+        home_location_or_logic: filters.home_location_or_logic || false,
+        
+        education_geography_filter: filters.education_geography_filter || null,
+        education_geography_or_logic: filters.education_geography_or_logic || false,
+        
+        // 9. SALARY ANALYSIS FIELDS
+        min_current_salary: filters.min_current_salary || null,
+        max_current_salary: filters.max_current_salary || null,
+        min_highest_career_salary: filters.min_highest_career_salary || null,
+        max_highest_career_salary: filters.max_highest_career_salary || null,
+        salary_growth_indicator: filters.salary_growth_indicator || false,
+        
+        // 10. ARRAY FIELDS FOR COMPREHENSIVE SEARCH (OR Logic)
+        post_company_companies_filter: filters.post_company_companies_filter || null,
+        post_company_companies_or_logic: filters.post_company_companies_or_logic || false,
+        
+        post_company_titles_filter: filters.post_company_titles_filter || null,
+        post_company_titles_or_logic: filters.post_company_titles_or_logic || false,
+        
+        post_company_industries_filter: filters.post_company_industries_filter || null,
+        post_company_industries_or_logic: filters.post_company_industries_or_logic || false,
+        
+        pre_company_companies_filter: filters.pre_company_companies_filter || null,
+        pre_company_companies_or_logic: filters.pre_company_companies_or_logic || false,
+        
+        pre_company_titles_filter: filters.pre_company_titles_filter || null,
+        pre_company_titles_or_logic: filters.pre_company_titles_or_logic || false,
+        
+        undergraduate_schools_filter: filters.undergraduate_schools_filter || null,
+        undergraduate_schools_or_logic: filters.undergraduate_schools_or_logic || false,
+        
+        graduate_schools_filter: filters.graduate_schools_filter || null,
+        graduate_schools_or_logic: filters.graduate_schools_or_logic || false,
+        
+        // Query parameters
+        search_query: query,
+        limit_count: top_k
+      };
+      
+      console.log(`[AI_SEARCH STANDARD] 📡 Calling ${rpcFunctionName} with comprehensive filters`);
+      console.log(`[AI_SEARCH STANDARD] 📊 Parameter summary:`, {
+        totalParams: Object.keys(rpcParams).length,
+        nonNullParams: Object.entries(rpcParams).filter(([key, value]) => 
+          value !== null && value !== false && (Array.isArray(value) ? value.length > 0 : true)
+        ).length,
+        hasBasicFilters: !!(rpcParams.company_filter || rpcParams.industry_filter || rpcParams.title_filter),
+        hasCareerFilters: !!(rpcParams.current_job_level_filter || rpcParams.is_current_leader),
+        hasSkillsFilters: !!(rpcParams.technical_background || rpcParams.sales_experience),
+        hasEducationFilters: !!(rpcParams.highest_degree_level_filter || rpcParams.stem_education),
+        hasSalaryFilters: !!(rpcParams.min_current_salary || rpcParams.salary_growth_indicator),
+        hasArrayFilters: !!(rpcParams.functional_expertise_filter || rpcParams.post_company_companies_filter)
+      });
+      
+      // Call the comprehensive standard search RPC function
+      const { data, error } = await this.supabase
+        .rpc(rpcFunctionName, rpcParams)
+        .returns<HybridSearchCompanyResult[]>();
+      
+      if (error) {
+        console.error(`[AI_SEARCH STANDARD] ❌ SQL function error:`, {
+          function: rpcFunctionName,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Standard search failed: ${error.message}`);
+      }
+      
+      console.log(`[AI_SEARCH STANDARD] ✅ SQL function executed successfully: ${data?.length || 0} results`);
+      
+      if (!data || data.length === 0) {
+        console.log(`[AI_SEARCH STANDARD] ⚠️ No results found`);
+        return [];
+      }
+      
+      // Format the results
+      const formattedResults = data.map((item: HybridSearchCompanyResult, index: number): CompanySearchResult => {
+        console.log(`[AI_SEARCH STANDARD] 📝 Processing result ${index + 1}: ${item.name}`);
+        
+        const baseResult: CompanySearchResult = {
+          id: Number(item.id),
+          profile_id: Number(item.profile_id),
+          name: item.name,
+          profile_url: item.profile_url,
+          post_company_current_company: item.post_company_current_company,
+          post_company_current_title: item.post_company_current_title,
+          post_company_current_industry: item.post_company_current_industry,
+          post_company_current_location: item.post_company_current_location,
+          picture_url: item.picture_url,
+          similarity: 1.0, // No similarity score for SQL-based search
+          industry: item.post_company_current_industry || '',
+          headline: item.headline || '',
+          
+          // Include all enriched fields directly from RPC result
+          current_job_level: item.current_job_level || '',
+          current_job_function: item.current_job_function || '',
+          career_stage: item.career_stage || '',
+          highest_degree_level: item.highest_degree_level || '',
+          school_ranking_tier: item.school_ranking_tier || '',
+          
+          // Boolean profile characteristics
+          is_current_leader: item.is_current_leader || false,
+          management_experience: item.management_experience || false,
+          technical_background: item.technical_background || false,
+          sales_experience: item.sales_experience || false,
+          has_startup_experience: item.has_startup_experience || false,
+          has_enterprise_experience: item.has_enterprise_experience || false,
+          is_remote_worker: item.is_remote_worker || false,
+          mentor_potential: item.mentor_potential || false,
+          
+          undergraduate_school: item.undergraduate_school || [],
+          graduate_school: item.graduate_school || [],
+          high_school: item.high_school || [],
+          pre_company_education: item.pre_company_education || [],
+          during_company_education: item.during_company_education || [],
+          post_company_education: item.post_company_education || [],
+          post_company_companies: item.post_company_companies || [],
+          post_company_titles: item.post_company_titles || [],
+          post_company_industries: item.post_company_industries || [],
+          post_company_locations: item.post_company_locations || [],
+          functional_expertise: item.functional_expertise || [],
+          industry_expertise: item.industry_expertise || [],
+          current_estimated_salary: item.current_estimated_salary || 0,
+          highest_career_salary: item.highest_career_salary || 0,
+          major_category: item.major_category || ''
+        };
+        
+        // Handle dynamic company-specific fields
+        Object.keys(item).forEach(key => {
+          if (key.includes(storedOrganizationName) || key.startsWith('achieved_') || key.startsWith('doubled_') || key.startsWith('moved_to_')) {
+            (baseResult as any)[key] = item[key];
+          }
+        });
+        
+        return baseResult;
+      });
+
+      console.log(`[AI_SEARCH STANDARD] 📊 Standard search completed: ${formattedResults.length} results`);
+      return formattedResults;
+      
+    } catch (error) {
+      console.error(`[AI_SEARCH STANDARD] ❌ Critical error in standard search:`, {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        query: `"${query}"`,
+        organizationName
+      });
+      throw error;
+    }
+  }
 }
 
 // Legacy Profile interface for backward compatibility
