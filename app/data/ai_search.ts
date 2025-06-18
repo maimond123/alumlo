@@ -592,6 +592,13 @@ export class LinkedInProfileSearchEngine {
         schoolFilterValue: searchFilters.school_filter
       });
       
+      // 🔍 DEBUG: Log the exact RPC call being made
+      console.log(`[AI_SEARCH STANDARD] 🎯 EXACT RPC CALL: this.supabase.rpc("${rpcFunctionName}", ${JSON.stringify({
+        search_filters: searchFilters,
+        search_query: query,
+        limit_count: top_k
+      })})`);
+      
       // Call the comprehensive standard search RPC function with JSON parameter
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, {
@@ -600,6 +607,17 @@ export class LinkedInProfileSearchEngine {
           limit_count: top_k
         })
         .returns<ComprehensiveSearchResult[]>();
+      
+      // 🔍 DEBUG: Log the exact response from Supabase
+      console.log(`[AI_SEARCH STANDARD] 📥 SUPABASE RESPONSE:`, {
+        dataLength: data?.length || 0,
+        hasError: !!error,
+        errorMessage: error?.message,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
+        errorCode: error?.code,
+        firstResult: data?.[0] ? { id: data[0].id, name: data[0].name } : null
+      });
       
       if (error) {
         console.error(`[AI_SEARCH STANDARD] ❌ SQL function error:`, {

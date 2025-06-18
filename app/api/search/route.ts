@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
         
         // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING
         debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, JSON.stringify(searchConfig.enhancedFilters, null, 2));
-        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: ${searchConfig.searchMethod}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, search_query: "${query}", limit_count: ${top_k})`);
+        debug.log(`[API SEARCH] �� SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, search_query: "${query}", limit_count: ${top_k})`);
         
         // Call the standardSearch with the enhanced filters
         results = await withTimeout(
@@ -356,7 +356,7 @@ export async function POST(req: NextRequest) {
           hasResults: !!results && Array.isArray(results),
           isArray: Array.isArray(results),
           firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none',
-          sqlFunction: searchConfig.searchMethod,
+          sqlFunction: `comprehensive_standard_search_${organizationName}`,
           filtersUsed: Object.keys(searchConfig.enhancedFilters || {}),
           queryUsed: query
         });
