@@ -602,9 +602,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       results,
       searchType,
-      appliedFilters: filters,
+      appliedFilters: effectiveFilters,
       searchMetadata,
-      filterCount: Object.keys(filters).length
+      filterCount: Object.keys(effectiveFilters).length
     });
   } catch (error: unknown) {
     console.error('[API] Error in search:', error);

@@ -374,6 +374,15 @@ export class LinkedInProfileSearchEngine {
   ): Promise<CompanySearchResult[]> {
     console.log(`[AI_SEARCH STANDARD] 🚀 Starting comprehensive standard search for: "${query}"`);
     console.log(`[AI_SEARCH STANDARD] 📊 Filters provided:`, filters);
+    console.log(`[AI_SEARCH STANDARD] 🔍 DETAILED filter analysis:`, {
+      filtersType: typeof filters,
+      filtersKeys: Object.keys(filters || {}),
+      hasSchoolFilter: !!filters?.school_filter,
+      schoolFilterValue: filters?.school_filter,
+      hasCompanyFilter: !!filters?.company_filter,
+      companyFilterValue: filters?.company_filter,
+      filterCount: Object.keys(filters || {}).length
+    });
     console.log(`[AI_SEARCH STANDARD] 🏢 Organization: ${organizationName}`);
     
     try {
@@ -560,6 +569,14 @@ export class LinkedInProfileSearchEngine {
       };
       
       console.log(`[AI_SEARCH STANDARD] 📡 Calling ${rpcFunctionName} with JSON filters`);
+      console.log(`[AI_SEARCH STANDARD] 🔍 DETAILED searchFilters object being sent to SQL:`, {
+        school_filter: searchFilters.school_filter,
+        company_filter: searchFilters.company_filter,
+        industry_filter: searchFilters.industry_filter,
+        title_filter: searchFilters.title_filter,
+        location_filter: searchFilters.location_filter,
+        allFilters: searchFilters
+      });
       console.log(`[AI_SEARCH STANDARD] 📊 Filter summary:`, {
         totalFilterKeys: Object.keys(searchFilters).length,
         nonNullFilters: Object.entries(searchFilters).filter(([key, value]) => 
@@ -570,7 +587,9 @@ export class LinkedInProfileSearchEngine {
         hasSkillsFilters: !!(searchFilters.technical_background || searchFilters.sales_experience),
         hasEducationFilters: !!(searchFilters.highest_degree_level_filter || searchFilters.stem_education),
         hasSalaryFilters: !!(searchFilters.min_current_salary || searchFilters.salary_growth_indicator),
-        hasArrayFilters: !!(searchFilters.functional_expertise_filter || searchFilters.post_company_companies_filter)
+        hasArrayFilters: !!(searchFilters.functional_expertise_filter || searchFilters.post_company_companies_filter),
+        hasSchoolFilter: !!searchFilters.school_filter,
+        schoolFilterValue: searchFilters.school_filter
       });
       
       // Call the comprehensive standard search RPC function with JSON parameter
