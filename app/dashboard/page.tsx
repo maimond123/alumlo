@@ -1427,20 +1427,17 @@ export default function DashboardPage() {
       console.log(`[DASHBOARD SEARCH] 🔧 Building search request body`);
       console.log(`[DASHBOARD SEARCH] 📊 Pipeline result type: ${pipelineResult?.searchType || 'unknown'}`);
       
-      const searchRequestBody = pipelineResult && (pipelineResult.searchType === 'chronological' || pipelineResult.searchType === 'temporal') ? {
-          query: currentQuery, 
-          organizationName: originalOrganizationName,
-          isDemo: isDemoMode,
-        searchConfig: searchConfig,
-        queryClassification: queryClassification,
-        // Include expansion results for metadata but don't execute expansion in main search
-        expansionResults: pipelineResult.expansionResults
-      } : {
+      // BUGFIX: Always include searchConfig for all search types (including standard)
+      const searchRequestBody = {
         query: currentQuery, 
         organizationName: originalOrganizationName,
         isDemo: isDemoMode,
+        searchConfig: searchConfig, // Always include searchConfig from pipeline
         queryClassification: queryClassification,
-          filters: apiFilters
+        // Include expansion results for metadata (for chronological searches)
+        ...(pipelineResult?.expansionResults && { expansionResults: pipelineResult.expansionResults }),
+        // Legacy filters for backward compatibility (will be ignored when searchConfig is present)
+        filters: apiFilters
       };
       
       console.log(`🚀🚀🚀 [DASHBOARD] SEARCH REQUEST BODY:`, {
