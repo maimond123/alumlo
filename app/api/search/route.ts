@@ -32,7 +32,7 @@ const testTransformersLoad = async () => {
 };
 
 // Add timeout handling at the top
-const SEARCH_TIMEOUT_MS = 30000; // 30 seconds
+const SEARCH_TIMEOUT_MS = 60000; // 60 seconds (Increased from 30)
 
 // Create timeout wrapper function
 const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = SEARCH_TIMEOUT_MS): Promise<T> => {
@@ -327,7 +327,7 @@ export async function POST(req: NextRequest) {
       
       else if ( searchConfig.type === 'standard') {
         debug.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
-        debug.log(`[API SEARCH] 📊 DETAILED: Standard search configuration:`, {
+        debug.log(`[API SEARCH] �� DETAILED: Standard search configuration:`, {
           rpcFunction: `comprehensive_standard_search_${organizationName}`,
           hasFilters: !!searchConfig.enhancedFilters,
           filterKeys: Object.keys(searchConfig.enhancedFilters || {}),
@@ -338,18 +338,33 @@ export async function POST(req: NextRequest) {
         
         // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING
         debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, searchConfig.enhancedFilters);
-        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, search_query: "${query}", limit_count: ${top_k})`);
+        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, limit_count: ${top_k})`);
         
         // Call the standardSearch with the enhanced filters
-        results = await withTimeout(
-          search_engine.standardSearch(
-            query,
-            searchConfig.enhancedFilters,
-            top_k,
-            organizationName
-          ),
-          SEARCH_TIMEOUT_MS
-        );
+        const startTime = performance.now();
+        debug.log(`[API SEARCH] ⏱️  Starting standard search execution with a ${SEARCH_TIMEOUT_MS / 1000}s timeout.`);
+
+        try {
+          results = await withTimeout(
+            search_engine.standardSearch(
+              query,
+              searchConfig.enhancedFilters,
+              top_k,
+              organizationName
+            ),
+            SEARCH_TIMEOUT_MS
+          );
+          const endTime = performance.now();
+          debug.log(`[API SEARCH] ✅ Standard search call finished in ${(endTime - startTime).toFixed(2)}ms.`);
+        } catch (error) {
+          const endTime = performance.now();
+          debug.error(`[API SEARCH] ❌ Standard search failed after ${(endTime - startTime).toFixed(2)}ms.`, error);
+          if (error instanceof Error && error.message.includes('timed out')) {
+            debug.log(`[API SEARCH] ⏰ TIMEOUT CONFIRMED. The operation took longer than ${SEARCH_TIMEOUT_MS / 1000}s.`);
+          }
+          // Let fallback logic handle the failure
+          results = null;
+        }
         
         debug.log(`[API SEARCH] 🔍 DETAILED: Standard search completed:`, {
           resultCount: Array.isArray(results) ? results.length : 0,
