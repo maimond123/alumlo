@@ -194,11 +194,16 @@ BEGIN
           jsonb_typeof(search_filters->'location_filters') = 'array' AND
           EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'location_filters') AS lf WHERE v.post_company_current_location ILIKE '%' || lf || '%' OR v.home_location ILIKE '%' || lf || '%')))
     
+    -- UPDATED: FUZZY SCHOOL MATCHING (like chronological search)
     AND ((search_filters->>'school_filter') IS NULL OR 
-         ((search_filters->>'school_or_logic')::boolean = FALSE AND (v.undergraduate_school && ARRAY[search_filters->>'school_filter'] OR v.graduate_school && ARRAY[search_filters->>'school_filter'])) OR
+         ((search_filters->>'school_or_logic')::boolean = FALSE AND 
+          (EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || (search_filters->>'school_filter') || '%') OR
+           EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || (search_filters->>'school_filter') || '%'))) OR
          ((search_filters->>'school_or_logic')::boolean = TRUE AND (search_filters->'school_filters') IS NOT NULL AND 
           jsonb_typeof(search_filters->'school_filters') = 'array' AND
-          (v.undergraduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'school_filters')) OR v.graduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'school_filters')))))
+          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'school_filters') AS sf 
+                 WHERE EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || sf || '%') OR
+                       EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || sf || '%'))))
     
     -- 2. CAREER PROGRESSION & LEADERSHIP FILTERS
     AND ((search_filters->>'current_job_level_filter') IS NULL OR 
@@ -220,9 +225,10 @@ BEGIN
           jsonb_typeof(search_filters->'career_trajectory_filters') = 'array' AND
           v.career_trajectory = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'career_trajectory_filters')))))
     
-    AND ((search_filters->>'is_current_leader')::boolean = FALSE OR v.is_current_leader = TRUE)
-    AND ((search_filters->>'management_experience')::boolean = FALSE OR v.management_experience = TRUE)
-    AND ((search_filters->>'revenue_responsibility')::boolean = FALSE OR v.revenue_responsibility = TRUE)
+    -- FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'is_current_leader')::boolean, FALSE) = FALSE OR v.is_current_leader = TRUE)
+    AND (COALESCE((search_filters->>'management_experience')::boolean, FALSE) = FALSE OR v.management_experience = TRUE)
+    AND (COALESCE((search_filters->>'revenue_responsibility')::boolean, FALSE) = FALSE OR v.revenue_responsibility = TRUE)
     
     -- 3. COMPANY & INDUSTRY INTELLIGENCE
     AND ((search_filters->>'current_company_size_category_filter') IS NULL OR 
@@ -231,25 +237,32 @@ BEGIN
           jsonb_typeof(search_filters->'current_company_size_category_filters') = 'array' AND
           v.current_company_size_category = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'current_company_size_category_filters')))))
     
-    AND ((search_filters->>'has_startup_experience')::boolean = FALSE OR v.has_startup_experience = TRUE)
-    AND ((search_filters->>'has_enterprise_experience')::boolean = FALSE OR v.has_enterprise_experience = TRUE)
+    -- FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'has_startup_experience')::boolean, FALSE) = FALSE OR v.has_startup_experience = TRUE)
+    AND (COALESCE((search_filters->>'has_enterprise_experience')::boolean, FALSE) = FALSE OR v.has_enterprise_experience = TRUE)
+    -- UPDATED: FUZZY INDUSTRY TRANSITIONS MATCHING
     AND ((search_filters->'industry_transitions_filter') IS NULL OR 
          jsonb_typeof(search_filters->'industry_transitions_filter') = 'array' AND
-         v.industry_transitions && ARRAY(SELECT jsonb_array_elements_text(search_filters->'industry_transitions_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_transitions_filter') AS itf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.industry_transitions) AS it WHERE it ILIKE '%' || itf || '%')))
     
-    -- 4. SKILLS & EXPERIENCE PATTERNS
-    AND ((search_filters->>'technical_background')::boolean = FALSE OR v.technical_background = TRUE)
-    AND ((search_filters->>'sales_experience')::boolean = FALSE OR v.sales_experience = TRUE)
-    AND ((search_filters->>'consulting_experience')::boolean = FALSE OR v.consulting_experience = TRUE)
-    AND ((search_filters->>'restaurant_operations_experience')::boolean = FALSE OR v.restaurant_operations_experience = TRUE)
-    AND ((search_filters->>'is_remote_worker')::boolean = FALSE OR v.is_remote_worker = TRUE)
+    -- 4. SKILLS & EXPERIENCE PATTERNS - FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'technical_background')::boolean, FALSE) = FALSE OR v.technical_background = TRUE)
+    AND (COALESCE((search_filters->>'sales_experience')::boolean, FALSE) = FALSE OR v.sales_experience = TRUE)
+    AND (COALESCE((search_filters->>'consulting_experience')::boolean, FALSE) = FALSE OR v.consulting_experience = TRUE)
+    AND (COALESCE((search_filters->>'restaurant_operations_experience')::boolean, FALSE) = FALSE OR v.restaurant_operations_experience = TRUE)
+    AND (COALESCE((search_filters->>'is_remote_worker')::boolean, FALSE) = FALSE OR v.is_remote_worker = TRUE)
     
+    -- UPDATED: FUZZY FUNCTIONAL EXPERTISE MATCHING
     AND ((search_filters->'functional_expertise_filter') IS NULL OR 
          jsonb_typeof(search_filters->'functional_expertise_filter') = 'array' AND
-         v.functional_expertise && ARRAY(SELECT jsonb_array_elements_text(search_filters->'functional_expertise_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'functional_expertise_filter') AS fef 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.functional_expertise) AS fe WHERE fe ILIKE '%' || fef || '%')))
+    -- UPDATED: FUZZY INDUSTRY EXPERTISE MATCHING         
     AND ((search_filters->'industry_expertise_filter') IS NULL OR 
          jsonb_typeof(search_filters->'industry_expertise_filter') = 'array' AND
-         v.industry_expertise && ARRAY(SELECT jsonb_array_elements_text(search_filters->'industry_expertise_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_expertise_filter') AS ief 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.industry_expertise) AS ie WHERE ie ILIKE '%' || ief || '%')))
     
     -- 5. EDUCATIONAL BACKGROUND & CONTEXT
     AND ((search_filters->>'highest_degree_level_filter') IS NULL OR 
@@ -282,27 +295,28 @@ BEGIN
           jsonb_typeof(search_filters->'graduate_specialization_filters') = 'array' AND
           EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'graduate_specialization_filters') AS gsf WHERE v.graduate_specialization ILIKE '%' || gsf || '%')))
     
-    AND ((search_filters->>'stem_education')::boolean = FALSE OR v.stem_education = TRUE)
-    AND ((search_filters->>'business_education')::boolean = FALSE OR v.business_education = TRUE)
-    AND ((search_filters->>'elite_education')::boolean = FALSE OR v.elite_education = TRUE)
-    AND ((search_filters->>'continued_education')::boolean = FALSE OR v.continued_education = TRUE)
-    AND ((search_filters->>'executive_education')::boolean = FALSE OR v.executive_education = TRUE)
-    AND ((search_filters->>'technical_certifications')::boolean = FALSE OR v.technical_certifications = TRUE)
+    -- FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'stem_education')::boolean, FALSE) = FALSE OR v.stem_education = TRUE)
+    AND (COALESCE((search_filters->>'business_education')::boolean, FALSE) = FALSE OR v.business_education = TRUE)
+    AND (COALESCE((search_filters->>'elite_education')::boolean, FALSE) = FALSE OR v.elite_education = TRUE)
+    AND (COALESCE((search_filters->>'continued_education')::boolean, FALSE) = FALSE OR v.continued_education = TRUE)
+    AND (COALESCE((search_filters->>'executive_education')::boolean, FALSE) = FALSE OR v.executive_education = TRUE)
+    AND (COALESCE((search_filters->>'technical_certifications')::boolean, FALSE) = FALSE OR v.technical_certifications = TRUE)
     
-    -- 6. ENHANCED SEARCH CATEGORIES
-    AND ((search_filters->>'mentor_potential')::boolean = FALSE OR v.mentor_potential = TRUE)
-    AND ((search_filters->>'likely_job_seeking')::boolean = FALSE OR v.likely_job_seeking = TRUE)
+    -- 6. ENHANCED SEARCH CATEGORIES - FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'mentor_potential')::boolean, FALSE) = FALSE OR v.mentor_potential = TRUE)
+    AND (COALESCE((search_filters->>'likely_job_seeking')::boolean, FALSE) = FALSE OR v.likely_job_seeking = TRUE)
     AND ((search_filters->>'total_positions_min')::integer IS NULL OR v.total_positions_count >= (search_filters->>'total_positions_min')::integer)
     AND ((search_filters->>'total_positions_max')::integer IS NULL OR v.total_positions_count <= (search_filters->>'total_positions_max')::integer)
     AND ((search_filters->>'average_tenure_min_months')::integer IS NULL OR v.average_tenure_months >= (search_filters->>'average_tenure_min_months')::integer)
     AND ((search_filters->>'average_tenure_max_months')::integer IS NULL OR v.average_tenure_months <= (search_filters->>'average_tenure_max_months')::integer)
     
-    -- 7. COMPANY IMPACT METRICS
-    AND ((search_filters->>'company_provided_salary_lift')::boolean = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE)
-    AND ((search_filters->>'achieved_six_figure_post_company')::boolean = FALSE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
-    AND ((search_filters->>'doubled_salary_post_company')::boolean = FALSE OR v.doubled_salary_post_chick_fil_a = TRUE)
-    AND ((search_filters->>'moved_to_leadership_post_company')::boolean = FALSE OR v.moved_to_leadership_post_chick_fil_a = TRUE)
-    AND ((search_filters->>'career_level_increase_post_company')::boolean = FALSE OR v.career_level_increase_post_chick_fil_a = TRUE)
+    -- 7. COMPANY IMPACT METRICS - FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'company_provided_salary_lift')::boolean, FALSE) = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE)
+    AND (COALESCE((search_filters->>'achieved_six_figure_post_company')::boolean, FALSE) = FALSE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
+    AND (COALESCE((search_filters->>'doubled_salary_post_company')::boolean, FALSE) = FALSE OR v.doubled_salary_post_chick_fil_a = TRUE)
+    AND (COALESCE((search_filters->>'moved_to_leadership_post_company')::boolean, FALSE) = FALSE OR v.moved_to_leadership_post_chick_fil_a = TRUE)
+    AND (COALESCE((search_filters->>'career_level_increase_post_company')::boolean, FALSE) = FALSE OR v.career_level_increase_post_chick_fil_a = TRUE)
     
     -- 8. GEOGRAPHIC & LOCATION (additional to basic location filters above)
     AND ((search_filters->>'home_location_filter') IS NULL OR 
@@ -311,9 +325,11 @@ BEGIN
           jsonb_typeof(search_filters->'home_location_filters') = 'array' AND
           EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'home_location_filters') AS hlf WHERE v.home_location ILIKE '%' || hlf || '%')))
     
+    -- UPDATED: FUZZY EDUCATION GEOGRAPHY MATCHING
     AND ((search_filters->'education_geography_filter') IS NULL OR 
          jsonb_typeof(search_filters->'education_geography_filter') = 'array' AND
-         v.education_geography && ARRAY(SELECT jsonb_array_elements_text(search_filters->'education_geography_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'education_geography_filter') AS egf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.education_geography) AS eg WHERE eg ILIKE '%' || egf || '%')))
     
     -- 9. SALARY ANALYSIS FIELDS (including new salary fields)
     AND ((search_filters->>'min_current_salary')::decimal IS NULL OR v.current_estimated_salary >= (search_filters->>'min_current_salary')::decimal)
@@ -322,15 +338,16 @@ BEGIN
     AND ((search_filters->>'max_highest_career_salary')::decimal IS NULL OR v.highest_career_salary <= (search_filters->>'max_highest_career_salary')::decimal)
     AND ((search_filters->>'min_pre_chick_fil_a_salary')::decimal IS NULL OR v.pre_chick_fil_a_salary >= (search_filters->>'min_pre_chick_fil_a_salary')::decimal)
     AND ((search_filters->>'min_first_post_chick_fil_a_salary')::decimal IS NULL OR v.first_post_chick_fil_a_salary >= (search_filters->>'min_first_post_chick_fil_a_salary')::decimal)
-    AND ((search_filters->>'salary_growth_indicator')::boolean = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
+    -- FIXED: Boolean filters with proper NULL handling
+    AND (COALESCE((search_filters->>'salary_growth_indicator')::boolean, FALSE) = FALSE OR v.chick_fil_a_provided_salary_lift = TRUE OR v.achieved_six_figure_post_chick_fil_a = TRUE)
     
-    -- NEW: MATHEMATICAL SALARY COMPARISONS
+    -- NEW: MATHEMATICAL SALARY COMPARISONS - FIXED: Boolean filters with proper NULL handling
     -- Compare post-company salary vs pre-company salary
-    AND ((search_filters->>'post_salary_greater_than_pre')::boolean = FALSE OR 
+    AND (COALESCE((search_filters->>'post_salary_greater_than_pre')::boolean, FALSE) = FALSE OR 
          (v.first_post_chick_fil_a_salary > 0 AND v.pre_chick_fil_a_salary > 0 AND v.first_post_chick_fil_a_salary > v.pre_chick_fil_a_salary))
     
     -- Current salary greater than first post-company salary (continued growth)
-    AND ((search_filters->>'current_salary_greater_than_first_post')::boolean = FALSE OR 
+    AND (COALESCE((search_filters->>'current_salary_greater_than_first_post')::boolean, FALSE) = FALSE OR 
          (v.current_estimated_salary > 0 AND v.first_post_chick_fil_a_salary > 0 AND v.current_estimated_salary > v.first_post_chick_fil_a_salary))
     
     -- Minimum salary growth percentage from pre to post company
@@ -354,7 +371,7 @@ BEGIN
           (v.first_post_chick_fil_a_salary / v.pre_chick_fil_a_salary) >= (search_filters->>'min_salary_multiplier')::decimal))
     
     -- Career peak salary comparison to current
-    AND ((search_filters->>'current_salary_near_peak')::boolean = FALSE OR 
+    AND (COALESCE((search_filters->>'current_salary_near_peak')::boolean, FALSE) = FALSE OR 
          (v.current_estimated_salary > 0 AND v.highest_career_salary > 0 AND 
           v.current_estimated_salary >= (v.highest_career_salary * 0.9))) -- Within 90% of peak
     
@@ -370,41 +387,51 @@ BEGIN
           v.first_post_chick_fil_a_salary <= (search_filters->'salary_range_post_company'->1)::decimal))
     
     -- 10. COMPREHENSIVE ARRAY FIELDS FOR CAREER TRACKING (PRE + POST COMPANY)
-    -- PRE-COMPANY FILTERS (Background/Network Analysis)
+    -- PRE-COMPANY FILTERS (Background/Network Analysis) - UPDATED: FUZZY MATCHING
     AND ((search_filters->'pre_company_companies_filter') IS NULL OR 
          jsonb_typeof(search_filters->'pre_company_companies_filter') = 'array' AND
-         v.pre_company_companies && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_companies_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'pre_company_companies_filter') AS pccf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.pre_company_companies) AS pcc WHERE pcc ILIKE '%' || pccf || '%')))
     AND ((search_filters->'pre_company_titles_filter') IS NULL OR 
          jsonb_typeof(search_filters->'pre_company_titles_filter') = 'array' AND
-         v.pre_company_titles && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_titles_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'pre_company_titles_filter') AS pctf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.pre_company_titles) AS pct WHERE pct ILIKE '%' || pctf || '%')))
     AND ((search_filters->'pre_company_industries_filter') IS NULL OR 
          jsonb_typeof(search_filters->'pre_company_industries_filter') = 'array' AND
-         v.pre_company_industries && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_industries_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'pre_company_industries_filter') AS pcif 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.pre_company_industries) AS pci WHERE pci ILIKE '%' || pcif || '%')))
     AND ((search_filters->'pre_company_locations_filter') IS NULL OR 
          jsonb_typeof(search_filters->'pre_company_locations_filter') = 'array' AND
-         v.pre_company_locations && ARRAY(SELECT jsonb_array_elements_text(search_filters->'pre_company_locations_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'pre_company_locations_filter') AS pclf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.pre_company_locations) AS pcl WHERE pcl ILIKE '%' || pclf || '%')))
     
-    -- POST-COMPANY FILTERS (Current/Recent Career Path)
+    -- POST-COMPANY FILTERS (Current/Recent Career Path) - UPDATED: FUZZY MATCHING
     AND ((search_filters->'post_company_companies_filter') IS NULL OR 
          jsonb_typeof(search_filters->'post_company_companies_filter') = 'array' AND
-         v.post_company_companies && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_companies_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'post_company_companies_filter') AS pocf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.post_company_companies) AS poc WHERE poc ILIKE '%' || pocf || '%')))
     AND ((search_filters->'post_company_titles_filter') IS NULL OR 
          jsonb_typeof(search_filters->'post_company_titles_filter') = 'array' AND
-         v.post_company_titles && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_titles_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'post_company_titles_filter') AS potf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.post_company_titles) AS pot WHERE pot ILIKE '%' || potf || '%')))
     AND ((search_filters->'post_company_industries_filter') IS NULL OR 
          jsonb_typeof(search_filters->'post_company_industries_filter') = 'array' AND
-         v.post_company_industries && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_industries_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'post_company_industries_filter') AS poif 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.post_company_industries) AS poi WHERE poi ILIKE '%' || poif || '%')))
     AND ((search_filters->'post_company_locations_filter') IS NULL OR 
          jsonb_typeof(search_filters->'post_company_locations_filter') = 'array' AND
-         v.post_company_locations && ARRAY(SELECT jsonb_array_elements_text(search_filters->'post_company_locations_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'post_company_locations_filter') AS polf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.post_company_locations) AS pol WHERE pol ILIKE '%' || polf || '%')))
     
-    -- EDUCATION FILTERS
+    -- EDUCATION FILTERS - UPDATED: FUZZY MATCHING
     AND ((search_filters->'undergraduate_schools_filter') IS NULL OR 
          jsonb_typeof(search_filters->'undergraduate_schools_filter') = 'array' AND
-         v.undergraduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'undergraduate_schools_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'undergraduate_schools_filter') AS usf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || usf || '%')))
     AND ((search_filters->'graduate_schools_filter') IS NULL OR 
          jsonb_typeof(search_filters->'graduate_schools_filter') = 'array' AND
-         v.graduate_school && ARRAY(SELECT jsonb_array_elements_text(search_filters->'graduate_schools_filter')))
+         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'graduate_schools_filter') AS gsf 
+                WHERE EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || gsf || '%')))
     
     -- Optional: Text search in natural language fields if search_query is provided
     AND (search_query IS NULL OR 
