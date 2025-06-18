@@ -595,7 +595,7 @@ export class LinkedInProfileSearchEngine {
       // 🔍 DEBUG: Log the exact RPC call being made
       console.log(`[AI_SEARCH STANDARD] 🎯 EXACT RPC CALL: this.supabase.rpc("${rpcFunctionName}", ${JSON.stringify({
         search_filters: searchFilters,
-        search_query: query,
+        // search_query: query,  // ← TEMPORARILY DISABLED TO TEST
         limit_count: top_k
       })})`);
       
@@ -603,7 +603,7 @@ export class LinkedInProfileSearchEngine {
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, {
           search_filters: searchFilters,
-          search_query: query,
+          // search_query: query,  // ← TEMPORARILY DISABLED TO TEST
           limit_count: top_k
         })
         .returns<ComprehensiveSearchResult[]>();
