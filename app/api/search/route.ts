@@ -73,6 +73,9 @@ export async function POST(req: NextRequest) {
       searchConfig // New: pipeline search config
     } = body;
     
+    // BUGFIX: Use enhanced filters from pipeline when available
+    const effectiveFilters = searchConfig?.enhancedFilters || filters;
+    
     if (!query || typeof query !== 'string') {
       console.log('[API] Invalid query parameter');
       console.log(`[API SEARCH] ❌ Invalid query parameter`);
@@ -88,18 +91,20 @@ export async function POST(req: NextRequest) {
       isDemo,
       hasClassification: !!queryClassification,
       classificationType: queryClassification?.type,
-      hasFilters: Object.keys(filters).length > 0,
-      filterKeys: Object.keys(filters),
+      hasFilters: Object.keys(effectiveFilters).length > 0,
+      filterKeys: Object.keys(effectiveFilters),
       hasChronologicalWeights: !!chronologicalWeights,
       useChronologicalConfig,
       hasChronologicalConfig: !!chronologicalConfig,
-      hasSearchConfig: !!searchConfig
+      hasSearchConfig: !!searchConfig,
+      pipelineEnhancedFilters: searchConfig?.enhancedFilters ? Object.keys(searchConfig.enhancedFilters) : null
     });
     console.log(`[API SEARCH] 📊 Parameter analysis:`, {
       searchType: queryClassification?.type || 'unknown',
       configSource: searchConfig ? 'pipeline' : 'legacy',
-      filterCount: Object.keys(filters).length,
-      isAuthenticated: !isDemo && !!organizationName
+      filterCount: Object.keys(effectiveFilters).length,
+      isAuthenticated: !isDemo && !!organizationName,
+      usingPipelineFilters: !!searchConfig?.enhancedFilters
     });
     
     console.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
@@ -460,7 +465,7 @@ export async function POST(req: NextRequest) {
             // Combine translated filters with existing filters
           const chronologicalFilters = {
             ...translatedFilters,
-            ...filters, // Include any existing filters from dashboard
+            ...effectiveFilters, // Include any existing filters from dashboard or pipeline
           };
           
           // Add weights to filters
@@ -515,11 +520,11 @@ export async function POST(req: NextRequest) {
         
         // Use basic filters for fallback
         const basicFallbackFilters = {
-          company_filter: filters.company || null,
-          industry_filter: filters.industry || null,
-          title_filter: filters.title || null,
-          location_filter: filters.location || null,
-          school_filter: filters.school || null
+          company_filter: effectiveFilters.company || effectiveFilters.company_filter || null,
+          industry_filter: effectiveFilters.industry || effectiveFilters.industry_filter || null,
+          title_filter: effectiveFilters.title || effectiveFilters.title_filter || null,
+          location_filter: effectiveFilters.location || effectiveFilters.location_filter || null,
+          school_filter: effectiveFilters.school || effectiveFilters.school_filter || null
         };
         
         console.log(`[API SEARCH] 🔍 Fallback filters:`, basicFallbackFilters);

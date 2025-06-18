@@ -364,7 +364,7 @@ export class LinkedInProfileSearchEngine {
     
     return finalResults;
   }
-
+  
   // Comprehensive Standard Search using SQL filtering
   async standardSearch(
     query: string,
@@ -694,14 +694,14 @@ export class LinkedInProfileSearchEngine {
       throw error;
     }
   }
-
+  
   /**
    * @deprecated This method is no longer used as profiles are added through the backend
    */
   async addProfileToDb(profile: any) {
     throw new Error('Method not implemented: profiles should be added through the backend');
   }
-
+  
   // Chronological search method with proper implementation
   async searchChronological(
     query: string,
@@ -731,7 +731,7 @@ export class LinkedInProfileSearchEngine {
       // Call the chronological search RPC function
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, {
-          chronological_filters: filters,
+        chronological_filters: filters,
           limit_count: top_k
         })
         .returns<any[]>();
@@ -770,12 +770,12 @@ export class LinkedInProfileSearchEngine {
           years_experience: item.total_years_experience || 0,
           similarity: 1.0, // No similarity score for chronological search
           profile_photo_url: '',
-          headline: '',
-          
-          // Chronological-specific fields
+        headline: '',
+        
+        // Chronological-specific fields
           career_timeline: item.career_timeline || {},
           education_timeline: item.education_timeline || {},
-          career_analysis: {
+        career_analysis: {
             total_years_experience: item.total_years_experience || 0,
             years_in_target_industry: item.years_in_target_industry || 0,
             years_in_target_function: 0,
@@ -802,7 +802,7 @@ export class LinkedInProfileSearchEngine {
       throw error;
     }
   }
-
+  
   // Temporal search method with proper implementation
   async searchTemporal(
     query: string,
@@ -916,4 +916,4 @@ export interface Profile {
   uncategorized_school?: string[];
   graduation_year?: number;
   [key: string]: any;
-} 
+}
