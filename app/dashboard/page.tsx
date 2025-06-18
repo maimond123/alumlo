@@ -1472,6 +1472,16 @@ export default function DashboardPage() {
           filterCount: rawData.filterCount,
           fullResponse: rawData
         });
+        
+        // 🔍 PRODUCTION DEBUG: Display all server-side debug logs
+        if (rawData.debug && Array.isArray(rawData.debug)) {
+          console.log('🔍 [SERVER DEBUG LOGS] ='.repeat(30));
+          rawData.debug.forEach((logEntry: string, index: number) => {
+            console.log(`🔍 [${index + 1}] ${logEntry}`);
+          });
+          console.log('🔍 [END SERVER DEBUG] ='.repeat(30));
+        }
+        
         console.log(`[DASHBOARD SEARCH] ✅ Search completed successfully:`, {
           resultCount: rawData.results?.length || 0,
           searchType: rawData.searchType,
