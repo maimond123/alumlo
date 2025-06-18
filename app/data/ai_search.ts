@@ -567,16 +567,20 @@ export class LinkedInProfileSearchEngine {
         graduate_schools_filter: filters.graduate_schools_filter || null,
         graduate_schools_or_logic: filters.graduate_schools_or_logic || false
       };
+
+      const activeSearchFilters: { [key: string]: any } = {};
+      Object.entries(searchFilters).forEach(([key, value]) => {
+        if (value !== null && value !== false && value !== undefined) {
+          if (Array.isArray(value) && value.length === 0) {
+            return; // Skip empty arrays
+          }
+          activeSearchFilters[key] = value;
+        }
+      });
+      console.log(`[AI_SEARCH STANDARD] 🧹 Cleaned active filters being sent to SQL:`, activeSearchFilters);
       
       console.log(`[AI_SEARCH STANDARD] 📡 Calling ${rpcFunctionName} with JSON filters`);
-      console.log(`[AI_SEARCH STANDARD] 🔍 DETAILED searchFilters object being sent to SQL:`, {
-        school_filter: searchFilters.school_filter,
-        company_filter: searchFilters.company_filter,
-        industry_filter: searchFilters.industry_filter,
-        title_filter: searchFilters.title_filter,
-        location_filter: searchFilters.location_filter,
-        allFilters: searchFilters
-      });
+
       console.log(`[AI_SEARCH STANDARD] 📊 Filter summary:`, {
         totalFilterKeys: Object.keys(searchFilters).length,
         nonNullFilters: Object.entries(searchFilters).filter(([key, value]) => 
@@ -602,7 +606,7 @@ export class LinkedInProfileSearchEngine {
       // Call the comprehensive standard search RPC function with JSON parameter
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, {
-          search_filters: searchFilters,
+          search_filters: activeSearchFilters,
           // search_query: query,  // ← TEMPORARILY DISABLED TO TEST
           limit_count: top_k
         })
