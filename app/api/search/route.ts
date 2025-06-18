@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Add debugging around the import
-console.log('[API] 🚀 Starting to import LinkedInProfileSearchEngine...');
+console.log('[API] 🚀  Starting to import LinkedInProfileSearchEngine...');
 try {
   var { LinkedInProfileSearchEngine } = require('../../data/ai_search');
   console.log('[API] ✅ Successfully imported LinkedInProfileSearchEngine');
