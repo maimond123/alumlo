@@ -337,8 +337,8 @@ export async function POST(req: NextRequest) {
         });
         
         // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING
-        debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, JSON.stringify(searchConfig.enhancedFilters, null, 2));
-        debug.log(`[API SEARCH] �� SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, search_query: "${query}", limit_count: ${top_k})`);
+        debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, searchConfig.enhancedFilters);
+        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, search_query: "${query}", limit_count: ${top_k})`);
         
         // Call the standardSearch with the enhanced filters
         results = await withTimeout(
@@ -364,7 +364,7 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] ✅ Comprehensive SQL filtering completed: ${Array.isArray(results) ? results.length : 0} results`);
         
         searchMetadata = {
-          search_method: 'comprehensive_sql_filtering',
+          search_method: 'comprehensive_standard_search',
           enhanced_filters: searchConfig.enhancedFilters,
           filter_count: Object.keys(searchConfig.enhancedFilters || {}).length,
           configuration_source: 'pipeline',
