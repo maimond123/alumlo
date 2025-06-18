@@ -325,7 +325,7 @@ export async function POST(req: NextRequest) {
         }
       }
       
-      else if (searchConfig.type === 'standard') {
+      else if ( searchConfig.type === 'standard') {
         debug.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
         debug.log(`[API SEARCH] 📊 DETAILED: Standard search configuration:`, {
           rpcFunction: searchConfig.searchMethod,
