@@ -170,60 +170,100 @@ BEGIN
   FROM chick_fil_a_alumni_standard_search v
   WHERE 1=1
     -- 1. BASIC ENTITY FILTERS (searches current state first, then arrays)
-    AND ((search_filters->>'company_filter') IS NULL OR 
-         ((search_filters->>'company_or_logic')::boolean = FALSE AND v.post_company_current_company ILIKE '%' || (search_filters->>'company_filter') || '%') OR
-         ((search_filters->>'company_or_logic')::boolean = TRUE AND (search_filters->'company_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'company_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'company_filters') AS cf WHERE v.post_company_current_company ILIKE '%' || cf || '%')))
-    
-    AND ((search_filters->>'industry_filter') IS NULL OR 
-         ((search_filters->>'industry_or_logic')::boolean = FALSE AND v.post_company_current_industry ILIKE '%' || (search_filters->>'industry_filter') || '%') OR
-         ((search_filters->>'industry_or_logic')::boolean = TRUE AND (search_filters->'industry_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'industry_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_filters') AS if_val WHERE v.post_company_current_industry ILIKE '%' || if_val || '%')))
-    
-    AND ((search_filters->>'title_filter') IS NULL OR 
-         ((search_filters->>'title_or_logic')::boolean = FALSE AND v.post_company_current_title ILIKE '%' || (search_filters->>'title_filter') || '%') OR
-         ((search_filters->>'title_or_logic')::boolean = TRUE AND (search_filters->'title_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'title_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'title_filters') AS tf WHERE v.post_company_current_title ILIKE '%' || tf || '%')))
-    
-    AND ((search_filters->>'location_filter') IS NULL OR 
-         ((search_filters->>'location_or_logic')::boolean = FALSE AND (v.post_company_current_location ILIKE '%' || (search_filters->>'location_filter') || '%' OR v.home_location ILIKE '%' || (search_filters->>'location_filter') || '%')) OR
-         ((search_filters->>'location_or_logic')::boolean = TRUE AND (search_filters->'location_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'location_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'location_filters') AS lf WHERE v.post_company_current_location ILIKE '%' || lf || '%' OR v.home_location ILIKE '%' || lf || '%')))
-    
+    AND (
+      (search_filters->>'company_filter' IS NULL AND search_filters->'company_filters' IS NULL) OR
+      (COALESCE((search_filters->>'company_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'company_filter' IS NOT NULL AND
+       v.post_company_current_company ILIKE '%' || (search_filters->>'company_filter') || '%') OR
+      (COALESCE((search_filters->>'company_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'company_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'company_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'company_filters') AS cf WHERE v.post_company_current_company ILIKE '%' || cf || '%'))
+    )
+
+    AND (
+      (search_filters->>'industry_filter' IS NULL AND search_filters->'industry_filters' IS NULL) OR
+      (COALESCE((search_filters->>'industry_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'industry_filter' IS NOT NULL AND
+       v.post_company_current_industry ILIKE '%' || (search_filters->>'industry_filter') || '%') OR
+      (COALESCE((search_filters->>'industry_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'industry_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'industry_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_filters') AS if_val WHERE v.post_company_current_industry ILIKE '%' || if_val || '%'))
+    )
+
+    AND (
+      (search_filters->>'title_filter' IS NULL AND search_filters->'title_filters' IS NULL) OR
+      (COALESCE((search_filters->>'title_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'title_filter' IS NOT NULL AND
+       v.post_company_current_title ILIKE '%' || (search_filters->>'title_filter') || '%') OR
+      (COALESCE((search_filters->>'title_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'title_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'title_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'title_filters') AS tf WHERE v.post_company_current_title ILIKE '%' || tf || '%'))
+    )
+
+    AND (
+      (search_filters->>'location_filter' IS NULL AND search_filters->'location_filters' IS NULL) OR
+      (COALESCE((search_filters->>'location_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'location_filter' IS NOT NULL AND
+       (v.post_company_current_location ILIKE '%' || (search_filters->>'location_filter') || '%' OR v.home_location ILIKE '%' || (search_filters->>'location_filter') || '%')) OR
+      (COALESCE((search_filters->>'location_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'location_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'location_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'location_filters') AS lf WHERE v.post_company_current_location ILIKE '%' || lf || '%' OR v.home_location ILIKE '%' || lf || '%'))
+    )
+
     -- UPDATED: FUZZY SCHOOL MATCHING (like chronological search)
-    AND ((search_filters->>'school_filter') IS NULL OR 
-         ((search_filters->>'school_or_logic')::boolean = FALSE AND 
-          (EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || (search_filters->>'school_filter') || '%') OR
-           EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || (search_filters->>'school_filter') || '%'))) OR
-         ((search_filters->>'school_or_logic')::boolean = TRUE AND (search_filters->'school_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'school_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'school_filters') AS sf 
-                 WHERE EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || sf || '%') OR
-                       EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || sf || '%'))))
+    AND (
+      (search_filters->>'school_filter' IS NULL AND search_filters->'school_filters' IS NULL) OR
+      (COALESCE((search_filters->>'school_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'school_filter' IS NOT NULL AND
+       (EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || (search_filters->>'school_filter') || '%') OR
+        EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || (search_filters->>'school_filter') || '%'))) OR
+      (COALESCE((search_filters->>'school_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'school_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'school_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'school_filters') AS sf
+              WHERE EXISTS(SELECT 1 FROM unnest(v.undergraduate_school) AS us WHERE us ILIKE '%' || sf || '%') OR
+                    EXISTS(SELECT 1 FROM unnest(v.graduate_school) AS gs WHERE gs ILIKE '%' || sf || '%')))
+    )
     
     -- 2. CAREER PROGRESSION & LEADERSHIP FILTERS
-    AND ((search_filters->>'current_job_level_filter') IS NULL OR 
-         ((search_filters->>'current_job_level_or_logic')::boolean = FALSE AND v.current_job_level ILIKE '%' || (search_filters->>'current_job_level_filter') || '%') OR
-         ((search_filters->>'current_job_level_or_logic')::boolean = TRUE AND (search_filters->'current_job_level_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'current_job_level_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'current_job_level_filters') AS jlf WHERE v.current_job_level ILIKE '%' || jlf || '%')))
+    AND (
+      (search_filters->>'current_job_level_filter' IS NULL AND search_filters->'current_job_level_filters' IS NULL) OR
+      (COALESCE((search_filters->>'current_job_level_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'current_job_level_filter' IS NOT NULL AND
+       v.current_job_level ILIKE '%' || (search_filters->>'current_job_level_filter') || '%') OR
+      (COALESCE((search_filters->>'current_job_level_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'current_job_level_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'current_job_level_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'current_job_level_filters') AS jlf WHERE v.current_job_level ILIKE '%' || jlf || '%'))
+    )
     
-    AND ((search_filters->>'current_job_function_filter') IS NULL OR 
-         ((search_filters->>'current_job_function_or_logic')::boolean = FALSE AND v.current_job_function ILIKE '%' || (search_filters->>'current_job_function_filter') || '%') OR
-         ((search_filters->>'current_job_function_or_logic')::boolean = TRUE AND (search_filters->'current_job_function_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'current_job_function_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'current_job_function_filters') AS jff WHERE v.current_job_function ILIKE '%' || jff || '%')))
+    AND (
+      (search_filters->>'current_job_function_filter' IS NULL AND search_filters->'current_job_function_filters' IS NULL) OR
+      (COALESCE((search_filters->>'current_job_function_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'current_job_function_filter' IS NOT NULL AND
+       v.current_job_function ILIKE '%' || (search_filters->>'current_job_function_filter') || '%') OR
+      (COALESCE((search_filters->>'current_job_function_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'current_job_function_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'current_job_function_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'current_job_function_filters') AS jff WHERE v.current_job_function ILIKE '%' || jff || '%'))
+    )
     
     AND ((search_filters->>'career_stage_filter') IS NULL OR v.career_stage = (search_filters->>'career_stage_filter'))
-    AND ((search_filters->>'career_trajectory_filter') IS NULL OR 
-         ((search_filters->>'career_trajectory_or_logic')::boolean = FALSE AND v.career_trajectory = (search_filters->>'career_trajectory_filter')) OR
-         ((search_filters->>'career_trajectory_or_logic')::boolean = TRUE AND (search_filters->'career_trajectory_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'career_trajectory_filters') = 'array' AND
-          v.career_trajectory = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'career_trajectory_filters')))))
+    
+    AND (
+      (search_filters->>'career_trajectory_filter' IS NULL AND search_filters->'career_trajectory_filters' IS NULL) OR
+      (COALESCE((search_filters->>'career_trajectory_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'career_trajectory_filter' IS NOT NULL AND
+       v.career_trajectory = (search_filters->>'career_trajectory_filter')) OR
+      (COALESCE((search_filters->>'career_trajectory_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'career_trajectory_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'career_trajectory_filters') = 'array' AND
+       v.career_trajectory = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'career_trajectory_filters'))))
+    )
     
     -- FIXED: Boolean filters with proper NULL handling
     AND (COALESCE((search_filters->>'is_current_leader')::boolean, FALSE) = FALSE OR v.is_current_leader = TRUE)
@@ -231,11 +271,16 @@ BEGIN
     AND (COALESCE((search_filters->>'revenue_responsibility')::boolean, FALSE) = FALSE OR v.revenue_responsibility = TRUE)
     
     -- 3. COMPANY & INDUSTRY INTELLIGENCE
-    AND ((search_filters->>'current_company_size_category_filter') IS NULL OR 
-         ((search_filters->>'current_company_size_category_or_logic')::boolean = FALSE AND v.current_company_size_category = (search_filters->>'current_company_size_category_filter')) OR
-         ((search_filters->>'current_company_size_category_or_logic')::boolean = TRUE AND (search_filters->'current_company_size_category_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'current_company_size_category_filters') = 'array' AND
-          v.current_company_size_category = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'current_company_size_category_filters')))))
+    AND (
+      (search_filters->>'current_company_size_category_filter' IS NULL AND search_filters->'current_company_size_category_filters' IS NULL) OR
+      (COALESCE((search_filters->>'current_company_size_category_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'current_company_size_category_filter' IS NOT NULL AND
+       v.current_company_size_category = (search_filters->>'current_company_size_category_filter')) OR
+      (COALESCE((search_filters->>'current_company_size_category_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'current_company_size_category_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'current_company_size_category_filters') = 'array' AND
+       v.current_company_size_category = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'current_company_size_category_filters'))))
+    )
     
     -- FIXED: Boolean filters with proper NULL handling
     AND (COALESCE((search_filters->>'has_startup_experience')::boolean, FALSE) = FALSE OR v.has_startup_experience = TRUE)
@@ -265,35 +310,60 @@ BEGIN
                 WHERE EXISTS(SELECT 1 FROM unnest(v.industry_expertise) AS ie WHERE ie ILIKE '%' || ief || '%')))
     
     -- 5. EDUCATIONAL BACKGROUND & CONTEXT
-    AND ((search_filters->>'highest_degree_level_filter') IS NULL OR 
-         ((search_filters->>'highest_degree_level_or_logic')::boolean = FALSE AND v.highest_degree_level = (search_filters->>'highest_degree_level_filter')) OR
-         ((search_filters->>'highest_degree_level_or_logic')::boolean = TRUE AND (search_filters->'highest_degree_level_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'highest_degree_level_filters') = 'array' AND
-          v.highest_degree_level = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'highest_degree_level_filters')))))
+    AND (
+      (search_filters->>'highest_degree_level_filter' IS NULL AND search_filters->'highest_degree_level_filters' IS NULL) OR
+      (COALESCE((search_filters->>'highest_degree_level_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'highest_degree_level_filter' IS NOT NULL AND
+       v.highest_degree_level = (search_filters->>'highest_degree_level_filter')) OR
+      (COALESCE((search_filters->>'highest_degree_level_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'highest_degree_level_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'highest_degree_level_filters') = 'array' AND
+       v.highest_degree_level = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'highest_degree_level_filters'))))
+    )
     
-    AND ((search_filters->>'school_ranking_tier_filter') IS NULL OR 
-         ((search_filters->>'school_ranking_tier_or_logic')::boolean = FALSE AND v.school_ranking_tier = (search_filters->>'school_ranking_tier_filter')) OR
-         ((search_filters->>'school_ranking_tier_or_logic')::boolean = TRUE AND (search_filters->'school_ranking_tier_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'school_ranking_tier_filters') = 'array' AND
-          v.school_ranking_tier = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'school_ranking_tier_filters')))))
+    AND (
+      (search_filters->>'school_ranking_tier_filter' IS NULL AND search_filters->'school_ranking_tier_filters' IS NULL) OR
+      (COALESCE((search_filters->>'school_ranking_tier_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'school_ranking_tier_filter' IS NOT NULL AND
+       v.school_ranking_tier = (search_filters->>'school_ranking_tier_filter')) OR
+      (COALESCE((search_filters->>'school_ranking_tier_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'school_ranking_tier_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'school_ranking_tier_filters') = 'array' AND
+       v.school_ranking_tier = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'school_ranking_tier_filters'))))
+    )
     
-    AND ((search_filters->>'major_category_filter') IS NULL OR 
-         ((search_filters->>'major_category_or_logic')::boolean = FALSE AND v.major_category = (search_filters->>'major_category_filter')) OR
-         ((search_filters->>'major_category_or_logic')::boolean = TRUE AND (search_filters->'major_category_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'major_category_filters') = 'array' AND
-          v.major_category = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'major_category_filters')))))
+    AND (
+      (search_filters->>'major_category_filter' IS NULL AND search_filters->'major_category_filters' IS NULL) OR
+      (COALESCE((search_filters->>'major_category_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'major_category_filter' IS NOT NULL AND
+       v.major_category = (search_filters->>'major_category_filter')) OR
+      (COALESCE((search_filters->>'major_category_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'major_category_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'major_category_filters') = 'array' AND
+       v.major_category = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'major_category_filters'))))
+    )
     
-    AND ((search_filters->>'undergraduate_major_filter') IS NULL OR 
-         ((search_filters->>'undergraduate_major_or_logic')::boolean = FALSE AND v.undergraduate_major ILIKE '%' || (search_filters->>'undergraduate_major_filter') || '%') OR
-         ((search_filters->>'undergraduate_major_or_logic')::boolean = TRUE AND (search_filters->'undergraduate_major_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'undergraduate_major_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'undergraduate_major_filters') AS umf WHERE v.undergraduate_major ILIKE '%' || umf || '%')))
+    AND (
+      (search_filters->>'undergraduate_major_filter' IS NULL AND search_filters->'undergraduate_major_filters' IS NULL) OR
+      (COALESCE((search_filters->>'undergraduate_major_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'undergraduate_major_filter' IS NOT NULL AND
+       v.undergraduate_major ILIKE '%' || (search_filters->>'undergraduate_major_filter') || '%') OR
+      (COALESCE((search_filters->>'undergraduate_major_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'undergraduate_major_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'undergraduate_major_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'undergraduate_major_filters') AS umf WHERE v.undergraduate_major ILIKE '%' || umf || '%'))
+    )
     
-    AND ((search_filters->>'graduate_specialization_filter') IS NULL OR 
-         ((search_filters->>'graduate_specialization_or_logic')::boolean = FALSE AND v.graduate_specialization ILIKE '%' || (search_filters->>'graduate_specialization_filter') || '%') OR
-         ((search_filters->>'graduate_specialization_or_logic')::boolean = TRUE AND (search_filters->'graduate_specialization_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'graduate_specialization_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'graduate_specialization_filters') AS gsf WHERE v.graduate_specialization ILIKE '%' || gsf || '%')))
+    AND (
+      (search_filters->>'graduate_specialization_filter' IS NULL AND search_filters->'graduate_specialization_filters' IS NULL) OR
+      (COALESCE((search_filters->>'graduate_specialization_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'graduate_specialization_filter' IS NOT NULL AND
+       v.graduate_specialization ILIKE '%' || (search_filters->>'graduate_specialization_filter') || '%') OR
+      (COALESCE((search_filters->>'graduate_specialization_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'graduate_specialization_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'graduate_specialization_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'graduate_specialization_filters') AS gsf WHERE v.graduate_specialization ILIKE '%' || gsf || '%'))
+    )
     
     -- FIXED: Boolean filters with proper NULL handling
     AND (COALESCE((search_filters->>'stem_education')::boolean, FALSE) = FALSE OR v.stem_education = TRUE)
@@ -319,11 +389,16 @@ BEGIN
     AND (COALESCE((search_filters->>'career_level_increase_post_company')::boolean, FALSE) = FALSE OR v.career_level_increase_post_chick_fil_a = TRUE)
     
     -- 8. GEOGRAPHIC & LOCATION (additional to basic location filters above)
-    AND ((search_filters->>'home_location_filter') IS NULL OR 
-         ((search_filters->>'home_location_or_logic')::boolean = FALSE AND v.home_location ILIKE '%' || (search_filters->>'home_location_filter') || '%') OR
-         ((search_filters->>'home_location_or_logic')::boolean = TRUE AND (search_filters->'home_location_filters') IS NOT NULL AND 
-          jsonb_typeof(search_filters->'home_location_filters') = 'array' AND
-          EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'home_location_filters') AS hlf WHERE v.home_location ILIKE '%' || hlf || '%')))
+    AND (
+      (search_filters->>'home_location_filter' IS NULL AND search_filters->'home_location_filters' IS NULL) OR
+      (COALESCE((search_filters->>'home_location_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'home_location_filter' IS NOT NULL AND
+       v.home_location ILIKE '%' || (search_filters->>'home_location_filter') || '%') OR
+      (COALESCE((search_filters->>'home_location_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'home_location_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'home_location_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'home_location_filters') AS hlf WHERE v.home_location ILIKE '%' || hlf || '%'))
+    )
     
     -- UPDATED: FUZZY EDUCATION GEOGRAPHY MATCHING
     AND ((search_filters->'education_geography_filter') IS NULL OR 

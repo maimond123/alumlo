@@ -976,7 +976,7 @@ export default function DashboardPage() {
       if (formattedOrganizationName) {
         setIsLoadingCount(true);
         try {
-          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_vector`;
+          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_standard_search`;
           const { count, error } = await supabase
             .from(tableName)
             .select('*', { count: 'exact', head: true });
@@ -1193,9 +1193,7 @@ export default function DashboardPage() {
       
       // Phase 1: Analyzing query with unified search pipeline
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 1: Analyzing with unified search pipeline`);
-      await typewriterEffect('Analyzing your search query to determine optimal search method...', 
-        (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
-      );
+      setDisplayedText(prev => ({ ...prev, analyzing: 'Finding optimal search method.' }));
       
       // STEP 1: Try unified search pipeline
       console.log(`🔍🔍🔍 [DASHBOARD] ATTEMPTING UNIFIED SEARCH PIPELINE for: "${currentQuery}"`);
@@ -1205,6 +1203,7 @@ export default function DashboardPage() {
       let pipelineResult = null;
       let apiFilters = {};
       let queryClassification = null;
+      let filterText = '';
       
       try {
         console.log(`[DASHBOARD PIPELINE] 📡 Making fetch request to /api/search-pipeline`);
@@ -1236,15 +1235,10 @@ export default function DashboardPage() {
           searchConfig = pipelineResult.searchConfig;
           queryClassification = pipelineResult.classification;
           
-          // Update UI based on search type
+          setSearchPhase('searching');
+          
           if (pipelineResult.searchType === 'temporal') {
             console.log(`[DASHBOARD PIPELINE] 🕐 Temporal search detected - processing temporal elements`);
-            await typewriterEffect('🕐 Detected temporal query - using date-specific timeline search', 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
-            );
-            
-            // Show temporal analysis
-      setSearchPhase('searching');
             const temporalElements = searchConfig.temporalElements;
             console.log(`[DASHBOARD PIPELINE] 🕐 Temporal elements extracted:`, temporalElements);
             
@@ -1253,44 +1247,26 @@ export default function DashboardPage() {
             if (temporalElements.subsequent_functions) temporalSummary.push(`functions: ${temporalElements.subsequent_functions.join(', ')}`);
             if (temporalElements.sequence_type) temporalSummary.push(`pattern: ${temporalElements.sequence_type}`);
             
-            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal summary: ${temporalSummary.join(', ')}`);
-            await typewriterEffect(`Applied temporal filters (${temporalSummary.join(', ')})`, 
-              (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-            );
+            filterText = `Applied temporal filters (${temporalSummary.join(', ')})`;
             
           } else if (pipelineResult.searchType === 'chronological') {
             console.log(`[DASHBOARD PIPELINE] 📈 Chronological search detected - processing filters`);
-            await typewriterEffect('📈 Detected career progression query - using chronological search', 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
-            );
-            
-            // Show chronological analysis
-            setSearchPhase('searching');
             const filterCount = Object.keys(searchConfig.filters).length;
             console.log(`[DASHBOARD PIPELINE] 📈 Chronological filters applied:`, searchConfig.filters);
             
-            await typewriterEffect(`Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`, 
-              (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-            );
+            filterText = `Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`;
             
           } else if (pipelineResult.searchType === 'standard') {
             console.log(`[DASHBOARD PIPELINE] 📊 Standard search detected - processing semantic filters`);
-            await typewriterEffect('📊 Using comprehensive standard search with intelligent filtering', 
-              (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
-            );
-            
-            // Show standard search analysis
             setSearchPhase('profiling');
             console.log(`[DASHBOARD PIPELINE] 📊 Processing standard search filters`);
             
             const enhancedFilters = searchConfig.enhancedFilters;
             console.log(`[DASHBOARD PIPELINE] 📊 Enhanced filters extracted:`, enhancedFilters);
             
-            // Analyze and display filter categories applied
             const filterCategories = [];
             let totalActiveFilters = 0;
             
-            // Count and categorize active filters
             const activeFilters = Object.entries(enhancedFilters || {}).filter(([key, value]) => {
               if (typeof value === 'boolean') return value === true;
               if (Array.isArray(value)) return value.length > 0;
@@ -1301,7 +1277,6 @@ export default function DashboardPage() {
             
             totalActiveFilters = activeFilters.length;
             
-            // Categorize filters for user-friendly display
             if (enhancedFilters.company_filter || enhancedFilters.industry_filter || enhancedFilters.title_filter || enhancedFilters.location_filter || enhancedFilters.school_filter) {
               filterCategories.push('entity matching');
             }
@@ -1324,45 +1299,12 @@ export default function DashboardPage() {
             console.log(`[DASHBOARD PIPELINE] 📊 Filter analysis:`, {
               totalActiveFilters,
               filterCategories,
-              usesOrLogic: !!(enhancedFilters.company_or_logic || enhancedFilters.industry_or_logic),
-              hasArrayFilters: !!(enhancedFilters.company_filters || enhancedFilters.title_filters)
             });
             
-            // Display filter analysis to user
             if (totalActiveFilters > 0) {
-              const filterSummary = `Applied ${totalActiveFilters} intelligent filters across ${filterCategories.length} categories: ${filterCategories.join(', ')}`;
-              await typewriterEffect(filterSummary, 
-                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-              );
-              
-              // Add additional context about OR logic if used
-              if (enhancedFilters.company_or_logic || enhancedFilters.industry_or_logic || enhancedFilters.title_or_logic) {
-                await typewriterEffect('Using flexible OR logic for broader matching where appropriate', 
-                  (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-                );
-              } else {
-                await typewriterEffect('Using precise filtering for targeted results', 
-                  (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-                );
-              }
+              filterText = `Applied ${totalActiveFilters} intelligent filters across ${filterCategories.length} categories: ${filterCategories.join(', ')}`;
             } else {
-              await typewriterEffect('No specific filters detected - using broad semantic search across all profiles', 
-                (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-              );
-              await typewriterEffect('Leveraging natural language understanding for best matches', 
-                (text) => setDisplayedText(prev => ({ ...prev, filters: text }))
-              );
-            }
-            
-            // Show search method being used
-            if (searchConfig.searchMethod === 'comprehensive_sql_filtering') {
-              await typewriterEffect('Executing SQL-based comprehensive search (no embeddings required)', 
-                (text) => setDisplayedText(prev => ({ ...prev, filters: prev.filters + ' • ' + text }))
-              );
-            } else {
-              await typewriterEffect('Executing semantic search with enhanced filtering capabilities', 
-                (text) => setDisplayedText(prev => ({ ...prev, filters: prev.filters + ' • ' + text }))
-              );
+              filterText = 'Using broad semantic search across all profiles.';
             }
           }
           
@@ -1382,10 +1324,7 @@ export default function DashboardPage() {
           stack: pipelineError instanceof Error ? pipelineError.stack : 'No stack'
         });
         
-        // Fallback to basic search
-        await typewriterEffect('Pipeline failed - using basic SQL search...', 
-          (text) => setDisplayedText(prev => ({ ...prev, analyzing: text }))
-        );
+        filterText = "Could not determine filters. Using basic search.";
         
         console.log(`[DASHBOARD PIPELINE] 🔄 Creating fallback pipeline result`);
         pipelineResult = {
@@ -1400,6 +1339,8 @@ export default function DashboardPage() {
         queryClassification = pipelineResult.classification;
         console.log(`[DASHBOARD PIPELINE] 🔄 Fallback config created:`, { searchConfig, queryClassification });
       }
+
+      setDisplayedText(prev => ({ ...prev, filters: filterText }));
       
       // Phase 2: Searching database
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 2: Searching database`);
@@ -1407,21 +1348,16 @@ export default function DashboardPage() {
       setSearchPhase('searching');
       
       // Custom message for demo account
+      let searchingText = '';
       if (isDemoMode) {
-        const baseText = "Searching across our database of sample alumni profiles. ";
+        searchingText = "Searching across our database of sample alumni profiles. ";
         const calendlyLink = `<a href="https://calendly.com/david-alumlo/30min" target="_blank" rel="noopener noreferrer" class="text-emerald-600 font-semibold hover:underline">Want alumni search for your organization?</a>`;
 
-        await typewriterEffect(baseText, 
-          (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
-        );
-        
-        setDisplayedText(prev => ({ ...prev, searching: prev.searching + calendlyLink }));
+        searchingText += calendlyLink;
       } else {
-        // Regular message for other users
-        await typewriterEffect(`Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`, 
-          (text) => setDisplayedText(prev => ({ ...prev, searching: text }))
-        );
+        searchingText = `Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`;
       }
+      setDisplayedText(prev => ({ ...prev, searching: searchingText }));
       
       // Create the search request based on the pipeline result
       console.log(`[DASHBOARD SEARCH] 🔧 Building search request body`);
@@ -1513,19 +1449,9 @@ export default function DashboardPage() {
       
       // Display initial results message
       let displayMessage = `Displaying ${initialResults.length} initial results`;
-      if (searchData.searchType === 'chronological') {
-        displayMessage += ' (using advanced chronological search for career progression analysis)';
-      } else if (searchData.searchType === 'temporal') {
-        displayMessage += ' (using temporal search for date-specific timeline analysis)';
-      } else if (Object.keys(apiFilters).length > 0) {
-        displayMessage += ` (with ${Object.keys(apiFilters).length} advanced filters applied)`;
-      }
-      displayMessage += '...';
       
       console.log(`[DASHBOARD RESULTS] 📄 Initial display message: ${displayMessage}`);
-      await typewriterEffect(displayMessage, 
-        (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
-      );
+      setDisplayedText(prev => ({ ...prev, displaying: displayMessage }));
       
       // Set initial results
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting initial search results state for query: "${currentQuery}"`);
@@ -2453,33 +2379,32 @@ export default function DashboardPage() {
                 {/* Collapsible Content */}
                 <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
                   {displayedText.analyzing && (
-                    <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.analyzing}</p>
+                    <div className="mb-3">
+                      <p className="font-bold text-gray-700">Analyzing</p>
+                      <p className="text-gray-700 whitespace-pre-line">{displayedText.analyzing}</p>
+                    </div>
                   )}
-                  
+
                   {/* Show expansion messages in real-time during expansion */}
                   {isExpanding && expansionMessages && (
                     <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
                   )}
                   
                   {displayedText.searching && (
-                    <p 
-                      className="text-gray-700 mb-3"
-                      dangerouslySetInnerHTML={{ __html: displayedText.searching }}
-                    ></p>
-                  )}
-                  
-                  {displayedText.profiling && (
-                    <>
-                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Profiling:</h3>
-                      <p className="text-gray-700 mb-3">{displayedText.profiling}</p>
-                    </>
+                    <div className="mb-3">
+                      <p className="font-bold text-gray-700">Searching</p>
+                      <p 
+                        className="text-gray-700"
+                        dangerouslySetInnerHTML={{ __html: displayedText.searching }}
+                      ></p>
+                    </div>
                   )}
                   
                   {displayedText.filters && (
-                    <>
-                      <h3 className="font-semibold text-gray-800 mt-4 mb-2">Metadata Filters:</h3>
-                      <p className="text-gray-700 mb-3 whitespace-pre-line">{displayedText.filters}</p>
-                    </>
+                    <div className="mb-3">
+                      <p className="font-bold text-gray-700">Filtering</p>
+                      <p className="text-gray-700 whitespace-pre-line">{displayedText.filters}</p>
+                    </div>
                   )}
                   
                   {displayedText.displaying && (

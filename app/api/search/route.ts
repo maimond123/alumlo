@@ -345,15 +345,15 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] ⏱️  Starting standard search execution with a ${SEARCH_TIMEOUT_MS / 1000}s timeout.`);
 
         try {
-          results = await withTimeout(
-            search_engine.standardSearch(
-              query,
-              searchConfig.enhancedFilters,
-              top_k,
-              organizationName
-            ),
-            SEARCH_TIMEOUT_MS
-          );
+        results = await withTimeout(
+          search_engine.standardSearch(
+            query,
+            searchConfig.enhancedFilters,
+            top_k,
+            organizationName
+          ),
+          SEARCH_TIMEOUT_MS
+        );
           const endTime = performance.now();
           debug.log(`[API SEARCH] ✅ Standard search call finished in ${(endTime - startTime).toFixed(2)}ms.`);
         } catch (error) {
@@ -477,76 +477,76 @@ export async function POST(req: NextRequest) {
             let legacyChronologicalWeights = chronologicalWeights; // Use passed weights if available
             if (!legacyChronologicalWeights) {
               debug.log(`[API SEARCH] ⚖️ Performing redundant weight assignment`);
-              try {
-                const weightResponse = await fetch('/api/assign-weights', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ query })
-                });
-                if (weightResponse.ok) {
+          try {
+            const weightResponse = await fetch('/api/assign-weights', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            });
+            if (weightResponse.ok) {
                   legacyChronologicalWeights = await weightResponse.json();
                   debug.log(`[API DEBUG] 📈 Legacy assigned chronological weights:`, legacyChronologicalWeights);
                   debug.log(`[API SEARCH] ✅ Legacy weight assignment completed`);
-                }
-              } catch (weightError) {
+            }
+          } catch (weightError) {
                 debug.log(`[API DEBUG] 📈 Legacy weight assignment failed, using defaults:`, weightError);
                 debug.log(`[API SEARCH] ❌ Legacy weight assignment failed`);
               }
-            }
-            
+          }
+          
             // Legacy chronological filter translation
-            let translatedFilters = {};
+          let translatedFilters = {};
             debug.log(`[API SEARCH] 🔄 Performing redundant filter translation`);
-            try {
-              const translateResponse = await fetch('/api/translate-chronological', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-              });
-              if (translateResponse.ok) {
-                translatedFilters = await translateResponse.json();
+          try {
+            const translateResponse = await fetch('/api/translate-chronological', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            });
+            if (translateResponse.ok) {
+              translatedFilters = await translateResponse.json();
                 debug.log(`[API DEBUG] 📈 Legacy translated chronological filters:`, translatedFilters);
                 debug.log(`[API SEARCH] ✅ Legacy filter translation completed`);
-              }
-            } catch (translateError) {
+            }
+          } catch (translateError) {
               debug.log(`[API DEBUG] 📈 Legacy filter translation failed, using basic filters:`, translateError);
               debug.log(`[API SEARCH] ❌ Legacy filter translation failed`);
-              translatedFilters = { gap_tolerance: 6 };
-            }
-            
+            translatedFilters = { gap_tolerance: 6 };
+          }
+          
             // Combine translated filters with existing filters
-            const chronologicalFilters = {
-              ...translatedFilters,
-              ...effectiveFilters, // Include any existing filters from dashboard or pipeline
-            };
-            
-            // Add weights to filters
+          const chronologicalFilters = {
+            ...translatedFilters,
+            ...effectiveFilters, // Include any existing filters from dashboard or pipeline
+          };
+          
+          // Add weights to filters
             if (legacyChronologicalWeights) {
               chronologicalFilters.chronological_weights = legacyChronologicalWeights;
-            }
-            
+          }
+          
             debug.log(`[API DEBUG] 📈 Legacy final chronological filters:`, chronologicalFilters);
             debug.log(`[API SEARCH] 📊 Final legacy chronological configuration prepared`);
-            
-            results = await search_engine.searchChronological(
-              query,
-              chronologicalFilters,
-              50,
-              organizationName
-            );
-            
-            if (results.length > 0) {
+          
+          results = await search_engine.searchChronological(
+            query,
+            chronologicalFilters,
+            50,
+            organizationName
+          );
+          
+          if (results.length > 0) {
               debug.log(`[API DEBUG] 📈 Legacy chronological search returned ${results.length} results`);
               debug.log(`[API SEARCH] ✅ Legacy chronological search successful: ${results.length} results`);
-              searchType = 'chronological';
-              searchMetadata = { 
+            searchType = 'chronological';
+            searchMetadata = { 
                 search_method: 'legacy_chronological',
-                translated_filters: translatedFilters,
-                chronological_filters: chronologicalFilters,
+              translated_filters: translatedFilters,
+              chronological_filters: chronologicalFilters,
                 chronological_weights: legacyChronologicalWeights,
                 configuration_source: 'legacy'
-              };
-            } else {
+            };
+          } else {
               debug.log(`[API DEBUG] 📈 Legacy chronological search returned no results, falling back to standard search`);
               debug.log(`[API SEARCH] ⚠️ Legacy chronological search returned no results`);
               results = null; // Will fall through to standard search
