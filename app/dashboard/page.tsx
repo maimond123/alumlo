@@ -2338,91 +2338,85 @@ export default function DashboardPage() {
           {/* Analysis and Search Results */}
           <div className="w-full max-w-6xl flex flex-col gap-4 mt-8">
             {/* Analysis Section - Only show if there's content to display */}
-            {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
-              isAnalysisCollapsed ? (
+            {(displayedText.analyzing || displayedText.searching || displayedText.filters) && (
+              <div className="w-full">
                 <button
-                  onClick={() => setIsAnalysisCollapsed(false)}
-                  className="flex items-center space-x-2 font-semibold text-gray-800 self-start"
+                  onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
+                  className="flex items-center justify-between space-x-2 self-start px-3 py-2 bg-gray-50 rounded-md hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 font-semibold text-gray-700 border border-gray-200"
                 >
-                  <MessageSquare className="h-5 w-5 text-yellow-500" />
                   <span>Show Search Reasoning</span>
+                  {isAnalysisCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
                 </button>
-              ) : (
-              <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
-                {/* Collapse/Expand Button */}
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
-                  <button 
-                    onClick={() => setIsAnalysisCollapsed(true)}
-                    className="flex items-center space-x-1 font-semibold text-gray-700 hover:text-black"
-                  >
-                    <span>Collapse</span>
-                    <ChevronUp className="h-5 w-5" />
-                  </button>
-                </div>
                 
-                {/* Collapsible Content */}
-                <div>
-                  {displayedText.analyzing && (
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <BrainCog className="h-5 w-5 text-yellow-500" />
-                        <span>Thinking</span>
-                      </div>
-                      <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.analyzing}</p>
-                    </div>
-                  )}
+                <AnimatePresence>
+                  {!isAnalysisCollapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full mt-2 p-6 bg-gray-50 rounded-lg shadow-sm overflow-hidden"
+                    >
+                      <div>
+                        {displayedText.analyzing && (
+                          <div className="mb-4">
+                            <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                              <BrainCog className="h-5 w-5 text-yellow-500" />
+                              <span>Thinking</span>
+                            </div>
+                            <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.analyzing}</p>
+                          </div>
+                        )}
 
-                  {/* Show expansion messages in real-time during expansion */}
-                  {isExpanding && expansionMessages && (
-                    <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
-                  )}
-                  
-                  {displayedText.filters && (
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <Filter className="h-5 w-5 text-yellow-500" />
-                        <span>Filtering</span>
-                      </div>
-                      <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.filters}</p>
-                    </div>
-                  )}
+                        {/* Show expansion messages in real-time during expansion */}
+                        {isExpanding && expansionMessages && (
+                          <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
+                        )}
+                        
+                        {displayedText.filters && (
+                          <div className="mb-4">
+                            <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                              <Filter className="h-5 w-5 text-yellow-500" />
+                              <span>Filtering</span>
+                            </div>
+                            <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.filters}</p>
+                          </div>
+                        )}
 
-                  {displayedText.searching && (
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <Database className="h-5 w-5 text-yellow-500" />
-                        <span>Searching</span>
+                        {displayedText.searching && (
+                          <div className="mb-4">
+                            <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                              <Database className="h-5 w-5 text-yellow-500" />
+                              <span>Searching</span>
+                            </div>
+                            <p 
+                              className="text-gray-700 pl-7 pt-1"
+                              dangerouslySetInnerHTML={{ __html: displayedText.searching }}
+                            ></p>
+                          </div>
+                        )}
+                        
+                        {displayedText.displaying && (
+                          <div className="mb-4">
+                            <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                              <LayoutGrid className="h-5 w-5 text-yellow-500" />
+                              <span>Displaying</span>
+                            </div>
+                            <p className="text-gray-700 pl-7 pt-1">{displayedText.displaying}</p>
+                          </div>
+                        )}
                       </div>
-                      <p 
-                        className="text-gray-700 pl-7 pt-1"
-                        dangerouslySetInnerHTML={{ __html: displayedText.searching }}
-                      ></p>
-                    </div>
+                    </motion.div>
                   )}
-                  
-                  {displayedText.displaying && (
-                    <div className="mb-4">
-                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <LayoutGrid className="h-5 w-5 text-yellow-500" />
-                        <span>Displaying</span>
-                      </div>
-                      <p className="text-gray-700 pl-7 pt-1">{displayedText.displaying}</p>
-                    </div>
-                  )}
-                </div>
+                </AnimatePresence>
               </div>
-              )
             )}
 
             {/* Search Results Section - Show below the analysis */}
             {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
               <div className="w-full pb-8">
                 {/* Results Header with Expansion Button */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-black">
-                  Found {searchResults.length} alumni matching your search
-                </h2>
+                <div className="flex items-center justify-end mb-4">
                   
                   {/* Expansion Button - Only show if expansion is available and not already expanded */}
                   {canExpand && !hasExpanded && !isExpanding && (
@@ -2527,7 +2521,7 @@ export default function DashboardPage() {
                       case 'already_saved':
                         saveButtonContent = (
                           <>
-                            <CheckCircle className="h-4 w-4 text-white" />
+                            <CheckCircle className="h-4 w-4 text-emerald-700" />
                             <span>Saved</span>
                           </>
                         );
@@ -2589,7 +2583,7 @@ export default function DashboardPage() {
                             className={`px-4 py-2 text-sm font-medium rounded-lg border flex items-center space-x-2 transition-all duration-200
                               ${
                                 isButtonDisabled && (currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved')
-                                  ? 'bg-emerald-500 text-white border-emerald-500 cursor-not-allowed'
+                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200 cursor-not-allowed'
                                   : isButtonDisabled && currentSaveStatus === 'saving'
                                   ? 'bg-gray-200 text-gray-500 border-gray-200 cursor-wait'
                                   : isButtonDisabled || currentSaveStatus === 'demo_no_save'
