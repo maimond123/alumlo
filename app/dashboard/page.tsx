@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid } from "lucide-react"
+import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -1193,7 +1193,7 @@ export default function DashboardPage() {
       
       // Phase 1: Analyzing query with unified search pipeline
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 1: Analyzing with unified search pipeline`);
-      const analyzingText = `Analyzing search query: "${currentQuery}"\nFinding optimal search method`;
+      const analyzingText = `Analyzing search query: "${currentQuery}"`;
       await typewriterEffect(analyzingText, (text) => setDisplayedText(prev => ({ ...prev, analyzing: text })));
       
       // STEP 1: Try unified search pipeline
@@ -1342,13 +1342,10 @@ export default function DashboardPage() {
       } else {
         searchingText = `Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`;
       }
-      await typewriterEffect(searchingText, (text) => setDisplayedText(prev => ({ ...prev, searching: text })));
       
-      // Create the search request based on the pipeline result
-      console.log(`[DASHBOARD SEARCH] 🔧 Building search request body`);
-      console.log(`[DASHBOARD SEARCH] 📊 Pipeline result type: ${pipelineResult?.searchType || 'unknown'}`);
+      // The search happens after filtering, so the searching message should also appear after.
+      // The searchPromise will be awaited later, so this appears in order.
       
-      // BUGFIX: Always include searchConfig for all search types (including standard)
       const searchRequestBody = {
         query: currentQuery, 
         organizationName: originalOrganizationName,
@@ -1360,15 +1357,6 @@ export default function DashboardPage() {
         // Legacy filters for backward compatibility (will be ignored when searchConfig is present)
         filters: apiFilters
       };
-      
-      console.log(`🚀🚀🚀 [DASHBOARD] SEARCH REQUEST BODY:`, {
-        searchType: pipelineResult?.searchType || 'standard',
-        body: searchRequestBody
-      });
-      console.log(`[DASHBOARD SEARCH] 📝 Final request body:`, searchRequestBody);
-      
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Creating search promise for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD SEARCH] 📡 Making search API request`);
       
       const searchPromise = fetch('/api/search', {
         method: 'POST',
@@ -1418,6 +1406,8 @@ export default function DashboardPage() {
         console.error(`[DASHBOARD SEARCH] ❌ Search API error:`, searchError);
         throw searchError;
       });
+
+      await typewriterEffect(searchingText, (text) => setDisplayedText(prev => ({ ...prev, searching: text })));
       
       // Get initial search results
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Waiting for search promise to resolve for query: "${currentQuery}"`);
@@ -2349,24 +2339,34 @@ export default function DashboardPage() {
           <div className="w-full max-w-6xl flex flex-col gap-4 mt-8">
             {/* Analysis Section - Only show if there's content to display */}
             {(displayedText.analyzing || displayedText.searching || displayedText.profiling || displayedText.filters) && (
+              isAnalysisCollapsed ? (
+                <button
+                  onClick={() => setIsAnalysisCollapsed(false)}
+                  className="flex items-center space-x-2 font-semibold text-gray-800 self-start"
+                >
+                  <MessageSquare className="h-5 w-5 text-yellow-500" />
+                  <span>Show Search Reasoning</span>
+                </button>
+              ) : (
               <div className="w-full p-6 bg-gray-50 rounded-lg shadow-sm">
                 {/* Collapse/Expand Button */}
                 <div className="flex justify-between items-center mb-2">
                   <h2 className="text-xl font-semibold text-black">Search Analysis</h2>
                   <button 
-                    onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
-                    className="text-black hover:text-emerald-600 transition-colors"
+                    onClick={() => setIsAnalysisCollapsed(true)}
+                    className="flex items-center space-x-1 font-semibold text-gray-700 hover:text-black"
                   >
-                    {isAnalysisCollapsed ? 'Expand ▼' : 'Collapse ▲'}
+                    <span>Collapse</span>
+                    <ChevronUp className="h-5 w-5" />
                   </button>
                 </div>
                 
                 {/* Collapsible Content */}
-                <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
+                <div>
                   {displayedText.analyzing && (
                     <div className="mb-4">
                       <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <BrainCog className="h-5 w-5 text-purple-600" />
+                        <BrainCog className="h-5 w-5 text-yellow-500" />
                         <span>Thinking</span>
                       </div>
                       <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.analyzing}</p>
@@ -2381,7 +2381,7 @@ export default function DashboardPage() {
                   {displayedText.filters && (
                     <div className="mb-4">
                       <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <Filter className="h-5 w-5 text-blue-600" />
+                        <Filter className="h-5 w-5 text-yellow-500" />
                         <span>Filtering</span>
                       </div>
                       <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.filters}</p>
@@ -2391,7 +2391,7 @@ export default function DashboardPage() {
                   {displayedText.searching && (
                     <div className="mb-4">
                       <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <Database className="h-5 w-5 text-green-600" />
+                        <Database className="h-5 w-5 text-yellow-500" />
                         <span>Searching</span>
                       </div>
                       <p 
@@ -2404,7 +2404,7 @@ export default function DashboardPage() {
                   {displayedText.displaying && (
                     <div className="mb-4">
                       <div className="flex items-center space-x-2 font-semibold text-gray-800">
-                        <LayoutGrid className="h-5 w-5 text-emerald-600" />
+                        <LayoutGrid className="h-5 w-5 text-yellow-500" />
                         <span>Displaying</span>
                       </div>
                       <p className="text-gray-700 pl-7 pt-1">{displayedText.displaying}</p>
@@ -2412,6 +2412,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+              )
             )}
 
             {/* Search Results Section - Show below the analysis */}
