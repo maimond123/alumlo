@@ -976,7 +976,7 @@ export default function DashboardPage() {
       if (formattedOrganizationName) {
         setIsLoadingCount(true);
         try {
-          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_standard_search`;
+          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_standard_search`;
           const { count, error } = await supabase
             .from(tableName)
             .select('*', { count: 'exact', head: true });
@@ -1193,7 +1193,8 @@ export default function DashboardPage() {
       
       // Phase 1: Analyzing query with unified search pipeline
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 1: Analyzing with unified search pipeline`);
-      setDisplayedText(prev => ({ ...prev, analyzing: 'Finding optimal search method.' }));
+      const analyzingText = `Analyzing search query: "${currentQuery}"\nFinding optimal search method`;
+      await typewriterEffect(analyzingText, (text) => setDisplayedText(prev => ({ ...prev, analyzing: text })));
       
       // STEP 1: Try unified search pipeline
       console.log(`🔍🔍🔍 [DASHBOARD] ATTEMPTING UNIFIED SEARCH PIPELINE for: "${currentQuery}"`);
@@ -1340,7 +1341,7 @@ export default function DashboardPage() {
         console.log(`[DASHBOARD PIPELINE] 🔄 Fallback config created:`, { searchConfig, queryClassification });
       }
 
-      setDisplayedText(prev => ({ ...prev, filters: filterText }));
+      await typewriterEffect(filterText, (text) => setDisplayedText(prev => ({ ...prev, filters: text })));
       
       // Phase 2: Searching database
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 2: Searching database`);
@@ -1357,7 +1358,7 @@ export default function DashboardPage() {
       } else {
         searchingText = `Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`;
       }
-      setDisplayedText(prev => ({ ...prev, searching: searchingText }));
+      await typewriterEffect(searchingText, (text) => setDisplayedText(prev => ({ ...prev, searching: text })));
       
       // Create the search request based on the pipeline result
       console.log(`[DASHBOARD SEARCH] 🔧 Building search request body`);
@@ -1451,7 +1452,7 @@ export default function DashboardPage() {
       let displayMessage = `Displaying ${initialResults.length} initial results`;
       
       console.log(`[DASHBOARD RESULTS] 📄 Initial display message: ${displayMessage}`);
-      setDisplayedText(prev => ({ ...prev, displaying: displayMessage }));
+      await typewriterEffect(displayMessage, (text) => setDisplayedText(prev => ({ ...prev, displaying: text })));
       
       // Set initial results
       console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting initial search results state for query: "${currentQuery}"`);
@@ -2380,7 +2381,7 @@ export default function DashboardPage() {
                 <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
                   {displayedText.analyzing && (
                     <div className="mb-3">
-                      <p className="font-bold text-gray-700">Analyzing</p>
+                      <p className="font-bold text-gray-700">Thinking</p>
                       <p className="text-gray-700 whitespace-pre-line">{displayedText.analyzing}</p>
                     </div>
                   )}
