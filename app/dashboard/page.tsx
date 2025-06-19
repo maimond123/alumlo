@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown, RefreshCw } from "lucide-react"
+import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown, RefreshCw, Download } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -2433,42 +2433,53 @@ export default function DashboardPage() {
             {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
               <div className="w-full pb-8">
                 {/* Results Header with Expansion Button */}
-                <div className="flex items-center justify-end mb-4">
-                  
-                  {/* Expansion Button - Only show if expansion is available and not already expanded */}
-                  {canExpand && !hasExpanded && !isExpanding && (
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-black">
+                    Found {searchResults.length} alumni matching your search
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    {/* Expansion Button - Only show if expansion is available and not already expanded */}
+                    {canExpand && !hasExpanded && !isExpanding && (
+                      <button
+                        onClick={handleExpandSearch}
+                        className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
+                        title="Find additional relevant profiles using alternative search strategies"
+                      >
+                        <span>Expand Searches</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </button>
+                    )}
+                    
+                    {/* Show expanding state */}
+                    {isExpanding && (
+                      <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium flex items-center space-x-2">
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Expanding Search...</span>
+                      </div>
+                    )}
+                    
+                    {/* Show expanded state */}
+                    {hasExpanded && (
+                      <div className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-medium flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Search Expanded</span>
+                      </div>
+                    )}
                     <button
-                      onClick={handleExpandSearch}
-                      className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
-                      title="Find additional relevant profiles using alternative search strategies"
+                      onClick={() => { /* No functionality for now */ }}
+                      className="px-4 py-2 bg-yellow-100 text-yellow-800 border border-yellow-200 rounded-lg hover:bg-yellow-200 transition-all duration-200 font-medium flex items-center space-x-2"
                     >
-                      <span>Expand Searches</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                      <Download className="h-5 w-5" />
+                      <span>Export CSV</span>
                     </button>
-                  )}
-                  
-                  {/* Show expanding state */}
-                  {isExpanding && (
-                    <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium flex items-center space-x-2">
-                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Expanding Search...</span>
-                    </div>
-                  )}
-                  
-                  {/* Show expanded state */}
-                  {hasExpanded && (
-                    <div className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg font-medium flex items-center space-x-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Search Expanded</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
                 
                 {/* Add instruction message for clickability - only in demo mode */}
