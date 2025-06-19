@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown } from "lucide-react"
+import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown, RefreshCw } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -2141,6 +2141,32 @@ export default function DashboardPage() {
     }
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchPhase('idle');
+    setError(null);
+    setExpandedQueries([]);
+    setExtractedFilters({});
+    setDisplayedText({
+      analyzing: '',
+      searching: '',
+      profiling: '',
+      filters: '',
+      displaying: ''
+    });
+    setCanExpand(false);
+    setIsExpanding(false);
+    setHasExpanded(false);
+    setPipelineExpansionData(null);
+    setInitialSearchResults([]);
+    setExpansionMessages('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.rows = 1;
+    }
+  };
+
   const [showCalendly, setShowCalendly] = useState(false)
 
   useEffect(() => {
@@ -2210,20 +2236,11 @@ export default function DashboardPage() {
                 {/* Refresh button */}
                 <button
                   type="button" 
-                  onClick={() => {
-                    setSearchQuery('')
-                    setSearchResults([])
-                    setSearchPhase('idle')
-                    setError(null)
-                    setExpandedQueries([])
-                    setExtractedFilters({})
-                  }}
+                  onClick={handleClearSearch}
                   className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
-                  aria-label="Clear"
+                  aria-label="Reset search"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <RefreshCw className="h-5 w-5" />
                 </button>
                 
                 {/* Search/Send button */}
