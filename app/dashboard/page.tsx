@@ -2399,20 +2399,22 @@ export default function DashboardPage() {
                         <span>Search Expanded</span>
                       </div>
                     )}
-                    <button
-                      onClick={() => { /* No functionality for now */ }}
-                      className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Export CSV</span>
-                    </button>
+                    {!isSearching && searchResults.length > 0 && (
+                      <button
+                        onClick={() => { /* No functionality for now */ }}
+                        className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Export CSV</span>
+                      </button>
+                    )}
                   </div>
               </div>
             )}
           </div>
 
           {/* Analysis and Search Results */}
-          <div className="w-full max-w-6xl flex flex-col gap-4 mt-2">
+          <div className="w-full max-w-6xl flex flex-col gap-4 mt-4">
             {/* Analysis Section - Only show if there's content to display */}
             <AnimatePresence>
               {!isAnalysisCollapsed && (displayedText.analyzing || displayedText.searching || displayedText.filters) && (
