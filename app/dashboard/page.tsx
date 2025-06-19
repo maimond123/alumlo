@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon } from "lucide-react"
+import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { supabase } from "../data/supabase"
@@ -1265,47 +1265,31 @@ export default function DashboardPage() {
             const enhancedFilters = searchConfig.enhancedFilters;
             console.log(`[DASHBOARD PIPELINE] 📊 Enhanced filters extracted:`, enhancedFilters);
             
-            const filterCategories = [];
-            let totalActiveFilters = 0;
-            
-            const activeFilters = Object.entries(enhancedFilters || {}).filter(([key, value]) => {
-              if (typeof value === 'boolean') return value === true;
-              if (Array.isArray(value)) return value.length > 0;
-              if (typeof value === 'number') return value !== null && value !== undefined;
-              if (typeof value === 'string') return value !== null && value !== '';
-              return value !== null && value !== undefined;
-            });
-            
-            totalActiveFilters = activeFilters.length;
-            
-            if (enhancedFilters.company_filter || enhancedFilters.industry_filter || enhancedFilters.title_filter || enhancedFilters.location_filter || enhancedFilters.school_filter) {
-              filterCategories.push('entity matching');
-            }
-            if (enhancedFilters.current_job_level_filter || enhancedFilters.is_current_leader || enhancedFilters.management_experience) {
-              filterCategories.push('career progression');
-            }
-            if (enhancedFilters.technical_background || enhancedFilters.sales_experience || enhancedFilters.functional_expertise_filter) {
-              filterCategories.push('skills & experience');
-            }
-            if (enhancedFilters.highest_degree_level_filter || enhancedFilters.stem_education || enhancedFilters.elite_education) {
-              filterCategories.push('education');
-            }
-            if (enhancedFilters.min_current_salary || enhancedFilters.salary_growth_indicator) {
-              filterCategories.push('salary analysis');
-            }
-            if (enhancedFilters.has_startup_experience || enhancedFilters.has_enterprise_experience) {
-              filterCategories.push('company intelligence');
-            }
-            
-            console.log(`[DASHBOARD PIPELINE] 📊 Filter analysis:`, {
-              totalActiveFilters,
-              filterCategories,
-            });
-            
-            if (totalActiveFilters > 0) {
-              filterText = `Applied ${totalActiveFilters} intelligent filters across ${filterCategories.length} categories: ${filterCategories.join(', ')}`;
+            const filterDescriptions = [];
+
+            if (enhancedFilters.company_filter) filterDescriptions.push(`• Companies matching: "${enhancedFilters.company_filter}"`);
+            if (enhancedFilters.industry_filter) filterDescriptions.push(`• Industries matching: "${enhancedFilters.industry_filter}"`);
+            if (enhancedFilters.title_filter) filterDescriptions.push(`• Roles matching: "${enhancedFilters.title_filter}"`);
+            if (enhancedFilters.location_filter) filterDescriptions.push(`• Locations matching: "${enhancedFilters.location_filter}"`);
+            if (enhancedFilters.school_filter) filterDescriptions.push(`• Schools matching: "${enhancedFilters.school_filter}"`);
+            if (enhancedFilters.current_job_level_filter) filterDescriptions.push(`• Job level: ${enhancedFilters.current_job_level_filter}`);
+            if (enhancedFilters.is_current_leader) filterDescriptions.push(`• Identifying current leaders`);
+            if (enhancedFilters.management_experience) filterDescriptions.push(`• Has management experience`);
+            if (enhancedFilters.technical_background) filterDescriptions.push(`• Has a technical background`);
+            if (enhancedFilters.sales_experience) filterDescriptions.push(`• Has sales experience`);
+            if (enhancedFilters.functional_expertise_filter) filterDescriptions.push(`• Expertise in: ${enhancedFilters.functional_expertise_filter}`);
+            if (enhancedFilters.highest_degree_level_filter) filterDescriptions.push(`• Degree level: ${enhancedFilters.highest_degree_level_filter}`);
+            if (enhancedFilters.stem_education) filterDescriptions.push(`• Has a STEM education`);
+            if (enhancedFilters.elite_education) filterDescriptions.push(`• Attended a top-tier school`);
+            if (enhancedFilters.min_current_salary) filterDescriptions.push(`• Minimum salary of $${enhancedFilters.min_current_salary.toLocaleString()}`);
+            if (enhancedFilters.salary_growth_indicator) filterDescriptions.push(`• Shows high salary growth`);
+            if (enhancedFilters.has_startup_experience) filterDescriptions.push(`• Has startup experience`);
+            if (enhancedFilters.has_enterprise_experience) filterDescriptions.push(`• Has enterprise experience`);
+
+            if (filterDescriptions.length > 0) {
+                filterText = filterDescriptions.join('\n');
             } else {
-              filterText = 'Using broad semantic search across all profiles.';
+                filterText = 'Using broad semantic search across all profiles.';
             }
           }
           
@@ -2380,9 +2364,12 @@ export default function DashboardPage() {
                 {/* Collapsible Content */}
                 <div className={`overflow-hidden transition-all duration-300 ${isAnalysisCollapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
                   {displayedText.analyzing && (
-                    <div className="mb-3">
-                      <p className="font-bold text-gray-700">Thinking</p>
-                      <p className="text-gray-700 whitespace-pre-line">{displayedText.analyzing}</p>
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                        <BrainCog className="h-5 w-5 text-purple-600" />
+                        <span>Thinking</span>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.analyzing}</p>
                     </div>
                   )}
 
@@ -2391,25 +2378,37 @@ export default function DashboardPage() {
                     <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
                   )}
                   
+                  {displayedText.filters && (
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                        <Filter className="h-5 w-5 text-blue-600" />
+                        <span>Filtering</span>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.filters}</p>
+                    </div>
+                  )}
+
                   {displayedText.searching && (
-                    <div className="mb-3">
-                      <p className="font-bold text-gray-700">Searching</p>
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                        <Database className="h-5 w-5 text-green-600" />
+                        <span>Searching</span>
+                      </div>
                       <p 
-                        className="text-gray-700"
+                        className="text-gray-700 pl-7 pt-1"
                         dangerouslySetInnerHTML={{ __html: displayedText.searching }}
                       ></p>
                     </div>
                   )}
                   
-                  {displayedText.filters && (
-                    <div className="mb-3">
-                      <p className="font-bold text-gray-700">Filtering</p>
-                      <p className="text-gray-700 whitespace-pre-line">{displayedText.filters}</p>
-                    </div>
-                  )}
-                  
                   {displayedText.displaying && (
-                    <p className="text-gray-700 mt-4">{displayedText.displaying}</p>
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                        <LayoutGrid className="h-5 w-5 text-emerald-600" />
+                        <span>Displaying</span>
+                      </div>
+                      <p className="text-gray-700 pl-7 pt-1">{displayedText.displaying}</p>
+                    </div>
                   )}
                 </div>
               </div>
