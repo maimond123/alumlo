@@ -1567,6 +1567,7 @@ export default function DashboardPage() {
   // Fix the handleTagClick function
   const handleTagClick = async (query: string) => {
     console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
+    setSearchQuery(query);
     handleSearch(new Event('submit') as any, query);
   };
   
@@ -2484,16 +2485,6 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-semibold text-black mb-4">
                   Found {searchResults.length} alumni matching your search
                 </h2>
-                
-                {/* Add instruction message for clickability - only in demo mode */}
-                {isDemoMode && (
-                  <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Click on any result to view the person's LinkedIn profile</span>
-                  </div>
-                )}
                 
                 <div className="grid gap-6">
                   {searchResults.map((result, index) => {
