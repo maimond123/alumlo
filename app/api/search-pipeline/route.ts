@@ -1334,66 +1334,6 @@ async function generateSearchExpansions(
   return variants.map(variant => variant.filters);
 }
 
-// TEST FUNCTION: Demonstrate search expansion (can be removed later)
-async function testSearchExpansion() {
-  console.log('🧪 [TEST] Testing complete search expansion workflow...');
-  
-  // Test Case 1: Specific company + school query
-  const query1 = "Find Georgetown MBA graduates working at Google";
-  const filters1: ChronologicalFilters = {
-    school_filter: "Georgetown",
-    company_filter: "Google", 
-    degree_level_progression: ["Bachelor's", "Master's"]
-  };
-  
-  console.log('🧪 [TEST 1] Query:', query1);
-  console.log('🧪 [TEST 1] Initial filters:', filters1);
-  
-  const variants1 = await generateSearchExpansionVariants(query1, filters1);
-  console.log('🧪 [TEST 1] Generated variants:', variants1.length);
-  variants1.forEach((variant, index) => {
-    console.log(`🧪 [TEST 1.${index + 1}] Natural Language Query: "${variant.natural_language_query}"`);
-    console.log(`🧪 [TEST 1.${index + 1}] Filters:`, variant.filters);
-  });
-  
-  // Test Case 2: Experience-based query
-  const query2 = "People with 10+ years consulting experience who became executives";
-  const filters2: ChronologicalFilters = {
-    industry_filter: "consulting",
-    min_years_in_industry: 10,
-    career_progression_pattern: "individual_contributor_to_management"
-  };
-  
-  console.log('🧪 [TEST 2] Query:', query2);
-  console.log('🧪 [TEST 2] Initial filters:', filters2);
-  
-  const variants2 = await generateSearchExpansionVariants(query2, filters2);
-  console.log('🧪 [TEST 2] Generated variants:', variants2.length);
-  variants2.forEach((variant, index) => {
-    console.log(`🧪 [TEST 2.${index + 1}] Natural Language Query: "${variant.natural_language_query}"`);
-    console.log(`🧪 [TEST 2.${index + 1}] Filters:`, variant.filters);
-  });
-  
-  // Test Case 3: Complete workflow simulation
-  console.log('🧪 [TEST 3] Testing complete workflow with processChronologicalSearchWithExpansion');
-  const { primaryConfig, expansionResults } = await processChronologicalSearchWithExpansion(
-    query1, 
-    { type: 'chronological' }, 
-    'chick_fil_a'
-  );
-  
-  console.log('🧪 [TEST 3] Primary config:', primaryConfig);
-  console.log('🧪 [TEST 3] Expansion results:', {
-    variantCount: expansionResults.variants.length,
-    configCount: expansionResults.additionalSearchConfigs.length,
-    queries: expansionResults.variants.map(v => v.natural_language_query)
-  });
-  
-  console.log('🧪 [TEST] Complete search expansion workflow testing complete!');
-}
-
-// Uncomment to test the expansion functionality:
-// testSearchExpansion().catch(console.error); 
 
 async function translateStandardSearchQuery(
   query: string

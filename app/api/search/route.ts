@@ -172,7 +172,6 @@ export async function POST(req: NextRequest) {
       usingPipelineFilters: !!searchConfig?.enhancedFilters
     });
     
-    debug.log(`[API DEBUG] Using gap-based filtering instead of fixed top_k=${top_k}`);
 
     // Try each step separately to identify where the error occurs
     debug.log('[API] Creating search engine instance');

@@ -10,93 +10,24 @@ CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
   organization_name text DEFAULT 'chick_fil_a'
 )
 RETURNS TABLE (
-  -- RICH PROFILE DATA (matching standard search)
-  id bigint,
   profile_id bigint,
   name text,
-  profile_url text,
-  picture_url text,
-  headline text,
-  home_location text,
-  post_company_current_company text,
-  post_company_current_title text,
-  post_company_current_industry text,
-  post_company_current_location text,
-  current_company text,
-  current_title text,
-  current_job_location text,
-  current_job_level text,
-  current_job_function text,
-  career_stage text,
-  career_trajectory text,
-  is_current_leader boolean,
-  management_experience boolean,
-  revenue_responsibility boolean,
-  current_company_size_category text,
-  has_startup_experience boolean,
-  has_enterprise_experience boolean,
-  technical_background boolean,
-  sales_experience boolean,
-  consulting_experience boolean,
-  restaurant_operations_experience boolean,
-  is_remote_worker boolean,
-  highest_degree_level text,
-  school_ranking_tier text,
-  major_category text,
-  undergraduate_major text,
-  graduate_specialization text,
-  stem_education boolean,
-  business_education boolean,
-  elite_education boolean,
-  continued_education boolean,
-  executive_education boolean,
-  technical_certifications boolean,
-  mentor_potential boolean,
-  likely_job_seeking boolean,
-  total_positions_count integer,
-  average_tenure_months decimal,
-  current_estimated_salary decimal,
-  highest_career_salary decimal,
-  pre_chick_fil_a_salary decimal,
-  first_post_chick_fil_a_salary decimal,
-  chick_fil_a_provided_salary_lift boolean,
-  achieved_six_figure_post_chick_fil_a boolean,
-  doubled_salary_post_chick_fil_a boolean,
-  moved_to_leadership_post_chick_fil_a boolean,
-  career_level_increase_post_chick_fil_a boolean,
-  undergraduate_school text[],
-  graduate_school text[],
-  high_school text[],
-  pre_company_education text[],
-  during_company_education text[],
-  post_company_education text[],
-  -- PRE-COMPANY CAREER TRACKING (before Chick-fil-A)
-  pre_company_companies text[],
-  pre_company_titles text[],
-  pre_company_industries text[],
-  pre_company_locations text[],
-  -- POST-COMPANY CAREER TRACKING (after Chick-fil-A)
-  post_company_companies text[],
-  post_company_titles text[],
-  post_company_industries text[],
-  post_company_locations text[],
-  functional_expertise text[],
-  industry_expertise text[],
-  industry_transitions text[],
-  education_geography text[],
-  -- Additional fields that exist in the table
-  chick_fil_a_exit_year integer,
-  had_multiple_company_stints boolean,
-  years_since_chick_fil_a integer,
-  
-  -- CHRONOLOGICAL-SPECIFIC DATA (preserved from original function)
   career_timeline jsonb,
   education_timeline jsonb,
   comprehensive_analysis jsonb,
   
+  -- Current state for quick reference (from vector table)
+  current_company text,
+  current_title text,
+  current_industry text,
+  current_location text,
+  
   -- Career progression metrics (calculated from event tables)
   total_years_experience numeric,
   years_in_target_industry numeric,
+  
+  -- Education progression metrics (calculated from event tables)
+  highest_degree_level text,
   
   -- Cross-domain analysis
   timeline_pattern text,
@@ -107,7 +38,7 @@ DECLARE
   -- Dynamic table name based on organization
   career_events_table text := organization_name || '_alumni_career_events';
   education_events_table text := organization_name || '_alumni_education_events';
-  standard_search_table text := organization_name || '_alumni_standard_search';
+  vector_table text := organization_name || '_alumni_vector';
 BEGIN
   RETURN QUERY
   EXECUTE format('
@@ -206,7 +137,7 @@ BEGIN
         WHEN MAX(ee.degree_level) ILIKE ''%%Bachelor%%'' THEN ''Bachelor''''s''
         WHEN MAX(ee.degree_level) ILIKE ''%%Associate%%'' THEN ''Associate''
         ELSE ''High School''
-      END as highest_degree_level_calculated,
+      END as highest_degree_level,
       
       -- Latest and earliest education dates for timeline analysis
       MAX(ee.end_year * 12 + ee.end_month) as latest_education_end_month,
@@ -226,7 +157,7 @@ BEGIN
       ea.education_timeline,
       ca.total_years_experience,
       ca.years_in_target_industry,
-      COALESCE(ea.highest_degree_level_calculated, '''') as highest_degree_level_calculated,
+      ea.highest_degree_level,
       ca.has_geographic_mobility,
       
       -- Timeline pattern analysis
@@ -308,86 +239,8 @@ BEGIN
   )
   
   SELECT 
-    -- RICH PROFILE DATA (from standard search table)
-    ss.id,
     cda.profile_id,
-    COALESCE(ss.name, ''Unknown'') as name,
-    COALESCE(ss.profile_url, '''') as profile_url,
-    COALESCE(ss.picture_url, '''') as picture_url,
-    COALESCE(ss.headline, '''') as headline,
-    COALESCE(ss.home_location, '''') as home_location,
-    COALESCE(ss.post_company_current_company, '''') as post_company_current_company,
-    COALESCE(ss.post_company_current_title, '''') as post_company_current_title,
-    COALESCE(ss.post_company_current_industry, '''') as post_company_current_industry,
-    COALESCE(ss.post_company_current_location, '''') as post_company_current_location,
-    COALESCE(ss.current_company, '''') as current_company,
-    COALESCE(ss.current_title, '''') as current_title,
-    COALESCE(ss.current_job_location, '''') as current_job_location,
-    COALESCE(ss.current_job_level, '''') as current_job_level,
-    COALESCE(ss.current_job_function, '''') as current_job_function,
-    COALESCE(ss.career_stage, '''') as career_stage,
-    COALESCE(ss.career_trajectory, '''') as career_trajectory,
-    COALESCE(ss.is_current_leader, FALSE) as is_current_leader,
-    COALESCE(ss.management_experience, FALSE) as management_experience,
-    COALESCE(ss.revenue_responsibility, FALSE) as revenue_responsibility,
-    COALESCE(ss.current_company_size_category, '''') as current_company_size_category,
-    COALESCE(ss.has_startup_experience, FALSE) as has_startup_experience,
-    COALESCE(ss.has_enterprise_experience, FALSE) as has_enterprise_experience,
-    COALESCE(ss.technical_background, FALSE) as technical_background,
-    COALESCE(ss.sales_experience, FALSE) as sales_experience,
-    COALESCE(ss.consulting_experience, FALSE) as consulting_experience,
-    COALESCE(ss.restaurant_operations_experience, FALSE) as restaurant_operations_experience,
-    COALESCE(ss.is_remote_worker, FALSE) as is_remote_worker,
-    COALESCE(ss.highest_degree_level, cda.highest_degree_level_calculated, '''') as highest_degree_level,
-    COALESCE(ss.school_ranking_tier, '''') as school_ranking_tier,
-    COALESCE(ss.major_category, '''') as major_category,
-    COALESCE(ss.undergraduate_major, '''') as undergraduate_major,
-    COALESCE(ss.graduate_specialization, '''') as graduate_specialization,
-    COALESCE(ss.stem_education, FALSE) as stem_education,
-    COALESCE(ss.business_education, FALSE) as business_education,
-    COALESCE(ss.elite_education, FALSE) as elite_education,
-    COALESCE(ss.continued_education, FALSE) as continued_education,
-    COALESCE(ss.executive_education, FALSE) as executive_education,
-    COALESCE(ss.technical_certifications, FALSE) as technical_certifications,
-    COALESCE(ss.mentor_potential, FALSE) as mentor_potential,
-    COALESCE(ss.likely_job_seeking, FALSE) as likely_job_seeking,
-    COALESCE(ss.total_positions_count, 0) as total_positions_count,
-    COALESCE(ss.average_tenure_months, 0) as average_tenure_months,
-    COALESCE(ss.current_estimated_salary, 0) as current_estimated_salary,
-    COALESCE(ss.highest_career_salary, 0) as highest_career_salary,
-    COALESCE(ss.pre_chick_fil_a_salary, 0) as pre_chick_fil_a_salary,
-    COALESCE(ss.first_post_chick_fil_a_salary, 0) as first_post_chick_fil_a_salary,
-    COALESCE(ss.chick_fil_a_provided_salary_lift, FALSE) as chick_fil_a_provided_salary_lift,
-    COALESCE(ss.achieved_six_figure_post_chick_fil_a, FALSE) as achieved_six_figure_post_chick_fil_a,
-    COALESCE(ss.doubled_salary_post_chick_fil_a, FALSE) as doubled_salary_post_chick_fil_a,
-    COALESCE(ss.moved_to_leadership_post_chick_fil_a, FALSE) as moved_to_leadership_post_chick_fil_a,
-    COALESCE(ss.career_level_increase_post_chick_fil_a, FALSE) as career_level_increase_post_chick_fil_a,
-    COALESCE(ss.undergraduate_school, ARRAY[]::TEXT[]) as undergraduate_school,
-    COALESCE(ss.graduate_school, ARRAY[]::TEXT[]) as graduate_school,
-    COALESCE(ss.high_school, ARRAY[]::TEXT[]) as high_school,
-    COALESCE(ss.pre_company_education, ARRAY[]::TEXT[]) as pre_company_education,
-    COALESCE(ss.during_company_education, ARRAY[]::TEXT[]) as during_company_education,
-    COALESCE(ss.post_company_education, ARRAY[]::TEXT[]) as post_company_education,
-    -- PRE-COMPANY CAREER FIELDS
-    COALESCE(ss.pre_company_companies, ARRAY[]::TEXT[]) as pre_company_companies,
-    COALESCE(ss.pre_company_titles, ARRAY[]::TEXT[]) as pre_company_titles,
-    COALESCE(ss.pre_company_industries, ARRAY[]::TEXT[]) as pre_company_industries,
-    COALESCE(ss.pre_company_locations, ARRAY[]::TEXT[]) as pre_company_locations,
-    -- POST-COMPANY CAREER FIELDS
-    COALESCE(ss.post_company_companies, ARRAY[]::TEXT[]) as post_company_companies,
-    COALESCE(ss.post_company_titles, ARRAY[]::TEXT[]) as post_company_titles,
-    COALESCE(ss.post_company_industries, ARRAY[]::TEXT[]) as post_company_industries,
-    COALESCE(ss.post_company_locations, ARRAY[]::TEXT[]) as post_company_locations,
-    COALESCE(ss.functional_expertise, ARRAY[]::TEXT[]) as functional_expertise,
-    COALESCE(ss.industry_expertise, ARRAY[]::TEXT[]) as industry_expertise,
-    COALESCE(ss.industry_transitions, ARRAY[]::TEXT[]) as industry_transitions,
-    COALESCE(ss.education_geography, ARRAY[]::TEXT[]) as education_geography,
-    -- Additional fields
-    ss.chick_fil_a_exit_year,
-    COALESCE(ss.had_multiple_company_stints, FALSE) as had_multiple_company_stints,
-    ss.years_since_chick_fil_a,
-    
-    -- CHRONOLOGICAL-SPECIFIC DATA (preserved from original function)
+    COALESCE(av.name, ''Unknown'') as name,
     COALESCE(cda.career_timeline, ''{}''::jsonb) as career_timeline,
     COALESCE(cda.education_timeline, ''{}''::jsonb) as education_timeline,
     jsonb_build_object(
@@ -399,13 +252,18 @@ BEGIN
       ''has_geographic_mobility'', cda.has_geographic_mobility,
       ''applied_filters'', $1
     ) as comprehensive_analysis,
+    COALESCE(av.post_company_current_company, ''Unknown'') as current_company,
+    COALESCE(av.post_company_current_title, ''Unknown'') as current_title,
+    COALESCE(av.post_company_current_industry, ''Unknown'') as current_industry,
+    COALESCE(av.post_company_current_location, ''Unknown'') as current_location,
     cda.total_years_experience,
     cda.years_in_target_industry,
+    cda.highest_degree_level,
     cda.timeline_pattern,
     cda.sequence_gap_months::int,
     cda.has_concurrent_activities
   FROM cross_domain_analysis cda
-  LEFT JOIN %I ss ON cda.profile_id = ss.profile_id
+  LEFT JOIN %I av ON cda.profile_id = av.profile_id
   ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
@@ -416,7 +274,7 @@ BEGIN
   career_events_table,     -- ce3 for industry filter
   career_events_table,     -- ce4 for title filter
   career_events_table,     -- ce5 for location filter
-  standard_search_table    -- Changed from vector_table to standard_search_table
+  vector_table
   ) 
   USING 
     chronological_filters,           -- $1 (JSON with all filters)
@@ -426,4 +284,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. Returns the same detailed profile information as standard search while preserving chronological analysis capabilities. All filters (school, company, industry, title, location) are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Simplified chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied. Results are ordered by total years of experience. No scoring or weight calculations - pure filter-based search.'; 
