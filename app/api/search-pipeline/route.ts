@@ -16,7 +16,7 @@ interface QueryClassification {
 }
 
 interface ChronologicalFilters {
-  // Basic search filters (MISSING - this is the bug!)
+  // Basic search filters
   school_filter?: string;
   company_filter?: string;
   industry_filter?: string;

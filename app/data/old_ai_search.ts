@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-
+import OpenAI from 'openai';
 
 // Define interfaces for search filters and results
 export interface SearchFilters {
@@ -20,6 +20,7 @@ export interface SearchResult {
   current_general_industry: string;
   current_job_location: string;
   years_experience: number;
+  similarity: number;
   profile_photo_url?: string;
   headline: string;
   
@@ -73,6 +74,89 @@ export interface SearchResult {
   [key: string]: any;
 }
 
+export interface ProfileDetail {
+  id: number;
+  name: string;
+  linkedin_url: string;
+  current_company: string;
+  current_title: string;
+  current_industry: string;
+  location: string;
+  years_experience: number;
+  graduation_year: number;
+  estimated_salary: string;
+  companies: string[];
+  titles: string[];
+  industries: string[];
+  undergraduate_schools: string[];
+  graduate_schools: string[];
+  certificate_programs: string[];
+  experiences_text: string;
+  education_text: string;
+}
+
+// Interface for comprehensive search results (used by standardSearch)
+interface ComprehensiveSearchResult {
+  id: bigint;
+  profile_id: number;
+  name: string;
+  profile_url: string;
+  post_company_current_company: string;
+  post_company_current_title: string;
+  post_company_current_industry: string;
+  post_company_current_location: string;
+  picture_url?: string;
+  similarity: number;
+  headline?: string;
+  
+  // Enhanced fields
+  current_job_level?: string;
+  current_job_function?: string;
+  career_stage?: string;
+  highest_degree_level?: string;
+  school_ranking_tier?: string;
+  
+  // Boolean characteristics
+  is_current_leader?: boolean;
+  management_experience?: boolean;
+  technical_background?: boolean;
+  sales_experience?: boolean;
+  has_startup_experience?: boolean;
+  has_enterprise_experience?: boolean;
+  is_remote_worker?: boolean;
+  mentor_potential?: boolean;
+  
+  // Array fields
+  undergraduate_school?: string[];
+  graduate_school?: string[];
+  high_school?: string[];
+  pre_company_education?: string[];
+  during_company_education?: string[];
+  post_company_education?: string[];
+  
+  // PRE-COMPANY CAREER FIELDS (Background/Network Analysis)
+  pre_company_companies?: string[];
+  pre_company_titles?: string[];
+  pre_company_industries?: string[];
+  pre_company_locations?: string[];
+  
+  // POST-COMPANY CAREER FIELDS (Current/Recent Career Path)
+  post_company_companies?: string[];
+  post_company_titles?: string[];
+  post_company_industries?: string[];
+  post_company_locations?: string[];
+  
+  functional_expertise?: string[];
+  industry_expertise?: string[];
+  
+  // Salary fields
+  current_estimated_salary?: number;
+  highest_career_salary?: number;
+  major_category?: string;
+  
+  // Dynamic company-specific fields
+  [key: string]: any;
+}
 
 export interface TemporalSearchFilters {
   target_company_year?: number;
@@ -93,6 +177,7 @@ export interface TemporalSearchResult {
   [key: string]: any;
   post_company_current_company: string;
   post_company_current_title: string;
+  similarity: number;
 }
 
 export interface EducationTimelineEntry {
@@ -182,6 +267,7 @@ type CompanySearchFilters = SearchFilters;
 
 export class LinkedInProfileSearchEngine {
   private supabase;
+  private openai;
   
   constructor() {
     // Initialize Supabase client
@@ -189,7 +275,94 @@ export class LinkedInProfileSearchEngine {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+    
+    // Initialize OpenAI client
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  
+  /**
+   * Apply gap-based filtering to search results
+   * Returns results above 0.4 threshold but stops when similarity drops significantly
+   */
+  private applyGapBasedFiltering<T extends { similarity: number }>(results: T[]): T[] {
+    console.log(`[GAP_FILTER DEBUG] 🔍 Processing ${results.length} results for gap-based filtering`);
+    
+    if (!results.length) {
+      console.log(`[GAP_FILTER DEBUG] ⚠️ No results to filter, returning empty array`);
+      return results;
+    }
 
+    // Sort by similarity descending (should already be sorted from DB, but ensuring)
+    const sortedResults = [...results].sort((a, b) => b.similarity - a.similarity);
+    console.log(`[GAP_FILTER DEBUG] 📊 Sorted results by similarity:`, {
+      totalResults: sortedResults.length,
+      topSimilarity: sortedResults[0]?.similarity,
+      bottomSimilarity: sortedResults[sortedResults.length - 1]?.similarity,
+      averageSimilarity: sortedResults.reduce((sum, r) => sum + r.similarity, 0) / sortedResults.length
+    });
+    
+    // Filter results above 0.4 threshold first
+    const aboveThreshold = sortedResults.filter(r => r.similarity >= 0.4);
+    console.log(`[GAP_FILTER DEBUG] 🎯 Threshold filtering (≥0.4):`, {
+      beforeThreshold: sortedResults.length,
+      afterThreshold: aboveThreshold.length,
+      rejectedBelowThreshold: sortedResults.length - aboveThreshold.length,
+      thresholdUsed: 0.4
+    });
+    
+    if (aboveThreshold.length === 0) {
+      console.log(`[GAP_FILTER DEBUG] ❌ No results above 0.4 threshold`);
+      console.log(`[GAP_FILTER DEBUG] 📊 All similarities:`, sortedResults.map(r => r.similarity));
+      return [];
+    }
+
+    if (aboveThreshold.length === 1) {
+      console.log(`[GAP_FILTER DEBUG] ✅ Only 1 result above threshold, returning it`);
+      return aboveThreshold;
+    }
+
+    // Apply gap detection
+    const finalResults: T[] = [aboveThreshold[0]]; // Always include the best result
+    let previousSimilarity = aboveThreshold[0].similarity;
+    
+    console.log(`[GAP_FILTER DEBUG] 🔍 Starting gap detection analysis:`);
+    console.log(`[GAP_FILTER DEBUG] 🥇 Best result (always included): similarity=${previousSimilarity.toFixed(3)}`);
+    
+    for (let i = 1; i < aboveThreshold.length; i++) {
+      const currentResult = aboveThreshold[i];
+      const gap = previousSimilarity - currentResult.similarity;
+      
+      console.log(`[GAP_FILTER DEBUG] 📊 Result ${i + 1}/${aboveThreshold.length}:`, {
+        index: i,
+        similarity: currentResult.similarity.toFixed(3),
+        gap: gap.toFixed(3),
+        previousSimilarity: previousSimilarity.toFixed(3),
+        gapThreshold: 0.1,
+        willInclude: gap <= 0.1
+      });
+      
+      // Stop if we detect a significant gap (0.1 seems reasonable for similarity scores)
+      if (gap > 0.1) {
+        console.log(`[GAP_FILTER DEBUG] ⛔ Significant gap detected (${gap.toFixed(3)} > 0.1), stopping at ${finalResults.length} results`);
+        break;
+      }
+      
+      finalResults.push(currentResult);
+      previousSimilarity = currentResult.similarity;
+    }
+    
+    console.log(`[GAP_FILTER DEBUG] ✅ Gap-based filtering complete:`, {
+      startedWith: results.length,
+      afterSorting: sortedResults.length,
+      aboveThreshold: aboveThreshold.length,
+      finalCount: finalResults.length,
+      reductionFromOriginal: Math.round((1 - finalResults.length / results.length) * 100) + '%',
+      finalSimilarities: finalResults.map(r => r.similarity.toFixed(3))
+    });
+    
+    return finalResults;
   }
   
   // Comprehensive Standard Search using SQL filtering
@@ -437,7 +610,7 @@ export class LinkedInProfileSearchEngine {
           // search_query: query,  // ← TEMPORARILY DISABLED TO TEST
           limit_count: top_k
         })
-        .returns<any[]>();
+        .returns<ComprehensiveSearchResult[]>();
       
       // 🔍 DEBUG: Log the exact response from Supabase
       console.log(`[AI_SEARCH STANDARD] 📥 SUPABASE RESPONSE:`, {
@@ -468,26 +641,85 @@ export class LinkedInProfileSearchEngine {
         return [];
       }
       
-      // Format the results using the same robust spread-operator strategy
-      const formattedResults = data.map((item: any, index: number): CompanySearchResult => {
+      // Format the results
+      const formattedResults = data.map((item: ComprehensiveSearchResult, index: number): CompanySearchResult => {
         console.log(`[AI_SEARCH STANDARD] 📝 Processing result ${index + 1}: ${item.name}`);
         
-        const result: SearchResult = {
-          ...item,
+        const baseResult: CompanySearchResult = {
           id: Number(item.id),
+          name: item.name,
           linkedin_url: item.profile_url || '',
+          current_company: item.post_company_current_company || '',
+          current_title: item.post_company_current_title || '',
+          current_industry: item.post_company_current_industry || '',
+          current_general_industry: item.post_company_current_industry || '',
+          current_job_location: item.post_company_current_location || '',
+          years_experience: 0,
+          similarity: 1.0, // No similarity score for SQL-based search
+          profile_photo_url: item.picture_url,
+          headline: item.headline || '',
+          
+          // Add all the missing required properties for SearchResult compatibility
+          profile_id: Number(item.profile_id),
+          profile_url: item.profile_url,
+          post_company_current_company: item.post_company_current_company,
+          post_company_current_title: item.post_company_current_title,
+          post_company_current_industry: item.post_company_current_industry,
+          post_company_current_location: item.post_company_current_location,
+          picture_url: item.picture_url,
+          industry: item.post_company_current_industry || '',
+          
+          // Include all enriched fields directly from RPC result
+          current_job_level: item.current_job_level || '',
+          current_job_function: item.current_job_function || '',
+          career_stage: item.career_stage || '',
+          highest_degree_level: item.highest_degree_level || '',
+          school_ranking_tier: item.school_ranking_tier || '',
+          
+          // Boolean profile characteristics
+          is_current_leader: item.is_current_leader || false,
+          management_experience: item.management_experience || false,
+          technical_background: item.technical_background || false,
+          sales_experience: item.sales_experience || false,
+          has_startup_experience: item.has_startup_experience || false,
+          has_enterprise_experience: item.has_enterprise_experience || false,
+          is_remote_worker: item.is_remote_worker || false,
+          mentor_potential: item.mentor_potential || false,
+          
+          undergraduate_school: item.undergraduate_school || [],
+          graduate_school: item.graduate_school || [],
+          high_school: item.high_school || [],
+          pre_company_education: item.pre_company_education || [],
+          during_company_education: item.during_company_education || [],
+          post_company_education: item.post_company_education || [],
+          
+          // PRE-COMPANY CAREER FIELDS (Background/Network Analysis)
+          pre_company_companies: item.pre_company_companies || [],
+          pre_company_titles: item.pre_company_titles || [],
+          pre_company_industries: item.pre_company_industries || [],
+          pre_company_locations: item.pre_company_locations || [],
+          
+          // POST-COMPANY CAREER FIELDS (Current/Recent Career Path)
+          post_company_companies: item.post_company_companies || [],
+          post_company_titles: item.post_company_titles || [],
+          post_company_industries: item.post_company_industries || [],
+          post_company_locations: item.post_company_locations || [],
+          
+          functional_expertise: item.functional_expertise || [],
+          industry_expertise: item.industry_expertise || [],
+          current_estimated_salary: item.current_estimated_salary || 0,
+          highest_career_salary: item.highest_career_salary || 0,
+          major_category: item.major_category || ''
         };
         
-        // Handle dynamic company-specific fields if they exist
-        if (storedOrganizationName) {
-            Object.keys(item).forEach(key => {
-            if (key.includes(storedOrganizationName) || key.startsWith('achieved_') || key.startsWith('doubled_') || key.startsWith('moved_to_')) {
-                (result as any)[key] = item[key];
-            }
-            });
-        }
+        // Handle dynamic company-specific fields
+        Object.keys(item).forEach(key => {
+          if (key.includes(storedOrganizationName) || key.startsWith('achieved_') || key.startsWith('doubled_') || key.startsWith('moved_to_')) {
+            (baseResult as any)[key] = item[key];
+          }
+        });
         
-        return result;
+        return baseResult;
       });
 
       console.log(`[AI_SEARCH STANDARD] 📊 Standard search completed: ${formattedResults.length} results`);
@@ -504,13 +736,21 @@ export class LinkedInProfileSearchEngine {
     }
   }
   
+  /**
+   * @deprecated This method is no longer used as profiles are added through the backend
+   */
+  async addProfileToDb(profile: any) {
+    throw new Error('Method not implemented: profiles should be added through the backend');
+  }
+  
   // Chronological search method with proper implementation
   async searchChronological(
     query: string,
     filters: ChronologicalSearchFilters = {},
     top_k: number = 50,
-    organizationName?: string
-  ): Promise<SearchResult[]> {
+    organizationName?: string,
+    weights?: any
+  ): Promise<ChronologicalSearchResult[]> {
     console.log(`[AI_SEARCH CHRONOLOGICAL] 📈 Starting chronological search for: "${query}"`);
     console.log(`[AI_SEARCH CHRONOLOGICAL] 📊 Filters provided:`, filters);
     console.log(`[AI_SEARCH CHRONOLOGICAL] 🏢 Organization: ${organizationName}`);
@@ -532,9 +772,8 @@ export class LinkedInProfileSearchEngine {
       // Call the chronological search RPC function
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, {
-          chronological_filters: filters,
-          limit_count: top_k,
-          organization_name: storedOrganizationName
+        chronological_filters: filters,
+          limit_count: top_k
         })
         .returns<any[]>();
       
@@ -556,26 +795,43 @@ export class LinkedInProfileSearchEngine {
         return [];
       }
       
-      // Format the results. The SQL function now returns a rich profile.
-      const formattedResults = data.map((item: any, index: number): SearchResult => {
+      // Format the results for ChronologicalSearchResult
+      const formattedResults = data.map((item: any, index: number): ChronologicalSearchResult => {
         console.log(`[AI_SEARCH CHRONOLOGICAL] 📝 Processing result ${index + 1}: ${item.name}`);
         
-        // The item is now the full, rich profile from the standard_search table
-        // We just need to ensure it matches the SearchResult interface.
-        const result: SearchResult = {
-          ...item,
-          id: Number(item.id),
-          linkedin_url: item.profile_url || '',
+        const baseResult: ChronologicalSearchResult = {
+          id: Number(item.profile_id),
+          name: item.name,
+          linkedin_url: '', // Not provided by chronological search
+          current_company: item.current_company || '',
+          current_title: item.current_title || '',
+          current_industry: item.current_industry || '',
+          current_general_industry: item.current_industry || '',
+          current_job_location: item.current_location || '',
+          years_experience: item.total_years_experience || 0,
+          similarity: 1.0, // No similarity score for chronological search
+          profile_photo_url: '',
+        headline: '',
+        
+        // Chronological-specific fields
+          career_timeline: item.career_timeline || {},
+          education_timeline: item.education_timeline || {},
+        career_analysis: {
+            total_years_experience: item.total_years_experience || 0,
+            years_in_target_industry: item.years_in_target_industry || 0,
+            years_in_target_function: 0,
+            career_progression_score: item.career_progression_score || 0,
+            industry_diversity_score: 0,
+            leadership_progression: false,
+            education_career_alignment: 0
+          }
         };
         
-        return result;
+        return baseResult;
       });
 
       console.log(`[AI_SEARCH CHRONOLOGICAL] 📊 Chronological search completed: ${formattedResults.length} results`);
-      // Gap-based filtering is based on similarity, which isn't a primary factor here.
-      // We can return the direct results or implement a different sorting/filtering logic if needed.
-      // For now, returning the full set from the enriched search.
-      return formattedResults;
+      return this.applyGapBasedFiltering(formattedResults);
       
     } catch (error) {
       console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ Critical error in chronological search:`, {
@@ -594,7 +850,7 @@ export class LinkedInProfileSearchEngine {
     temporalElements: TemporalSearchFilters = {},
     top_k: number = 50,
     organizationName?: string
-  ): Promise<SearchResult[]> {
+  ): Promise<TemporalSearchResult[]> {
     console.log(`[AI_SEARCH TEMPORAL] 🕐 Starting temporal search for: "${query}"`);
     console.log(`[AI_SEARCH TEMPORAL] 📊 Temporal elements provided:`, temporalElements);
     console.log(`[AI_SEARCH TEMPORAL] 🏢 Organization: ${organizationName}`);
@@ -656,75 +912,25 @@ export class LinkedInProfileSearchEngine {
       }
       
       // Format the results for TemporalSearchResult
-      const formattedResults = data.map((item: any, index: number): SearchResult => {
+      const formattedResults = data.map((item: any, index: number): TemporalSearchResult => {
         console.log(`[AI_SEARCH TEMPORAL] 📝 Processing result ${index + 1}: ${item.name}`);
         
-        // Map TemporalSearchResult to the standard SearchResult interface
-        const baseResult: SearchResult = {
+        const baseResult: TemporalSearchResult = {
           id: Number(item.profile_id || item.id),
           profile_id: Number(item.profile_id || item.id),
           name: item.name,
-          linkedin_url: item.profile_url || '',
-          
-          // Map from available temporal fields
-          current_company: item.post_company_current_company || item.current_company || '',
-          current_title: item.post_company_current_title || item.current_title || '',
-          post_company_current_company: item.post_company_current_company || item.current_company || '',
-          post_company_current_title: item.post_company_current_title || item.current_title || '',
-
-          // Provide default values for fields not present in temporal search results
-          current_industry: item.post_company_current_industry || '',
-          post_company_current_industry: item.post_company_current_industry || '',
-          current_general_industry: '',
-          current_job_location: item.post_company_current_location || '',
-          post_company_current_location: item.post_company_current_location || '',
-          years_experience: 0,
-          profile_photo_url: item.picture_url,
-          picture_url: item.picture_url,
-          headline: item.headline || '',
-          current_job_level: '',
-          current_job_function: '',
-          undergraduate_school: [],
-          graduate_school: [],
-          high_school: [],
-          pre_company_education: [],
-          during_company_education: [],
-          post_company_education: [],
-          highest_degree_level: '',
-          major_category: '',
-          career_stage: '',
-          school_ranking_tier: '',
-          current_estimated_salary: 0,
-          highest_career_salary: 0,
-          is_current_leader: false,
-          management_experience: false,
-          technical_background: false,
-          sales_experience: false,
-          has_startup_experience: false,
-          has_enterprise_experience: false,
-          is_remote_worker: false,
-          mentor_potential: false,
-          post_company_companies: [],
-          post_company_titles: [],
-          post_company_industries: [],
-          post_company_locations: [],
-          functional_expertise: [],
-          industry_expertise: [],
-          pre_company_companies: [],
-          pre_company_titles: [],
-          pre_company_industries: [],
-          pre_company_locations: [],
-          
-          // Preserve timelines if they exist, for potential future use
           career_timeline: item.career_timeline || {},
           education_timeline: item.education_timeline || {},
+          post_company_current_company: item.current_company || '',
+          post_company_current_title: item.current_title || '',
+          similarity: item.similarity || 1.0
         };
         
         return baseResult;
       });
 
       console.log(`[AI_SEARCH TEMPORAL] 📊 Temporal search completed: ${formattedResults.length} results`);
-      return formattedResults;
+      return this.applyGapBasedFiltering(formattedResults);
       
     } catch (error) {
       console.error(`[AI_SEARCH TEMPORAL] ❌ Critical error in temporal search:`, {
@@ -736,4 +942,19 @@ export class LinkedInProfileSearchEngine {
       throw error;
     }
   }
+}
+
+// Legacy Profile interface for backward compatibility
+export interface Profile {
+  name: string;
+  profile_url?: string;
+  linkedin_url?: string;
+  experiences?: any[];
+  education?: any[];
+  location?: string;
+  current_estimated_salary?: number;
+  industry?: string;
+  uncategorized_school?: string[];
+  graduation_year?: number;
+  [key: string]: any;
 }
