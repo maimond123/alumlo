@@ -40,7 +40,6 @@ interface SearchResult {
   natural_language_education: string;
   highest_degree_level: string;
   major_category: string;
-  similarity: number;
   
   // Enhanced career and salary fields
   career_stage?: string;
@@ -2706,7 +2705,7 @@ export default function DashboardPage() {
                               
                               {/* Education */}
                               <div className="space-y-1">
-                                <div className="text-xs text-gray-500 uppercase tracking-wide">Education</div>
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Highest Education</div>
                                 <div className="text-sm font-medium text-gray-700">
                                   {standardInfo.education || 'Not specified'}
                                 </div>

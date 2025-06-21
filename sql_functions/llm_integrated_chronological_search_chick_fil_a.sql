@@ -1,5 +1,5 @@
 -- Drop the old version of the function with different parameters
-DROP FUNCTION IF EXISTS llm_integrated_chronological_search_chick_fil_a(jsonb, jsonb, int, text);
+DROP FUNCTION IF EXISTS llm_integrated_chronological_search_chick_fil_a(jsonb, int, text);
 
 CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
   -- LLM PIPELINE INPUTS
@@ -10,35 +10,94 @@ CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
   organization_name text DEFAULT 'chick_fil_a'
 )
 RETURNS TABLE (
+  -- Rich Profile Fields from the Standard Search Table
+  id bigint,
+  created_at timestamptz,
   profile_id bigint,
+  is_new boolean,
+  chick_fil_a_exit_year numeric,
+  had_multiple_company_stints boolean,
+  is_current_leader boolean,
+  management_experience boolean,
+  revenue_responsibility boolean,
+  years_since_chick_fil_a numeric,
+  has_startup_experience boolean,
+  has_enterprise_experience boolean,
+  technical_background boolean,
+  sales_experience boolean,
+  consulting_experience boolean,
+  restaurant_operations_experience boolean,
+  is_remote_worker boolean,
+  total_positions_count integer,
+  average_tenure_months numeric,
+  stem_education boolean,
+  business_education boolean,
+  continued_education boolean,
+  executive_education boolean,
+  technical_certifications boolean,
+  elite_education boolean,
+  mentor_potential boolean,
+  current_estimated_salary numeric,
+  highest_career_salary numeric,
+  pre_chick_fil_a_salary numeric,
+  first_post_chick_fil_a_salary numeric,
+  chick_fil_a_provided_salary_lift boolean,
+  achieved_six_figure_post_chick_fil_a boolean,
+  doubled_salary_post_chick_fil_a boolean,
+  moved_to_leadership_post_chick_fil_a boolean,
+  career_level_increase_post_chick_fil_a boolean,
+  likely_job_seeking boolean,
+  highest_degree_level text,
+  current_company_size_category text,
+  school_ranking_tier text,
+  education_geography text,
+  industry_transitions text,
+  industry_expertise text[],
   name text,
-  career_timeline jsonb,
-  education_timeline jsonb,
-  comprehensive_analysis jsonb,
-  
-  -- Current state for quick reference (from vector table)
+  career_trajectory text,
+  profile_url text,
+  picture_url text,
+  headline text,
+  home_location text,
+  post_company_current_company text,
+  post_company_current_title text,
+  post_company_current_industry text,
+  post_company_current_location text,
   current_company text,
   current_title text,
-  current_industry text,
-  current_location text,
+  current_job_location text,
+  career_stage text,
+  functional_expertise text[],
+  post_company_companies text[],
+  post_company_titles text[],
+  post_company_industries text[],
+  post_company_locations text[],
+  pre_company_companies text[],
+  pre_company_titles text[],
+  pre_company_industries text[],
+  pre_company_locations text[],
+  undergraduate_school text[],
+  graduate_school text[],
+  high_school text[],
+  pre_company_education text[],
+  during_company_education text[],
+  post_company_education text[],
+  current_job_level text,
+  current_job_function text,
+  major_category text,
+  undergraduate_major text,
+  graduate_specialization text,
   
-  -- Career progression metrics (calculated from event tables)
-  total_years_experience numeric,
-  years_in_target_industry numeric,
-  
-  -- Education progression metrics (calculated from event tables)
-  highest_degree_level text,
-  
-  -- Cross-domain analysis
-  timeline_pattern text,
-  sequence_gap_months int,
-  has_concurrent_activities boolean
+  -- Calculated Chronological Fields
+  career_timeline jsonb,
+  education_timeline jsonb,
+  comprehensive_analysis jsonb
 ) AS $$
 DECLARE
   -- Dynamic table name based on organization
   career_events_table text := organization_name || '_alumni_career_events';
   education_events_table text := organization_name || '_alumni_education_events';
-  vector_table text := organization_name || '_alumni_vector';
+  standard_search_table text := organization_name || '_alumni_standard_search';
 BEGIN
   RETURN QUERY
   EXECUTE format('
@@ -239,10 +298,14 @@ BEGIN
   )
   
   SELECT 
-    cda.profile_id,
-    COALESCE(av.name, ''Unknown'') as name,
+    -- Select all columns from the standard search table to get the rich profile
+    ss.*,
+    
+    -- Add the unique calculated fields from this chronological search
     COALESCE(cda.career_timeline, ''{}''::jsonb) as career_timeline,
     COALESCE(cda.education_timeline, ''{}''::jsonb) as education_timeline,
+    
+    -- Build a comprehensive analysis JSON object with calculated metrics
     jsonb_build_object(
       ''total_years_experience'', cda.total_years_experience,
       ''years_in_target_industry'', cda.years_in_target_industry,
@@ -251,19 +314,12 @@ BEGIN
       ''has_concurrent_activities'', cda.has_concurrent_activities,
       ''has_geographic_mobility'', cda.has_geographic_mobility,
       ''applied_filters'', $1
-    ) as comprehensive_analysis,
-    COALESCE(av.post_company_current_company, ''Unknown'') as current_company,
-    COALESCE(av.post_company_current_title, ''Unknown'') as current_title,
-    COALESCE(av.post_company_current_industry, ''Unknown'') as current_industry,
-    COALESCE(av.post_company_current_location, ''Unknown'') as current_location,
-    cda.total_years_experience,
-    cda.years_in_target_industry,
-    cda.highest_degree_level,
-    cda.timeline_pattern,
-    cda.sequence_gap_months::int,
-    cda.has_concurrent_activities
+    ) as comprehensive_analysis
+    
   FROM cross_domain_analysis cda
-  LEFT JOIN %I av ON cda.profile_id = av.profile_id
+  -- Join with the standard search table to get the full rich profile data
+  JOIN %I ss ON cda.profile_id = ss.profile_id
+  
   ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
@@ -274,7 +330,7 @@ BEGIN
   career_events_table,     -- ce3 for industry filter
   career_events_table,     -- ce4 for title filter
   career_events_table,     -- ce5 for location filter
-  vector_table
+  standard_search_table    -- The rich profile table to join with
   ) 
   USING 
     chronological_filters,           -- $1 (JSON with all filters)
@@ -284,4 +340,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Simplified chronological search with STRICT FILTER ENFORCEMENT. All filters (school, company, industry, title, location) are hard requirements that must be satisfied. Results are ordered by total years of experience. No scoring or weight calculations - pure filter-based search.'; 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Performs a chronological search based on event tables, then joins with the standard search table to return a full, enriched profile for each match. All filters are hard requirements.'; 
