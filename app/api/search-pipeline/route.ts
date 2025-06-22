@@ -720,12 +720,38 @@ async function translateWithoutClassificationContext(
   console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'o4-mini',
+    model: 'gpt-4.1-mini',
     temperature: 0,
     messages: [
       {
         role: 'system',
-        content: `You are translating natural language career progression queries into structured chronological filters.
+        content: `You are an expert data extraction system. Your sole purpose is to meticulously analyze a user's query and transform it into a structured JSON object. You are hyper-attentive to detail and never miss an entity.
+
+**RESPONSE FORMAT:**
+You MUST provide your response in exactly this two-part format:
+
+**PART 1 - REASONING SCRATCHPAD:**
+\`\`\`reasoning
+STEP 1: ENTITY INVENTORY
+- ALL COMPANIES MENTIONED: [list every single company name you found]
+- ALL SCHOOLS MENTIONED: [list every single school/university name you found]
+- ALL TITLES MENTIONED: [list every single job title/role you found]
+- ALL INDUSTRIES MENTIONED: [list every single industry you found]
+- ALL LOCATIONS MENTIONED: [list every single location you found]
+- ALL EXPERIENCE INDICATORS: [list any experience/years mentions]
+- ALL PROGRESSION PATTERNS: [list any career progression keywords]
+
+STEP 2: FILTER SELECTION LOGIC
+For each filter I'm setting in the final JSON, I will explain my reasoning:
+- [Filter name]: [One sentence explaining why I chose this value based on the extraction rules]
+\`\`\`
+
+**PART 2 - FINAL JSON:**
+\`\`\`json
+{
+  // Your final JSON object here
+}
+\`\`\`
 
 **ENHANCED ENTITY EXTRACTION PROCESS:**
 
@@ -807,74 +833,59 @@ Then choose the most relevant entity for each filter using these rules:
 **ENHANCED EXAMPLES:**
 
 Query: "Find someone who worked at Chick Fil A and then went to Georgetown University"
+
+\`\`\`reasoning
+STEP 1: ENTITY INVENTORY
+- ALL COMPANIES MENTIONED: ["Chick Fil A"]
+- ALL SCHOOLS MENTIONED: ["Georgetown University"]
+- ALL TITLES MENTIONED: []
+- ALL INDUSTRIES MENTIONED: []
+- ALL LOCATIONS MENTIONED: []
+- ALL EXPERIENCE INDICATORS: []
+- ALL PROGRESSION PATTERNS: ["then went to" - indicates career progression]
+
+STEP 2: FILTER SELECTION LOGIC
+- company_filter: "Chick Fil A" - The source company where the person worked
+- school_filter: "Georgetown University" - Specific institution mentioned for subsequent education
+- career_progression_pattern: "startup_to_enterprise" - Moving from work to higher education shows advancement
+- gap_tolerance: 6 - Default value for career transitions
+\`\`\`
+
+\`\`\`json
 {
   "company_filter": "Chick Fil A",
   "school_filter": "Georgetown University", 
   "career_progression_pattern": "startup_to_enterprise",
   "gap_tolerance": 6
 }
+\`\`\`
 
 Query: "Find me people who went to college and then worked at Chick Fil A"
+
+\`\`\`reasoning
+STEP 1: ENTITY INVENTORY
+- ALL COMPANIES MENTIONED: ["Chick Fil A"]
+- ALL SCHOOLS MENTIONED: ["college" - generic term, not specific institution]
+- ALL TITLES MENTIONED: []
+- ALL INDUSTRIES MENTIONED: []
+- ALL LOCATIONS MENTIONED: []
+- ALL EXPERIENCE INDICATORS: []
+- ALL PROGRESSION PATTERNS: ["then worked at" - indicates education to work progression]
+
+STEP 2: FILTER SELECTION LOGIC
+- company_filter: "Chick Fil A" - Specific company mentioned as destination
+- school_filter: null - "college" is too generic, doesn't extract specific institution
+- degree_level_progression: ["Bachelor's"] - "college" implies undergraduate degree
+- gap_tolerance: 6 - Default for education to work transition
+\`\`\`
+
+\`\`\`json
 {
   "company_filter": "Chick Fil A",
   "degree_level_progression": ["Bachelor's"],
   "gap_tolerance": 6
 }
-
-Query: "MBA graduates who became senior executives"
-{
-  "degree_level_progression": ["Bachelor's", "Master's"],
-  "career_progression_pattern": "entry_level_to_senior",
-  "min_years_in_function": 5,
-  "education_industry_alignment": true,
-  "gap_tolerance": 12
-}
-
-Query: "People with 10+ years engineering experience who moved to management"
-{
-  "title_filter": "engineering",
-  "min_years_in_function": 10,
-  "total_experience_years": 10,
-  "career_progression_pattern": "individual_contributor_to_management",
-  "gap_tolerance": 6
-}
-
-Query: "Tech professionals at Google who worked while getting their Master's degree"
-{
-  "company_filter": "Google",
-  "industry_filter": "technology",
-  "min_years_in_industry": 3,
-  "degree_level_progression": ["Bachelor's", "Master's"],
-  "concurrent_activities": true,
-  "education_industry_alignment": true,
-  "gap_tolerance": 0
-}
-
-Query: "Experienced professionals who moved from big tech to startups"
-{
-  "min_years_in_industry": 5,
-  "total_experience_years": 7,
-  "company_size_progression": ["large", "startup"],
-  "industry_transitions": ["technology"],
-  "career_progression_pattern": "startup_to_enterprise",
-  "gap_tolerance": 6
-}
-
-Query: "People who studied abroad and had international careers"
-{
-  "geographic_mobility": true,
-  "education_industry_alignment": false,
-  "gap_tolerance": 12,
-  "total_experience_years": 5
-}
-
-Query: "People who worked at Chick Fil A and then worked at Palantir"
-{
-  "company_filter": "Palantir",
-  "education_industry_alignment": false,
-  "gap_tolerance": 12,
-  "total_experience_years": 5
-}
+\`\`\`
 
 **EXTRACTION RULES:**
 - Extract specific institutions: "Georgetown University" → school_filter: "Georgetown University"
