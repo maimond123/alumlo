@@ -720,7 +720,7 @@ async function translateWithoutClassificationContext(
   console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: 'o4-mini',
     temperature: 0,
     messages: [
       {
@@ -863,6 +863,14 @@ Query: "Experienced professionals who moved from big tech to startups"
 Query: "People who studied abroad and had international careers"
 {
   "geographic_mobility": true,
+  "education_industry_alignment": false,
+  "gap_tolerance": 12,
+  "total_experience_years": 5
+}
+
+Query: "People who worked at Chick Fil A and then worked at Palantir"
+{
+  "company_filter": "Palantir",
   "education_industry_alignment": false,
   "gap_tolerance": 12,
   "total_experience_years": 5
