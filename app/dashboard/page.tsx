@@ -41,7 +41,7 @@ interface SearchResult {
   highest_degree_level: string;
   major_category: string;
   
-  // Enhanced career and salary fields
+  // Enhanced career and  salary fields
   career_stage?: string;
   school_ranking_tier?: string;
   current_estimated_salary?: number;
