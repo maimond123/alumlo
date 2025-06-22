@@ -120,8 +120,7 @@ export async function POST(req: NextRequest) {
       isDemo: body.isDemo,
       hasClassification: !!body.queryClassification,
       hasSearchConfig: !!body.searchConfig,
-      hasFilters: !!body.filters && Object.keys(body.filters).length > 0,
-      hasChronologicalWeights: !!body.chronologicalWeights
+      hasFilters: !!body.filters && Object.keys(body.filters).length > 0
     });
     
     const { 
@@ -131,7 +130,6 @@ export async function POST(req: NextRequest) {
       organizationName, 
       isDemo = false,
       queryClassification,
-      chronologicalWeights,
       useChronologicalConfig = false,
       chronologicalConfig,
       searchConfig // New: pipeline search config
@@ -158,7 +156,6 @@ export async function POST(req: NextRequest) {
       classificationType: queryClassification?.type,
       hasFilters: Object.keys(effectiveFilters).length > 0,
       filterKeys: Object.keys(effectiveFilters),
-      hasChronologicalWeights: !!chronologicalWeights,
       useChronologicalConfig,
       hasChronologicalConfig: !!chronologicalConfig,
       hasSearchConfig: !!searchConfig,
@@ -254,7 +251,6 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] 📈 Executing chronological search from pipeline`);
         debug.log(`[API SEARCH] 📈 DETAILED: Chronological search configuration:`, {
           filters: searchConfig.filters,
-          hasWeights: !!searchConfig.weights,
           sqlFunction: searchConfig.sqlFunction,
           organizationName: organizationName
         });
@@ -263,7 +259,6 @@ export async function POST(req: NextRequest) {
           debug.log(`[API SEARCH] 📈 DETAILED: Calling searchChronological with parameters:`, {
             query: `"${query}"`,
             filtersCount: Object.keys(searchConfig.filters).length,
-            weightsCount: searchConfig.weights ? Object.keys(searchConfig.weights).length : 0,
             limit: 50,
             organizationName: organizationName
           });
@@ -278,8 +273,7 @@ export async function POST(req: NextRequest) {
               query,
               searchConfig.filters,
               50,
-              organizationName,
-              searchConfig.weights // May be undefined for new pipeline
+              organizationName
             ),
             SEARCH_TIMEOUT_MS
           );
@@ -298,7 +292,6 @@ export async function POST(req: NextRequest) {
           searchMetadata = {
             search_method: 'chronological_pipeline_primary',
             filters: searchConfig.filters,
-            weights: searchConfig.weights,
             sql_function: searchConfig.sqlFunction,
             configuration_source: 'pipeline',
             strict_filtering: true,
@@ -326,7 +319,7 @@ export async function POST(req: NextRequest) {
       
       else if ( searchConfig.type === 'standard') {
         debug.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
-        debug.log(`[API SEARCH] �� DETAILED: Standard search configuration:`, {
+        debug.log(`[API SEARCH] 📋 DETAILED: Standard search configuration:`, {
           rpcFunction: `comprehensive_standard_search_${organizationName}`,
           hasFilters: !!searchConfig.enhancedFilters,
           filterKeys: Object.keys(searchConfig.enhancedFilters || {}),
@@ -472,27 +465,6 @@ export async function POST(req: NextRequest) {
           debug.log(`[API SEARCH] 📈 Executing legacy chronological search with redundant LLM calls`);
           
           try {
-            // Legacy redundant weight assignment
-            let legacyChronologicalWeights = chronologicalWeights; // Use passed weights if available
-            if (!legacyChronologicalWeights) {
-              debug.log(`[API SEARCH] ⚖️ Performing redundant weight assignment`);
-          try {
-            const weightResponse = await fetch('/api/assign-weights', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query })
-            });
-            if (weightResponse.ok) {
-                  legacyChronologicalWeights = await weightResponse.json();
-                  debug.log(`[API DEBUG] 📈 Legacy assigned chronological weights:`, legacyChronologicalWeights);
-                  debug.log(`[API SEARCH] ✅ Legacy weight assignment completed`);
-            }
-          } catch (weightError) {
-                debug.log(`[API DEBUG] 📈 Legacy weight assignment failed, using defaults:`, weightError);
-                debug.log(`[API SEARCH] ❌ Legacy weight assignment failed`);
-              }
-          }
-          
             // Legacy chronological filter translation
           let translatedFilters = {};
             debug.log(`[API SEARCH] 🔄 Performing redundant filter translation`);
@@ -519,11 +491,6 @@ export async function POST(req: NextRequest) {
             ...effectiveFilters, // Include any existing filters from dashboard or pipeline
           };
           
-          // Add weights to filters
-            if (legacyChronologicalWeights) {
-              chronologicalFilters.chronological_weights = legacyChronologicalWeights;
-          }
-          
             debug.log(`[API DEBUG] 📈 Legacy final chronological filters:`, chronologicalFilters);
             debug.log(`[API SEARCH] 📊 Final legacy chronological configuration prepared`);
           
@@ -542,7 +509,6 @@ export async function POST(req: NextRequest) {
                 search_method: 'legacy_chronological',
               translated_filters: translatedFilters,
               chronological_filters: chronologicalFilters,
-                chronological_weights: legacyChronologicalWeights,
                 configuration_source: 'legacy'
             };
           } else {
