@@ -676,11 +676,50 @@ Respond only with valid JSON containing just the type field.`,
   }
 }
 
-// STEP 2: Enhanced Translation without Classification Context
+// NEW: Function to extract available filters from SQL function definition
+async function getAvailableChronologicalFilters(): Promise<string> {
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Querying SQL function definition for available filters`);
+  
+  try {
+    // Read the SQL function file to understand the complete schema
+    const fs = require('fs').promises;
+    const path = require('path');
+    
+    const sqlFunctionPath = path.join(process.cwd(), 'sql_functions', 'llm_integrated_chronological_search_chick_fil_a.sql');
+    const sqlContent = await fs.readFile(sqlFunctionPath, 'utf8');
+    
+    console.log(`[PIPELINE CHRONOLOGICAL] ✅ SQL function definition loaded successfully`);
+    
+    // Return the SQL function content for the LLM to analyze
+    return sqlContent;
+  } catch (error) {
+    console.error(`[PIPELINE CHRONOLOGICAL] ❌ Failed to load SQL function definition:`, error);
+    
+    // Fallback to basic filters if file read fails
+    return `
+    Basic chronological filters available:
+    - school_filter (string)
+    - company_filter (string)
+    - industry_filter (string)
+    - title_filter (string)
+    - location_filter (string)
+    - min_years_in_industry (number)
+    - total_experience_years (number)
+    - geographic_mobility (boolean)
+    - concurrent_activities (boolean)
+    `;
+  }
+}
+
+// STEP 2: Enhanced Translation with Complete Filter Knowledge
 async function translateWithoutClassificationContext(
   query: string
 ): Promise<ChronologicalFilters> {
   console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
+  
+  // STEP 1: Get complete filter schema from SQL function
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Loading complete filter schema from SQL function`);
+  const sqlFunctionDefinition = await getAvailableChronologicalFilters();
   
   const response = await openai.chat.completions.create({
     model: 'gpt-4.1-mini',
@@ -688,36 +727,23 @@ async function translateWithoutClassificationContext(
     messages: [
       {
         role: 'system',
-        content: `You are an expert data extraction system. Your sole purpose is to meticulously analyze a user's query and transform it into a structured JSON object. You are hyper-attentive to detail and never miss an entity.
+        content: `You are an expert data extraction system that translates natural language career progression queries into structured chronological filters.
 
-**RESPONSE FORMAT:**
-You MUST provide your response in exactly this two-part format:
+**CRITICAL FIRST STEP: ANALYZE THE SQL FUNCTION DEFINITION**
 
-**PART 1 - REASONING SCRATCHPAD:**
-\`\`\`reasoning
-STEP 1: ENTITY INVENTORY
-- ALL COMPANIES MENTIONED: [list every single company name you found]
-- ALL SCHOOLS MENTIONED: [list every single school/university name you found]
-- ALL TITLES MENTIONED: [list every single job title/role you found]
-- ALL INDUSTRIES MENTIONED: [list every single industry you found]
-- ALL LOCATIONS MENTIONED: [list every single location you found]
-- ALL EXPERIENCE INDICATORS: [list any experience/years mentions]
-- ALL PROGRESSION PATTERNS: [list any career progression keywords]
+Below is the complete SQL function definition that shows ALL available filters and data fields you can map to. Study this carefully to understand the full scope of available filters:
 
-STEP 2: FILTER SELECTION LOGIC
-For each filter I'm setting in the final JSON, I will explain my reasoning:
-- [Filter name]: [One sentence explaining why I chose this value based on the extraction rules]
+\`\`\`sql
+${sqlFunctionDefinition}
 \`\`\`
 
-**PART 2 - FINAL JSON:**
-\`\`\`json
-{
-  // Your final JSON object here
-}
-\`\`\`
+**YOUR TASK:**
+1. **ANALYZE THE SQL FUNCTION**: Examine the function signature, return fields, and WHERE clause logic to understand ALL available filters
+2. **EXTRACT ENTITIES COMPREHENSIVELY**: Now that you know the complete filter landscape, extract entities more thoroughly
+3. **MAP TO ALL APPLICABLE FILTERS**: Use ALL relevant filters from the SQL function, not just the basic ones
 
 **ENHANCED ENTITY EXTRACTION PROCESS:**
-
+        
 **STEP 1: EXTRACT ALL ENTITIES**
 First, identify EVERY entity mentioned in the query:
 - ALL COMPANIES: Extract every company name mentioned
@@ -725,59 +751,101 @@ First, identify EVERY entity mentioned in the query:
 - ALL TITLES: Extract every job title/role mentioned
 - ALL INDUSTRIES: Extract every industry mentioned
 - ALL LOCATIONS: Extract every location mentioned
-
+- ALL EXPERIENCE INDICATORS: Extract experience levels, years, seniority
+- ALL PROGRESSION PATTERNS: Extract career advancement patterns
+        
 **STEP 2: SMART ENTITY SELECTION**
 Then choose the most relevant entity for each filter using these rules:
-
+        
 **COMPANY SELECTION RULES:**
 - If multiple companies with "then/after": Choose the LAST mentioned (target destination)
 - If "former X employees": Choose X as company_filter
 - If "X alumni at Y": Choose X as company_filter (source company)
 - If "people who left X for Y": Choose X as company_filter (source company)
 - If "worked at X and Y": Choose the LAST mentioned
-
+        
 **SCHOOL SELECTION RULES:**
 - If multiple schools with "then/after": Choose the LAST mentioned (most recent)
 - If "X graduates who went to Y": Choose X as school_filter (source school)
 - If "studied at X then Y": Choose Y as school_filter (most recent)
 - If undergraduate + graduate school mentioned: Choose graduate school
-
+        
 **TITLE SELECTION RULES:**
 - If multiple titles: Choose the most SPECIFIC one
 - If progression mentioned (junior → senior): Choose the TARGET level
 - If "former X who became Y": Choose X as title_filter (source role)
-
+        
 **INDUSTRY SELECTION RULES:**
 - If multiple industries with transition: Choose the TARGET industry
 - If "from X to Y industry": Choose Y as industry_filter
-
+        
 **LOCATION SELECTION RULES:**
 - If multiple locations: Choose the most SPECIFIC one
 - If "moved from X to Y": Choose Y as location_filter (current location)
 
-**COMPREHENSIVE FILTER CATEGORIES:**
+**ENHANCED EXAMPLES USING COMPLETE FILTER SET:**
+        
+Query: "Find Georgetown MBA graduates working at Google"
+{
+  "school_filter": "Georgetown University",
+  "company_filter": "Google", 
+  "degree_level_progression": ["Bachelor's", "Master's"],
+  "gap_tolerance": 6
+}
+        
+Query: "Technical professionals with leadership experience"
+{
+  "technical_background": true,
+  "is_current_leader": true,
+  "management_experience": true,
+  "gap_tolerance": 6
+}
 
+Query: "People who doubled their salary after leaving"
+{
+  "doubled_salary_post_chick_fil_a": true,
+  "chick_fil_a_provided_salary_lift": true,
+  "gap_tolerance": 6
+}
+
+Query: "Startup founders with consulting background"
+{
+  "consulting_experience": true,
+  "has_startup_experience": true,
+  "career_trajectory": "Entrepreneur",
+  "is_current_leader": true,
+  "gap_tolerance": 6
+}
+
+**CRITICAL INSTRUCTIONS:**
+1. **USE THE SQL FUNCTION AS YOUR FILTER REFERENCE**: Only use filters that exist in the SQL function definition
+2. **BE COMPREHENSIVE**: Now that you know all available filters, use as many relevant ones as possible
+3. **MAINTAIN EXISTING PROMPT LOGIC**: Keep all the existing entity extraction rules and examples
+4. **ADD NEW FILTER CAPABILITIES**: Leverage the additional filters you discovered in the SQL function
+
+**EXISTING COMPREHENSIVE FILTER CATEGORIES:**
+        
 **Basic Search Filters:**
 - school_filter: Extract specific schools/universities mentioned (string)
 - company_filter: Extract specific companies mentioned (string)  
 - industry_filter: Extract specific industries mentioned (string)
 - title_filter: Extract specific job titles mentioned (string)
 - location_filter: Extract specific locations mentioned (string)
-
+        
 **Experience-Based Filters:**
 - min_years_in_industry: Extract from "5+ years in tech", "experienced in finance" (number)
 - min_years_in_function: Extract from "10+ years engineering", "seasoned marketing" (number)
 - total_experience_years: Extract from "experienced professionals", "10+ years total" (number)
 - career_progression_pattern: Specific advancement patterns (string)
-
+        
 **Education-Based Filters:**
 - degree_level_progression: Education sequence like ["Bachelor's", "Master's", "PhD"] (array)
 - education_industry_alignment: Whether education field matches career industry (boolean)
-
+        
 **Timeline-Based Filters:**
 - gap_tolerance: Max acceptable career gaps in months, default 6 (number)
 - concurrent_activities: Working while studying, part-time education (boolean)
-
+        
 **Pattern-Based Filters:**
 - industry_transitions: Industry change patterns like ["finance", "technology"] (array)
 - company_size_progression: Company size advancement like ["startup", "large"] (array)  
@@ -793,196 +861,7 @@ Then choose the most relevant entity for each filter using these rules:
 - "industry_switcher" - Changed industries
 - "entrepreneur_path" - Became founder/entrepreneur
 
-**ENHANCED EXAMPLES:**
-
-Query: "Find someone who worked at Chick Fil A and then went to Georgetown University"
-
-\`\`\`reasoning
-STEP 1: ENTITY INVENTORY
-- ALL COMPANIES MENTIONED: ["Chick Fil A"]
-- ALL SCHOOLS MENTIONED: ["Georgetown University"]
-- ALL TITLES MENTIONED: []
-- ALL INDUSTRIES MENTIONED: []
-- ALL LOCATIONS MENTIONED: []
-- ALL EXPERIENCE INDICATORS: []
-- ALL PROGRESSION PATTERNS: ["then went to" - indicates career progression]
-
-STEP 2: FILTER SELECTION LOGIC
-- company_filter: "Chick Fil A" - The source company where the person worked
-- school_filter: "Georgetown University" - Specific institution mentioned for subsequent education
-- career_progression_pattern: "startup_to_enterprise" - Moving from work to higher education shows advancement
-- gap_tolerance: 6 - Default value for career transitions
-\`\`\`
-
-\`\`\`json
-{
-  "company_filter": "Chick Fil A",
-  "school_filter": "Georgetown University", 
-  "career_progression_pattern": "startup_to_enterprise",
-  "gap_tolerance": 6
-}
-\`\`\`
-
-Query: "Find me people who went to college and then worked at Chick Fil A"
-
-\`\`\`reasoning
-STEP 1: ENTITY INVENTORY
-- ALL COMPANIES MENTIONED: ["Chick Fil A"]
-- ALL SCHOOLS MENTIONED: ["college" - generic term, not specific institution]
-- ALL TITLES MENTIONED: []
-- ALL INDUSTRIES MENTIONED: []
-- ALL LOCATIONS MENTIONED: []
-- ALL EXPERIENCE INDICATORS: []
-- ALL PROGRESSION PATTERNS: ["then worked at" - indicates education to work progression]
-
-STEP 2: FILTER SELECTION LOGIC
-- company_filter: "Chick Fil A" - Specific company mentioned as destination
-- school_filter: null - "college" is too generic, doesn't extract specific institution
-- degree_level_progression: ["Bachelor's"] - "college" implies undergraduate degree
-- gap_tolerance: 6 - Default for education to work transition
-\`\`\`
-
-\`\`\`json
-{
-  "company_filter": "Chick Fil A",
-  "degree_level_progression": ["Bachelor's"],
-  "gap_tolerance": 6
-}
-\`\`\`
-
-**EXTRACTION RULES:**
-- Extract specific institutions: "Georgetown University" → school_filter: "Georgetown University"
-- **DO NOT extract generic education terms**: "college", "university", "school" → school_filter: null
-- **Only extract when specific institution names are mentioned**: "Harvard", "MIT", "Stanford University" → school_filter: "Stanford University"
-- **Generic education requirements go to degree_level_progression**: "college graduates" → degree_level_progression: ["Bachelor's"]
-- Extract specific companies: "Chick Fil A", "Google", "Apple" → company_filter: "Company Name"
-- Extract industries: "tech", "finance", "healthcare" → industry_filter: "technology"
-- Extract job titles: "engineering", "marketing", "sales" → title_filter: "engineering"
-- Extract locations: "New York", "San Francisco", "remote" → location_filter: "New York"
-- Extract numeric values for experience requirements (e.g., "10+ years" → 10)
-- Identify career progression patterns (e.g., "IC to management" → "individual_contributor_to_management")
-- Detect education requirements and progressions
-- Identify mobility and transition patterns
-- Set reasonable defaults for timeline tolerances
-
-**IMPORTANT SCHOOL FILTER EXAMPLES:**
-✅ CORRECT - Specific institutions:
-- "Georgetown University graduates" → school_filter: "Georgetown University"
-- "people from Harvard" → school_filter: "Harvard"
-- "MIT alumni" → school_filter: "MIT"
-- "Stanford MBA graduates" → school_filter: "Stanford"
-
-❌ INCORRECT - Generic terms (DO NOT extract):
-- "college graduates" → school_filter: null, degree_level_progression: ["Bachelor's"]
-- "university alumni" → school_filter: null, degree_level_progression: ["Bachelor's"]
-- "people who went to school" → school_filter: null
-- "people who went to college" → school_filter: null, degree_level_progression: ["Bachelor's"]
-- "business school graduates" → school_filter: null, degree_level_progression: ["Master's"]
-
-**ADDITIONAL EDGE CASES:**
-
-**Company Name Edge Cases:**
-✅ CORRECT:
-- "ex-Google employees" → company_filter: "Google"
-- "former Apple workers" → company_filter: "Apple"
-- "people who left Microsoft" → company_filter: "Microsoft"
-- "alumni from McKinsey" → company_filter: "McKinsey"
-
-❌ INCORRECT - Generic company terms:
-- "startup employees" → company_filter: null, company_size_progression: ["startup"]
-- "big tech workers" → company_filter: null, industry_filter: "technology"
-- "consulting firm alumni" → company_filter: null, industry_filter: "consulting"
-- "Fortune 500 employees" → company_filter: null, company_size_progression: ["large"]
-
-**Industry Edge Cases:**
-✅ CORRECT:
-- "tech professionals" → industry_filter: "technology"
-- "healthcare workers" → industry_filter: "healthcare"
-- "financial services" → industry_filter: "finance"
-
-❌ INCORRECT - Too generic:
-- "professionals" → industry_filter: null
-- "workers" → industry_filter: null
-- "employees" → industry_filter: null
-
-**Title/Role Edge Cases:**
-✅ CORRECT:
-- "software engineers" → title_filter: "software engineer"
-- "product managers" → title_filter: "product manager"
-- "data scientists" → title_filter: "data scientist"
-
-❌ INCORRECT - Too generic or ambiguous:
-- "managers" → title_filter: null, career_progression_pattern: "individual_contributor_to_management"
-- "executives" → title_filter: null, career_progression_pattern: "entry_level_to_senior"
-- "leaders" → title_filter: null, career_progression_pattern: "individual_contributor_to_management"
-- "professionals" → title_filter: null
-
-**Location Edge Cases:**
-✅ CORRECT:
-- "San Francisco Bay Area" → location_filter: "San Francisco"
-- "NYC" → location_filter: "New York"
-- "remote workers" → location_filter: "remote"
-
-❌ INCORRECT - Too generic:
-- "West Coast" → location_filter: null, geographic_mobility: true
-- "East Coast" → location_filter: null, geographic_mobility: true
-- "international" → location_filter: null, geographic_mobility: true
-
-**Experience Level Edge Cases:**
-✅ CORRECT:
-- "5+ years experience" → min_years_in_industry: 5
-- "senior level" → total_experience_years: 7
-- "experienced professionals" → total_experience_years: 5
-
-❌ INCORRECT - Ambiguous terms:
-- "seasoned" → total_experience_years: 7 (interpret as experienced)
-- "junior" → total_experience_years: 2 (interpret as early career)
-- "entry-level" → total_experience_years: 1
-
-**Degree Level Edge Cases:**
-✅ CORRECT:
-- "PhD holders" → degree_level_progression: ["Bachelor's", "Master's", "PhD"]
-- "MBA graduates" → degree_level_progression: ["Bachelor's", "Master's"]
-- "undergraduate alumni" → degree_level_progression: ["Bachelor's"]
-
-❌ INCORRECT - Generic education terms:
-- "educated professionals" → degree_level_progression: ["Bachelor's"]
-- "degree holders" → degree_level_progression: ["Bachelor's"]
-- "graduates" → degree_level_progression: ["Bachelor's"]
-
-**Temporal/Sequence Edge Cases:**
-✅ CORRECT:
-- "people who worked at X then Y" → career_progression_pattern: "startup_to_enterprise" (if applicable)
-- "went to school while working" → concurrent_activities: true
-- "career changers" → industry_transitions: ["previous", "current"]
-
-❌ INCORRECT - Don't over-interpret:
-- "career growth" → career_progression_pattern: "steady_progression"
-- "professional development" → career_progression_pattern: null
-- "advancement" → career_progression_pattern: "entry_level_to_senior"
-
-**Ambiguous Company References:**
-✅ CORRECT:
-- "FAANG employees" → industry_filter: "technology" (don't extract specific companies)
-- "Big 4 consultants" → industry_filter: "consulting"
-- "investment bank analysts" → industry_filter: "finance"
-
-❌ INCORRECT:
-- "FAANG" → company_filter: "FAANG" (this is not a real company)
-- "Big 4" → company_filter: "Big 4" (this is not a real company)
-
-**Salary/Compensation Edge Cases:**
-- "high earners" → total_experience_years: 7 (implies senior level)
-- "well-compensated" → career_progression_pattern: "entry_level_to_senior"
-- "six-figure salaries" → total_experience_years: 5
-
-**Geographic Mobility Edge Cases:**
-- "relocated for work" → geographic_mobility: true
-- "moved cities" → geographic_mobility: true
-- "international experience" → geographic_mobility: true
-- "worked abroad" → geographic_mobility: true
-
-Return comprehensive JSON with all applicable filters. If no chronological patterns detected, return: {"gap_tolerance": 6}`
+Return comprehensive JSON with all applicable filters from the SQL function. If no chronological patterns detected, return: {"gap_tolerance": 6}`
       },
       {
         role: 'user',

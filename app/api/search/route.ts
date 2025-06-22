@@ -14,23 +14,6 @@ try {
   throw importError;
 }
 
-// Test function to check if we can load the transformers library
-const testTransformersLoad = async () => {
-  try {
-    console.log('[API] Attempting to load transformers library');
-    if (typeof window !== 'undefined') {
-      console.log('[API] Loading browser version of transformers');
-      return await import('@xenova/transformers/dist/transformers.min.js');
-    } else {
-      console.log('[API] Loading Node.js version of transformers');
-      return await import('@xenova/transformers');
-    }
-  } catch (error: unknown) {
-    console.error('[API] Failed to load transformers library:', error);
-    throw error;
-  }
-};
-
 // Add timeout handling at the top
 const SEARCH_TIMEOUT_MS = 60000; // 60 seconds (Increased from 30)
 
