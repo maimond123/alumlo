@@ -238,6 +238,9 @@ export async function POST(req: NextRequest) {
           organizationName: organizationName
         });
         
+        debug.log(`[API SEARCH] 🔍 ENHANCED FUZZY MATCHING: This search is using the enhanced fuzzy matching system`);
+        debug.log(`[API SEARCH] 🧠 FUZZY MATCHING FLOW: Query → Term Standardization → Filter Extraction → SQL Execution`);
+        
         try {
           debug.log(`[API SEARCH] 📈 DETAILED: Calling searchChronological with parameters:`, {
             query: `"${query}"`,
@@ -249,6 +252,7 @@ export async function POST(req: NextRequest) {
           // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING - CHRONOLOGICAL
           debug.log(`[API SEARCH] 🔍 EXACT CHRONOLOGICAL FILTERS BEING SENT TO SQL:`, JSON.stringify(searchConfig.filters, null, 2));
           debug.log(`[API SEARCH] 🔍 CHRONOLOGICAL SQL FUNCTION CALL: ${searchConfig.sqlFunction}(chronological_filters: ${JSON.stringify(searchConfig.filters)}, limit_count: 50)`);
+          debug.log(`[API SEARCH] 🎯 FUZZY MATCHING BENEFITS: These filters were enhanced through fuzzy term matching for better database compatibility`);
           
           // Execute primary search only (expansion will be handled separately)
           results = await withTimeout(
@@ -268,7 +272,8 @@ export async function POST(req: NextRequest) {
             firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none',
             sqlFunction: searchConfig.sqlFunction,
             filtersUsed: Object.keys(searchConfig.filters || {}),
-            queryUsed: query
+            queryUsed: query,
+            enhancedWithFuzzyMatching: true
           });
           
           // Set metadata for primary search only
@@ -278,10 +283,13 @@ export async function POST(req: NextRequest) {
             sql_function: searchConfig.sqlFunction,
             configuration_source: 'pipeline',
             strict_filtering: true,
+            fuzzy_matching_enabled: true,
+            term_standardization_applied: true,
             expansion_available: !!(body.expansionResults && body.expansionResults.variants && body.expansionResults.variants.length > 0)
           };
           
           debug.log(`[API SEARCH] ✅ Primary chronological search completed with ${Array.isArray(results) ? results.length : 0} results`);
+          debug.log(`[API SEARCH] 🎉 FUZZY MATCHING SUCCESS: Enhanced search with intelligent term standardization completed`);
           searchType = 'chronological';
           
         } catch (error) {
@@ -291,7 +299,8 @@ export async function POST(req: NextRequest) {
             errorStack: error instanceof Error ? error.stack : 'No stack',
             errorName: error instanceof Error ? error.name : 'Unknown',
             searchConfig: searchConfig,
-            organizationName: organizationName
+            organizationName: organizationName,
+            fuzzyMatchingWasApplied: true
           });
           
           // Log but don't throw - let it fall through to fallback
