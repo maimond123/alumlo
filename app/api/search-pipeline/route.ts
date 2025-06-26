@@ -117,6 +117,869 @@ interface SearchExpansionResponse {
   expansion_variants: SearchExpansionVariant[];
 }
 
+// NEW: Database Term Standardization and Mapping System (Enhanced for Fuzzy Matching)
+const DATABASE_TERM_MAPPINGS = {
+  // INDUSTRY STANDARDIZATION (Expanded for better fuzzy matching)
+  industry_mappings: {
+    // Technology variations (expanded)
+    "tech": "Technology & Software",
+    "technology": "Technology & Software", 
+    "software": "Technology & Software",
+    "it": "IT/Systems",
+    "information technology": "IT/Systems",
+    "info tech": "IT/Systems",
+    "fintech": "Fintech",
+    "financial technology": "Fintech",
+    "ecommerce": "Internet/E-commerce",
+    "e-commerce": "Internet/E-commerce",
+    "internet": "Internet/E-commerce",
+    "online": "Internet/E-commerce",
+    "digital": "Technology & Software",
+    "data": "Data/Analytics",
+    "analytics": "Data/Analytics",
+    "big data": "Data/Analytics",
+    "telecom": "Telecommunications",
+    "telecommunications": "Telecommunications",
+    "saas": "Technology & Software",
+    "software as a service": "Technology & Software",
+    "cloud": "Technology & Software",
+    "artificial intelligence": "Technology & Software",
+    "ai": "Technology & Software",
+    "machine learning": "Technology & Software",
+    "ml": "Technology & Software",
+    "blockchain": "Fintech",
+    "crypto": "Fintech",
+    "cryptocurrency": "Fintech",
+    
+    // Finance variations (expanded)
+    "finance": "Financial Services",
+    "financial": "Financial Services",
+    "financial services": "Financial Services",
+    "banking": "Banking",
+    "investment": "Investment Management",
+    "investment management": "Investment Management",
+    "private equity": "Private Equity/VC",
+    "pe": "Private Equity/VC",
+    "venture capital": "Private Equity/VC",
+    "vc": "Private Equity/VC",
+    "hedge fund": "Investment Management",
+    "asset management": "Investment Management",
+    "wealth management": "Financial Services",
+    "insurance": "Insurance",
+    "accounting": "Accounting & Tax",
+    "tax": "Accounting & Tax",
+    "audit": "Accounting & Tax",
+    "wall street": "Financial Services",
+    "capital markets": "Financial Services",
+    "trading": "Financial Services",
+    
+    // Healthcare variations (expanded)
+    "healthcare": "Healthcare & Pharmaceuticals",
+    "health": "Healthcare & Pharmaceuticals",
+    "medical": "Healthcare & Pharmaceuticals",
+    "medicine": "Healthcare & Pharmaceuticals",
+    "pharma": "Healthcare & Pharmaceuticals",
+    "pharmaceutical": "Healthcare & Pharmaceuticals",
+    "pharmaceuticals": "Healthcare & Pharmaceuticals",
+    "biotech": "Healthcare & Pharmaceuticals",
+    "biotechnology": "Healthcare & Pharmaceuticals",
+    "medtech": "Medical Devices",
+    "medical devices": "Medical Devices",
+    "life sciences": "Healthcare & Pharmaceuticals",
+    "clinical": "Healthcare & Pharmaceuticals",
+    "hospital": "Healthcare & Pharmaceuticals",
+    
+    // Consulting variations (expanded)
+    "consulting": "Management Consulting",
+    "management consulting": "Management Consulting",
+    "mckinsey": "Management Consulting",
+    "bain": "Management Consulting",
+    "bcg": "Management Consulting",
+    "boston consulting group": "Management Consulting",
+    "advisory": "Management Consulting",
+    "strategy": "Management Consulting",
+    "strategy consulting": "Management Consulting",
+    "business consulting": "Management Consulting",
+    
+    // Food & Restaurant variations (expanded)
+    "food": "Food & Beverage",
+    "food and beverage": "Food & Beverage",
+    "restaurant": "Restaurant/Hospitality",
+    "restaurants": "Restaurant/Hospitality",
+    "hospitality": "Restaurant/Hospitality",
+    "qsr": "Quick Service Restaurant (QSR)",
+    "quick service": "Quick Service Restaurant (QSR)",
+    "fast food": "Quick Service Restaurant (QSR)",
+    "food service": "Restaurant/Hospitality",
+    "catering": "Food & Beverage",
+    "beverage": "Food & Beverage",
+    "consumer packaged goods": "Retail & Consumer Goods",
+    "cpg": "Retail & Consumer Goods",
+    
+    // Retail variations (expanded)
+    "retail": "Retail & Consumer Goods",
+    "consumer": "Retail & Consumer Goods",
+    "consumer goods": "Retail & Consumer Goods",
+    "fashion": "Fashion",
+    "apparel": "Fashion",
+    "clothing": "Fashion",
+    "automotive": "Automotive",
+    "auto": "Automotive",
+    "luxury": "Luxury Goods",
+    "beauty": "Beauty & Personal Care",
+    "cosmetics": "Beauty & Personal Care",
+    
+    // Manufacturing variations (expanded)
+    "manufacturing": "Manufacturing",
+    "production": "Manufacturing",
+    "industrial": "Manufacturing",
+    "factory": "Manufacturing",
+    "logistics": "Transportation & Logistics",
+    "supply chain": "Supply Chain/Logistics",
+    "transportation": "Transportation & Logistics",
+    "shipping": "Transportation & Logistics",
+    
+    // Media variations (expanded)
+    "media": "Media & Entertainment",
+    "entertainment": "Media & Entertainment",
+    "sports": "Sports & Recreation",
+    "gaming": "Gaming & Entertainment",
+    "film": "Media & Entertainment",
+    "television": "Media & Entertainment",
+    "tv": "Media & Entertainment",
+    "advertising": "Advertising & Marketing",
+    "marketing": "Advertising & Marketing",
+    "social media": "Media & Entertainment",
+    
+    // Education variations (expanded)
+    "education": "Education",
+    "academic": "Education",
+    "university": "Education",
+    "school": "Education",
+    "edtech": "Education",
+    "educational technology": "Education",
+    "learning": "Education",
+    
+    // Real Estate variations (expanded)
+    "real estate": "Real Estate",
+    "property": "Real Estate",
+    "realty": "Real Estate",
+    "housing": "Real Estate",
+    "commercial property": "Real Estate",
+    "construction": "Construction & Real Estate",
+    
+    // Government variations (expanded)
+    "government": "Government & Public Sector",
+    "public sector": "Government & Public Sector",
+    "federal": "Government & Public Sector",
+    "state government": "Government & Public Sector",
+    "local government": "Government & Public Sector",
+    "nonprofit": "Non-Profit & NGO",
+    "non-profit": "Non-Profit & NGO",
+    "ngo": "Non-Profit & NGO",
+    "public service": "Government & Public Sector",
+    
+    // Energy & Environment (new categories)
+    "energy": "Energy",
+    "oil": "Energy",
+    "gas": "Energy",
+    "renewable": "Energy",
+    "solar": "Energy",
+    "wind": "Energy",
+    "utilities": "Utilities",
+    "environmental": "Environmental Services",
+    "sustainability": "Environmental Services",
+    "green": "Environmental Services"
+  },
+
+  // JOB FUNCTION STANDARDIZATION (Expanded)
+  function_mappings: {
+    // Engineering variations (expanded)
+    "engineering": "Software Engineering",
+    "software engineering": "Software Engineering",
+    "software development": "Software Engineering", 
+    "development": "Software Engineering",
+    "programmer": "Software Engineering",
+    "developer": "Software Engineering",
+    "coding": "Software Engineering",
+    "programming": "Software Engineering",
+    "swe": "Software Engineering",
+    "full stack": "Software Engineering",
+    "frontend": "Software Engineering",
+    "backend": "Software Engineering",
+    "devops": "Software Engineering",
+    "mobile development": "Software Engineering",
+    "web development": "Software Engineering",
+    
+    // Product variations (expanded)
+    "product": "Product Management",
+    "product management": "Product Management",
+    "product manager": "Product Management",
+    "pm": "Product Management",
+    "product marketing": "Product Management",
+    "product strategy": "Product Management",
+    "product owner": "Product Management",
+    
+    // Data variations (expanded)
+    "data science": "Data Science/Analytics",
+    "data": "Data Science/Analytics",
+    "analytics": "Data Science/Analytics",
+    "data analyst": "Data Science/Analytics",
+    "data scientist": "Data Science/Analytics",
+    "business intelligence": "Data Science/Analytics",
+    "bi": "Data Science/Analytics",
+    "machine learning": "Data Science/Analytics",
+    "ai": "Data Science/Analytics",
+    "statistics": "Data Science/Analytics",
+    "quantitative": "Data Science/Analytics",
+    
+    // Sales variations (expanded)
+    "sales": "Sales",
+    "business development": "Business Development",
+    "bd": "Business Development",
+    "biz dev": "Business Development",
+    "account management": "Account Management",
+    "customer success": "Customer Success",
+    "revenue": "Sales",
+    "partnerships": "Business Development",
+    "enterprise sales": "Sales",
+    "inside sales": "Sales",
+    "outside sales": "Sales",
+    
+    // Marketing variations (expanded)
+    "marketing": "Marketing",
+    "digital marketing": "Digital Marketing",
+    "growth": "Marketing",
+    "growth marketing": "Marketing",
+    "brand": "Marketing",
+    "brand marketing": "Marketing",
+    "content marketing": "Marketing",
+    "performance marketing": "Marketing",
+    "social media marketing": "Marketing",
+    "seo": "Digital Marketing",
+    "sem": "Digital Marketing",
+    "advertising": "Marketing",
+    
+    // Finance variations (expanded)
+    "finance": "Finance",
+    "financial": "Finance",
+    "accounting": "Accounting",
+    "fp&a": "Finance",
+    "financial planning": "Finance",
+    "treasury": "Finance",
+    "investment banking": "Investment Banking",
+    "ib": "Investment Banking",
+    "private equity": "Private Equity/VC",
+    "venture capital": "Private Equity/VC",
+    "hedge fund": "Investment Management",
+    "trading": "Trading",
+    
+    // Operations variations (expanded)
+    "operations": "Operations Management",
+    "ops": "Operations Management",
+    "supply chain": "Supply Chain",
+    "logistics": "Supply Chain",
+    "procurement": "Operations Management",
+    "process improvement": "Operations Management",
+    "program management": "Project Management",
+    "project management": "Project Management",
+    "business operations": "Operations Management",
+    
+    // Management variations (expanded)
+    "management": "General Management",
+    "general management": "General Management",
+    "consulting": "Consulting",
+    "strategy": "Strategy & Planning",
+    "strategic planning": "Strategy & Planning",
+    "business strategy": "Strategy & Planning",
+    "transformation": "Consulting",
+    
+    // HR variations (expanded)
+    "hr": "Human Resources", 
+    "human resources": "Human Resources",
+    "people": "Human Resources",
+    "recruiting": "Recruiting/Talent",
+    "recruitment": "Recruiting/Talent",
+    "talent": "Recruiting/Talent",
+    "talent acquisition": "Recruiting/Talent",
+    "people operations": "Human Resources",
+    "compensation": "Human Resources",
+    "benefits": "Human Resources",
+    "learning and development": "Human Resources",
+    
+    // Design variations (new)
+    "design": "Design",
+    "ux": "Design",
+    "ui": "Design",
+    "user experience": "Design",
+    "user interface": "Design",
+    "graphic design": "Design",
+    "product design": "Design",
+    "creative": "Design",
+    
+    // Legal variations (new)
+    "legal": "Legal",
+    "law": "Legal",
+    "attorney": "Legal",
+    "lawyer": "Legal",
+    "counsel": "Legal",
+    "compliance": "Legal",
+    
+    // Restaurant specific (expanded)
+    "restaurant operations": "Restaurant Operations",
+    "food service": "Food Service Management",
+    "franchise": "Franchise Operations",
+    "store management": "Store Management",
+    "restaurant management": "Restaurant Operations",
+    "kitchen": "Food Service Management",
+    "culinary": "Food Service Management"
+  },
+
+  // JOB LEVEL STANDARDIZATION (Expanded)
+  level_mappings: {
+    // Entry level variations (expanded)
+    "entry": "Entry Level",
+    "entry level": "Entry Level",
+    "junior": "Entry Level",
+    "jr": "Entry Level",
+    "associate": "Associate",
+    "coordinator": "Associate",
+    "analyst": "Associate",
+    "assistant": "Entry Level",
+    "trainee": "Entry Level",
+    "intern": "Entry Level",
+    "new grad": "Entry Level",
+    "recent graduate": "Entry Level",
+    
+    // Mid level variations (expanded)
+    "mid": "Mid Level",
+    "mid level": "Mid Level",
+    "senior": "Senior Level",
+    "sr": "Senior Level",
+    "senior level": "Senior Level",
+    "staff": "Senior Level",
+    "principal": "Lead/Principal",
+    "lead": "Lead/Principal",
+    "senior staff": "Lead/Principal",
+    "architect": "Lead/Principal",
+    "specialist": "Mid Level",
+    "expert": "Senior Level",
+    
+    // Management variations (expanded)
+    "manager": "Manager",
+    "mgr": "Manager",
+    "supervisor": "Manager",
+    "team lead": "Manager",
+    "team leader": "Manager",
+    "director": "Director",
+    "dir": "Director",
+    "senior director": "Director",
+    "head of": "Director",
+    
+    // Executive variations (expanded)
+    "vp": "VP/SVP",
+    "vice president": "VP/SVP",
+    "svp": "VP/SVP",
+    "senior vice president": "VP/SVP",
+    "executive": "VP/SVP",
+    "evp": "VP/SVP",
+    "executive vice president": "VP/SVP",
+    "c-suite": "C-Suite",
+    "ceo": "C-Suite",
+    "chief executive officer": "C-Suite",
+    "cto": "C-Suite",
+    "chief technology officer": "C-Suite",
+    "cfo": "C-Suite",
+    "chief financial officer": "C-Suite",
+    "coo": "C-Suite",
+    "chief operating officer": "C-Suite",
+    "cmo": "C-Suite",
+    "chief marketing officer": "C-Suite",
+    "chief": "C-Suite",
+    "founder": "Founder/Owner",
+    "co-founder": "Founder/Owner",
+    "cofounder": "Founder/Owner",
+    "owner": "Founder/Owner",
+    "entrepreneur": "Founder/Owner",
+    "president": "C-Suite"
+  },
+
+  // COMPANY SIZE STANDARDIZATION (Expanded)
+  size_mappings: {
+    "startup": "Startup (1-50 employees)",
+    "start-up": "Startup (1-50 employees)",
+    "early stage": "Startup (1-50 employees)",
+    "seed": "Startup (1-50 employees)",
+    "series a": "Startup (1-50 employees)",
+    "small": "Small (51-200 employees)",
+    "small company": "Small (51-200 employees)",
+    "sme": "Small (51-200 employees)",
+    "small business": "Small (51-200 employees)",
+    "medium": "Medium (201-1000 employees)",
+    "medium company": "Medium (201-1000 employees)",
+    "mid-size": "Medium (201-1000 employees)",
+    "large": "Large (1001-5000 employees)",
+    "large company": "Large (1001-5000 employees)",
+    "enterprise": "Enterprise (5000+ employees)",
+    "big company": "Enterprise (5000+ employees)",
+    "fortune 500": "Enterprise (5000+ employees)",
+    "fortune500": "Enterprise (5000+ employees)",
+    "big tech": "Enterprise (5000+ employees)",
+    "faang": "Enterprise (5000+ employees)",
+    "corporate": "Enterprise (5000+ employees)",
+    "multinational": "Enterprise (5000+ employees)"
+  },
+
+  // DEGREE LEVEL STANDARDIZATION (Expanded)
+  degree_mappings: {
+    // High school variations
+    "high school": "High School Diploma",
+    "secondary": "High School Diploma",
+    "hs": "High School Diploma",
+    
+    // Undergraduate variations (expanded)
+    "bachelor": "Bachelor's Degree",
+    "bachelors": "Bachelor's Degree", 
+    "bachelor's": "Bachelor's Degree",
+    "ba": "Bachelor's Degree",
+    "bs": "Bachelor's Degree",
+    "bsc": "Bachelor's Degree",
+    "undergraduate": "Bachelor's Degree",
+    "undergrad": "Bachelor's Degree",
+    "college": "Bachelor's Degree",
+    "college degree": "Bachelor's Degree",
+    "associate": "Associate Degree",
+    "associates": "Associate Degree",
+    "associate's": "Associate Degree",
+    "aa": "Associate Degree",
+    "as": "Associate Degree",
+    
+    // Graduate variations (expanded)
+    "master": "Master's Degree",
+    "masters": "Master's Degree",
+    "master's": "Master's Degree",
+    "ma": "Master of Arts (MA)",
+    "ms": "Master of Science (MS)",
+    "msc": "Master of Science (MS)",
+    "graduate": "Master's Degree",
+    "grad school": "Master's Degree",
+    "graduate degree": "Master's Degree",
+    "mba": "Master of Business Administration (MBA)",
+    "master of business administration": "Master of Business Administration (MBA)",
+    "business school": "Master of Business Administration (MBA)",
+    "mfa": "Master of Fine Arts (MFA)",
+    "med": "Master of Education (MEd)",
+    
+    // Doctorate variations (expanded)
+    "phd": "Doctor of Philosophy (PhD)",
+    "ph.d": "Doctor of Philosophy (PhD)",
+    "doctorate": "Doctor of Philosophy (PhD)",
+    "doctoral": "Doctor of Philosophy (PhD)",
+    "doctor of philosophy": "Doctor of Philosophy (PhD)",
+    "md": "Doctor of Medicine (MD)",
+    "doctor of medicine": "Doctor of Medicine (MD)",
+    "medical degree": "Doctor of Medicine (MD)",
+    "med school": "Doctor of Medicine (MD)",
+    "medical school": "Doctor of Medicine (MD)",
+    "jd": "Juris Doctor (JD)",
+    "j.d": "Juris Doctor (JD)",
+    "juris doctor": "Juris Doctor (JD)",
+    "law degree": "Juris Doctor (JD)",
+    "law school": "Juris Doctor (JD)",
+    "legal": "Juris Doctor (JD)"
+  },
+
+  // SCHOOL RANKING STANDARDIZATION (Expanded)
+  ranking_mappings: {
+    "ivy league": "Ivy League",
+    "ivy": "Ivy League",
+    "harvard": "Ivy League",
+    "yale": "Ivy League", 
+    "princeton": "Ivy League",
+    "columbia": "Ivy League",
+    "penn": "Ivy League",
+    "upenn": "Ivy League",
+    "university of pennsylvania": "Ivy League",
+    "dartmouth": "Ivy League",
+    "brown": "Ivy League",
+    "cornell": "Ivy League",
+    "top 10": "Top 10",
+    "top ten": "Top 10",
+    "top 25": "Top 25",
+    "top 50": "Top 50",
+    "top 100": "Top 100",
+    "elite": "Top 10",
+    "prestigious": "Top 25",
+    "state school": "State University",
+    "state university": "State University",
+    "public university": "State University",
+    "uc": "State University",
+    "university of california": "State University",
+    "community college": "Community College",
+    "cc": "Community College",
+    "trade school": "Trade/Technical School",
+    "technical school": "Trade/Technical School",
+    "vocational": "Trade/Technical School",
+    "liberal arts": "Liberal Arts College",
+    "liberal arts college": "Liberal Arts College"
+  },
+
+  // MAJOR CATEGORY STANDARDIZATION (Expanded)
+  major_mappings: {
+    // STEM variations (expanded)
+    "computer science": "Computer Science/Technology",
+    "cs": "Computer Science/Technology",
+    "comp sci": "Computer Science/Technology",
+    "tech": "Computer Science/Technology",
+    "technology": "Computer Science/Technology",
+    "information technology": "Computer Science/Technology",
+    "it": "Computer Science/Technology",
+    "engineering": "Engineering",
+    "mechanical engineering": "Engineering",
+    "electrical engineering": "Engineering",
+    "civil engineering": "Engineering",
+    "chemical engineering": "Engineering",
+    "software engineering": "Computer Science/Technology",
+    "math": "Mathematics/Statistics",
+    "mathematics": "Mathematics/Statistics",
+    "statistics": "Mathematics/Statistics",
+    "applied math": "Mathematics/Statistics",
+    "data science": "Data Science/Analytics",
+    "science": "Natural Sciences",
+    "biology": "Natural Sciences",
+    "chemistry": "Natural Sciences",
+    "physics": "Natural Sciences",
+    "biochemistry": "Natural Sciences",
+    "neuroscience": "Natural Sciences",
+    
+    // Business variations (expanded)
+    "business": "Business Administration",
+    "business administration": "Business Administration",
+    "business management": "Business Administration",
+    "finance": "Finance",
+    "accounting": "Accounting",
+    "marketing": "Marketing",
+    "management": "Management",
+    "economics": "Economics",
+    "econ": "Economics",
+    "entrepreneurship": "Business Administration",
+    "operations": "Management",
+    "supply chain": "Management",
+    "international business": "Business Administration",
+    
+    // Liberal arts variations (expanded)
+    "liberal arts": "Liberal Arts",
+    "english": "English/Literature",
+    "literature": "English/Literature",
+    "history": "History",
+    "philosophy": "Philosophy",
+    "communications": "Communications",
+    "comm": "Communications",
+    "journalism": "Communications",
+    "media studies": "Communications",
+    "art": "Fine Arts",
+    "fine arts": "Fine Arts",
+    "visual arts": "Fine Arts",
+    "music": "Music",
+    "theater": "Theater/Film",
+    "theatre": "Theater/Film",
+    "film": "Theater/Film",
+    "design": "Design",
+    "graphic design": "Design",
+    
+    // Social sciences variations (expanded)
+    "psychology": "Psychology",
+    "psych": "Psychology",
+    "sociology": "Sociology",
+    "anthropology": "Sociology",
+    "political science": "Political Science",
+    "poli sci": "Political Science",
+    "government": "Political Science",
+    "international relations": "International Relations",
+    "ir": "International Relations",
+    "public policy": "Public Policy",
+    "public administration": "Public Administration",
+    "social work": "Social Work",
+    "criminal justice": "Criminal Justice",
+    
+    // Professional fields variations (expanded)
+    "education": "Education",
+    "teaching": "Education",
+    "medicine": "Medicine",
+    "medical": "Medicine",
+    "pre-med": "Medicine",
+    "nursing": "Nursing",
+    "pharmacy": "Pharmacy",
+    "healthcare": "Medicine",
+    "law": "Law",
+    "legal": "Law",
+    "pre-law": "Law",
+    "architecture": "Architecture",
+    "urban planning": "Architecture"
+  }
+};
+
+// Enhanced fuzzy matching function with multiple strategies
+function fuzzyMatchTerms(query: string, mappings: Record<string, string>): string[] {
+  const lowerQuery = query.toLowerCase();
+  const matches: Array<{ term: string; score: number }> = [];
+  
+  for (const [key, value] of Object.entries(mappings)) {
+    const lowerKey = key.toLowerCase();
+    let score = 0;
+    
+    // Strategy 1: Exact match (highest score)
+    if (lowerQuery === lowerKey) {
+      score = 100;
+    }
+    // Strategy 2: Contains exact key
+    else if (lowerQuery.includes(lowerKey)) {
+      score = 90;
+    }
+    // Strategy 3: Key contains query (partial match)
+    else if (lowerKey.includes(lowerQuery) && lowerQuery.length >= 3) {
+      score = 80;
+    }
+    // Strategy 4: Word boundary matching
+    else if (new RegExp(`\\b${lowerKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(lowerQuery)) {
+      score = 85;
+    }
+    // Strategy 5: Fuzzy word matching (split into words)
+    else {
+      const queryWords = lowerQuery.split(/\s+/);
+      const keyWords = lowerKey.split(/\s+/);
+      
+      let wordMatches = 0;
+      let partialMatches = 0;
+      
+      for (const queryWord of queryWords) {
+        for (const keyWord of keyWords) {
+          // Exact word match
+          if (queryWord === keyWord) {
+            wordMatches++;
+          }
+          // Partial word match (at least 3 chars)
+          else if (queryWord.length >= 3 && keyWord.includes(queryWord)) {
+            partialMatches++;
+          }
+          // Reverse partial match
+          else if (keyWord.length >= 3 && queryWord.includes(keyWord)) {
+            partialMatches++;
+          }
+          // Levenshtein-like similarity for short words
+          else if (calculateSimilarity(queryWord, keyWord) > 0.7) {
+            partialMatches++;
+          }
+        }
+      }
+      
+      if (wordMatches > 0 || partialMatches > 0) {
+        score = Math.min(75, (wordMatches * 20) + (partialMatches * 10));
+      }
+    }
+    
+    // Strategy 6: Acronym matching
+    if (score === 0) {
+      const acronym = lowerKey.split(' ').map(word => word[0]).join('');
+      if (lowerQuery === acronym || lowerQuery.includes(acronym)) {
+        score = 70;
+      }
+    }
+    
+    // Strategy 7: Common abbreviations and variations
+    if (score === 0) {
+      score = checkCommonVariations(lowerQuery, lowerKey);
+    }
+    
+    if (score >= 50) { // Minimum threshold for inclusion
+      matches.push({ term: value, score });
+    }
+  }
+  
+  // Sort by score (highest first) and return unique values
+  const sortedMatches = matches
+    .sort((a, b) => b.score - a.score)
+    .map(match => match.term);
+  
+  return [...new Set(sortedMatches)];
+}
+
+// Simple similarity calculation (Jaccard-like)
+function calculateSimilarity(str1: string, str2: string): number {
+  if (str1.length < 3 || str2.length < 3) return 0;
+  
+  const set1 = new Set(str1.toLowerCase().split(''));
+  const set2 = new Set(str2.toLowerCase().split(''));
+  
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+  
+  return intersection.size / union.size;
+}
+
+// Check for common variations and abbreviations
+function checkCommonVariations(query: string, key: string): number {
+  const variations: Record<string, string[]> = {
+    // Technology variations
+    'technology': ['tech', 'it', 'information technology', 'info tech', 'digital'],
+    'software': ['sw', 'development', 'dev', 'programming', 'coding'],
+    'engineering': ['eng', 'engineer', 'engineers'],
+    'artificial intelligence': ['ai', 'machine learning', 'ml', 'deep learning'],
+    'data science': ['ds', 'data analysis', 'analytics', 'big data'],
+    
+    // Business variations
+    'management consulting': ['consulting', 'mckinsey', 'bain', 'bcg', 'strategy'],
+    'business administration': ['business', 'admin', 'management'],
+    'finance': ['financial', 'fin', 'banking', 'investment'],
+    'marketing': ['mktg', 'advertising', 'promotion', 'brand'],
+    'human resources': ['hr', 'people', 'talent', 'recruiting'],
+    
+    // Education variations
+    'bachelor': ['bachelors', 'undergraduate', 'college', 'ba', 'bs'],
+    'master': ['masters', 'graduate', 'ma', 'ms'],
+    'doctorate': ['doctoral', 'phd', 'doctor'],
+    'mba': ['master of business administration', 'business school'],
+    
+    // Company size variations
+    'startup': ['start-up', 'early stage', 'seed', 'series a'],
+    'enterprise': ['large company', 'big company', 'fortune 500', 'corporate'],
+    'small': ['small company', 'sme', 'small business'],
+    
+    // Industry variations
+    'healthcare': ['health', 'medical', 'medicine', 'pharma', 'pharmaceutical'],
+    'real estate': ['property', 'realty', 'housing', 'commercial property'],
+    'retail': ['consumer', 'shopping', 'commerce', 'merchandise'],
+    'manufacturing': ['production', 'factory', 'industrial'],
+    
+    // Job level variations
+    'senior': ['sr', 'senior level', 'experienced'],
+    'junior': ['jr', 'entry level', 'associate'],
+    'manager': ['mgr', 'management', 'supervisor'],
+    'director': ['dir', 'head of'],
+    'vice president': ['vp', 'svp', 'senior vp'],
+    'chief executive': ['ceo', 'chief executive officer'],
+    'founder': ['co-founder', 'entrepreneur', 'startup founder']
+  };
+  
+  for (const [baseKey, variants] of Object.entries(variations)) {
+    if (key.includes(baseKey)) {
+      for (const variant of variants) {
+        if (query.includes(variant)) {
+          return 60; // Good match for variations
+        }
+      }
+    }
+  }
+  
+  return 0;
+}
+
+// Enhanced function to standardize terms using fuzzy matching
+function standardizeTerms(query: string, filterType: keyof typeof DATABASE_TERM_MAPPINGS): string[] {
+  const mappings = DATABASE_TERM_MAPPINGS[filterType];
+  const matches = fuzzyMatchTerms(query, mappings);
+  
+  // If no fuzzy matches found, try semantic expansion
+  if (matches.length === 0) {
+    const expandedMatches = semanticExpansion(query, filterType);
+    if (expandedMatches.length > 0) {
+      return expandedMatches;
+    }
+  }
+  
+  // If still no matches, return the original query (let the LLM handle it)
+  return matches.length > 0 ? matches : [query];
+}
+
+// Semantic expansion for terms not found in mappings
+function semanticExpansion(query: string, filterType: keyof typeof DATABASE_TERM_MAPPINGS): string[] {
+  const lowerQuery = query.toLowerCase();
+  
+  // Industry semantic expansion
+  if (filterType === 'industry_mappings') {
+    if (lowerQuery.includes('digital') || lowerQuery.includes('online') || lowerQuery.includes('internet')) {
+      return ['Technology & Software', 'Internet/E-commerce'];
+    }
+    if (lowerQuery.includes('bio') || lowerQuery.includes('life sciences')) {
+      return ['Healthcare & Pharmaceuticals'];
+    }
+    if (lowerQuery.includes('green') || lowerQuery.includes('sustainable') || lowerQuery.includes('renewable')) {
+      return ['Energy', 'Environmental Services'];
+    }
+    if (lowerQuery.includes('crypto') || lowerQuery.includes('blockchain') || lowerQuery.includes('defi')) {
+      return ['Fintech', 'Technology & Software'];
+    }
+  }
+  
+  // Function semantic expansion
+  if (filterType === 'function_mappings') {
+    if (lowerQuery.includes('code') || lowerQuery.includes('program') || lowerQuery.includes('develop')) {
+      return ['Software Engineering'];
+    }
+    if (lowerQuery.includes('design') && (lowerQuery.includes('ui') || lowerQuery.includes('ux'))) {
+      return ['Product Management', 'Design'];
+    }
+    if (lowerQuery.includes('revenue') || lowerQuery.includes('growth') || lowerQuery.includes('acquisition')) {
+      return ['Sales', 'Business Development'];
+    }
+    if (lowerQuery.includes('people') || lowerQuery.includes('culture') || lowerQuery.includes('talent')) {
+      return ['Human Resources'];
+    }
+  }
+  
+  // Level semantic expansion
+  if (filterType === 'level_mappings') {
+    if (lowerQuery.includes('experienced') || lowerQuery.includes('seasoned')) {
+      return ['Senior Level'];
+    }
+    if (lowerQuery.includes('new grad') || lowerQuery.includes('recent graduate')) {
+      return ['Entry Level'];
+    }
+    if (lowerQuery.includes('leadership') || lowerQuery.includes('executive')) {
+      return ['VP/SVP', 'C-Suite'];
+    }
+  }
+  
+  // Degree semantic expansion
+  if (filterType === 'degree_mappings') {
+    if (lowerQuery.includes('undergrad') || lowerQuery.includes('college degree')) {
+      return ["Bachelor's Degree"];
+    }
+    if (lowerQuery.includes('grad school') || lowerQuery.includes('graduate degree')) {
+      return ["Master's Degree"];
+    }
+    if (lowerQuery.includes('business school')) {
+      return ["Master of Business Administration (MBA)"];
+    }
+    if (lowerQuery.includes('law school') || lowerQuery.includes('legal')) {
+      return ["Juris Doctor (JD)"];
+    }
+  }
+  
+  return [];
+}
+
+// Enhanced function to get all possible standardized terms with fuzzy matching
+function getAllStandardizedTerms(query: string): {
+  industries: string[];
+  functions: string[];
+  levels: string[];
+  sizes: string[];
+  degrees: string[];
+  rankings: string[];
+  majors: string[];
+} {
+  return {
+    industries: standardizeTerms(query, 'industry_mappings'),
+    functions: standardizeTerms(query, 'function_mappings'),
+    levels: standardizeTerms(query, 'level_mappings'),
+    sizes: standardizeTerms(query, 'size_mappings'),
+    degrees: standardizeTerms(query, 'degree_mappings'),
+    rankings: standardizeTerms(query, 'ranking_mappings'),
+    majors: standardizeTerms(query, 'major_mappings')
+  };
+}
+
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   const processingSteps: string[] = [];
@@ -678,224 +1541,387 @@ Respond only with valid JSON containing just the type field.`,
 
 // NEW: Function to extract available filters from SQL function definition
 async function getAvailableChronologicalFilters(): Promise<string> {
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Querying SQL function definition for available filters`);
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Providing supported chronological filters`);
   
-  try {
-    // Read the SQL function file to understand the complete schema
-    const fs = require('fs').promises;
-    const path = require('path');
-    
-    const sqlFunctionPath = path.join(process.cwd(), 'sql_functions', 'llm_integrated_chronological_search_chick_fil_a.sql');
-    const sqlContent = await fs.readFile(sqlFunctionPath, 'utf8');
-    
-    console.log(`[PIPELINE CHRONOLOGICAL] ✅ SQL function definition loaded successfully`);
-    
-    // Return the SQL function content for the LLM to analyze
-    return sqlContent;
-  } catch (error) {
-    console.error(`[PIPELINE CHRONOLOGICAL] ❌ Failed to load SQL function definition:`, error);
-    
-    // Fallback to basic filters if file read fails
-    return `
-    Basic chronological filters available:
-    - school_filter (string)
-    - company_filter (string)
-    - industry_filter (string)
-    - title_filter (string)
-    - location_filter (string)
-    - min_years_in_industry (number)
-    - total_experience_years (number)
-    - geographic_mobility (boolean)
-    - concurrent_activities (boolean)
-    `;
-  }
+  // Return only the 9 supported input filters that the SQL function actually uses
+  return `
+**SUPPORTED CHRONOLOGICAL INPUT FILTERS:**
+
+**Basic Entity Filters:**
+- school_filter (string) - Filters by educational institution name (e.g., "Georgetown University", "Harvard")
+- company_filter (string) - Filters by company name (e.g., "Google", "Apple", "Microsoft")
+- industry_filter (string) - Filters by industry (e.g., "technology", "finance", "consulting")
+- title_filter (string) - Filters by job title/role (e.g., "software engineer", "product manager")
+- location_filter (string) - Filters by location (e.g., "San Francisco", "New York", "remote")
+
+**Experience & Timeline Filters:**
+- total_experience_years (number) - Minimum total years of professional experience
+- min_years_in_industry (number) - Minimum years of experience in a specific industry
+- geographic_mobility (boolean) - Whether the person has moved locations for career advancement
+- concurrent_activities (boolean) - Whether the person worked while studying or had overlapping activities
+
+**CRITICAL INSTRUCTIONS:**
+1. These are the ONLY 9 filters that can be used as input to the chronological search
+2. Focus your entity extraction on mapping to these 9 specific filters
+3. Always include gap_tolerance: 6 as a default timeline filter
+`;
 }
 
-// STEP 2: Enhanced Translation with Complete Filter Knowledge
-async function translateWithoutClassificationContext(
-  query: string
-): Promise<ChronologicalFilters> {
-  console.log(`[PIPELINE CHRONOLOGICAL] 📈 Starting chronological filter translation for: "${query}"`);
+// STAGE 1: Term Standardization & Preprocessing
+async function standardizeQueryTerms(query: string): Promise<{
+  standardizedQuery: string;
+  termMappings: {
+    industries: string[];
+    functions: string[];
+    levels: string[];
+    sizes: string[];
+    degrees: string[];
+    rankings: string[];
+    majors: string[];
+  };
+  transformations: Array<{
+    original: string;
+    standardized: string;
+    category: string;
+  }>;
+}> {
+  console.log(`[STAGE 1] 🔄 Starting term standardization for: "${query}"`);
   
-  // STEP 1: Get complete filter schema from SQL function
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 Loading complete filter schema from SQL function`);
-  const sqlFunctionDefinition = await getAvailableChronologicalFilters();
-  
+  // Pre-analyze terms using our mapping system
+  const preAnalyzedTerms = getAllStandardizedTerms(query);
+  console.log(`[STAGE 1] 📊 Pre-analyzed terms:`, preAnalyzedTerms);
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4.1-mini',
     temperature: 0,
     messages: [
       {
         role: 'system',
-        content: `You are an expert data extraction system that translates natural language career progression queries into structured chronological filters.
+        content: `You are a specialized term standardization system. Your ONLY job is to convert natural language terms into exact database-compatible terms.
 
-**CRITICAL FIRST STEP: ANALYZE THE SQL FUNCTION DEFINITION**
+**YOUR MISSION:** Transform the input query by replacing common language variations with exact database terms that will match our backend data.
 
-Below is the complete SQL function definition that shows ALL available filters and data fields you can map to. Study this carefully to understand the full scope of available filters:
+**CRITICAL STANDARDIZATION RULES:**
 
-\`\`\`sql
-${sqlFunctionDefinition}
-\`\`\`
+**INDUSTRY STANDARDIZATION (Case-Sensitive):**
+- "tech" → "Technology & Software"
+- "technology" → "Technology & Software" 
+- "software" → "Technology & Software"
+- "it" → "IT/Systems"
+- "fintech" → "Fintech"
+- "finance" → "Financial Services"
+- "financial" → "Financial Services"
+- "banking" → "Banking"
+- "consulting" → "Management Consulting"
+- "healthcare" → "Healthcare & Pharmaceuticals"
+- "health" → "Healthcare & Pharmaceuticals"
+- "medical" → "Healthcare & Pharmaceuticals"
+- "food" → "Food & Beverage"
+- "restaurant" → "Restaurant/Hospitality"
+- "retail" → "Retail & Consumer Goods"
+- "media" → "Media & Entertainment"
+- "education" → "Education"
+- "real estate" → "Real Estate"
+- "government" → "Government & Public Sector"
 
-**YOUR TASK:**
-1. **ANALYZE THE SQL FUNCTION**: Examine the function signature, return fields, and WHERE clause logic to understand ALL available filters
-2. **EXTRACT ENTITIES COMPREHENSIVELY**: Now that you know the complete filter landscape, extract entities more thoroughly
-3. **MAP TO ALL APPLICABLE FILTERS**: Use ALL relevant filters from the SQL function, not just the basic ones
+**JOB FUNCTION STANDARDIZATION:**
+- "engineering" → "Software Engineering"
+- "software engineering" → "Software Engineering"
+- "development" → "Software Engineering"
+- "developer" → "Software Engineering"
+- "programmer" → "Software Engineering"
+- "product" → "Product Management"
+- "product management" → "Product Management"
+- "data science" → "Data Science/Analytics"
+- "data scientist" → "Data Science/Analytics"
+- "analytics" → "Data Science/Analytics"
+- "sales" → "Sales"
+- "marketing" → "Marketing"
+- "operations" → "Operations Management"
+- "hr" → "Human Resources"
+- "recruiting" → "Recruiting/Talent"
 
-**ENHANCED ENTITY EXTRACTION PROCESS:**
-        
-**STEP 1: EXTRACT ALL ENTITIES**
-First, identify EVERY entity mentioned in the query:
-- ALL COMPANIES: Extract every company name mentioned
-- ALL SCHOOLS: Extract every school/university name mentioned  
-- ALL TITLES: Extract every job title/role mentioned
-- ALL INDUSTRIES: Extract every industry mentioned
-- ALL LOCATIONS: Extract every location mentioned
-- ALL EXPERIENCE INDICATORS: Extract experience levels, years, seniority
-- ALL PROGRESSION PATTERNS: Extract career advancement patterns
-        
-**STEP 2: SMART ENTITY SELECTION**
-Then choose the most relevant entity for each filter using these rules:
-        
-**COMPANY SELECTION RULES:**
-- If multiple companies with "then/after": Choose the LAST mentioned (target destination)
-- If "former X employees": Choose X as company_filter
-- If "X alumni at Y": Choose X as company_filter (source company)
-- If "people who left X for Y": Choose X as company_filter (source company)
-- If "worked at X and Y": Choose the LAST mentioned
-        
-**SCHOOL SELECTION RULES:**
-- If multiple schools with "then/after": Choose the LAST mentioned (most recent)
-- If "X graduates who went to Y": Choose X as school_filter (source school)
-- If "studied at X then Y": Choose Y as school_filter (most recent)
-- If undergraduate + graduate school mentioned: Choose graduate school
-        
-**TITLE SELECTION RULES:**
-- If multiple titles: Choose the most SPECIFIC one
-- If progression mentioned (junior → senior): Choose the TARGET level
-- If "former X who became Y": Choose X as title_filter (source role)
-        
-**INDUSTRY SELECTION RULES:**
-- If multiple industries with transition: Choose the TARGET industry
-- If "from X to Y industry": Choose Y as industry_filter
-        
-**LOCATION SELECTION RULES:**
-- If multiple locations: Choose the most SPECIFIC one
-- If "moved from X to Y": Choose Y as location_filter (current location)
+**JOB LEVEL STANDARDIZATION:**
+- "entry level" → "Entry Level"
+- "junior" → "Entry Level"
+- "senior" → "Senior Level"
+- "lead" → "Lead/Principal"
+- "principal" → "Lead/Principal"
+- "manager" → "Manager"
+- "director" → "Director"
+- "vp" → "VP/SVP"
+- "vice president" → "VP/SVP"
+- "executive" → "VP/SVP"
+- "ceo" → "C-Suite"
+- "cto" → "C-Suite"
+- "cfo" → "C-Suite"
+- "founder" → "Founder/Owner"
+- "entrepreneur" → "Founder/Owner"
 
-**ENHANCED EXAMPLES USING COMPLETE FILTER SET:**
-        
-Query: "Find Georgetown MBA graduates working at Google"
+**COMPANY SIZE STANDARDIZATION:**
+- "startup" → "Startup (1-50 employees)"
+- "small company" → "Small (51-200 employees)"
+- "medium company" → "Medium (201-1000 employees)"
+- "large company" → "Large (1001-5000 employees)"
+- "enterprise" → "Enterprise (5000+ employees)"
+- "big tech" → "Enterprise (5000+ employees)"
+- "fortune 500" → "Enterprise (5000+ employees)"
+
+**DEGREE LEVEL STANDARDIZATION:**
+- "bachelor" → "Bachelor's Degree"
+- "bachelor's" → "Bachelor's Degree"
+- "undergraduate" → "Bachelor's Degree"
+- "college degree" → "Bachelor's Degree"
+- "master" → "Master's Degree"
+- "master's" → "Master's Degree"
+- "graduate degree" → "Master's Degree"
+- "mba" → "Master of Business Administration (MBA)"
+- "phd" → "Doctor of Philosophy (PhD)"
+- "doctorate" → "Doctor of Philosophy (PhD)"
+- "jd" → "Juris Doctor (JD)"
+- "law degree" → "Juris Doctor (JD)"
+- "md" → "Doctor of Medicine (MD)"
+- "medical degree" → "Doctor of Medicine (MD)"
+
+**TRANSFORMATION EXAMPLES:**
+
+Input: "Find me tech engineers at startups with MBA degrees"
+Output: "Find me Software Engineering professionals at Startup (1-50 employees) with Master of Business Administration (MBA) degrees"
+
+Input: "Senior software developers in finance companies"
+Output: "Senior Level Software Engineering professionals in Financial Services companies"
+
+Input: "Healthcare consultants with master's degrees"
+Output: "Healthcare & Pharmaceuticals Management Consulting professionals with Master's Degree"
+
+Input: "Entry level data scientists at big tech companies"
+Output: "Entry Level Data Science/Analytics professionals at Enterprise (5000+ employees) companies"
+
+**TRANSFORMATION STRATEGY:**
+1. **Identify all standardizable terms** in the query
+2. **Replace with exact database terms** while preserving sentence structure
+3. **Maintain natural language flow** - don't make it robotic
+4. **Log all transformations** for transparency
+
+**OUTPUT FORMAT:**
+Return JSON with:
 {
-  "school_filter": "Georgetown University",
-  "company_filter": "Google", 
-  "degree_level_progression": ["Bachelor's", "Master's"],
-  "gap_tolerance": 6
-}
-        
-Query: "Technical professionals with leadership experience"
-{
-  "technical_background": true,
-  "is_current_leader": true,
-  "management_experience": true,
-  "gap_tolerance": 6
-}
-
-Query: "People who doubled their salary after leaving"
-{
-  "doubled_salary_post_chick_fil_a": true,
-  "chick_fil_a_provided_salary_lift": true,
-  "gap_tolerance": 6
+  "standardized_query": "The transformed query with exact database terms",
+  "transformations": [
+    {
+      "original": "tech",
+      "standardized": "Technology & Software", 
+      "category": "industry"
+    },
+    {
+      "original": "engineers",
+      "standardized": "Software Engineering",
+      "category": "function"
+    }
+  ]
 }
 
-Query: "Startup founders with consulting background"
-{
-  "consulting_experience": true,
-  "has_startup_experience": true,
-  "career_trajectory": "Entrepreneur",
-  "is_current_leader": true,
-  "gap_tolerance": 6
-}
+**IMPORTANT RULES:**
+1. **Preserve query intent** - don't change the meaning
+2. **Only standardize terms that have exact mappings** - leave ambiguous terms unchanged
+3. **Maintain grammatical structure** - ensure the output reads naturally
+4. **Log every transformation** for debugging
+5. **If no standardizations needed**, return the original query
 
-**CRITICAL INSTRUCTIONS:**
-1. **USE THE SQL FUNCTION AS YOUR FILTER REFERENCE**: Only use filters that exist in the SQL function definition
-2. **BE COMPREHENSIVE**: Now that you know all available filters, use as many relevant ones as possible
-3. **MAINTAIN EXISTING PROMPT LOGIC**: Keep all the existing entity extraction rules and examples
-4. **ADD NEW FILTER CAPABILITIES**: Leverage the additional filters you discovered in the SQL function
-
-**EXISTING COMPREHENSIVE FILTER CATEGORIES:**
-        
-**Basic Search Filters:**
-- school_filter: Extract specific schools/universities mentioned (string)
-- company_filter: Extract specific companies mentioned (string)  
-- industry_filter: Extract specific industries mentioned (string)
-- title_filter: Extract specific job titles mentioned (string)
-- location_filter: Extract specific locations mentioned (string)
-        
-**Experience-Based Filters:**
-- min_years_in_industry: Extract from "5+ years in tech", "experienced in finance" (number)
-- min_years_in_function: Extract from "10+ years engineering", "seasoned marketing" (number)
-- total_experience_years: Extract from "experienced professionals", "10+ years total" (number)
-- career_progression_pattern: Specific advancement patterns (string)
-        
-**Education-Based Filters:**
-- degree_level_progression: Education sequence like ["Bachelor's", "Master's", "PhD"] (array)
-- education_industry_alignment: Whether education field matches career industry (boolean)
-        
-**Timeline-Based Filters:**
-- gap_tolerance: Max acceptable career gaps in months, default 6 (number)
-- concurrent_activities: Working while studying, part-time education (boolean)
-        
-**Pattern-Based Filters:**
-- industry_transitions: Industry change patterns like ["finance", "technology"] (array)
-- company_size_progression: Company size advancement like ["startup", "large"] (array)  
-- geographic_mobility: Moved locations for career advancement (boolean)
-
-**PROGRESSION PATTERNS:**
-- "individual_contributor_to_management" - IC → Manager
-- "entry_level_to_senior" - Junior → Senior roles
-- "startup_to_enterprise" - Small → Large companies
-- "technical_to_leadership" - Engineer → CTO/VP
-- "rapid_advancement" - Fast promotions
-- "steady_progression" - Consistent growth
-- "industry_switcher" - Changed industries
-- "entrepreneur_path" - Became founder/entrepreneur
-
-Return comprehensive JSON with all applicable filters from the SQL function. If no chronological patterns detected, return: {"gap_tolerance": 6}`
+Focus ONLY on term standardization. Do NOT extract filters or perform analysis.`
       },
       {
         role: 'user',
-        content: `Query: "${query}"`
+        content: `Input Query: "${query}"
+
+**PRE-ANALYZED STANDARDIZABLE TERMS:**
+Industries: ${JSON.stringify(preAnalyzedTerms.industries)}
+Functions: ${JSON.stringify(preAnalyzedTerms.functions)}
+Levels: ${JSON.stringify(preAnalyzedTerms.levels)}
+Sizes: ${JSON.stringify(preAnalyzedTerms.sizes)}
+Degrees: ${JSON.stringify(preAnalyzedTerms.degrees)}
+Rankings: ${JSON.stringify(preAnalyzedTerms.rankings)}
+Majors: ${JSON.stringify(preAnalyzedTerms.majors)}
+
+Transform this query using exact database terms while preserving natural language flow and intent.`
       }
     ]
   });
 
-  console.log(`[PIPELINE CHRONOLOGICAL] 🤖 OpenAI filter translation response received`);
+  console.log(`[STAGE 1] 🤖 OpenAI standardization response received`);
 
-  // ADD DETAILED DEBUGGING: Log the raw response
   const content = response.choices[0]?.message?.content;
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 RAW LLM RESPONSE:`, {
-    hasContent: !!content,
-    contentLength: content?.length || 0,
-    rawContent: content,
-    responseChoices: response.choices?.length || 0,
-    model: response.model,
-    usage: response.usage
-  });
-
   if (!content) {
-    console.log(`[PIPELINE CHRONOLOGICAL] ⚠️ Empty response from OpenAI, returning default filters`);
-    return { gap_tolerance: 6 };
+    console.log(`[STAGE 1] ⚠️ Empty response from OpenAI, using original query`);
+    return {
+      standardizedQuery: query,
+      termMappings: preAnalyzedTerms,
+      transformations: []
+    };
   }
 
   try {
     const parsed = JSON.parse(content);
+    console.log(`[STAGE 1] ✅ Term standardization successful:`, {
+      originalQuery: query,
+      standardizedQuery: parsed.standardized_query,
+      transformationCount: parsed.transformations?.length || 0,
+      transformations: parsed.transformations
+    });
+
+    return {
+      standardizedQuery: parsed.standardized_query || query,
+      termMappings: preAnalyzedTerms,
+      transformations: parsed.transformations || []
+    };
+  } catch (error) {
+    console.error(`[STAGE 1] ❌ Failed to parse standardization response:`, {
+      error: error,
+      rawContent: content
+    });
     
-    // ADD DETAILED DEBUGGING: Log the parsed structure
-    console.log(`[PIPELINE CHRONOLOGICAL] 🔍 PARSED LLM STRUCTURE:`, {
-      parsedSuccessfully: true,
-      parsedKeys: Object.keys(parsed),
-      parsedValues: parsed,
+    // Fallback: use original query with pre-analyzed terms
+    return {
+      standardizedQuery: query,
+      termMappings: preAnalyzedTerms,
+      transformations: []
+    };
+  }
+}
+
+// STAGE 2: Filter Extraction from Standardized Query
+async function extractFiltersFromStandardizedQuery(
+  standardizedQuery: string,
+  termMappings: any,
+  transformations: any[]
+): Promise<ChronologicalFilters> {
+  console.log(`[STAGE 2] 📊 Starting filter extraction from standardized query: "${standardizedQuery}"`);
+  console.log(`[STAGE 2] 🔍 Available term mappings:`, termMappings);
+  console.log(`[STAGE 2] 🔄 Applied transformations:`, transformations);
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a specialized filter extraction system. Your ONLY job is to extract structured JSON filters from a pre-standardized query.
+
+**YOUR MISSION:** Convert the standardized query into precise JSON filters. The query has already been processed for term standardization, so focus purely on extraction logic.
+
+**AVAILABLE FILTER CATEGORIES:**
+
+**Text-Based Filters:**
+- school_filter: Specific educational institutions (string)
+- company_filter: Specific company names (string)  
+- industry_filter: Industry categories (string)
+- title_filter: Job titles/functions (string)
+- location_filter: Geographic locations (string)
+- company_size_filter: Company size categories (string)
+- degree_level_filter: Educational degree levels (string)
+
+**Numeric Experience Filters:**
+- total_experience_years: Minimum total years of experience (number)
+- min_years_in_industry: Minimum years in specific industry (number)
+
+**Boolean Timeline Filters:**
+- concurrent_activities: Worked while studying or overlapping activities (boolean)
+- geographic_mobility: Moved locations throughout career (boolean)
+
+**EXTRACTION RULES:**
+
+**ENTITY PRIORITY:**
+- If multiple companies mentioned: Choose the most specific or target company
+- If multiple schools mentioned: Choose the most relevant or recent
+- If multiple titles mentioned: Choose the most specific role
+- If multiple industries mentioned: Choose the target or current industry
+
+**EXPERIENCE EXTRACTION:**
+- "5+ years" → total_experience_years: 5
+- "10+ years in tech" → min_years_in_industry: 10
+- "experienced" → total_experience_years: 5
+- "senior level" → total_experience_years: 7
+- "seasoned" → total_experience_years: 7
+
+**BOOLEAN PATTERN DETECTION:**
+- "worked while studying" → concurrent_activities: true
+- "part-time education" → concurrent_activities: true
+- "relocated for work" → geographic_mobility: true
+- "moved cities" → geographic_mobility: true
+- "international experience" → geographic_mobility: true
+
+**EXTRACTION EXAMPLES:**
+
+Input: "Find Software Engineering professionals at Startup (1-50 employees) with Master of Business Administration (MBA)"
+Output:
+{
+  "title_filter": "Software Engineering",
+  "company_size_filter": "Startup (1-50 employees)",
+  "degree_level_filter": "Master of Business Administration (MBA)"
+}
+
+Input: "Senior Level Data Science/Analytics professionals in Technology & Software companies"
+Output:
+{
+  "title_filter": "Data Science/Analytics",
+  "industry_filter": "Technology & Software",
+  "total_experience_years": 7
+}
+
+Input: "Harvard graduates working at Google with 8+ years experience"
+Output:
+{
+  "school_filter": "Harvard",
+  "company_filter": "Google",
+  "total_experience_years": 8
+}
+
+Input: "People who worked while getting Master's Degree and moved locations"
+Output:
+{
+  "degree_level_filter": "Master's Degree",
+  "concurrent_activities": true,
+  "geographic_mobility": true
+}
+
+**EXTRACTION GUIDELINES:**
+1. **Extract specific entities** (school names, company names, exact locations)
+2. **Use standardized terms exactly** as they appear in the query
+3. **Don't over-interpret** - extract only what's clearly stated
+4. **Prefer specific filters** over generic ones
+5. **Don't extract if ambiguous** - better to omit than guess wrong
+
+**OUTPUT FORMAT:**
+Return only valid JSON with extracted filters. If no clear filters detected, return empty object {}.
+
+Focus ONLY on filter extraction. Do NOT perform term standardization or analysis.`
+      },
+      {
+        role: 'user',
+        content: `Standardized Query: "${standardizedQuery}"
+
+**CONTEXT FROM STAGE 1:**
+Applied Transformations: ${JSON.stringify(transformations)}
+Available Term Mappings: ${JSON.stringify(termMappings)}
+
+Extract precise JSON filters from this pre-standardized query.`
+      }
+    ]
+  });
+
+  console.log(`[STAGE 2] 🤖 OpenAI filter extraction response received`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[STAGE 2] ⚠️ Empty response from OpenAI, returning empty filters`);
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[STAGE 2] ✅ Filter extraction successful:`, {
+      extractedFilters: parsed,
+      filterCount: Object.keys(parsed).length,
       hasBasicFilters: {
         school_filter: !!parsed.school_filter,
         company_filter: !!parsed.company_filter,
@@ -904,73 +1930,113 @@ Return comprehensive JSON with all applicable filters from the SQL function. If 
         location_filter: !!parsed.location_filter
       },
       hasExperienceFilters: {
-        min_years_in_industry: !!parsed.min_years_in_industry,
-        min_years_in_function: !!parsed.min_years_in_function,
         total_experience_years: !!parsed.total_experience_years,
-        career_progression_pattern: !!parsed.career_progression_pattern
+        min_years_in_industry: !!parsed.min_years_in_industry
       },
-      hasEducationFilters: {
-        degree_level_progression: !!parsed.degree_level_progression,
-        education_industry_alignment: !!parsed.education_industry_alignment
-      },
-      hasTimelineFilters: {
-        gap_tolerance: parsed.gap_tolerance,
-        concurrent_activities: !!parsed.concurrent_activities
-      },
-      hasPatternFilters: {
-        industry_transitions: !!parsed.industry_transitions?.length,
-        company_size_progression: !!parsed.company_size_progression?.length,
+      hasBooleanFilters: {
+        concurrent_activities: !!parsed.concurrent_activities,
         geographic_mobility: !!parsed.geographic_mobility
       }
     });
-    
-    console.log(`[PIPELINE CHRONOLOGICAL] ✅ Chronological filters extracted successfully:`, parsed);
-    console.log(`[PIPELINE CHRONOLOGICAL] 📊 Filter summary:`, {
-      experienceFilters: {
-        hasMinYearsIndustry: !!parsed.min_years_in_industry,
-        hasMinYearsFunction: !!parsed.min_years_in_function,
-        hasTotalExperience: !!parsed.total_experience_years,
-        hasProgressionPattern: !!parsed.career_progression_pattern
-      },
-      educationFilters: {
-        hasDegreeProgression: !!parsed.degree_level_progression?.length,
-        hasEducationAlignment: !!parsed.education_industry_alignment
-      },
-      timelineFilters: {
-        gapTolerance: parsed.gap_tolerance || 6,
-        hasConcurrentActivities: !!parsed.concurrent_activities
-      },
-      patternFilters: {
-        hasIndustryTransitions: !!parsed.industry_transitions?.length,
-        hasCompanySizeProgression: !!parsed.company_size_progression?.length,
-        hasGeographicMobility: !!parsed.geographic_mobility
-      },
-      totalFilterCount: Object.keys(parsed).length
-    });
+
     return parsed;
   } catch (error) {
-    console.error(`[PIPELINE CHRONOLOGICAL] ❌ Failed to parse filter translation response:`, {
+    console.error(`[STAGE 2] ❌ Failed to parse filter extraction response:`, {
       error: error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      errorStack: error instanceof Error ? error.stack : 'No stack',
-      rawContent: content,
-      contentPreview: content?.substring(0, 200) + (content?.length > 200 ? '...' : ''),
-      parseAttempt: 'JSON.parse failed'
+      rawContent: content
     });
+    return {};
+  }
+}
+
+// UPDATED: Two-Stage Translation with Comprehensive Error Handling  
+async function translateWithoutClassificationContext(
+  query: string
+): Promise<ChronologicalFilters> {
+  console.log(`[TRANSLATION PIPELINE] 🚀 Starting two-stage translation for: "${query}"`);
+  const pipelineStartTime = Date.now();
+
+  try {
+    // STAGE 1: Term Standardization
+    console.log(`[TRANSLATION PIPELINE] 📝 STAGE 1: Term Standardization`);
+    const stage1StartTime = Date.now();
     
-    // ADD DETAILED DEBUGGING: Try to identify the parsing issue
-    console.error(`[PIPELINE CHRONOLOGICAL] 🔍 PARSING DEBUG:`, {
-      contentType: typeof content,
-      isString: typeof content === 'string',
-      startsWithBrace: content?.startsWith('{'),
-      endsWithBrace: content?.endsWith('}'),
-      hasNewlines: content?.includes('\n'),
-      hasBackticks: content?.includes('```'),
-      firstChar: content?.[0],
-      lastChar: content?.[content.length - 1]
+    const standardizationResult = await standardizeQueryTerms(query);
+    
+    const stage1Duration = Date.now() - stage1StartTime;
+    console.log(`[TRANSLATION PIPELINE] ✅ STAGE 1 COMPLETE:`, {
+      duration: stage1Duration + 'ms',
+      originalQuery: query,
+      standardizedQuery: standardizationResult.standardizedQuery,
+      transformationCount: standardizationResult.transformations.length,
+      wasTransformed: standardizationResult.standardizedQuery !== query
     });
+
+    // STAGE 2: Filter Extraction
+    console.log(`[TRANSLATION PIPELINE] 🔍 STAGE 2: Filter Extraction`);
+    const stage2StartTime = Date.now();
     
-    return { gap_tolerance: 6 };
+    const filters = await extractFiltersFromStandardizedQuery(
+      standardizationResult.standardizedQuery,
+      standardizationResult.termMappings,
+      standardizationResult.transformations
+    );
+    
+    const stage2Duration = Date.now() - stage2StartTime;
+    const totalDuration = Date.now() - pipelineStartTime;
+    
+    console.log(`[TRANSLATION PIPELINE] ✅ STAGE 2 COMPLETE:`, {
+      duration: stage2Duration + 'ms',
+      extractedFilters: filters,
+      filterCount: Object.keys(filters).length
+    });
+
+    console.log(`[TRANSLATION PIPELINE] 🎉 TWO-STAGE PIPELINE COMPLETE:`, {
+      totalDuration: totalDuration + 'ms',
+      stage1Duration: stage1Duration + 'ms',
+      stage2Duration: stage2Duration + 'ms',
+      finalFilters: filters,
+      pipelineSuccess: true
+    });
+
+    return filters;
+
+  } catch (stage1Error) {
+    console.error(`[TRANSLATION PIPELINE] ❌ STAGE 1 FAILED, attempting fallback:`, {
+      error: stage1Error,
+      fallbackStrategy: 'Direct filter extraction from original query'
+    });
+
+    try {
+      // FALLBACK: Direct filter extraction from original query
+      console.log(`[TRANSLATION PIPELINE] 🔄 FALLBACK: Direct extraction from original query`);
+      const fallbackStartTime = Date.now();
+      
+      const fallbackFilters = await extractFiltersFromStandardizedQuery(
+        query, // Use original query
+        getAllStandardizedTerms(query), // Get pre-analyzed terms
+        [] // No transformations
+      );
+      
+      const fallbackDuration = Date.now() - fallbackStartTime;
+      console.log(`[TRANSLATION PIPELINE] ✅ FALLBACK SUCCESSFUL:`, {
+        duration: fallbackDuration + 'ms',
+        fallbackFilters: fallbackFilters,
+        filterCount: Object.keys(fallbackFilters).length
+      });
+
+      return fallbackFilters;
+
+    } catch (stage2Error) {
+      console.error(`[TRANSLATION PIPELINE] ❌ STAGE 2 FALLBACK FAILED:`, {
+        stage1Error: stage1Error,
+        stage2Error: stage2Error,
+        finalFallback: 'Empty filters'
+      });
+
+      // FINAL FALLBACK: Return empty filters
+      return {};
+    }
   }
 }
 
@@ -1033,25 +2099,24 @@ Generate alternative search strategies that maintain the core intent while broad
 
 **Experience Filters (often need relaxation):**
 - min_years_in_industry: Reduce by 2-3 years
-- min_years_in_function: Reduce by 2-3 years  
 - total_experience_years: Reduce by 2-3 years
 
 **Pattern Filters (often need alternatives):**
-- career_progression_pattern: Try related progression types
-- industry_transitions: Expand to similar transition patterns
+- concurrent_activities: Try related timeline patterns
+- geographic_mobility: Expand to similar mobility patterns
 
 **EXAMPLES:**
 
 **Original Query:** "Find Georgetown MBA graduates working at Google"
-**Initial Filters:** {"school_filter": "Georgetown", "company_filter": "Google", "degree_level_progression": ["Bachelor's", "Master's"]}
+**Initial Filters:** {"school_filter": "Georgetown", "company_filter": "Google", "degree_level_filter": "Master of Business Administration (MBA)"}
 
 **Expansion 1 - Remove Company Specificity:**
 {
   "natural_language_query": "Georgetown MBA graduates working in technology companies",
   "filters": {
     "school_filter": "Georgetown",
-    "industry_filter": "technology", 
-    "degree_level_progression": ["Bachelor's", "Master's"]
+    "industry_filter": "Technology & Software", 
+    "degree_level_filter": "Master of Business Administration (MBA)"
   }
 }
 
@@ -1060,7 +2125,7 @@ Generate alternative search strategies that maintain the core intent while broad
   "natural_language_query": "MBA graduates working at Google",
   "filters": {
     "company_filter": "Google",
-    "degree_level_progression": ["Bachelor's", "Master's"]
+    "degree_level_filter": "Master of Business Administration (MBA)"
   }
 }
 
@@ -1068,42 +2133,9 @@ Generate alternative search strategies that maintain the core intent while broad
 {
   "natural_language_query": "Business school graduates working at major tech companies",
   "filters": {
-    "industry_filter": "technology",
-    "degree_level_progression": ["Bachelor's", "Master's"],
-    "company_size_progression": ["large"]
-  }
-}
-
-**Original Query:** "People with 10+ years consulting experience who became executives"
-**Initial Filters:** {"industry_filter": "consulting", "min_years_in_industry": 10, "career_progression_pattern": "individual_contributor_to_management"}
-
-**Expansion 1 - Reduce Experience Requirement:**
-{
-  "natural_language_query": "People with 7+ years consulting experience who moved to leadership roles",
-  "filters": {
-    "industry_filter": "consulting",
-    "min_years_in_industry": 7,
-    "career_progression_pattern": "individual_contributor_to_management"
-  }
-}
-
-**Expansion 2 - Broaden Industry:**
-{
-  "natural_language_query": "Experienced client-facing professionals who became executives",
-  "filters": {
-    "min_years_in_industry": 8,
-    "career_progression_pattern": "individual_contributor_to_management",
-    "title_filter": "client"
-  }
-}
-
-**Expansion 3 - Alternative Progression Pattern:**
-{
-  "natural_language_query": "Experienced consultants who advanced to senior positions",
-  "filters": {
-    "industry_filter": "consulting", 
-    "min_years_in_industry": 8,
-    "career_progression_pattern": "entry_level_to_senior"
+    "industry_filter": "Technology & Software",
+    "degree_level_filter": "Master of Business Administration (MBA)",
+    "company_size_filter": "Enterprise (5000+ employees)"
   }
 }
 
@@ -1194,7 +2226,6 @@ async function generateSearchExpansions(
   const variants = await generateSearchExpansionVariants(originalQuery, initialFilters, initialResultCount);
   return variants.map(variant => variant.filters);
 }
-
 
 async function translateStandardSearchQuery(
   query: string

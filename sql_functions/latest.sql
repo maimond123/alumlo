@@ -271,7 +271,20 @@ BEGIN
           (ea.earliest_education_start_month <= ca.latest_career_end_month AND 
            ca.earliest_career_start_month <= ea.latest_education_end_month)
         ELSE FALSE
-      END as has_concurrent_activities
+      END as has_concurrent_activities,
+      
+      -- TIER 1 FILTER FIELDS: Career & Leadership
+      COALESCE(ca.has_leadership_experience, FALSE) as has_leadership_experience,
+      COALESCE(ca.has_management_responsibility, FALSE) as has_management_responsibility,
+      COALESCE(ca.has_pre_company_experience, FALSE) as has_pre_company_experience,
+      COALESCE(ca.has_post_company_experience, FALSE) as has_post_company_experience,
+      COALESCE(ca.worked_at_target_company, FALSE) as worked_at_target_company,
+      COALESCE(ca.worked_during_company, FALSE) as worked_during_company,
+      
+      -- TIER 1 FILTER FIELDS: Education
+      COALESCE(ea.educated_before_company, FALSE) as educated_before_company,
+      COALESCE(ea.educated_during_company, FALSE) as educated_during_company,
+      COALESCE(ea.educated_after_company, FALSE) as educated_after_company
       
     FROM career_analysis ca
     FULL OUTER JOIN education_analysis ea ON ca.profile_id = ea.profile_id
@@ -279,17 +292,15 @@ BEGIN
       -- Experience filters
       ((($1->>''total_experience_years'')::numeric) IS NULL OR COALESCE(ca.total_years_experience, 0) >= (($1->>''total_experience_years'')::numeric))
       AND ((($1->>''min_years_in_industry'')::numeric) IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= (($1->>''min_years_in_industry'')::numeric))
-      
-      -- Boolean filters (Fixed version)
-      AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR ca.has_geographic_mobility = (($1->>''geographic_mobility'')::boolean))
+      AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR COALESCE(ca.has_geographic_mobility, FALSE) = (($1->>''geographic_mobility'')::boolean))
       AND ((($1->>''concurrent_activities'')::boolean) IS NULL OR 
-           (CASE 
+           CASE 
              WHEN ea.earliest_education_start_month IS NOT NULL AND ca.latest_career_end_month IS NOT NULL AND
                   ca.earliest_career_start_month IS NOT NULL AND ea.latest_education_end_month IS NOT NULL THEN
                (ea.earliest_education_start_month <= ca.latest_career_end_month AND 
-                ca.earliest_career_start_month <= ea.latest_education_end_month)
-             ELSE FALSE
-           END) = (($1->>''concurrent_activities'')::boolean))
+                ca.earliest_career_start_month <= ea.latest_education_end_month) = (($1->>''concurrent_activities'')::boolean)
+             ELSE (($1->>''concurrent_activities'')::boolean) = FALSE
+           END)
       
       -- HARD SCHOOL FILTER ENFORCEMENT
       AND (($1->>''school_filter'') IS NULL OR 
@@ -423,6 +434,15 @@ BEGIN
       ''sequence_gap_months'', cda.sequence_gap_months,
       ''has_concurrent_activities'', cda.has_concurrent_activities,
       ''has_geographic_mobility'', cda.has_geographic_mobility,
+      ''has_leadership_experience'', cda.has_leadership_experience,
+      ''has_management_responsibility'', cda.has_management_responsibility,
+      ''has_pre_company_experience'', cda.has_pre_company_experience,
+      ''has_post_company_experience'', cda.has_post_company_experience,
+      ''worked_at_target_company'', cda.worked_at_target_company,
+      ''worked_during_company'', cda.worked_during_company,
+      ''educated_before_company'', cda.educated_before_company,
+      ''educated_during_company'', cda.educated_during_company,
+      ''educated_after_company'', cda.educated_after_company,
       ''highest_degree_level_calculated'', cda.highest_degree_level_calculated,
       ''applied_filters'', $1
     ) as comprehensive_analysis,
@@ -433,6 +453,21 @@ BEGIN
     cda.has_concurrent_activities
   FROM cross_domain_analysis cda
   LEFT JOIN %I ss ON cda.profile_id = ss.profile_id
+  WHERE 
+    -- TIER 1 FILTERS: Leadership & Management
+    ((($1->>''has_leadership_experience'')::boolean) IS NULL OR cda.has_leadership_experience = (($1->>''has_leadership_experience'')::boolean))
+    AND ((($1->>''has_management_responsibility'')::boolean) IS NULL OR cda.has_management_responsibility = (($1->>''has_management_responsibility'')::boolean))
+    
+    -- TIER 1 FILTERS: Company Relationship
+    AND ((($1->>''has_pre_company_experience'')::boolean) IS NULL OR cda.has_pre_company_experience = (($1->>''has_pre_company_experience'')::boolean))
+    AND ((($1->>''has_post_company_experience'')::boolean) IS NULL OR cda.has_post_company_experience = (($1->>''has_post_company_experience'')::boolean))
+    AND ((($1->>''worked_at_target_company'')::boolean) IS NULL OR cda.worked_at_target_company = (($1->>''worked_at_target_company'')::boolean))
+    AND ((($1->>''worked_during_company'')::boolean) IS NULL OR cda.worked_during_company = (($1->>''worked_during_company'')::boolean))
+    
+    -- TIER 1 FILTERS: Education Relationship  
+    AND ((($1->>''educated_before_company'')::boolean) IS NULL OR cda.educated_before_company = (($1->>''educated_before_company'')::boolean))
+    AND ((($1->>''educated_during_company'')::boolean) IS NULL OR cda.educated_during_company = (($1->>''educated_during_company'')::boolean))
+    AND ((($1->>''educated_after_company'')::boolean) IS NULL OR cda.educated_after_company = (($1->>''educated_after_company'')::boolean))
   ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
@@ -454,11 +489,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA and TIER 1 FILTERS. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
 
 SUPPORTED FILTERS:
 - Text Filters: school_filter, company_filter, industry_filter, title_filter, location_filter, company_size_filter, degree_level_filter
 - Numeric Filters: total_experience_years (>=), min_years_in_industry (>=)
 - Boolean Filters: geographic_mobility, concurrent_activities
+- TIER 1 Leadership: has_leadership_experience, has_management_responsibility  
+- TIER 1 Company Relationship: has_pre_company_experience, has_post_company_experience, worked_at_target_company, worked_during_company
+- TIER 1 Education Relationship: educated_before_company, educated_during_company, educated_after_company
 
-All text filters use ILIKE pattern matching with wildcards for partial matching. All filters are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
+All filters are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
