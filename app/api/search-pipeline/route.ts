@@ -12,7 +12,9 @@ interface SearchPipelineRequest {
 }
 
 interface QueryClassification {
-  type: 'chronological' | 'temporal' | 'standard';
+  type: 'chronological' | 'temporal' | 'standard' | 'invalid';
+  invalidReason?: string;
+  suggestions?: string[];
 }
 
 interface ChronologicalFilters {
@@ -87,10 +89,16 @@ interface StandardConfig {
   searchMethod: 'semantic_with_filters' | 'comprehensive_sql_filtering';
 }
 
-type SearchConfig = TemporalConfig | ChronologicalConfig | StandardConfig;
+interface InvalidConfig {
+  type: 'invalid';
+  invalidReason: string;
+  suggestions: string[];
+}
+
+type SearchConfig = TemporalConfig | ChronologicalConfig | StandardConfig | InvalidConfig;
 
 interface SearchPipelineResponse {
-  searchType: 'temporal' | 'chronological' | 'standard';
+  searchType: 'temporal' | 'chronological' | 'standard' | 'invalid';
   classification: QueryClassification;
   searchConfig: SearchConfig;
   shouldExecuteSearch: boolean;
@@ -1054,99 +1062,115 @@ export async function POST(req: NextRequest) {
   let llmCalls = 0;
 
   try {
-    const { query, organizationName, isDemo = false }: SearchPipelineRequest = await req.json();
+    console.log(`[PIPELINE] 🚀 Search pipeline started at ${new Date().toISOString()}`);
     
-    console.log('🔍 [SEARCH PIPELINE] Starting unified LLM chain for:', query);
-    console.log(`[PIPELINE DEBUG] 🚀 Pipeline started at ${new Date().toISOString()}`);
-    console.log(`[PIPELINE DEBUG] 📝 Request parameters:`, {
-      query: `"${query}"`,
-      organizationName,
-      isDemo,
-      queryLength: query?.length || 0
+    const body: SearchPipelineRequest = await req.json();
+    console.log(`[PIPELINE] 📝 Request received:`, {
+      hasQuery: !!body.query,
+      queryLength: body.query?.length || 0,
+      organizationName: body.organizationName,
+      isDemo: body.isDemo
     });
-    
+
+    const { query, organizationName, isDemo = false } = body;
+
     if (!query) {
-      console.log(`[PIPELINE DEBUG] ❌ Missing query parameter`);
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+      console.log(`[PIPELINE] ❌ No query provided`);
+      return NextResponse.json({
+        searchType: 'standard',
+        classification: { type: 'standard' },
+        searchConfig: {
+          type: 'standard',
+          enhancedFilters: {},
+          searchMethod: 'comprehensive_sql_filtering'
+        },
+        shouldExecuteSearch: true,
+        metadata: {
+          processingSteps: ['error_no_query'],
+          llmCalls: 0,
+          processingTimeMs: Date.now() - startTime
+        }
+      });
     }
 
-    // STEP 1: Universal Classification
-    console.log('🔍 [STEP 1] Classifying search query...');
-    console.log(`[PIPELINE DEBUG] 🎯 Starting classification step`);
+    // Step 1: Classify the query
+    console.log(`[PIPELINE] 🔍 Step 1: Classifying query...`);
+    processingSteps.push('query_classification');
+    
     const classification = await classifyQueryUsingMainAPI(query);
-    processingSteps.push('classification');
     llmCalls++;
     
-    console.log(`[PIPELINE DEBUG] ✅ Classification completed:`, {
+    console.log(`[PIPELINE] 🎯 Classification result:`, {
       type: classification.type,
-      processingTime: Date.now() - startTime + 'ms',
-      llmCallsUsed: llmCalls
+      hasInvalidReason: !!classification.invalidReason,
+      hasSuggestions: !!classification.suggestions?.length
     });
-    
-    // STEP 2: Route to Appropriate Translation
-    console.log(`[PIPELINE DEBUG] 🔀 Routing to ${classification.type} processing`);
-    let searchConfig: SearchConfig;
-    let expansionResults: { variants: SearchExpansionVariant[]; additionalSearchConfigs: ChronologicalConfig[]; } | undefined;
-    
-    switch (classification.type) {
-      case 'temporal':
-        console.log('🕐 [STEP 2] Processing temporal search...');
-        console.log(`[PIPELINE DEBUG] 🕐 Starting temporal extraction and processing`);
-        searchConfig = await processTemporalSearch(query, classification, organizationName);
-        processingSteps.push('temporal_extraction');
-        llmCalls++;
-        console.log(`[PIPELINE DEBUG] ✅ Temporal processing completed:`, {
-          sqlFunction: searchConfig.sqlFunction,
-          hasTemporalElements: !!searchConfig.temporalElements,
-          elementCount: Object.keys(searchConfig.temporalElements || {}).length
-        });
-        break;
-        
-      case 'chronological':
-        console.log('📈 [STEP 2] Processing chronological search...');
-        console.log(`[PIPELINE DEBUG] 📈 Starting chronological filter translation`);
-        searchConfig = await processChronologicalSearch(query, classification, organizationName);
-        processingSteps.push('chronological_filter_translation');
-        llmCalls++;
-        console.log(`[PIPELINE DEBUG] ✅ Chronological filter translation completed:`, {
-          sqlFunction: searchConfig.sqlFunction,
-          hasFilters: !!searchConfig.filters,
-          filterCount: Object.keys(searchConfig.filters || {}).length
-        });
-        break;
-        
-      case 'standard':
-        console.log('📊 [STEP 2] Processing standard search...');
-        console.log(`[PIPELINE DEBUG] 📊 Starting standard search enhancement`);
-        searchConfig = await processStandardSearch(query, classification);
-        processingSteps.push('standard_enhancement');
-        llmCalls++;
-        console.log(`[PIPELINE DEBUG] ✅ Standard processing completed:`, {
-          searchMethod: searchConfig.searchMethod,
-          hasEnhancedFilters: !!searchConfig.enhancedFilters,
-          filterCount: Object.keys(searchConfig.enhancedFilters || {}).length
-        });
-        break;
+
+    // NEW: Handle invalid queries
+    if (classification.type === 'invalid') {
+      console.log(`[PIPELINE] ❌ Invalid query detected: ${classification.invalidReason}`);
+      
+      return NextResponse.json({
+        searchType: 'invalid',
+        classification: classification,
+        searchConfig: {
+          type: 'invalid',
+          invalidReason: classification.invalidReason,
+          suggestions: classification.suggestions || []
+        },
+        shouldExecuteSearch: false,
+        metadata: {
+          processingSteps: [...processingSteps, 'invalid_query_detected'],
+          llmCalls,
+          processingTimeMs: Date.now() - startTime
+        }
+      });
     }
 
-    // STEP 3: Return Unified Response
-    console.log(`[PIPELINE DEBUG] 📤 Preparing unified response`);
-    console.log(`[PIPELINE DEBUG] 📤 DETAILED: Response preparation details:`, {
-      searchType: classification.type,
-      hasSearchConfig: !!searchConfig,
+    // Continue with existing logic for valid queries
+    let searchConfig: SearchConfig;
+    let expansionResults: any = null;
+
+    // Step 2: Process based on classification type
+    if (classification.type === 'temporal') {
+      console.log(`[PIPELINE] 🕐 Step 2: Processing temporal search...`);
+      processingSteps.push('temporal_processing');
+      
+      searchConfig = await processTemporalSearch(query, classification, organizationName);
+      llmCalls++;
+      
+    } else if (classification.type === 'chronological') {
+      console.log(`[PIPELINE] 📈 Step 2: Processing chronological search with expansion...`);
+      processingSteps.push('chronological_processing_with_expansion');
+      
+      const chronologicalResult = await processChronologicalSearchWithExpansion(query, classification, organizationName);
+      llmCalls += 3; // Standardization + Filter extraction + Expansion generation
+      
+      searchConfig = chronologicalResult.primaryConfig;
+      expansionResults = chronologicalResult.expansionResults;
+      
+    } else {
+      console.log(`[PIPELINE] 📊 Step 2: Processing standard search...`);
+      processingSteps.push('standard_processing');
+      
+      searchConfig = await processStandardSearch(query, classification);
+      llmCalls++;
+    }
+
+    console.log(`[PIPELINE] ✅ Search configuration completed:`, {
+      configType: searchConfig.type,
+      hasEnhancedFilters: !!(searchConfig as any).enhancedFilters,
       hasExpansionResults: !!expansionResults,
-      expansionVariantCount: expansionResults?.variants?.length || 0,
-      expansionConfigCount: expansionResults?.additionalSearchConfigs?.length || 0,
-      processingSteps: processingSteps,
-      llmCalls: llmCalls
+      totalSteps: processingSteps.length,
+      totalLLMCalls: llmCalls
     });
-    
+
     const response: SearchPipelineResponse = {
-      searchType: classification.type,
-      classification,
-      searchConfig,
+      searchType: classification.type as 'temporal' | 'chronological' | 'standard' | 'invalid',
+      classification: classification,
+      searchConfig: searchConfig,
       shouldExecuteSearch: true,
-      expansionResults,
+      ...(expansionResults && { expansionResults }),
       metadata: {
         processingSteps,
         llmCalls,
@@ -1154,29 +1178,7 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    console.log('🔍 [PIPELINE COMPLETE] Search configuration ready:', {
-      searchType: response.searchType,
-      processingSteps: response.metadata.processingSteps,
-      llmCalls: response.metadata.llmCalls,
-      processingTime: response.metadata.processingTimeMs + 'ms'
-    });
-    
-    console.log(`[PIPELINE DEBUG] 🎉 Pipeline completed successfully:`, {
-      finalSearchType: response.searchType,
-      totalProcessingTime: response.metadata.processingTimeMs + 'ms',
-      totalLLMCalls: response.metadata.llmCalls,
-      configReady: true
-    });
-    
-    console.log(`[PIPELINE DEBUG] 📤 FINAL RESPONSE INSPECTION:`, {
-      hasExpansionResults: !!response.expansionResults,
-      expansionVariantCount: response.expansionResults?.variants?.length || 0,
-      expansionConfigCount: response.expansionResults?.additionalSearchConfigs?.length || 0,
-      firstVariant: response.expansionResults?.variants?.[0] || 'none',
-      responseKeys: Object.keys(response),
-      expansionResultsKeys: response.expansionResults ? Object.keys(response.expansionResults) : 'none'
-    });
-
+    console.log(`[PIPELINE] 🎉 Pipeline completed successfully in ${Date.now() - startTime}ms`);
     return NextResponse.json(response);
 
   } catch (error: any) {
@@ -1547,28 +1549,22 @@ async function processStandardSearch(
 // STEP 1: Use the main classification API instead of specialized function
 async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassification> {
   try {
-    console.log(`[PIPELINE CLASSIFY] 🎯 Starting classification for: "${query}"`);
+    console.log(`[PIPELINE CLASSIFY] 🔗 Attempting main API classification for: "${query}"`);
     
-    // Call the main classification API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/classify-query`, {
+    const response = await fetch('/api/classify-query', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
     });
-
-    console.log(`[PIPELINE CLASSIFY] 📡 Classification API response: ${response.status} ${response.statusText}`);
-
-    if (!response.ok) {
-      throw new Error(`Classification API failed: ${response.status}`);
-    }
-
-    const classification = await response.json();
-    console.log('🔗 [CLASSIFICATION] Main API result:', classification);
-    console.log(`[PIPELINE CLASSIFY] ✅ Main API classification successful: ${classification.type}`);
     
-    return classification;
+    if (!response.ok) {
+      throw new Error(`Main API returned ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log(`[PIPELINE CLASSIFY] ✅ Main API classification successful: ${result.type}`);
+    
+    return result;
   } catch (error) {
     console.error('🔗 [CLASSIFICATION ERROR] Main API failed, using fallback:', error);
     console.error(`[PIPELINE CLASSIFY] ❌ Main API failed, switching to fallback:`, {
@@ -1585,9 +1581,39 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
       messages: [
         {
           role: 'system',
-          content: `You are a search query classifier. Analyze the user's query and determine the most appropriate search type.
+          content: `You are a search query classifier for an alumni database. Analyze the user's query and determine the most appropriate search type.
 
-**SEARCH TYPES:**
+**FIRST: VALIDATE QUERY APPROPRIATENESS**
+
+Before classifying, check if this query is appropriate for searching alumni profiles:
+
+**VALID ALUMNI QUERIES:**
+- Professional roles, titles, companies (e.g., "software engineers", "marketing managers at Google")
+- Education background, schools, degrees (e.g., "MBA graduates", "Harvard alumni")
+- Industries, career progression, skills (e.g., "people in finance", "experienced consultants")
+- Geographic locations for work/life (e.g., "alumni in San Francisco", "remote workers")
+- Career achievements, leadership roles (e.g., "executives", "startup founders")
+- Salary ranges, company sizes (e.g., "high earners", "people at Fortune 500 companies")
+- Experience levels, functional expertise (e.g., "senior developers", "sales professionals")
+
+**INVALID QUERIES (mark as "invalid"):**
+- Empty or meaningless input (e.g., "", "asdf", "123", "??")
+- Non-English gibberish or random characters
+- Personal/private information requests (e.g., "dating profiles", "medical records")
+- Non-professional context (e.g., "weather forecast", "recipe for pasta", "math homework")
+- Impossible combinations (e.g., "entry-level executives", "graduated in 1850")
+- Questions unrelated to alumni/people search (e.g., "What is the capital of France?")
+- Shopping/products (e.g., "buy shoes", "best laptop")
+- Entertainment requests (e.g., "funny movies", "music recommendations")
+
+**IF QUERY IS INVALID:**
+Return: {
+  "type": "invalid",
+  "invalidReason": "brief explanation",
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
+}
+
+**IF QUERY IS VALID, CLASSIFY AS ONE OF THESE SEARCH TYPES:**
 
 1. **TEMPORAL SEARCH** - For queries with specific dates, years, or time-based sequences
    - Specific years (e.g., "2018", "2019-2021", "after 2020")
@@ -1639,13 +1665,25 @@ async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassifica
 - "Moved to management after 2020" → TEMPORAL (specific year reference)
 
 **OUTPUT FORMAT:**
-Return only the search type as a simple JSON object:
-
+For valid queries, return:
 {
   "type": "temporal" | "chronological" | "standard"
 }
 
-Respond only with valid JSON containing just the type field.`,
+For invalid queries, return:
+{
+  "type": "invalid",
+  "invalidReason": "explanation of why invalid",
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"]
+}
+
+**SUGGESTION EXAMPLES FOR INVALID QUERIES:**
+- If personal/medical: ["Software engineers", "Marketing professionals", "Alumni in healthcare industry"]
+- If gibberish: ["Software engineers at tech companies", "MBA graduates in finance", "Alumni working in California"]
+- If non-professional: ["People working in [related industry]", "Professionals with [related skill]", "Alumni at [related companies]"]
+- If impossible: Fix the contradiction and suggest realistic alternatives
+
+Respond only with valid JSON.`,
         },
         {
           role: 'user',

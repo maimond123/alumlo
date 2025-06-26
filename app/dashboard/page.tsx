@@ -591,7 +591,7 @@ export default function DashboardPage() {
   const [isLoadingCount, setIsLoadingCount] = useState(false);
 
   // Add these new states to your component
-  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'expanding' | 'complete'>('idle');
+  const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'expanding' | 'complete' | 'invalid'>('idle');
   const [displayedText, setDisplayedText] = useState({
     analyzing: '',
     searching: '',
@@ -641,6 +641,16 @@ export default function DashboardPage() {
 
   // Add state for query classification
   const [queryClassification, setQueryClassification] = useState<any>(null);
+
+  // Add new state for invalid query handling
+  const [queryValidationError, setQueryValidationError] = useState<{
+    errorType: string;
+    message: string;
+    suggestions: string[];
+  } | null>(null);
+
+  // Add new state for expansion messages
+  const [expansionMessages, setExpansionMessages] = useState<string>('');
 
   // Add function to classify query for temporal search
   const classifyQuery = async (query: string): Promise<any> => {
@@ -1157,6 +1167,7 @@ export default function DashboardPage() {
     setIsSearching(true);
     setSearchPhase('analyzing');
     setSavedStatusMap({}); // Reset saved statuses on new search
+    setQueryValidationError(null); // Clear any previous validation errors
     
     // Reset expansion states for new search
     setCanExpand(false);
@@ -1200,7 +1211,7 @@ export default function DashboardPage() {
       console.log(`[DASHBOARD PIPELINE] 🚀 Starting search pipeline request at ${new Date().toISOString()}`);
       
       let searchConfig = null;
-      let pipelineResult = null;
+      let pipelineResult: any = null;
       let apiFilters = {};
       let queryClassification = null;
       let filterText = '';
@@ -1228,6 +1239,37 @@ export default function DashboardPage() {
         if (pipelineResponse.ok) {
           pipelineResult = await pipelineResponse.json();
           console.log(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE RESULT:`, pipelineResult);
+          
+          // NEW: Check for invalid query response
+          if (pipelineResult.searchType === 'invalid') {
+            console.log(`[DASHBOARD PIPELINE] ❌ Invalid query detected by pipeline`);
+            
+            setSearchPhase('invalid');
+            setIsSearching(false);
+            
+            // Set validation error state
+            setQueryValidationError({
+              errorType: 'invalid',
+              message: pipelineResult.classification.invalidReason || 'This search query is not valid for our alumni database.',
+              suggestions: pipelineResult.searchConfig.suggestions || [],
+            });
+            
+            // Update displayed text to show error
+            setDisplayedText(prev => ({ 
+              ...prev, 
+              displaying: `❌ ${pipelineResult.classification.invalidReason || 'Invalid search query detected'}` 
+            }));
+            
+            // Track invalid query
+            analytics.trackSearch(currentQuery, 0, { 
+              source: directQuery ? 'tag_click' : 'search_input',
+              status: 'invalid',
+              invalidReason: pipelineResult.classification.invalidReason
+            });
+            
+            return; // Exit early for invalid queries
+          }
+          
           console.log(`[DASHBOARD PIPELINE] ✅ Pipeline success - searchType: ${pipelineResult.searchType}`);
           console.log(`[DASHBOARD PIPELINE] 📊 Pipeline metadata:`, pipelineResult.metadata);
           console.log(`[DASHBOARD PIPELINE] 🎯 Search configuration:`, pipelineResult.searchConfig);
@@ -1570,9 +1612,6 @@ export default function DashboardPage() {
     handleSearch(new Event('submit') as any, query);
   };
   
-  // Add new state for expansion messages
-  const [expansionMessages, setExpansionMessages] = useState<string>('');
-
   // NEW: Manual expansion function
   const handleExpandSearch = async () => {
     if (!pipelineExpansionData || isExpanding || hasExpanded) {
@@ -2477,6 +2516,46 @@ export default function DashboardPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Invalid Query Error Section */}
+            {queryValidationError && (
+              <div className="w-full pb-8">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <AlertCircle className="h-6 w-6 text-red-500" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-red-800 mb-2">
+                        Invalid Search Query
+                      </h3>
+                      <p className="text-red-700 mb-4">
+                        {queryValidationError.message}
+                      </p>
+                      
+                      {queryValidationError.suggestions && queryValidationError.suggestions.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-red-800 mb-2">
+                            Try searching for:
+                          </h4>
+                          <div className="space-y-2">
+                            {queryValidationError.suggestions.map((suggestion, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleTagClick(suggestion)}
+                                className="block w-full text-left px-3 py-2 bg-white border border-red-200 rounded-md hover:border-red-300 hover:bg-red-50 transition-colors text-red-700"
+                              >
+                                "{suggestion}"
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Search Results Section - Show below the analysis */}
             {!isSearching && searchPhase === 'complete' && searchResults.length > 0 && (
