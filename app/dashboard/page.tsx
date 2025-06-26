@@ -1247,11 +1247,14 @@ export default function DashboardPage() {
             setSearchPhase('invalid');
             setIsSearching(false);
             
+            // Collapse the analysis section when showing invalid query error
+            setIsAnalysisCollapsed(true);
+            
             // Set validation error state
             setQueryValidationError({
               errorType: 'invalid',
               message: pipelineResult.classification.invalidReason || 'This search query is not valid for our alumni database.',
-              suggestions: pipelineResult.searchConfig.suggestions || [],
+              suggestions: pipelineResult.searchConfig.suggestions || []
             });
             
             // Update displayed text to show error
