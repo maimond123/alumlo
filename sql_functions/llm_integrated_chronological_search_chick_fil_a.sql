@@ -231,6 +231,9 @@ BEGIN
     WHERE 
       -- Apply school filter using JSON extraction
       (($1->>''school_filter'') IS NULL OR ee.institution ILIKE ''%%'' || ($1->>''school_filter'') || ''%%'')
+      -- NEW EDUCATION FILTERS
+      AND (($1->>''major_category_filter'') IS NULL OR ee.major_category ILIKE ''%%'' || ($1->>''major_category_filter'') || ''%%'')
+      AND (($1->>''school_type_filter'') IS NULL OR ee.school_type ILIKE ''%%'' || ($1->>''school_type_filter'') || ''%%'')
     GROUP BY ee.profile_id
   ),
   
@@ -243,6 +246,19 @@ BEGIN
       ca.years_in_target_industry,
       COALESCE(ea.highest_degree_level_calculated, '''') as highest_degree_level_calculated,
       ca.has_geographic_mobility,
+      
+      -- TIER 1 FILTER FIELDS: Career & Leadership
+      COALESCE(ca.has_leadership_experience, FALSE) as has_leadership_experience,
+      COALESCE(ca.has_management_responsibility, FALSE) as has_management_responsibility,
+      COALESCE(ca.has_pre_company_experience, FALSE) as has_pre_company_experience,
+      COALESCE(ca.has_post_company_experience, FALSE) as has_post_company_experience,
+      COALESCE(ca.worked_at_target_company, FALSE) as worked_at_target_company,
+      COALESCE(ca.worked_during_company, FALSE) as worked_during_company,
+      
+      -- TIER 1 FILTER FIELDS: Education
+      COALESCE(ea.educated_before_company, FALSE) as educated_before_company,
+      COALESCE(ea.educated_during_company, FALSE) as educated_during_company,
+      COALESCE(ea.educated_after_company, FALSE) as educated_after_company,
       
       -- Timeline pattern analysis
       CASE 
@@ -279,17 +295,33 @@ BEGIN
       -- Experience filters
       ((($1->>''total_experience_years'')::numeric) IS NULL OR COALESCE(ca.total_years_experience, 0) >= (($1->>''total_experience_years'')::numeric))
       AND ((($1->>''min_years_in_industry'')::numeric) IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= (($1->>''min_years_in_industry'')::numeric))
-      
-      -- Boolean filters (Fixed version)
-      AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR ca.has_geographic_mobility = (($1->>''geographic_mobility'')::boolean))
+      AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR COALESCE(ca.has_geographic_mobility, FALSE) = (($1->>''geographic_mobility'')::boolean))
       AND ((($1->>''concurrent_activities'')::boolean) IS NULL OR 
-           (CASE 
+           CASE 
              WHEN ea.earliest_education_start_month IS NOT NULL AND ca.latest_career_end_month IS NOT NULL AND
                   ca.earliest_career_start_month IS NOT NULL AND ea.latest_education_end_month IS NOT NULL THEN
                (ea.earliest_education_start_month <= ca.latest_career_end_month AND 
-                ca.earliest_career_start_month <= ea.latest_education_end_month)
-             ELSE FALSE
-           END) = (($1->>''concurrent_activities'')::boolean))
+                ca.earliest_career_start_month <= ea.latest_education_end_month) = (($1->>''concurrent_activities'')::boolean)
+             ELSE (($1->>''concurrent_activities'')::boolean) = FALSE
+           END)
+      
+      -- TIER 1 FILTERS: Leadership & Management
+      AND ((($1->>''has_leadership_experience'')::boolean) IS NULL OR COALESCE(ca.has_leadership_experience, FALSE) = (($1->>''has_leadership_experience'')::boolean))
+      AND ((($1->>''has_management_responsibility'')::boolean) IS NULL OR COALESCE(ca.has_management_responsibility, FALSE) = (($1->>''has_management_responsibility'')::boolean))
+      
+      -- TIER 1 FILTERS: Company Relationship
+      AND ((($1->>''has_pre_company_experience'')::boolean) IS NULL OR COALESCE(ca.has_pre_company_experience, FALSE) = (($1->>''has_pre_company_experience'')::boolean))
+      AND ((($1->>''has_post_company_experience'')::boolean) IS NULL OR COALESCE(ca.has_post_company_experience, FALSE) = (($1->>''has_post_company_experience'')::boolean))
+      AND ((($1->>''worked_at_target_company'')::boolean) IS NULL OR COALESCE(ca.worked_at_target_company, FALSE) = (($1->>''worked_at_target_company'')::boolean))
+      AND ((($1->>''worked_during_company'')::boolean) IS NULL OR COALESCE(ca.worked_during_company, FALSE) = (($1->>''worked_during_company'')::boolean))
+      
+      -- TIER 1 FILTERS: Education Relationship  
+      AND ((($1->>''educated_before_company'')::boolean) IS NULL OR COALESCE(ea.educated_before_company, FALSE) = (($1->>''educated_before_company'')::boolean))
+      AND ((($1->>''educated_during_company'')::boolean) IS NULL OR COALESCE(ea.educated_during_company, FALSE) = (($1->>''educated_during_company'')::boolean))
+      AND ((($1->>''educated_after_company'')::boolean) IS NULL OR COALESCE(ea.educated_after_company, FALSE) = (($1->>''educated_after_company'')::boolean))
+      
+      -- TIER 1 FILTERS: Degree Level
+      AND ((($1->>''degree_level_filter'') IS NULL OR COALESCE(ea.highest_degree_level_calculated, '''') ILIKE ''%%'' || ($1->>''degree_level_filter'') || ''%%''))
       
       -- HARD SCHOOL FILTER ENFORCEMENT
       AND (($1->>''school_filter'') IS NULL OR 
@@ -321,16 +353,11 @@ BEGIN
             EXISTS (SELECT 1 FROM %I ce5 WHERE ce5.profile_id = ca.profile_id
                     AND ce5.location ILIKE ''%%'' || ($1->>''location_filter'') || ''%%'')))
       
-      -- HARD COMPANY SIZE FILTER ENFORCEMENT
+      -- TIER 1 FILTERS: Company Size (Hard Filter)
       AND (($1->>''company_size_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce6 WHERE ce6.profile_id = ca.profile_id
                     AND ce6.company_size ILIKE ''%%'' || ($1->>''company_size_filter'') || ''%%'')))
-      
-      -- HARD DEGREE LEVEL FILTER ENFORCEMENT
-      AND (($1->>''degree_level_filter'') IS NULL OR 
-           (ea.profile_id IS NOT NULL AND
-            COALESCE(ea.highest_degree_level_calculated, '''') ILIKE ''%%'' || ($1->>''degree_level_filter'') || ''%%''))
   )
   
   SELECT 
@@ -423,6 +450,15 @@ BEGIN
       ''sequence_gap_months'', cda.sequence_gap_months,
       ''has_concurrent_activities'', cda.has_concurrent_activities,
       ''has_geographic_mobility'', cda.has_geographic_mobility,
+      ''has_leadership_experience'', cda.has_leadership_experience,
+      ''has_management_responsibility'', cda.has_management_responsibility,
+      ''has_pre_company_experience'', cda.has_pre_company_experience,
+      ''has_post_company_experience'', cda.has_post_company_experience,
+      ''worked_at_target_company'', cda.worked_at_target_company,
+      ''worked_during_company'', cda.worked_during_company,
+      ''educated_before_company'', cda.educated_before_company,
+      ''educated_during_company'', cda.educated_during_company,
+      ''educated_after_company'', cda.educated_after_company,
       ''highest_degree_level_calculated'', cda.highest_degree_level_calculated,
       ''applied_filters'', $1
     ) as comprehensive_analysis,
@@ -454,11 +490,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
+COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA and EDUCATION FILTERS. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
 
 SUPPORTED FILTERS:
 - Text Filters: school_filter, company_filter, industry_filter, title_filter, location_filter, company_size_filter, degree_level_filter
+- NEW Education Filters: major_category_filter, school_type_filter
 - Numeric Filters: total_experience_years (>=), min_years_in_industry (>=)
 - Boolean Filters: geographic_mobility, concurrent_activities
 
-All text filters use ILIKE pattern matching with wildcards for partial matching. All filters are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
+All filters use ILIKE pattern matching with wildcards for partial matching. All filters are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
