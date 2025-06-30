@@ -2580,11 +2580,6 @@ export default function DashboardPage() {
                         <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{displayedText.analyzing}</p>
                       </div>
                     )}
-
-                    {/* Show expansion messages in real-time during expansion */}
-                    {isExpanding && expansionMessages && (
-                      <p className="text-gray-700 mb-3 whitespace-pre-line">{expansionMessages}</p>
-                    )}
                     
                     {displayedText.filters && (
                       <div className="mb-4">

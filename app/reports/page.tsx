@@ -336,7 +336,7 @@ function ReportsContent() {
           ? "Please select at least one data point and one class year before generating a report."
           : selectedOptions.length === 0
           ? "Please select at least one data point before generating a report."
-          : "Please select at least one class year before generating a report."
+          : "Please select at least one class year before a report."
       );
       setShowErrorModal(true);
       return;
