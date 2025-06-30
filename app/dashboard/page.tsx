@@ -2630,6 +2630,17 @@ export default function DashboardPage() {
                         <p className="text-gray-700 pl-7 pt-1">{displayedText.displaying}</p>
                       </div>
                     )}
+
+                    {/* New Expanding section - shows when expansion is in progress */}
+                    {isExpanding && expansionMessages && (
+                      <div className="mb-4">
+                        <div className="flex items-center space-x-2 font-semibold text-gray-800">
+                          <RefreshCw className="h-5 w-5 text-yellow-500 animate-spin" />
+                          <span>Expanding</span>
+                        </div>
+                        <p className="text-gray-700 whitespace-pre-line pl-7 pt-1">{expansionMessages}</p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
