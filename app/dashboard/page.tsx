@@ -1311,24 +1311,99 @@ export default function DashboardPage() {
             
             const filterDescriptions = [];
 
-            if (enhancedFilters.company_filter) filterDescriptions.push(`• Companies matching: "${enhancedFilters.company_filter}"`);
-            if (enhancedFilters.industry_filter) filterDescriptions.push(`• Industries matching: "${enhancedFilters.industry_filter}"`);
-            if (enhancedFilters.title_filter) filterDescriptions.push(`• Roles matching: "${enhancedFilters.title_filter}"`);
-            if (enhancedFilters.location_filter) filterDescriptions.push(`• Locations matching: "${enhancedFilters.location_filter}"`);
-            if (enhancedFilters.school_filter) filterDescriptions.push(`• Schools matching: "${enhancedFilters.school_filter}"`);
-            if (enhancedFilters.current_job_level_filter) filterDescriptions.push(`• Job level: ${enhancedFilters.current_job_level_filter}`);
+            // Company filters - handle both singular and array formats
+            if (enhancedFilters.company_filter) {
+                filterDescriptions.push(`• Companies matching: "${enhancedFilters.company_filter}"`);
+            } else if (enhancedFilters.company_filters && enhancedFilters.company_filters.length > 0) {
+                filterDescriptions.push(`• Companies matching: ${enhancedFilters.company_filters.join(', ')}`);
+            } else if (enhancedFilters.post_company_companies_filter && enhancedFilters.post_company_companies_filter.length > 0) {
+                filterDescriptions.push(`• Previously worked at: ${enhancedFilters.post_company_companies_filter.join(', ')}`);
+            }
+
+            // Industry filters - handle both singular and array formats
+            if (enhancedFilters.industry_filter) {
+                filterDescriptions.push(`• Industries matching: "${enhancedFilters.industry_filter}"`);
+            } else if (enhancedFilters.industry_filters && enhancedFilters.industry_filters.length > 0) {
+                filterDescriptions.push(`• Industries matching: ${enhancedFilters.industry_filters.join(', ')}`);
+            } else if (enhancedFilters.post_company_industries_filter && enhancedFilters.post_company_industries_filter.length > 0) {
+                filterDescriptions.push(`• Previously worked in: ${enhancedFilters.post_company_industries_filter.join(', ')}`);
+            }
+
+            // Title filters - handle both singular and array formats
+            if (enhancedFilters.title_filter) {
+                filterDescriptions.push(`• Roles matching: "${enhancedFilters.title_filter}"`);
+            } else if (enhancedFilters.title_filters && enhancedFilters.title_filters.length > 0) {
+                filterDescriptions.push(`• Roles matching: ${enhancedFilters.title_filters.join(', ')}`);
+            } else if (enhancedFilters.post_company_titles_filter && enhancedFilters.post_company_titles_filter.length > 0) {
+                filterDescriptions.push(`• Previously held roles: ${enhancedFilters.post_company_titles_filter.join(', ')}`);
+            }
+
+            // Location filters - handle both singular and array formats
+            if (enhancedFilters.location_filter) {
+                filterDescriptions.push(`• Locations matching: "${enhancedFilters.location_filter}"`);
+            } else if (enhancedFilters.location_filters && enhancedFilters.location_filters.length > 0) {
+                filterDescriptions.push(`• Locations matching: ${enhancedFilters.location_filters.join(', ')}`);
+            } else if (enhancedFilters.post_company_locations_filter && enhancedFilters.post_company_locations_filter.length > 0) {
+                filterDescriptions.push(`• Previously worked in: ${enhancedFilters.post_company_locations_filter.join(', ')}`);
+            }
+
+            // School filters - handle both singular and array formats
+            if (enhancedFilters.school_filter) {
+                filterDescriptions.push(`• Schools matching: "${enhancedFilters.school_filter}"`);
+            } else if (enhancedFilters.school_filters && enhancedFilters.school_filters.length > 0) {
+                filterDescriptions.push(`• Schools matching: ${enhancedFilters.school_filters.join(', ')}`);
+            } else if (enhancedFilters.undergraduate_schools_filter && enhancedFilters.undergraduate_schools_filter.length > 0) {
+                filterDescriptions.push(`• Undergraduate schools: ${enhancedFilters.undergraduate_schools_filter.join(', ')}`);
+            } else if (enhancedFilters.graduate_schools_filter && enhancedFilters.graduate_schools_filter.length > 0) {
+                filterDescriptions.push(`• Graduate schools: ${enhancedFilters.graduate_schools_filter.join(', ')}`);
+            }
+
+            // Job level filters - handle both singular and array formats
+            if (enhancedFilters.current_job_level_filter) {
+                filterDescriptions.push(`• Job level: ${enhancedFilters.current_job_level_filter}`);
+            } else if (enhancedFilters.current_job_level_filters && enhancedFilters.current_job_level_filters.length > 0) {
+                filterDescriptions.push(`• Job levels: ${enhancedFilters.current_job_level_filters.join(', ')}`);
+            }
+
+            // Boolean filters
             if (enhancedFilters.is_current_leader) filterDescriptions.push(`• Identifying current leaders`);
             if (enhancedFilters.management_experience) filterDescriptions.push(`• Has management experience`);
             if (enhancedFilters.technical_background) filterDescriptions.push(`• Has a technical background`);
             if (enhancedFilters.sales_experience) filterDescriptions.push(`• Has sales experience`);
-            if (enhancedFilters.functional_expertise_filter) filterDescriptions.push(`• Expertise in: ${enhancedFilters.functional_expertise_filter}`);
-            if (enhancedFilters.highest_degree_level_filter) filterDescriptions.push(`• Degree level: ${enhancedFilters.highest_degree_level_filter}`);
+
+            // Expertise filters - handle arrays
+            if (enhancedFilters.functional_expertise_filter && enhancedFilters.functional_expertise_filter.length > 0) {
+                filterDescriptions.push(`• Expertise in: ${enhancedFilters.functional_expertise_filter.join(', ')}`);
+            }
+            if (enhancedFilters.industry_expertise_filter && enhancedFilters.industry_expertise_filter.length > 0) {
+                filterDescriptions.push(`• Industry expertise: ${enhancedFilters.industry_expertise_filter.join(', ')}`);
+            }
+
+            // Education filters - handle both singular and array formats
+            if (enhancedFilters.highest_degree_level_filter) {
+                filterDescriptions.push(`• Degree level: ${enhancedFilters.highest_degree_level_filter}`);
+            } else if (enhancedFilters.highest_degree_level_filters && enhancedFilters.highest_degree_level_filters.length > 0) {
+                filterDescriptions.push(`• Degree levels: ${enhancedFilters.highest_degree_level_filters.join(', ')}`);
+            }
+
             if (enhancedFilters.stem_education) filterDescriptions.push(`• Has a STEM education`);
             if (enhancedFilters.elite_education) filterDescriptions.push(`• Attended a top-tier school`);
+
+            // Salary filters
             if (enhancedFilters.min_current_salary) filterDescriptions.push(`• Minimum salary of $${enhancedFilters.min_current_salary.toLocaleString()}`);
+            if (enhancedFilters.max_current_salary) filterDescriptions.push(`• Maximum salary of $${enhancedFilters.max_current_salary.toLocaleString()}`);
             if (enhancedFilters.salary_growth_indicator) filterDescriptions.push(`• Shows high salary growth`);
+
+            // Experience filters
             if (enhancedFilters.has_startup_experience) filterDescriptions.push(`• Has startup experience`);
             if (enhancedFilters.has_enterprise_experience) filterDescriptions.push(`• Has enterprise experience`);
+
+            // Company size filters - handle both singular and array formats
+            if (enhancedFilters.current_company_size_category_filter) {
+                filterDescriptions.push(`• Company size: ${enhancedFilters.current_company_size_category_filter}`);
+            } else if (enhancedFilters.current_company_size_category_filters && enhancedFilters.current_company_size_category_filters.length > 0) {
+                filterDescriptions.push(`• Company sizes: ${enhancedFilters.current_company_size_category_filters.join(', ')}`);
+            }
 
             if (filterDescriptions.length > 0) {
                 filterText = filterDescriptions.join('\n');
