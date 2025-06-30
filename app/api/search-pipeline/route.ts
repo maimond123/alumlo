@@ -103,11 +103,15 @@ interface SearchPipelineResponse {
   searchConfig: SearchConfig;
   shouldExecuteSearch: boolean;
   fallbackToStandard?: boolean;
-  // NEW: Search expansion results
-  expansionResults?: {
-    variants: SearchExpansionVariant[];
-    additionalSearchConfigs: ChronologicalConfig[];
+  // NEW: Expansion capability metadata (stored for on-demand expansion)
+  expansionMetadata?: {
+    canExpand: boolean;
+    originalQuery: string;
+    primaryFilters?: StandardSearchFilters | ChronologicalFilters;
+    primaryElements?: TemporalElements;
+    organizationName?: string;
   };
+  // REMOVED: expansionResults - now generated on-demand only
   metadata: {
     processingSteps: string[];
     llmCalls: number;
@@ -124,6 +128,21 @@ interface SearchExpansionVariant {
 interface SearchExpansionResponse {
   expansion_variants: SearchExpansionVariant[];
 }
+
+// NEW: Standard search expansion interfaces
+interface StandardExpansionVariant {
+  natural_language_query: string;
+  filters: StandardSearchFilters;
+}
+
+// NEW: Temporal search expansion interfaces  
+interface TemporalExpansionVariant {
+  natural_language_query: string;
+  temporalElements: TemporalElements;
+}
+
+// NEW: Generic expansion variant type
+type GenericExpansionVariant = SearchExpansionVariant | StandardExpansionVariant | TemporalExpansionVariant;
 
 // NEW: Database Term Standardization and Mapping System (Enhanced for Fuzzy Matching)
 const DATABASE_TERM_MAPPINGS = {
@@ -1064,15 +1083,16 @@ export async function POST(req: NextRequest) {
   try {
     console.log(`[PIPELINE] 🚀 Search pipeline started at ${new Date().toISOString()}`);
     
-    const body: SearchPipelineRequest = await req.json();
+    const body: SearchPipelineRequest & { requestType?: 'search' | 'expand' } = await req.json();
     console.log(`[PIPELINE] 📝 Request received:`, {
       hasQuery: !!body.query,
       queryLength: body.query?.length || 0,
       organizationName: body.organizationName,
-      isDemo: body.isDemo
+      isDemo: body.isDemo,
+      requestType: body.requestType || 'search'
     });
 
-    const { query, organizationName, isDemo = false } = body;
+    const { query, organizationName, isDemo = false, requestType = 'search' } = body;
 
     if (!query) {
       console.log(`[PIPELINE] ❌ No query provided`);
@@ -1093,6 +1113,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Handle expansion requests
+    if (requestType === 'expand') {
+      console.log(`[PIPELINE EXPANSION] 🔍 Processing on-demand expansion request`);
+      return await handleExpansionRequest(body, startTime);
+    }
+
+    // Handle regular search requests (existing logic)
     // Step 1: Classify the query
     console.log(`[PIPELINE] 🔍 Step 1: Classifying query...`);
     processingSteps.push('query_classification');
@@ -1129,38 +1156,61 @@ export async function POST(req: NextRequest) {
 
     // Continue with existing logic for valid queries
     let searchConfig: SearchConfig;
-    let expansionResults: any = null;
+    let expansionMetadata: any = null;
 
-    // Step 2: Process based on classification type
+    // Step 2: Process based on classification type (without expansion - on-demand only)
     if (classification.type === 'temporal') {
       console.log(`[PIPELINE] 🕐 Step 2: Processing temporal search...`);
       processingSteps.push('temporal_processing');
       
+      const temporalElements = await extractTemporalElements(query);
       searchConfig = await processTemporalSearch(query, classification, organizationName);
-      llmCalls++;
+      llmCalls += 2; // Classification + Temporal extraction
+      
+      // Store expansion metadata for on-demand expansion
+      expansionMetadata = {
+        canExpand: true,
+        originalQuery: query,
+        primaryElements: temporalElements,
+        organizationName: organizationName
+      };
       
     } else if (classification.type === 'chronological') {
-      console.log(`[PIPELINE] 📈 Step 2: Processing chronological search with expansion...`);
-      processingSteps.push('chronological_processing_with_expansion');
+      console.log(`[PIPELINE] 📈 Step 2: Processing chronological search...`);
+      processingSteps.push('chronological_processing');
       
-      const chronologicalResult = await processChronologicalSearchWithExpansion(query, classification, organizationName);
-      llmCalls += 3; // Standardization + Filter extraction + Expansion generation
+      const chronologicalFilters = await translateWithoutClassificationContext(query);
+      searchConfig = await processChronologicalSearch(query, classification, organizationName);
+      llmCalls += 3; // Classification + Standardization + Filter extraction
       
-      searchConfig = chronologicalResult.primaryConfig;
-      expansionResults = chronologicalResult.expansionResults;
+      // Store expansion metadata for on-demand expansion
+      expansionMetadata = {
+        canExpand: true,
+        originalQuery: query,
+        primaryFilters: chronologicalFilters,
+        organizationName: organizationName
+      };
       
     } else {
       console.log(`[PIPELINE] 📊 Step 2: Processing standard search...`);
       processingSteps.push('standard_processing');
       
+      const standardFilters = await translateStandardSearchQuery(query);
       searchConfig = await processStandardSearch(query, classification);
-      llmCalls++;
+      llmCalls += 2; // Classification + Standard filter extraction
+      
+      // Store expansion metadata for on-demand expansion
+      expansionMetadata = {
+        canExpand: true,
+        originalQuery: query,
+        primaryFilters: standardFilters
+      };
     }
 
     console.log(`[PIPELINE] ✅ Search configuration completed:`, {
       configType: searchConfig.type,
       hasEnhancedFilters: !!(searchConfig as any).enhancedFilters,
-      hasExpansionResults: !!expansionResults,
+      hasExpansionMetadata: !!expansionMetadata,
       totalSteps: processingSteps.length,
       totalLLMCalls: llmCalls
     });
@@ -1170,7 +1220,7 @@ export async function POST(req: NextRequest) {
       classification: classification,
       searchConfig: searchConfig,
       shouldExecuteSearch: true,
-      ...(expansionResults && { expansionResults }),
+      ...(expansionMetadata && { expansionMetadata }),
       metadata: {
         processingSteps,
         llmCalls,
@@ -1215,7 +1265,186 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// NEW: Process temporal search
+// NEW: Handle on-demand expansion requests
+async function handleExpansionRequest(
+  body: any,
+  startTime: number
+): Promise<NextResponse> {
+  console.log(`[EXPANSION REQUEST] 🔍 Processing expansion request:`, body);
+  
+  const { 
+    query, 
+    organizationName, 
+    searchType, 
+    primaryFilters, 
+    primaryElements 
+  } = body;
+
+  let llmCalls = 0;
+  let expansionResults: any = null;
+
+  try {
+    if (searchType === 'standard') {
+      console.log(`[EXPANSION REQUEST] 📊 Generating standard expansions`);
+      const variants = await generateStandardExpansionVariants(query, primaryFilters);
+      llmCalls++;
+      
+      const additionalSearchConfigs = variants.map(variant => ({
+        type: 'standard',
+        enhancedFilters: variant.filters,
+        searchMethod: 'comprehensive_sql_filtering'
+      }));
+      
+      expansionResults = { variants, additionalSearchConfigs };
+      
+    } else if (searchType === 'temporal') {
+      console.log(`[EXPANSION REQUEST] 🕐 Generating temporal expansions`);
+      const variants = await generateTemporalExpansionVariants(query, primaryElements);
+      llmCalls++;
+      
+      const additionalSearchConfigs = variants.map(variant => {
+        let searchMethod = 'general_filter';
+        let sqlFunction = `temporal_filter_search_${organizationName}`;
+        
+        if (variant.temporalElements.exit_year && variant.temporalElements.subsequent_functions && variant.temporalElements.subsequent_functions.length > 0) {
+          searchMethod = 'specific_sequence';
+          sqlFunction = `temporal_career_search_${organizationName}`;
+        }
+        
+        return {
+          type: 'temporal',
+          temporalElements: variant.temporalElements,
+          searchMethod,
+          sqlFunction,
+          sqlParameters: mapTemporalParameters(variant.temporalElements)
+        };
+      });
+      
+      expansionResults = { variants, additionalSearchConfigs };
+      
+    } else if (searchType === 'chronological') {
+      console.log(`[EXPANSION REQUEST] 📈 Generating chronological expansions`);
+      const variants = await generateSearchExpansionVariants(query, primaryFilters);
+      llmCalls++;
+      
+      const additionalSearchConfigs = variants.map(variant => ({
+        type: 'chronological',
+        filters: variant.filters,
+        sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+        sqlParameters: { chronological_filters: variant.filters }
+      }));
+      
+      expansionResults = { variants, additionalSearchConfigs };
+    }
+
+    console.log(`[EXPANSION REQUEST] ✅ Expansion completed:`, {
+      searchType,
+      variantCount: expansionResults?.variants?.length || 0,
+      llmCalls,
+      processingTime: Date.now() - startTime + 'ms'
+    });
+
+    return NextResponse.json({
+      success: true,
+      searchType,
+      expansionResults,
+      metadata: {
+        llmCalls,
+        processingTimeMs: Date.now() - startTime
+      }
+    });
+
+  } catch (error) {
+    console.error(`[EXPANSION REQUEST] ❌ Expansion failed:`, error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      metadata: {
+        llmCalls,
+        processingTimeMs: Date.now() - startTime
+      }
+    }, { status: 500 });
+  }
+}
+
+// NEW: Process temporal search with expansion
+async function processTemporalSearchWithExpansion(
+  query: string, 
+  classification: QueryClassification,
+  organizationName: string
+): Promise<{
+  primaryConfig: TemporalConfig;
+  expansionResults: {
+    variants: TemporalExpansionVariant[];
+    additionalSearchConfigs: TemporalConfig[];
+  };
+}> {
+  console.log(`[PIPELINE TEMPORAL] 🕐 Processing temporal search with expansion for: "${query}"`);
+  
+  // Step 1: Extract temporal elements using LLM
+  console.log(`[PIPELINE TEMPORAL] 🕐 Extracting temporal elements`);
+  const temporalElements = await extractTemporalElements(query);
+  console.log(`[PIPELINE TEMPORAL] ✅ Temporal elements extracted:`, temporalElements);
+  
+  // Step 2: Create primary search configuration
+  let searchMethod = 'general_filter';
+  let sqlFunction = `temporal_filter_search_${organizationName}`;
+  
+  if (temporalElements.exit_year && temporalElements.subsequent_functions && temporalElements.subsequent_functions.length > 0) {
+    searchMethod = 'specific_sequence';
+    sqlFunction = `temporal_career_search_${organizationName}`;
+  }
+  
+  const primaryConfig: TemporalConfig = {
+    type: 'temporal',
+    temporalElements,
+    searchMethod,
+    sqlFunction,
+    sqlParameters: mapTemporalParameters(temporalElements)
+  };
+  
+  console.log(`[PIPELINE TEMPORAL] ✅ Primary temporal search config created:`, primaryConfig);
+  
+  // Step 3: Generate search expansion variants
+  console.log(`[PIPELINE TEMPORAL] 🔍 Generating temporal search expansion variants`);
+  const expansionVariants = await generateTemporalExpansionVariants(query, temporalElements);
+  console.log(`[PIPELINE TEMPORAL] ✅ Generated ${expansionVariants.length} expansion variants`);
+  
+  // Step 4: Create additional search configurations for each variant
+  const additionalSearchConfigs: TemporalConfig[] = expansionVariants.map((variant, index) => {
+    console.log(`[PIPELINE TEMPORAL] 🔧 Creating search config for variant ${index + 1}: "${variant.natural_language_query}"`);
+    
+    // Determine search method for this variant
+    let variantSearchMethod = 'general_filter';
+    let variantSqlFunction = `temporal_filter_search_${organizationName}`;
+    
+    if (variant.temporalElements.exit_year && variant.temporalElements.subsequent_functions && variant.temporalElements.subsequent_functions.length > 0) {
+      variantSearchMethod = 'specific_sequence';
+      variantSqlFunction = `temporal_career_search_${organizationName}`;
+    }
+    
+    return {
+      type: 'temporal',
+      temporalElements: variant.temporalElements,
+      searchMethod: variantSearchMethod,
+      sqlFunction: variantSqlFunction,
+      sqlParameters: mapTemporalParameters(variant.temporalElements)
+    };
+  });
+  
+  console.log(`[PIPELINE TEMPORAL] ✅ Created ${additionalSearchConfigs.length} additional search configurations`);
+  
+  return {
+    primaryConfig,
+    expansionResults: {
+      variants: expansionVariants,
+      additionalSearchConfigs
+    }
+  };
+}
+
+// EXISTING: Process temporal search (for backward compatibility)
 async function processTemporalSearch(
   query: string, 
   classification: QueryClassification,
@@ -1528,7 +1757,61 @@ async function processChronologicalSearchWithExpansion(
   };
 }
 
-// NEW: Process standard search 
+// NEW: Process standard search with expansion
+async function processStandardSearchWithExpansion(
+  query: string, 
+  classification: QueryClassification
+): Promise<{
+  primaryConfig: StandardConfig;
+  expansionResults: {
+    variants: StandardExpansionVariant[];
+    additionalSearchConfigs: StandardConfig[];
+  };
+}> {
+  console.log(`[PIPELINE STANDARD] 📊 Processing standard search with expansion for: "${query}"`);
+  
+  // Step 1: Extract standard filters using LLM
+  console.log(`[PIPELINE STANDARD] 📊 Extracting standard filters`);
+  const enhancedFilters = await translateStandardSearchQuery(query);
+  console.log(`[PIPELINE STANDARD] ✅ Enhanced filters extracted:`, enhancedFilters);
+  
+  // Step 2: Create primary search configuration
+  const primaryConfig: StandardConfig = {
+    type: 'standard',
+    enhancedFilters,
+    searchMethod: 'comprehensive_sql_filtering'
+  };
+  
+  console.log(`[PIPELINE STANDARD] ✅ Primary standard search config created:`, primaryConfig);
+  
+  // Step 3: Generate search expansion variants
+  console.log(`[PIPELINE STANDARD] 🔍 Generating standard search expansion variants`);
+  const expansionVariants = await generateStandardExpansionVariants(query, enhancedFilters);
+  console.log(`[PIPELINE STANDARD] ✅ Generated ${expansionVariants.length} expansion variants`);
+  
+  // Step 4: Create additional search configurations for each variant
+  const additionalSearchConfigs: StandardConfig[] = expansionVariants.map((variant, index) => {
+    console.log(`[PIPELINE STANDARD] 🔧 Creating search config for variant ${index + 1}: "${variant.natural_language_query}"`);
+    
+    return {
+      type: 'standard',
+      enhancedFilters: variant.filters,
+      searchMethod: 'comprehensive_sql_filtering'
+    };
+  });
+  
+  console.log(`[PIPELINE STANDARD] ✅ Created ${additionalSearchConfigs.length} additional search configurations`);
+  
+  return {
+    primaryConfig,
+    expansionResults: {
+      variants: expansionVariants,
+      additionalSearchConfigs
+    }
+  };
+}
+
+// EXISTING: Process standard search (for backward compatibility)
 async function processStandardSearch(
   query: string, 
   classification: QueryClassification
@@ -1542,7 +1825,7 @@ async function processStandardSearch(
   return {
     type: 'standard',
     enhancedFilters,
-    searchMethod: 'comprehensive_sql_filtering' // Always use SQL filtering instead of semantic search
+    searchMethod: 'comprehensive_sql_filtering'
   };
 }
 
@@ -3100,4 +3383,372 @@ function verifyChronologicalSearchIntegration(
   });
   
   console.log(`[CHRONOLOGICAL INTEGRATION] ✅ Chronological search integration verified successfully`);
+}
+
+// NEW: Generate standard search expansion variants
+async function generateStandardExpansionVariants(
+  originalQuery: string,
+  initialFilters: StandardSearchFilters,
+  initialResultCount?: number
+): Promise<StandardExpansionVariant[]> {
+  console.log(`[STANDARD EXPANSION] 🔍 Generating standard search expansion variants for: "${originalQuery}"`);
+  console.log(`[STANDARD EXPANSION] 📊 Initial filters:`, initialFilters);
+  console.log(`[STANDARD EXPANSION] 📈 Initial result count:`, initialResultCount);
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    temperature: 0.3, // Slightly higher for creative alternatives
+    messages: [
+      {
+        role: 'system',
+        content: `You are an intelligent standard search expansion system. Your job is to analyze a standard search query and its extracted filters, then generate 2-3 alternative filter sets that could capture different valid interpretations or broadened versions of the original query.
+
+**YOUR GOAL:**
+Generate alternative search strategies for STANDARD SEARCHES that maintain the core intent while broadening the search space to find more relevant profiles. Focus on current-state attributes and semantic matching.
+
+**STANDARD SEARCH EXPANSION STRATEGIES:**
+
+1. **COMPANY/ORGANIZATION EXPANSION** - Broaden company scope:
+   - Specific companies → Related industry/sector
+   - Single company → Company size category + industry
+   - FAANG → "Major tech companies" + enterprise size
+   - Startups → Company size + industry combination
+
+2. **INDUSTRY SEMANTIC EXPANSION** - Use related industry terms:
+   - "Technology" → ["Software", "Internet", "AI", "Cloud Computing"]
+   - "Finance" → ["Banking", "Investment", "Fintech", "Insurance"]
+   - "Healthcare" → ["Medical", "Pharmaceutical", "Biotech", "MedTech"]
+   - "Consulting" → ["Advisory", "Strategy", "Management Consulting"]
+
+3. **ROLE/TITLE BROADENING** - Expand to related functions:
+   - "Software Engineer" → Technical roles, development, product engineering
+   - "Product Manager" → Product roles, strategy, business development
+   - "Marketing Manager" → Marketing, growth, brand, communications
+   - "Sales Rep" → Sales, business development, account management
+
+4. **EXPERIENCE/LEVEL RELAXATION** - Broaden seniority requirements:
+   - Remove specific job level requirements
+   - Expand to related experience patterns
+   - Include adjacent skill sets
+   - Broaden leadership/management scope
+
+5. **EDUCATION/BACKGROUND EXPANSION** - Alternative academic paths:
+   - Specific schools → School ranking tiers
+   - Exact degrees → Degree level categories
+   - STEM → Related technical backgrounds
+   - MBA → Business education + leadership experience
+
+**STANDARD FILTER CATEGORIES TO CONSIDER:**
+
+**Basic Entity Filters:**
+- company_filter/company_filters → industry_filter + company_size
+- industry_filter → related industries array
+- title_filter/title_filters → functional_expertise_filter
+- school_filter → school_ranking_tier_filter + degree_level
+
+**Current State Filters:**
+- current_job_level_filter → career_stage_filter
+- technical_background → functional_expertise: ["engineering", "product", "data"]
+- management_experience → is_current_leader + current_job_level
+- has_startup_experience → current_company_size_category + industry
+
+**Salary & Success Filters:**
+- min_current_salary → salary_growth_indicator + career success patterns
+- elite_education → school_ranking_tier + continued_education
+- is_current_leader → management_experience + career_trajectory
+
+**EXAMPLES:**
+
+**Original Query:** "People who worked at Google, Microsoft, or Apple"
+**Initial Filters:** {"post_company_companies_filter": ["Google", "Microsoft", "Apple"]}
+
+**Expansion 1 - Industry + Size:**
+{
+  "natural_language_query": "Alumni who worked at major technology companies",
+  "filters": {
+    "industry_expertise_filter": ["technology", "software", "internet"],
+    "industry_expertise_or_logic": true,
+    "current_company_size_category_filter": "Enterprise (5000+ employees)",
+    "has_enterprise_experience": true
+  }
+}
+
+**Expansion 2 - Technical Roles at Tech:**
+{
+  "natural_language_query": "Technical professionals with big tech experience",
+  "filters": {
+    "technical_background": true,
+    "has_enterprise_experience": true,
+    "functional_expertise_filter": ["engineering", "product", "data science"],
+    "functional_expertise_or_logic": true,
+    "industry_expertise_filter": ["technology"]
+  }
+}
+
+**Expansion 3 - Leadership from Tech:**
+{
+  "natural_language_query": "Leaders and managers from technology companies",
+  "filters": {
+    "management_experience": true,
+    "industry_expertise_filter": ["technology", "software"],
+    "industry_expertise_or_logic": true,
+    "current_job_level_filters": ["Manager", "Director", "VP/SVP"],
+    "current_job_level_or_logic": true
+  }
+}
+
+**IMPORTANT RULES:**
+1. **Always generate exactly 3 expansion variants**
+2. **Focus on CURRENT STATE attributes** (no career progression patterns)
+3. **Use semantic broadening** rather than temporal sequences
+4. **Maintain core search intent** while expanding scope
+5. **Prefer OR logic** for inclusive matching
+6. **Each variant should be meaningfully different**
+7. **Generate natural language queries** that would produce these filters
+
+**OUTPUT FORMAT:**
+Return only valid JSON in this exact structure:
+
+{
+  "expansion_variants": [
+    {
+      "natural_language_query": "Clear, searchable natural language query",
+      "filters": { /* StandardSearchFilters object */ }
+    },
+    {
+      "natural_language_query": "Another clear, searchable natural language query", 
+      "filters": { /* StandardSearchFilters object */ }
+    },
+    {
+      "natural_language_query": "Third clear, searchable natural language query",
+      "filters": { /* StandardSearchFilters object */ }
+    }
+  ]
+}
+
+Respond only with valid JSON.`
+      },
+      {
+        role: 'user',
+        content: `Original Query: "${originalQuery}"
+
+Initial Filters: ${JSON.stringify(initialFilters, null, 2)}
+
+${initialResultCount !== undefined ? `Initial Result Count: ${initialResultCount}` : ''}
+
+Generate 3 intelligent standard search expansion variants that maintain the core intent while broadening the search space.`
+      }
+    ]
+  });
+
+  console.log(`[STANDARD EXPANSION] 🤖 OpenAI expansion response received`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[STANDARD EXPANSION] ⚠️ Empty response from OpenAI, returning empty expansions`);
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[STANDARD EXPANSION] ✅ Standard search expansion variants generated successfully:`, parsed);
+    
+    if (!parsed.expansion_variants || !Array.isArray(parsed.expansion_variants)) {
+      console.error(`[STANDARD EXPANSION] ❌ Invalid response structure, expected expansion_variants array`);
+      return [];
+    }
+
+    const variants = parsed.expansion_variants as StandardExpansionVariant[];
+    console.log(`[STANDARD EXPANSION] 📊 Expansion summary:`, {
+      totalVariants: variants.length,
+      generatedQueries: variants.map(v => v.natural_language_query),
+      hasFilters: variants.map(v => Object.keys(v.filters || {}).length > 0)
+    });
+
+    return variants;
+  } catch (error) {
+    console.error(`[STANDARD EXPANSION] ❌ Failed to parse expansion response:`, {
+      error: error,
+      rawContent: content
+    });
+    return [];
+  }
+}
+
+// NEW: Generate temporal search expansion variants
+async function generateTemporalExpansionVariants(
+  originalQuery: string,
+  initialElements: TemporalElements,
+  initialResultCount?: number
+): Promise<TemporalExpansionVariant[]> {
+  console.log(`[TEMPORAL EXPANSION] 🔍 Generating temporal search expansion variants for: "${originalQuery}"`);
+  console.log(`[TEMPORAL EXPANSION] 📊 Initial temporal elements:`, initialElements);
+  console.log(`[TEMPORAL EXPANSION] 📈 Initial result count:`, initialResultCount);
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4.1-mini',
+    temperature: 0.3, // Slightly higher for creative alternatives
+    messages: [
+      {
+        role: 'system',
+        content: `You are an intelligent temporal search expansion system. Your job is to analyze a temporal search query and its extracted temporal elements, then generate 2-3 alternative temporal configurations that could capture different valid interpretations or relaxed versions of the original query.
+
+**YOUR GOAL:**
+Generate alternative temporal search strategies that maintain the core chronological intent while broadening the time-based search space to find more relevant profiles.
+
+**TEMPORAL SEARCH EXPANSION STRATEGIES:**
+
+1. **TIME WINDOW EXPANSION** - Broaden temporal constraints:
+   - Specific year → Year range (±1-2 years)
+   - Narrow range → Broader range
+   - Exact timing → Flexible timing windows
+   - Sequential timing → Overlapping periods
+
+2. **FUNCTION/ROLE BROADENING** - Expand target functions:
+   - Specific roles → Related role categories
+   - "Consultant" → ["Advisory", "Strategy", "Business analyst"]
+   - "Engineer" → ["Technical roles", "Product development", "R&D"]
+   - "Sales" → ["Business development", "Account management", "Revenue"]
+
+3. **SEQUENCE PATTERN RELAXATION** - Alternative timing patterns:
+   - Strict sequences → Flexible timing
+   - "Immediately after" → "Within 12 months"
+   - "Then became" → "Subsequently worked as"
+   - "During" → "Around the same time"
+
+4. **TEMPORAL CONSTRAINT RELAXATION** - Loosen timing requirements:
+   - Remove specific month constraints
+   - Expand gap tolerance
+   - Allow for concurrent activities
+   - Broaden education timing overlap
+
+**TEMPORAL ELEMENTS TO CONSIDER:**
+
+**Year-Based Elements:**
+- specific_years → broader year ranges
+- exit_year → exit_year_range
+- year_ranges → expanded ranges
+
+**Function/Role Elements:**
+- subsequent_functions → related function categories
+- target_company_functions → broader role types
+
+**Sequence Elements:**
+- sequence_type → alternative sequence patterns
+- timing_constraints → relaxed timing windows
+
+**EXAMPLES:**
+
+**Original Query:** "People who left in 2019 and became consultants"
+**Initial Elements:** {"exit_year": 2019, "subsequent_functions": ["consulting"], "sequence_type": "exit_then_function"}
+
+**Expansion 1 - Broader Time Window:**
+{
+  "natural_language_query": "People who left between 2018-2020 and became consultants",
+  "temporalElements": {
+    "year_ranges": [{"start": 2018, "end": 2020}],
+    "subsequent_functions": ["consulting"],
+    "sequence_type": "exit_then_function",
+    "timing_constraints": {"max_gap_months": 12}
+  }
+}
+
+**Expansion 2 - Broader Functions:**
+{
+  "natural_language_query": "People who left in 2019 and moved into advisory roles",
+  "temporalElements": {
+    "exit_year": 2019,
+    "subsequent_functions": ["consulting", "advisory", "strategy", "business analyst"],
+    "sequence_type": "exit_then_function",
+    "timing_constraints": {"max_gap_months": 18}
+  }
+}
+
+**Expansion 3 - Flexible Timing:**
+{
+  "natural_language_query": "People who worked around 2019 and later became consultants",
+  "temporalElements": {
+    "year_ranges": [{"start": 2018, "end": 2020}],
+    "subsequent_functions": ["consulting", "advisory"],
+    "sequence_type": "function_then_function",
+    "timing_constraints": {"max_gap_months": 24}
+  }
+}
+
+**IMPORTANT RULES:**
+1. **Always generate exactly 3 expansion variants**
+2. **Focus on TEMPORAL RELATIONSHIPS** and timing patterns
+3. **Maintain chronological logic** while expanding scope
+4. **Broaden time windows** reasonably (±1-3 years max)
+5. **Expand function categories** to related roles
+6. **Relax timing constraints** to capture more patterns
+7. **Generate natural language queries** that would produce these elements
+
+**OUTPUT FORMAT:**
+Return only valid JSON in this exact structure:
+
+{
+  "expansion_variants": [
+    {
+      "natural_language_query": "Clear, searchable temporal query",
+      "temporalElements": { /* TemporalElements object */ }
+    },
+    {
+      "natural_language_query": "Another clear, searchable temporal query", 
+      "temporalElements": { /* TemporalElements object */ }
+    },
+    {
+      "natural_language_query": "Third clear, searchable temporal query",
+      "temporalElements": { /* TemporalElements object */ }
+    }
+  ]
+}
+
+Respond only with valid JSON.`
+      },
+      {
+        role: 'user',
+        content: `Original Query: "${originalQuery}"
+
+Initial Temporal Elements: ${JSON.stringify(initialElements, null, 2)}
+
+${initialResultCount !== undefined ? `Initial Result Count: ${initialResultCount}` : ''}
+
+Generate 3 intelligent temporal search expansion variants that maintain the core chronological intent while broadening the time-based search space.`
+      }
+    ]
+  });
+
+  console.log(`[TEMPORAL EXPANSION] 🤖 OpenAI expansion response received`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[TEMPORAL EXPANSION] ⚠️ Empty response from OpenAI, returning empty expansions`);
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[TEMPORAL EXPANSION] ✅ Temporal search expansion variants generated successfully:`, parsed);
+    
+    if (!parsed.expansion_variants || !Array.isArray(parsed.expansion_variants)) {
+      console.error(`[TEMPORAL EXPANSION] ❌ Invalid response structure, expected expansion_variants array`);
+      return [];
+    }
+
+    const variants = parsed.expansion_variants as TemporalExpansionVariant[];
+    console.log(`[TEMPORAL EXPANSION] 📊 Expansion summary:`, {
+      totalVariants: variants.length,
+      generatedQueries: variants.map(v => v.natural_language_query),
+      hasTemporalElements: variants.map(v => Object.keys(v.temporalElements || {}).length > 0)
+    });
+
+    return variants;
+  } catch (error) {
+    console.error(`[TEMPORAL EXPANSION] ❌ Failed to parse expansion response:`, {
+      error: error,
+      rawContent: content
+    });
+    return [];
+  }
 }

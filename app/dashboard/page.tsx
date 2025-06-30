@@ -1559,28 +1559,23 @@ export default function DashboardPage() {
       setInitialSearchResults(compatibleInitialResults); // Store initial results separately
       console.log(`[DASHBOARD DEBUG] Initial search results state has been set`);
       
-      // Phase 4: Check if expansion is available (for chronological searches only)
+      // Phase 4: Check if expansion is available (now supports all search types)
       console.log(`[DASHBOARD EXPANSION] 🔍 Checking expansion availability:`, {
         searchType: searchData.searchType,
         hasPipelineResult: !!pipelineResult,
-        hasExpansionResults: !!pipelineResult?.expansionResults,
-        hasVariants: !!pipelineResult?.expansionResults?.variants,
-        variantCount: pipelineResult?.expansionResults?.variants?.length || 0
+        hasExpansionMetadata: !!pipelineResult?.expansionMetadata,
+        canExpand: !!pipelineResult?.expansionMetadata?.canExpand
       });
       
-      if (searchData.searchType === 'chronological' && 
-          pipelineResult?.expansionResults && 
-          pipelineResult.expansionResults.variants && 
-          pipelineResult.expansionResults.variants.length > 0) {
+      if (pipelineResult?.expansionMetadata && pipelineResult.expansionMetadata.canExpand) {
+        console.log(`[DASHBOARD EXPANSION] ✅ Expansion available for ${searchData.searchType} search`);
         
-        console.log(`[DASHBOARD EXPANSION] ✅ Expansion available: ${pipelineResult.expansionResults.variants.length} variants`);
-        
-        // Store expansion data and enable the expand button
-        setPipelineExpansionData(pipelineResult.expansionResults);
+        // Store expansion metadata for on-demand expansion
+        setPipelineExpansionData(pipelineResult.expansionMetadata);
         setCanExpand(true);
         setHasExpanded(false); // Reset expansion state
         
-        console.log(`[DASHBOARD EXPANSION] 🎯 Expansion button enabled with ${pipelineResult.expansionResults.variants.length} variants ready`);
+        console.log(`[DASHBOARD EXPANSION] 🎯 Expansion button enabled for ${searchData.searchType} search`);
         
       } else {
         console.log(`[DASHBOARD EXPANSION] ❌ No expansion available - disabling expand option`);
@@ -1697,31 +1692,66 @@ export default function DashboardPage() {
       return;
     }
     
-    console.log(`[DASHBOARD EXPANSION] 🔍 Starting manual expansion search`);
+    console.log(`[DASHBOARD EXPANSION] 🔍 Starting on-demand expansion search`);
     setIsExpanding(true);
     setSearchPhase('expanding');
     
-    // EXPAND the Search Analysis section to show the typewriter animation
+    // EXPAND the Search Analysis section to show the expansion process
     setIsAnalysisCollapsed(false);
     
     // Clear previous expansion messages
     setExpansionMessages('');
     
     try {
-      // Store the current analyzing text to append to
+      // Store the current analyzing text
       const currentAnalyzing = displayedText.analyzing;
       
       // Show expansion header
-      const expansionHeader = '🔍 Performing deeper analysis with alternative search strategies...';
+      const expansionHeader = '🔍 Generating alternative search strategies...';
       await typewriterEffect(expansionHeader, 
         (text) => setExpansionMessages(text)
       );
       
+      console.log(`[DASHBOARD EXPANSION] 📡 Making on-demand expansion API request`);
+      
+      // Call the search-pipeline API with expansion request
+      const expansionResponse = await fetch('/api/search-pipeline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requestType: 'expand',
+          query: pipelineExpansionData.originalQuery,
+          organizationName: pipelineExpansionData.organizationName || localStorage.getItem('organizationName'),
+          searchType: pipelineExpansionData.searchType || (pipelineExpansionData.primaryElements ? 'temporal' : 
+                     pipelineExpansionData.primaryFilters ? 'standard' : 'standard'),
+          primaryFilters: pipelineExpansionData.primaryFilters,
+          primaryElements: pipelineExpansionData.primaryElements
+        }),
+      });
+      
+      if (!expansionResponse.ok) {
+        throw new Error(`Expansion API failed: ${expansionResponse.status}`);
+      }
+      
+      const expansionData = await expansionResponse.json();
+      
+      if (!expansionData.success || !expansionData.expansionResults) {
+        throw new Error('Invalid expansion response');
+      }
+      
+      console.log(`[DASHBOARD EXPANSION] ✅ Expansion variants generated:`, {
+        variantCount: expansionData.expansionResults.variants?.length || 0,
+        searchType: expansionData.searchType
+      });
+      
       // Show the expansion queries being processed
       let accumulatedExpansionText = expansionHeader;
+      const variants = expansionData.expansionResults.variants;
       
-      for (let i = 0; i < pipelineExpansionData.variants.length; i++) {
-        const variant = pipelineExpansionData.variants[i];
+      for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
         console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
         
         const queryMessage = `\n• Searching: "${variant.natural_language_query}"`;
@@ -1732,75 +1762,86 @@ export default function DashboardPage() {
         );
       }
       
-      console.log(`[DASHBOARD EXPANSION] 📡 Making expansion API request`);
-      
-      const expansionResponse = await fetch('/api/search-expansion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expansionResults: pipelineExpansionData,
-          organizationName: localStorage.getItem('organizationName'),
-          initialResults: initialSearchResults
-        }),
-      });
-      
-      if (expansionResponse.ok) {
-        const expansionData = await expansionResponse.json();
-        console.log(`[DASHBOARD EXPANSION] ✅ Expansion search completed:`, {
-          expansionResultCount: expansionData.results?.length || 0,
-          metadata: expansionData.metadata
-        });
-        
-        if (expansionData.results && expansionData.results.length > 0) {
-          // Show expansion completion message
-          const completionMessage = `\n✅ Found ${expansionData.results.length} additional relevant profiles from expanded search`;
-          accumulatedExpansionText += completionMessage;
-          
-          await typewriterEffect(completionMessage, 
-            (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - completionMessage.length) + text)
-          );
-          
-          // Combine initial and expansion results
-          const allResults = [...initialSearchResults, ...expansionData.results];
-          const compatibleAllResults = ensureSearchResultCompatibility(allResults);
-          
-          console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
-            initialCount: initialSearchResults.length,
-            expansionCount: expansionData.results.length,
-            totalCount: allResults.length,
-            compatibleCount: compatibleAllResults.length
+      // Now execute the expansion searches using the search API
+      console.log(`[DASHBOARD EXPANSION] 🔍 Executing expansion searches`);
+      const searchPromises = expansionData.expansionResults.additionalSearchConfigs.map(async (config: any, index: number) => {
+        try {
+          const searchResponse = await fetch('/api/search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              searchConfig: config,
+              organizationName: pipelineExpansionData.organizationName || localStorage.getItem('organizationName'),
+              query: variants[index].natural_language_query,
+              isExpansionSearch: true
+            }),
           });
           
-          // Update results with combined data
-          setSearchResults(compatibleAllResults);
-          setHasExpanded(true);
-          
-          // Update display message to show final count
-          const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialSearchResults.length} primary + ${expansionData.results.length} expanded) based on relevance and alternative search strategies...`;
-          
-          await typewriterEffect(finalDisplayMessage, 
-            (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
-          );
-          
-        } else {
-          console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
-          const noResultsMessage = `\n• No additional relevant profiles found from expanded search`;
-          accumulatedExpansionText += noResultsMessage;
-          
-          await typewriterEffect(noResultsMessage, 
-            (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - noResultsMessage.length) + text)
-          );
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            return searchData.results || [];
+          } else {
+            console.warn(`[DASHBOARD EXPANSION] ⚠️ Expansion search ${index + 1} failed`);
+            return [];
+          }
+        } catch (error) {
+          console.warn(`[DASHBOARD EXPANSION] ⚠️ Expansion search ${index + 1} error:`, error);
+          return [];
         }
+      });
+      
+      // Wait for all expansion searches to complete
+      const expansionResults = await Promise.all(searchPromises);
+      const allExpansionResults = expansionResults.flat();
+      
+      console.log(`[DASHBOARD EXPANSION] ✅ Expansion searches completed:`, {
+        expansionResultCount: allExpansionResults.length,
+        searchCount: expansionResults.length
+      });
+      
+      if (allExpansionResults.length > 0) {
+        // Show expansion completion message
+        const completionMessage = `\n✅ Found ${allExpansionResults.length} additional relevant profiles from expanded search`;
+        accumulatedExpansionText += completionMessage;
+        
+        await typewriterEffect(completionMessage, 
+          (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - completionMessage.length) + text)
+        );
+        
+        // Combine initial and expansion results (remove duplicates by ID)
+        const seenIds = new Set(initialSearchResults.map(r => r.id));
+        const uniqueExpansionResults = allExpansionResults.filter((r: any) => !seenIds.has(r.id));
+        const allResults = [...initialSearchResults, ...uniqueExpansionResults];
+        const compatibleAllResults = ensureSearchResultCompatibility(allResults);
+        
+        console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
+          initialCount: initialSearchResults.length,
+          expansionCount: allExpansionResults.length,
+          uniqueExpansionCount: uniqueExpansionResults.length,
+          totalCount: allResults.length,
+          compatibleCount: compatibleAllResults.length
+        });
+        
+        // Update results with combined data
+        setSearchResults(compatibleAllResults);
+        setHasExpanded(true);
+        
+        // Update display message to show final count
+        const finalDisplayMessage = `Displaying ${allResults.length} total results (${initialSearchResults.length} primary + ${uniqueExpansionResults.length} expanded) based on relevance and alternative search strategies...`;
+        
+        await typewriterEffect(finalDisplayMessage, 
+          (text) => setDisplayedText(prev => ({ ...prev, displaying: text }))
+        );
         
       } else {
-        console.error(`[DASHBOARD EXPANSION] ❌ Expansion API failed:`, expansionResponse.status);
-        const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
-        accumulatedExpansionText += errorMessage;
+        console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
+        const noResultsMessage = `\n• No additional relevant profiles found from expanded search`;
+        accumulatedExpansionText += noResultsMessage;
         
-        await typewriterEffect(errorMessage, 
-          (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - errorMessage.length) + text)
+        await typewriterEffect(noResultsMessage, 
+          (text) => setExpansionMessages(accumulatedExpansionText.substring(0, accumulatedExpansionText.length - noResultsMessage.length) + text)
         );
       }
       
@@ -1811,13 +1852,12 @@ export default function DashboardPage() {
       }));
       
       // COLLAPSE the Search Analysis section again after expansion is complete
-      // Add a small delay to let users see the completion message
       setTimeout(() => {
         setIsAnalysisCollapsed(true);
       }, 2000); // 2 second delay before auto-collapsing
       
     } catch (expansionError) {
-      console.error(`[DASHBOARD EXPANSION] ❌ Expansion search error:`, expansionError);
+      console.error(`[DASHBOARD EXPANSION] ❌ On-demand expansion error:`, expansionError);
       const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
       
       await typewriterEffect(errorMessage, 
@@ -1838,7 +1878,7 @@ export default function DashboardPage() {
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
-      console.log(`[DASHBOARD EXPANSION] ✅ Manual expansion phase completed`);
+      console.log(`[DASHBOARD EXPANSION] ✅ On-demand expansion phase completed`);
     }
   };
 
