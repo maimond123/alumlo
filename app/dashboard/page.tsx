@@ -1845,11 +1845,6 @@ export default function DashboardPage() {
         );
       }
       
-      // Update the main analyzing text to include expansion messages
-      setDisplayedText(prev => ({ 
-        ...prev, 
-        analyzing: currentAnalyzing + '\n\n' + accumulatedExpansionText 
-      }));
       
       // COLLAPSE the Search Analysis section again after expansion is complete
       setTimeout(() => {
@@ -1864,17 +1859,10 @@ export default function DashboardPage() {
         (text) => setExpansionMessages(text)
       );
       
-      // Update the main analyzing text to include error message
-      setDisplayedText(prev => ({ 
-        ...prev, 
-        analyzing: prev.analyzing + '\n\n' + errorMessage 
-      }));
-      
       // COLLAPSE the Search Analysis section on error too
       setTimeout(() => {
         setIsAnalysisCollapsed(true);
       }, 2000);
-      
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
