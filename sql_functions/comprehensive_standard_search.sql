@@ -252,7 +252,16 @@ BEGIN
        EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'current_job_function_filters') AS jff WHERE v.current_job_function ILIKE '%' || jff || '%'))
     )
     
-    AND ((search_filters->>'career_stage_filter') IS NULL OR v.career_stage = (search_filters->>'career_stage_filter'))
+    AND (
+      (search_filters->>'career_stage_filter' IS NULL AND search_filters->'career_stage_filters' IS NULL) OR
+      (COALESCE((search_filters->>'career_stage_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'career_stage_filter' IS NOT NULL AND
+       v.career_stage = (search_filters->>'career_stage_filter')) OR
+      (COALESCE((search_filters->>'career_stage_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'career_stage_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'career_stage_filters') = 'array' AND
+       v.career_stage = ANY(ARRAY(SELECT jsonb_array_elements_text(search_filters->'career_stage_filters'))))
+    )
     
     AND (
       (search_filters->>'career_trajectory_filter' IS NULL AND search_filters->'career_trajectory_filters' IS NULL) OR
@@ -286,10 +295,17 @@ BEGIN
     AND (COALESCE((search_filters->>'has_startup_experience')::boolean, FALSE) = FALSE OR v.has_startup_experience = TRUE)
     AND (COALESCE((search_filters->>'has_enterprise_experience')::boolean, FALSE) = FALSE OR v.has_enterprise_experience = TRUE)
     -- UPDATED: FUZZY INDUSTRY TRANSITIONS MATCHING
-    AND ((search_filters->'industry_transitions_filter') IS NULL OR 
-         jsonb_typeof(search_filters->'industry_transitions_filter') = 'array' AND
-         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_transitions_filter') AS itf 
-                WHERE EXISTS(SELECT 1 FROM unnest(v.industry_transitions) AS it WHERE it ILIKE '%' || itf || '%')))
+    AND (
+      (search_filters->>'industry_transitions_filter' IS NULL AND search_filters->'industry_transitions_filters' IS NULL) OR
+      (COALESCE((search_filters->>'industry_transitions_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'industry_transitions_filter' IS NOT NULL AND
+       EXISTS(SELECT 1 FROM unnest(v.industry_transitions) AS it WHERE it ILIKE '%' || (search_filters->>'industry_transitions_filter') || '%')) OR
+      (COALESCE((search_filters->>'industry_transitions_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'industry_transitions_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'industry_transitions_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_transitions_filters') AS itf 
+              WHERE EXISTS(SELECT 1 FROM unnest(v.industry_transitions) AS it WHERE it ILIKE '%' || itf || '%')))
+    )
     
     -- 4. SKILLS & EXPERIENCE PATTERNS - FIXED: Boolean filters with proper NULL handling
     AND (COALESCE((search_filters->>'technical_background')::boolean, FALSE) = FALSE OR v.technical_background = TRUE)
@@ -298,16 +314,31 @@ BEGIN
     AND (COALESCE((search_filters->>'restaurant_operations_experience')::boolean, FALSE) = FALSE OR v.restaurant_operations_experience = TRUE)
     AND (COALESCE((search_filters->>'is_remote_worker')::boolean, FALSE) = FALSE OR v.is_remote_worker = TRUE)
     
-    -- UPDATED: FUZZY FUNCTIONAL EXPERTISE MATCHING
-    AND ((search_filters->'functional_expertise_filter') IS NULL OR 
-         jsonb_typeof(search_filters->'functional_expertise_filter') = 'array' AND
-         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'functional_expertise_filter') AS fef 
-                WHERE EXISTS(SELECT 1 FROM unnest(v.functional_expertise) AS fe WHERE fe ILIKE '%' || fef || '%')))
-    -- UPDATED: FUZZY INDUSTRY EXPERTISE MATCHING         
-    AND ((search_filters->'industry_expertise_filter') IS NULL OR 
-         jsonb_typeof(search_filters->'industry_expertise_filter') = 'array' AND
-         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_expertise_filter') AS ief 
-                WHERE EXISTS(SELECT 1 FROM unnest(v.industry_expertise) AS ie WHERE ie ILIKE '%' || ief || '%')))
+    -- UPDATED: FUZZY FUNCTIONAL EXPERTISE MATCHING WITH OR LOGIC
+    AND (
+      (search_filters->>'functional_expertise_filter' IS NULL AND search_filters->'functional_expertise_filters' IS NULL) OR
+      (COALESCE((search_filters->>'functional_expertise_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'functional_expertise_filter' IS NOT NULL AND
+       EXISTS(SELECT 1 FROM unnest(v.functional_expertise) AS fe WHERE fe ILIKE '%' || (search_filters->>'functional_expertise_filter') || '%')) OR
+      (COALESCE((search_filters->>'functional_expertise_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'functional_expertise_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'functional_expertise_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'functional_expertise_filters') AS fef 
+              WHERE EXISTS(SELECT 1 FROM unnest(v.functional_expertise) AS fe WHERE fe ILIKE '%' || fef || '%')))
+    )
+    
+    -- UPDATED: FUZZY INDUSTRY EXPERTISE MATCHING WITH OR LOGIC
+    AND (
+      (search_filters->>'industry_expertise_filter' IS NULL AND search_filters->'industry_expertise_filters' IS NULL) OR
+      (COALESCE((search_filters->>'industry_expertise_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'industry_expertise_filter' IS NOT NULL AND
+       EXISTS(SELECT 1 FROM unnest(v.industry_expertise) AS ie WHERE ie ILIKE '%' || (search_filters->>'industry_expertise_filter') || '%')) OR
+      (COALESCE((search_filters->>'industry_expertise_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'industry_expertise_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'industry_expertise_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'industry_expertise_filters') AS ief 
+              WHERE EXISTS(SELECT 1 FROM unnest(v.industry_expertise) AS ie WHERE ie ILIKE '%' || ief || '%')))
+    )
     
     -- 5. EDUCATIONAL BACKGROUND & CONTEXT
     AND (
@@ -400,11 +431,18 @@ BEGIN
        EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'home_location_filters') AS hlf WHERE v.home_location ILIKE '%' || hlf || '%'))
     )
     
-    -- UPDATED: FUZZY EDUCATION GEOGRAPHY MATCHING
-    AND ((search_filters->'education_geography_filter') IS NULL OR 
-         jsonb_typeof(search_filters->'education_geography_filter') = 'array' AND
-         EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'education_geography_filter') AS egf 
-                WHERE EXISTS(SELECT 1 FROM unnest(v.education_geography) AS eg WHERE eg ILIKE '%' || egf || '%')))
+    -- UPDATED: FUZZY EDUCATION GEOGRAPHY MATCHING WITH OR LOGIC
+    AND (
+      (search_filters->>'education_geography_filter' IS NULL AND search_filters->'education_geography_filters' IS NULL) OR
+      (COALESCE((search_filters->>'education_geography_or_logic')::boolean, FALSE) = FALSE AND
+       search_filters->>'education_geography_filter' IS NOT NULL AND
+       EXISTS(SELECT 1 FROM unnest(v.education_geography) AS eg WHERE eg ILIKE '%' || (search_filters->>'education_geography_filter') || '%')) OR
+      (COALESCE((search_filters->>'education_geography_or_logic')::boolean, FALSE) = TRUE AND
+       search_filters->'education_geography_filters' IS NOT NULL AND
+       jsonb_typeof(search_filters->'education_geography_filters') = 'array' AND
+       EXISTS(SELECT 1 FROM jsonb_array_elements_text(search_filters->'education_geography_filters') AS egf 
+              WHERE EXISTS(SELECT 1 FROM unnest(v.education_geography) AS eg WHERE eg ILIKE '%' || egf || '%')))
+    )
     
     -- 9. SALARY ANALYSIS FIELDS (including new salary fields)
     AND ((search_filters->>'min_current_salary')::decimal IS NULL OR v.current_estimated_salary >= (search_filters->>'min_current_salary')::decimal)
