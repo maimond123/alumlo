@@ -29,6 +29,7 @@ interface ChronologicalFilters {
   min_years_in_industry?: number;
   min_years_in_function?: number;
   min_years_at_company_type?: number;
+  total_experience_years?: number;
   career_progression_pattern?: string;
   degree_level_progression?: string[];
   education_industry_alignment?: boolean;
@@ -746,333 +747,192 @@ const DATABASE_TERM_MAPPINGS = {
   }
 };
 
-// Enhanced fuzzy matching function with multiple strategies
-function fuzzyMatchTerms(query: string, mappings: Record<string, string>): string[] {
-  const lowerQuery = query.toLowerCase();
-  const matches: Array<{ term: string; score: number; matchType: string }> = [];
-  
-  console.log(`[FUZZY MATCH] 🔍 Starting fuzzy matching for query: "${query}"`);
-  console.log(`[FUZZY MATCH] 📊 Available mappings count: ${Object.keys(mappings).length}`);
-  
-  for (const [key, value] of Object.entries(mappings)) {
-    const lowerKey = key.toLowerCase();
-    let score = 0;
-    let matchType = '';
-    
-    // Strategy 1: Exact match (highest score)
-    if (lowerQuery === lowerKey) {
-      score = 100;
-      matchType = 'exact_match';
-    }
-    // Strategy 2: Contains exact key
-    else if (lowerQuery.includes(lowerKey)) {
-      score = 90;
-      matchType = 'contains_key';
-    }
-    // Strategy 3: Key contains query (partial match)
-    else if (lowerKey.includes(lowerQuery) && lowerQuery.length >= 3) {
-      score = 80;
-      matchType = 'partial_match';
-    }
-    // Strategy 4: Word boundary matching
-    else if (new RegExp(`\\b${lowerKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(lowerQuery)) {
-      score = 85;
-      matchType = 'word_boundary';
-    }
-    // Strategy 5: Fuzzy word matching (split into words)
-    else {
-      const queryWords = lowerQuery.split(/\s+/);
-      const keyWords = lowerKey.split(/\s+/);
-      
-      let wordMatches = 0;
-      let partialMatches = 0;
-      
-      for (const queryWord of queryWords) {
-        for (const keyWord of keyWords) {
-          // Exact word match
-          if (queryWord === keyWord) {
-            wordMatches++;
-          }
-          // Partial word match (at least 3 chars)
-          else if (queryWord.length >= 3 && keyWord.includes(queryWord)) {
-            partialMatches++;
-          }
-          // Reverse partial match
-          else if (keyWord.length >= 3 && queryWord.includes(keyWord)) {
-            partialMatches++;
-          }
-          // Levenshtein-like similarity for short words
-          else if (calculateSimilarity(queryWord, keyWord) > 0.7) {
-            partialMatches++;
-          }
-        }
+// NEW: LLM-only mapping and translation function for chronological search
+async function translateChronologicalQueryWithLLM(query: string): Promise<ChronologicalFilters> {
+  console.log(`[LLM TRANSLATION] 🤖 Starting LLM-only translation for chronological query: "${query}"`);
+  const translationStartTime = Date.now();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a specialized chronological search query translator. Your job is to convert natural language queries into precise JSON filters for chronological career analysis.
+
+**YOUR MISSION:** 
+1. Map natural language terms to exact database values using the provided mappings
+2. Extract chronological filters that capture career progression patterns
+3. Return structured JSON that the SQL chronological search function expects
+
+**AVAILABLE CHRONOLOGICAL FILTERS (ONLY THESE 9):**
+
+**Basic Entity Filters:**
+- school_filter (string): Educational institution name
+- company_filter (string): Company name  
+- industry_filter (string): Industry category
+- title_filter (string): Job title/function
+- location_filter (string): Geographic location
+
+**Experience & Timeline Filters:**
+- total_experience_years (number): Minimum total years of experience
+- min_years_in_industry (number): Minimum years in specific industry
+- geographic_mobility (boolean): Whether person moved locations for career
+- concurrent_activities (boolean): Whether person worked while studying
+
+**CRITICAL DATABASE TERM MAPPINGS:**
+
+**INDUSTRY MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.industry_mappings, null, 2)}
+
+**FUNCTION MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.function_mappings, null, 2)}
+
+**LEVEL MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.level_mappings, null, 2)}
+
+**SIZE MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.size_mappings, null, 2)}
+
+**DEGREE MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.degree_mappings, null, 2)}
+
+**RANKING MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.ranking_mappings, null, 2)}
+
+**MAJOR MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.major_mappings, null, 2)}
+
+**MAPPING RULES:**
+1. **Industry terms** → Use exact values from industry_mappings
+2. **Job function terms** → Use exact values from function_mappings  
+3. **Experience level terms** → Convert to total_experience_years numbers
+4. **Company size terms** → Map using size_mappings (but don't use as filter - chronological search doesn't have company_size_filter)
+5. **School names** → Use exact school names (don't map these)
+6. **Company names** → Use exact company names (don't map these)
+7. **Location names** → Use exact location names (don't map these)
+
+**EXPERIENCE LEVEL TO YEARS MAPPING:**
+- "entry level", "junior", "new grad" → total_experience_years: 0-2
+- "mid level", "experienced" → total_experience_years: 3-5  
+- "senior", "senior level" → total_experience_years: 5-8
+- "lead", "principal", "staff" → total_experience_years: 8-12
+- "manager" → total_experience_years: 5-10
+- "director" → total_experience_years: 10-15
+- "vp", "executive" → total_experience_years: 15+
+
+**PROGRESSION PATTERN DETECTION:**
+- "worked while studying", "part-time during school" → concurrent_activities: true
+- "moved cities", "relocated", "international experience" → geographic_mobility: true
+- "X+ years in [industry]" → min_years_in_industry: X
+- "X+ years experience" → total_experience_years: X
+
+**TRANSLATION EXAMPLES:**
+
+Input: "Find Georgetown graduates working in tech companies"
+Output:
+{
+  "school_filter": "Georgetown",
+  "industry_filter": "Technology & Software"
+}
+
+Input: "Senior software engineers with 8+ years experience"
+Output:
+{
+  "title_filter": "Software Engineering", 
+  "total_experience_years": 8
+}
+
+Input: "Experienced consultants who moved locations for career growth"
+Output:
+{
+  "title_filter": "Management Consulting",
+  "total_experience_years": 5,
+  "geographic_mobility": true
+}
+
+Input: "MBA graduates with 5+ years in finance working at startups"
+Output:
+{
+  "industry_filter": "Financial Services",
+  "min_years_in_industry": 5,
+  "total_experience_years": 5
+}
+
+Input: "People who worked while getting their master's degree"
+Output:
+{
+  "concurrent_activities": true
+}
+
+**IMPORTANT EXTRACTION RULES:**
+1. **Only use the 9 available chronological filters** - ignore everything else
+2. **Map terms to exact database values** from the provided mappings
+3. **Don't create filters for unmappable terms** - skip ambiguous terms
+4. **Focus on career progression patterns** - this is chronological search
+5. **Use specific school/company names exactly** - don't map these
+6. **Convert experience levels to numeric years** using the mapping above
+7. **Detect mobility and concurrent activity patterns** from context clues
+
+**OUTPUT FORMAT:**
+Return only valid JSON with extracted filters. If no clear chronological patterns detected, return empty object {}.
+
+Examples of what NOT to include:
+- company_size_filter (not available in chronological search)
+- degree_level_filter (not available in chronological search)  
+- Any filters not in the 9 available filters above
+
+Focus on career progression, experience patterns, and exact database term mapping.`
+      },
+      {
+        role: 'user',
+        content: `Natural Language Query: "${query}"
+
+Convert this query to chronological search filters using exact database term mappings and career progression analysis.`
       }
-      
-      if (wordMatches > 0 || partialMatches > 0) {
-        score = Math.min(75, (wordMatches * 20) + (partialMatches * 10));
-        matchType = `fuzzy_words_${wordMatches}exact_${partialMatches}partial`;
-      }
-    }
-    
-    // Strategy 6: Acronym matching
-    if (score === 0) {
-      const acronym = lowerKey.split(' ').map(word => word[0]).join('');
-      if (lowerQuery === acronym || lowerQuery.includes(acronym)) {
-        score = 70;
-        matchType = 'acronym_match';
-      }
-    }
-    
-    // Strategy 7: Common abbreviations and variations
-    if (score === 0) {
-      const variationScore = checkCommonVariations(lowerQuery, lowerKey);
-      if (variationScore > 0) {
-        score = variationScore;
-        matchType = 'variation_match';
-      }
-    }
-    
-    if (score >= 50) { // Minimum threshold for inclusion
-      matches.push({ term: value, score, matchType });
-      console.log(`[FUZZY MATCH] ✅ Found match: "${lowerKey}" → "${value}" (score: ${score}, type: ${matchType})`);
-    }
-  }
-  
-  // Sort by score (highest first) and return unique values
-  const sortedMatches = matches
-    .sort((a, b) => b.score - a.score)
-    .map(match => match.term);
-  
-  console.log(`[FUZZY MATCH] 📊 Fuzzy matching summary:`, {
-    queryTerm: query,
-    totalMatches: matches.length,
-    uniqueResults: [...new Set(sortedMatches)].length,
-    bestMatches: matches.slice(0, 3).map(m => ({ term: m.term, score: m.score, type: m.matchType }))
+    ]
   });
-  
-  return [...new Set(sortedMatches)];
-}
 
-// Simple similarity calculation (Jaccard-like)
-function calculateSimilarity(str1: string, str2: string): number {
-  if (str1.length < 3 || str2.length < 3) return 0;
-  
-  const set1 = new Set(str1.toLowerCase().split(''));
-  const set2 = new Set(str2.toLowerCase().split(''));
-  
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  
-  return intersection.size / union.size;
-}
+  const translationDuration = Date.now() - translationStartTime;
+  console.log(`[LLM TRANSLATION] 🤖 LLM response received (${translationDuration}ms)`);
 
-// Check for common variations and abbreviations
-function checkCommonVariations(query: string, key: string): number {
-  const variations: Record<string, string[]> = {
-    // Technology variations
-    'technology': ['tech', 'it', 'information technology', 'info tech', 'digital'],
-    'software': ['sw', 'development', 'dev', 'programming', 'coding'],
-    'engineering': ['eng', 'engineer', 'engineers'],
-    'artificial intelligence': ['ai', 'machine learning', 'ml', 'deep learning'],
-    'data science': ['ds', 'data analysis', 'analytics', 'big data'],
-    
-    // Business variations
-    'management consulting': ['consulting', 'mckinsey', 'bain', 'bcg', 'strategy'],
-    'business administration': ['business', 'admin', 'management'],
-    'finance': ['financial', 'fin', 'banking', 'investment'],
-    'marketing': ['mktg', 'advertising', 'promotion', 'brand'],
-    'human resources': ['hr', 'people', 'talent', 'recruiting'],
-    
-    // Education variations
-    'bachelor': ['bachelors', 'undergraduate', 'college', 'ba', 'bs'],
-    'master': ['masters', 'graduate', 'ma', 'ms'],
-    'doctorate': ['doctoral', 'phd', 'doctor'],
-    'mba': ['master of business administration', 'business school'],
-    
-    // Company size variations
-    'startup': ['start-up', 'early stage', 'seed', 'series a'],
-    'enterprise': ['large company', 'big company', 'fortune 500', 'corporate'],
-    'small': ['small company', 'sme', 'small business'],
-    
-    // Industry variations
-    'healthcare': ['health', 'medical', 'medicine', 'pharma', 'pharmaceutical'],
-    'real estate': ['property', 'realty', 'housing', 'commercial property'],
-    'retail': ['consumer', 'shopping', 'commerce', 'merchandise'],
-    'manufacturing': ['production', 'factory', 'industrial'],
-    
-    // Job level variations
-    'senior': ['sr', 'senior level', 'experienced'],
-    'junior': ['jr', 'entry level', 'associate'],
-    'manager': ['mgr', 'management', 'supervisor'],
-    'director': ['dir', 'head of'],
-    'vice president': ['vp', 'svp', 'senior vp'],
-    'chief executive': ['ceo', 'chief executive officer'],
-    'founder': ['co-founder', 'entrepreneur', 'startup founder']
-  };
-  
-  for (const [baseKey, variants] of Object.entries(variations)) {
-    if (key.includes(baseKey)) {
-      for (const variant of variants) {
-        if (query.includes(variant)) {
-          return 60; // Good match for variations
-        }
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[LLM TRANSLATION] ⚠️ Empty response from LLM, returning empty filters`);
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[LLM TRANSLATION] ✅ LLM translation successful:`, {
+      originalQuery: query,
+      extractedFilters: parsed,
+      filterCount: Object.keys(parsed).length,
+      processingTime: translationDuration + 'ms',
+      hasBasicFilters: {
+        school_filter: !!parsed.school_filter,
+        company_filter: !!parsed.company_filter,
+        industry_filter: !!parsed.industry_filter,
+        title_filter: !!parsed.title_filter,
+        location_filter: !!parsed.location_filter
+      },
+      hasExperienceFilters: {
+        total_experience_years: !!parsed.total_experience_years,
+        min_years_in_industry: !!parsed.min_years_in_industry,
+        geographic_mobility: !!parsed.geographic_mobility,
+        concurrent_activities: !!parsed.concurrent_activities
       }
-    }
-  }
-  
-  return 0;
-}
-
-// Enhanced function to standardize terms using fuzzy matching
-function standardizeTerms(query: string, filterType: keyof typeof DATABASE_TERM_MAPPINGS): string[] {
-  console.log(`[TERM STANDARDIZATION] 🔄 Starting standardization for "${query}" in category: ${filterType}`);
-  
-  const mappings = DATABASE_TERM_MAPPINGS[filterType];
-  console.log(`[TERM STANDARDIZATION] 📋 Available mappings in ${filterType}:`, Object.keys(mappings).length);
-  
-  const matches = fuzzyMatchTerms(query, mappings);
-  console.log(`[TERM STANDARDIZATION] 🎯 Fuzzy matches found:`, matches);
-  
-  // If no fuzzy matches found, try semantic expansion
-  if (matches.length === 0) {
-    console.log(`[TERM STANDARDIZATION] 🔍 No fuzzy matches, trying semantic expansion...`);
-    const expandedMatches = semanticExpansion(query, filterType);
-    console.log(`[TERM STANDARDIZATION] 🧠 Semantic expansion results:`, expandedMatches);
+    });
     
-    if (expandedMatches.length > 0) {
-      console.log(`[TERM STANDARDIZATION] ✅ Using semantic expansion results`);
-      return expandedMatches;
-    }
+    return parsed;
+  } catch (error) {
+    console.error(`[LLM TRANSLATION] ❌ Failed to parse LLM response:`, {
+      error: error,
+      rawContent: content,
+      processingTime: translationDuration + 'ms'
+    });
+    return {};
   }
-  
-  // If still no matches, return the original query (let the LLM handle it)
-  const finalResult = matches.length > 0 ? matches : [query];
-  console.log(`[TERM STANDARDIZATION] 📤 Final standardization result for "${query}":`, {
-    inputTerm: query,
-    category: filterType,
-    outputTerms: finalResult,
-    wasStandardized: finalResult[0] !== query,
-    matchCount: matches.length
-  });
-  
-  return finalResult;
-}
-
-// Semantic expansion for terms not found in mappings
-function semanticExpansion(query: string, filterType: keyof typeof DATABASE_TERM_MAPPINGS): string[] {
-  const lowerQuery = query.toLowerCase();
-  
-  // Industry semantic expansion
-  if (filterType === 'industry_mappings') {
-    if (lowerQuery.includes('digital') || lowerQuery.includes('online') || lowerQuery.includes('internet')) {
-      return ['Technology & Software', 'Internet/E-commerce'];
-    }
-    if (lowerQuery.includes('bio') || lowerQuery.includes('life sciences')) {
-      return ['Healthcare & Pharmaceuticals'];
-    }
-    if (lowerQuery.includes('green') || lowerQuery.includes('sustainable') || lowerQuery.includes('renewable')) {
-      return ['Energy', 'Environmental Services'];
-    }
-    if (lowerQuery.includes('crypto') || lowerQuery.includes('blockchain') || lowerQuery.includes('defi')) {
-      return ['Fintech', 'Technology & Software'];
-    }
-  }
-  
-  // Function semantic expansion
-  if (filterType === 'function_mappings') {
-    if (lowerQuery.includes('code') || lowerQuery.includes('program') || lowerQuery.includes('develop')) {
-      return ['Software Engineering'];
-    }
-    if (lowerQuery.includes('design') && (lowerQuery.includes('ui') || lowerQuery.includes('ux'))) {
-      return ['Product Management', 'Design'];
-    }
-    if (lowerQuery.includes('revenue') || lowerQuery.includes('growth') || lowerQuery.includes('acquisition')) {
-      return ['Sales', 'Business Development'];
-    }
-    if (lowerQuery.includes('people') || lowerQuery.includes('culture') || lowerQuery.includes('talent')) {
-      return ['Human Resources'];
-    }
-  }
-  
-  // Level semantic expansion
-  if (filterType === 'level_mappings') {
-    if (lowerQuery.includes('experienced') || lowerQuery.includes('seasoned')) {
-      return ['Senior Level'];
-    }
-    if (lowerQuery.includes('new grad') || lowerQuery.includes('recent graduate')) {
-      return ['Entry Level'];
-    }
-    if (lowerQuery.includes('leadership') || lowerQuery.includes('executive')) {
-      return ['VP/SVP', 'C-Suite'];
-    }
-  }
-  
-  // Degree semantic expansion
-  if (filterType === 'degree_mappings') {
-    if (lowerQuery.includes('undergrad') || lowerQuery.includes('college degree')) {
-      return ["Bachelor's Degree"];
-    }
-    if (lowerQuery.includes('grad school') || lowerQuery.includes('graduate degree')) {
-      return ["Master's Degree"];
-    }
-    if (lowerQuery.includes('business school')) {
-      return ["Master of Business Administration (MBA)"];
-    }
-    if (lowerQuery.includes('law school') || lowerQuery.includes('legal')) {
-      return ["Juris Doctor (JD)"];
-    }
-  }
-  
-  return [];
-}
-
-// Enhanced function to get all possible standardized terms with fuzzy matching
-function getAllStandardizedTerms(query: string): {
-  industries: string[];
-  functions: string[];
-  levels: string[];
-  sizes: string[];
-  degrees: string[];
-  rankings: string[];
-  majors: string[];
-} {
-  console.log(`[COMPREHENSIVE TERM ANALYSIS] 🔍 Starting comprehensive term analysis for: "${query}"`);
-  
-  const results = {
-    industries: standardizeTerms(query, 'industry_mappings'),
-    functions: standardizeTerms(query, 'function_mappings'),
-    levels: standardizeTerms(query, 'level_mappings'),
-    sizes: standardizeTerms(query, 'size_mappings'),
-    degrees: standardizeTerms(query, 'degree_mappings'),
-    rankings: standardizeTerms(query, 'ranking_mappings'),
-    majors: standardizeTerms(query, 'major_mappings')
-  };
-  
-  console.log(`[COMPREHENSIVE TERM ANALYSIS] 📊 Complete term analysis results:`, {
-    query: query,
-    hasMatches: {
-      industries: results.industries.length > 0 && results.industries[0] !== query,
-      functions: results.functions.length > 0 && results.functions[0] !== query,
-      levels: results.levels.length > 0 && results.levels[0] !== query,
-      sizes: results.sizes.length > 0 && results.sizes[0] !== query,
-      degrees: results.degrees.length > 0 && results.degrees[0] !== query,
-      rankings: results.rankings.length > 0 && results.rankings[0] !== query,
-      majors: results.majors.length > 0 && results.majors[0] !== query
-    },
-    matchCounts: {
-      industries: results.industries.length,
-      functions: results.functions.length,
-      levels: results.levels.length,
-      sizes: results.sizes.length,
-      degrees: results.degrees.length,
-      rankings: results.rankings.length,
-      majors: results.majors.length
-    },
-    totalStandardizations: Object.values(results).reduce((total, matches) => 
-      total + (matches.length > 0 && matches[0] !== query ? 1 : 0), 0)
-  });
-  
-  return results;
 }
 
 export async function POST(req: NextRequest) {
@@ -1163,15 +1023,14 @@ export async function POST(req: NextRequest) {
       console.log(`[PIPELINE] 🕐 Step 2: Processing temporal search...`);
       processingSteps.push('temporal_processing');
       
-      const temporalElements = await extractTemporalElements(query);
       searchConfig = await processTemporalSearch(query, classification, organizationName);
-      llmCalls += 2; // Classification + Temporal extraction
+      llmCalls += 3; // Classification + LLM-mapping + Fine-tuned translator
       
       // Store expansion metadata for on-demand expansion
       expansionMetadata = {
         canExpand: true,
         originalQuery: query,
-        primaryElements: temporalElements,
+        primaryElements: (searchConfig as TemporalConfig).temporalElements,
         organizationName: organizationName
       };
       
@@ -1179,15 +1038,14 @@ export async function POST(req: NextRequest) {
       console.log(`[PIPELINE] 📈 Step 2: Processing chronological search...`);
       processingSteps.push('chronological_processing');
       
-      const chronologicalFilters = await translateWithoutClassificationContext(query);
       searchConfig = await processChronologicalSearch(query, classification, organizationName);
-      llmCalls += 3; // Classification + Standardization + Filter extraction
+      llmCalls += 3; // Classification + LLM-mapping + Fine-tuned translator
       
       // Store expansion metadata for on-demand expansion
       expansionMetadata = {
         canExpand: true,
         originalQuery: query,
-        primaryFilters: chronologicalFilters,
+        primaryFilters: searchConfig.filters,
         organizationName: organizationName
       };
       
@@ -1195,15 +1053,14 @@ export async function POST(req: NextRequest) {
       console.log(`[PIPELINE] 📊 Step 2: Processing standard search...`);
       processingSteps.push('standard_processing');
       
-      const standardFilters = await translateStandardSearchQuery(query);
       searchConfig = await processStandardSearch(query, classification);
-      llmCalls += 2; // Classification + Standard filter extraction
+      llmCalls += 3; // Classification + LLM-mapping + Fine-tuned translator
       
       // Store expansion metadata for on-demand expansion
       expansionMetadata = {
         canExpand: true,
         originalQuery: query,
-        primaryFilters: standardFilters
+        primaryFilters: (searchConfig as StandardConfig).enhancedFilters
       };
     }
 
@@ -1330,7 +1187,7 @@ async function handleExpansionRequest(
       const additionalSearchConfigs = variants.map(variant => ({
         type: 'chronological',
         filters: variant.filters,
-        sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+        sqlFunction: `chronological_search_function_${organizationName}`,
         sqlParameters: { chronological_filters: variant.filters }
       }));
       
@@ -1444,15 +1301,31 @@ async function processTemporalSearchWithExpansion(
   };
 }
 
-// EXISTING: Process temporal search (for backward compatibility)
+// EXISTING: Process temporal search with 4-step flow
 async function processTemporalSearch(
   query: string, 
   classification: QueryClassification,
   organizationName: string
 ): Promise<TemporalConfig> {
-  const temporalElements = await extractTemporalElements(query);
+  console.log(`[PIPELINE TEMPORAL] 🕐 Processing temporal search with 4-step flow: "${query}"`);
   
-  // Determine which temporal search method to use
+  // Step 1: Classification (already done)
+  console.log(`[PIPELINE TEMPORAL] ✅ Step 1: Classification = ${classification.type}`);
+  
+  // Step 2: LLM-mapping
+  console.log(`[PIPELINE TEMPORAL] 🗺️ Step 2: LLM-mapping`);
+  const mappingResult = await standardizeQueryWithLLM(query, 'temporal');
+  
+  // Step 3: Fine-tuned translator
+  console.log(`[PIPELINE TEMPORAL] 🎯 Step 3: Fine-tuned translator`);
+  const temporalElements = await translateTemporalQueryWithFineTuning(
+    mappingResult.standardizedQuery,
+    mappingResult.mappedTerms,
+    mappingResult.transformations
+  );
+  
+  // Step 4: SQL configuration
+  console.log(`[PIPELINE TEMPORAL] 🔧 Step 4: SQL configuration`);
   let searchMethod = 'general_filter';
   let sqlFunction = `temporal_filter_search_${organizationName}`;
   
@@ -1460,6 +1333,8 @@ async function processTemporalSearch(
     searchMethod = 'specific_sequence';
     sqlFunction = `temporal_career_search_${organizationName}`;
   }
+  
+  console.log(`[PIPELINE TEMPORAL] ✅ 4-step temporal pipeline complete`);
   
   return {
     type: 'temporal',
@@ -1603,36 +1478,48 @@ function mapTemporalParameters(temporalElements: TemporalElements): any {
   return params;
 }
 
-// EXISTING: Process chronologeal search
+// EXISTING: Process chronologeal search with proper 4-step flow
 async function processChronologicalSearch(
   query: string, 
   classification: QueryClassification,
   organizationName: string
 ): Promise<ChronologicalConfig> {
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔄 Processing chronological search for: "${query}"`);
-  console.log(`[PIPELINE CHRONOLOGICAL] 📊 Input parameters:`, {
-    query: `"${query}"`,
-    classificationType: classification.type,
-    organizationName: organizationName,
-    queryLength: query.length
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔄 Processing chronological search with 4-step flow: "${query}"`);
+  console.log(`[PIPELINE CHRONOLOGICAL] 📊 Flow: classification → LLM-mapping → fine-tuned translator → SQL`);
+  
+  // Step 1: Classification (already done, passed in as parameter)
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Step 1: Classification = ${classification.type}`);
+  
+  // Step 2: LLM-mapping
+  console.log(`[PIPELINE CHRONOLOGICAL] 🗺️ Step 2: LLM-mapping`);
+  const mappingStartTime = Date.now();
+  
+  const mappingResult = await standardizeQueryWithLLM(query, 'chronological');
+  
+  const mappingDuration = Date.now() - mappingStartTime;
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Step 2 complete (${mappingDuration}ms):`, {
+    originalQuery: query,
+    standardizedQuery: mappingResult.standardizedQuery,
+    transformationCount: mappingResult.transformations.length,
+    mappedCategories: Object.keys(mappingResult.mappedTerms).filter(key => 
+      mappingResult.mappedTerms[key as keyof typeof mappingResult.mappedTerms].length > 0
+    )
   });
   
-  // Step 0: Debug fuzzy matching capabilities for this query
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔬 Testing fuzzy matching effectiveness...`);
-  await debugFuzzyMatchingForQuery(query);
+  // Step 3: Fine-tuned translator
+  console.log(`[PIPELINE CHRONOLOGICAL] 🎯 Step 3: Fine-tuned translator`);
+  const translationStartTime = Date.now();
   
-  // Step 1: Extract chronological filters using enhanced LLM system with fuzzy matching
-  console.log(`[PIPELINE CHRONOLOGICAL] 📊 Extracting chronological filters with enhanced fuzzy matching system`);
-  const filterExtractionStartTime = Date.now();
+  const filters = await translateChronologicalQueryWithFineTuning(
+    mappingResult.standardizedQuery,
+    mappingResult.mappedTerms,
+    mappingResult.transformations
+  );
   
-  const filters = await translateWithoutClassificationContext(query);
-  
-  const filterExtractionDuration = Date.now() - filterExtractionStartTime;
-  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Filters extracted successfully (${filterExtractionDuration}ms):`, {
+  const translationDuration = Date.now() - translationStartTime;
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Step 3 complete (${translationDuration}ms):`, {
     extractedFilters: filters,
     filterCount: Object.keys(filters).length,
-    filterKeys: Object.keys(filters),
-    processingTime: filterExtractionDuration + 'ms',
     hasBasicFilters: {
       school_filter: !!filters.school_filter,
       company_filter: !!filters.company_filter,
@@ -1641,57 +1528,32 @@ async function processChronologicalSearch(
       location_filter: !!filters.location_filter
     },
     hasExperienceFilters: {
+      total_experience_years: !!filters.total_experience_years,
       min_years_in_industry: !!filters.min_years_in_industry,
-      min_years_in_function: !!filters.min_years_in_function,
-      min_years_at_company_type: !!filters.min_years_at_company_type
-    },
-    hasBooleanFilters: {
       geographic_mobility: !!filters.geographic_mobility,
-      concurrent_activities: !!filters.concurrent_activities,
-      education_industry_alignment: !!filters.education_industry_alignment
-    },
-    hasPatternFilters: {
-      career_progression_pattern: !!filters.career_progression_pattern,
-      degree_level_progression: !!filters.degree_level_progression,
-      industry_transitions: !!filters.industry_transitions,
-      company_size_progression: !!filters.company_size_progression
+      concurrent_activities: !!filters.concurrent_activities
     }
   });
   
-  // Step 2: Create search configuration 
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔧 Creating chronological search configuration`);
+  // Step 4: SQL configuration
+  console.log(`[PIPELINE CHRONOLOGICAL] 🔧 Step 4: SQL configuration`);
   const searchConfig: ChronologicalConfig = {
     type: 'chronological',
     filters: filters,
-    sqlFunction: 'llm_integrated_chronological_search_chick_fil_a',
+    sqlFunction: 'chronological_search_function_chick_fil_a',
     sqlParameters: {
       chronological_filters: filters
     }
   };
   
-  console.log(`[PIPELINE CHRONOLOGICAL] ✅ Chronological search config created successfully:`, {
-    configType: searchConfig.type,
-    sqlFunction: searchConfig.sqlFunction,
-    hasFilters: !!searchConfig.filters,
-    filterCount: Object.keys(searchConfig.filters || {}).length,
-    sqlParameterKeys: Object.keys(searchConfig.sqlParameters),
-    isReadyForExecution: !!(searchConfig.filters && searchConfig.sqlFunction)
+  console.log(`[PIPELINE CHRONOLOGICAL] ✅ 4-step chronological pipeline complete:`, {
+    step1_classification: classification.type,
+    step2_mapping: `${mappingResult.transformations.length} transformations`,
+    step3_translation: `${Object.keys(filters).length} filters`,
+    step4_sql: searchConfig.sqlFunction,
+    totalProcessingTime: (mappingDuration + translationDuration) + 'ms',
+    readyForExecution: !!(searchConfig.filters && searchConfig.sqlFunction)
   });
-  
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔍 DETAILED CONFIG INSPECTION:`, {
-    finalFilters: searchConfig.filters,
-    sqlFunctionCall: `${searchConfig.sqlFunction}(chronological_filters: ${JSON.stringify(searchConfig.filters)}, limit_count: 20, organization_name: "chick_fil_a")`,
-    configValidation: {
-      hasValidType: searchConfig.type === 'chronological',
-      hasValidSqlFunction: !!searchConfig.sqlFunction,
-      hasValidFilters: !!searchConfig.filters && typeof searchConfig.filters === 'object',
-      hasValidSqlParameters: !!searchConfig.sqlParameters && !!searchConfig.sqlParameters.chronological_filters
-    }
-  });
-  
-  // Step 3: Verify integration with search engine
-  console.log(`[PIPELINE CHRONOLOGICAL] 🔗 Verifying integration with search engine...`);
-  verifyChronologicalSearchIntegration(query, searchConfig.filters, organizationName);
   
   return searchConfig;
 }
@@ -1712,14 +1574,14 @@ async function processChronologicalSearchWithExpansion(
   
   // Step 1: Extract chronological filters using LLM
   console.log(`[PIPELINE CHRONOLOGICAL] 📊 Extracting chronological filters`);
-  const filters = await translateWithoutClassificationContext(query);
+  const filters = await translateChronologicalQueryWithLLM(query);
   console.log(`[PIPELINE CHRONOLOGICAL] ✅ Filters extracted:`, filters);
   
   // Step 2: Create primary search configuration
   const primaryConfig: ChronologicalConfig = {
     type: 'chronological',
     filters: filters,
-    sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+    sqlFunction: `chronological_search_function_${organizationName}`,
     sqlParameters: {
       chronological_filters: filters
     }
@@ -1739,7 +1601,7 @@ async function processChronologicalSearchWithExpansion(
     return {
       type: 'chronological',
       filters: variant.filters,
-      sqlFunction: `llm_integrated_chronological_search_${organizationName}`,
+      sqlFunction: `chronological_search_function_${organizationName}`,
       sqlParameters: {
         chronological_filters: variant.filters
       }
@@ -1811,16 +1673,32 @@ async function processStandardSearchWithExpansion(
   };
 }
 
-// EXISTING: Process standard search (for backward compatibility)
+// EXISTING: Process standard search with 4-step flow
 async function processStandardSearch(
   query: string, 
   classification: QueryClassification
 ): Promise<StandardConfig> {
-  console.log(`[PIPELINE STANDARD] 📊 Processing standard search for: "${query}"`);
+  console.log(`[PIPELINE STANDARD] 📊 Processing standard search with 4-step flow: "${query}"`);
   
-  // Extract comprehensive standard filters using LLM
-  const enhancedFilters = await translateStandardSearchQuery(query);
-  console.log(`[PIPELINE STANDARD] ✅ Enhanced filters extracted:`, enhancedFilters);
+  // Step 1: Classification (already done)
+  console.log(`[PIPELINE STANDARD] ✅ Step 1: Classification = ${classification.type}`);
+  
+  // Step 2: LLM-mapping
+  console.log(`[PIPELINE STANDARD] 🗺️ Step 2: LLM-mapping`);
+  const mappingResult = await standardizeQueryWithLLM(query, 'standard');
+  
+  // Step 3: Fine-tuned translator
+  console.log(`[PIPELINE STANDARD] 🎯 Step 3: Fine-tuned translator`);
+  const enhancedFilters = await translateStandardQueryWithFineTuning(
+    mappingResult.standardizedQuery,
+    mappingResult.mappedTerms,
+    mappingResult.transformations
+  );
+  
+  // Step 4: SQL configuration
+  console.log(`[PIPELINE STANDARD] 🔧 Step 4: SQL configuration`);
+  
+  console.log(`[PIPELINE STANDARD] ✅ 4-step standard pipeline complete`);
   
   return {
     type: 'standard',
@@ -2020,522 +1898,6 @@ async function getAvailableChronologicalFilters(): Promise<string> {
 2. Focus your entity extraction on mapping to these 9 specific filters
 3. Always include gap_tolerance: 6 as a default timeline filter
 `;
-}
-
-// STAGE 1: Term Standardization & Preprocessing
-async function standardizeQueryTerms(query: string): Promise<{
-  standardizedQuery: string;
-  termMappings: {
-    industries: string[];
-    functions: string[];
-    levels: string[];
-    sizes: string[];
-    degrees: string[];
-    rankings: string[];
-    majors: string[];
-  };
-  transformations: Array<{
-    original: string;
-    standardized: string;
-    category: string;
-  }>;
-}> {
-  console.log(`[STAGE 1] 🔄 Starting term standardization for: "${query}"`);
-  console.log(`[STAGE 1] ⏱️ Stage 1 initiated at ${new Date().toISOString()}`);
-  
-  // Pre-analyze terms using our mapping system
-  console.log(`[STAGE 1] 🔍 Pre-analyzing terms with fuzzy matching system...`);
-  const preAnalyzedTerms = getAllStandardizedTerms(query);
-  console.log(`[STAGE 1] 📊 Pre-analyzed terms summary:`, {
-    totalCategories: Object.keys(preAnalyzedTerms).length,
-    categoriesWithMatches: Object.entries(preAnalyzedTerms).filter(([_, matches]) => 
-      matches.length > 0 && matches[0] !== query).length,
-    preAnalyzedTerms: preAnalyzedTerms
-  });
-  
-  console.log(`[STAGE 1] 🤖 Calling OpenAI for term standardization...`);
-  const llmStartTime = Date.now();
-  
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
-    temperature: 0,
-    messages: [
-      {
-        role: 'system',
-        content: `You are a specialized term standardization system. Your ONLY job is to convert natural language terms into exact database-compatible terms.
-
-**YOUR MISSION:** Transform the input query by replacing common language variations with exact database terms that will match our backend data.
-
-**CRITICAL STANDARDIZATION RULES:**
-
-**INDUSTRY STANDARDIZATION (Case-Sensitive):**
-- "tech" → "Technology & Software"
-- "technology" → "Technology & Software" 
-- "software" → "Technology & Software"
-- "it" → "IT/Systems"
-- "fintech" → "Fintech"
-- "finance" → "Financial Services"
-- "financial" → "Financial Services"
-- "banking" → "Banking"
-- "consulting" → "Management Consulting"
-- "healthcare" → "Healthcare & Pharmaceuticals"
-- "health" → "Healthcare & Pharmaceuticals"
-- "medical" → "Healthcare & Pharmaceuticals"
-- "food" → "Food & Beverage"
-- "restaurant" → "Restaurant/Hospitality"
-- "retail" → "Retail & Consumer Goods"
-- "media" → "Media & Entertainment"
-- "education" → "Education"
-- "real estate" → "Real Estate"
-- "government" → "Government & Public Sector"
-
-**JOB FUNCTION STANDARDIZATION:**
-- "engineering" → "Software Engineering"
-- "software engineering" → "Software Engineering"
-- "development" → "Software Engineering"
-- "developer" → "Software Engineering"
-- "programmer" → "Software Engineering"
-- "product" → "Product Management"
-- "product management" → "Product Management"
-- "data science" → "Data Science/Analytics"
-- "data scientist" → "Data Science/Analytics"
-- "analytics" → "Data Science/Analytics"
-- "sales" → "Sales"
-- "marketing" → "Marketing"
-- "operations" → "Operations Management"
-- "hr" → "Human Resources"
-- "recruiting" → "Recruiting/Talent"
-
-**JOB LEVEL STANDARDIZATION:**
-- "entry level" → "Entry Level"
-- "junior" → "Entry Level"
-- "senior" → "Senior Level"
-- "lead" → "Lead/Principal"
-- "principal" → "Lead/Principal"
-- "manager" → "Manager"
-- "director" → "Director"
-- "vp" → "VP/SVP"
-- "vice president" → "VP/SVP"
-- "executive" → "VP/SVP"
-- "ceo" → "C-Suite"
-- "cto" → "C-Suite"
-- "cfo" → "C-Suite"
-- "founder" → "Founder/Owner"
-- "entrepreneur" → "Founder/Owner"
-
-**COMPANY SIZE STANDARDIZATION:**
-- "startup" → "Startup (1-50 employees)"
-- "small company" → "Small (51-200 employees)"
-- "medium company" → "Medium (201-1000 employees)"
-- "large company" → "Large (1001-5000 employees)"
-- "enterprise" → "Enterprise (5000+ employees)"
-- "big tech" → "Enterprise (5000+ employees)"
-- "fortune 500" → "Enterprise (5000+ employees)"
-
-**DEGREE LEVEL STANDARDIZATION:**
-- "bachelor" → "Bachelor's Degree"
-- "bachelor's" → "Bachelor's Degree"
-- "undergraduate" → "Bachelor's Degree"
-- "college degree" → "Bachelor's Degree"
-- "master" → "Master's Degree"
-- "master's" → "Master's Degree"
-- "graduate degree" → "Master's Degree"
-- "mba" → "Master of Business Administration (MBA)"
-- "phd" → "Doctor of Philosophy (PhD)"
-- "doctorate" → "Doctor of Philosophy (PhD)"
-- "jd" → "Juris Doctor (JD)"
-- "law degree" → "Juris Doctor (JD)"
-- "md" → "Doctor of Medicine (MD)"
-- "medical degree" → "Doctor of Medicine (MD)"
-
-**TRANSFORMATION EXAMPLES:**
-
-Input: "Find me tech engineers at startups with MBA degrees"
-Output: "Find me Software Engineering professionals at Startup (1-50 employees) with Master of Business Administration (MBA) degrees"
-
-Input: "Senior software developers in finance companies"
-Output: "Senior Level Software Engineering professionals in Financial Services companies"
-
-Input: "Healthcare consultants with master's degrees"
-Output: "Healthcare & Pharmaceuticals Management Consulting professionals with Master's Degree"
-
-Input: "Entry level data scientists at big tech companies"
-Output: "Entry Level Data Science/Analytics professionals at Enterprise (5000+ employees) companies"
-
-**TRANSFORMATION STRATEGY:**
-1. **Identify all standardizable terms** in the query
-2. **Replace with exact database terms** while preserving sentence structure
-3. **Maintain natural language flow** - don't make it robotic
-4. **Log all transformations** for transparency
-
-**OUTPUT FORMAT:**
-Return JSON with:
-{
-  "standardized_query": "The transformed query with exact database terms",
-  "transformations": [
-    {
-      "original": "tech",
-      "standardized": "Technology & Software", 
-      "category": "industry"
-    },
-    {
-      "original": "engineers",
-      "standardized": "Software Engineering",
-      "category": "function"
-    }
-  ]
-}
-
-**IMPORTANT RULES:**
-1. **Preserve query intent** - don't change the meaning
-2. **Only standardize terms that have exact mappings** - leave ambiguous terms unchanged
-3. **Maintain grammatical structure** - ensure the output reads naturally
-4. **Log every transformation** for debugging
-5. **If no standardizations needed**, return the original query
-
-Focus ONLY on term standardization. Do NOT extract filters or perform analysis.`
-      },
-      {
-        role: 'user',
-        content: `Input Query: "${query}"
-
-**PRE-ANALYZED STANDARDIZABLE TERMS:**
-Industries: ${JSON.stringify(preAnalyzedTerms.industries)}
-Functions: ${JSON.stringify(preAnalyzedTerms.functions)}
-Levels: ${JSON.stringify(preAnalyzedTerms.levels)}
-Sizes: ${JSON.stringify(preAnalyzedTerms.sizes)}
-Degrees: ${JSON.stringify(preAnalyzedTerms.degrees)}
-Rankings: ${JSON.stringify(preAnalyzedTerms.rankings)}
-Majors: ${JSON.stringify(preAnalyzedTerms.majors)}
-
-Transform this query using exact database terms while preserving natural language flow and intent.`
-      }
-    ]
-  });
-
-  const llmDuration = Date.now() - llmStartTime;
-  console.log(`[STAGE 1] 🤖 OpenAI standardization response received (${llmDuration}ms)`);
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    console.log(`[STAGE 1] ⚠️ Empty response from OpenAI, using original query`);
-    console.log(`[STAGE 1] 📤 Fallback result:`, {
-      originalQuery: query,
-      standardizedQuery: query,
-      transformationCount: 0,
-      preAnalyzedTermsUsed: true
-    });
-    
-    return {
-      standardizedQuery: query,
-      termMappings: preAnalyzedTerms,
-      transformations: []
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(content);
-    const standardizedQuery = parsed.standardized_query || query;
-    const transformations = parsed.transformations || [];
-    
-    console.log(`[STAGE 1] ✅ Term standardization successful:`, {
-      originalQuery: query,
-      standardizedQuery: standardizedQuery,
-      wasTransformed: standardizedQuery !== query,
-      transformationCount: transformations.length,
-      llmProcessingTime: llmDuration + 'ms',
-      transformationDetails: transformations
-    });
-    
-    console.log(`[STAGE 1] 🔍 DETAILED TRANSFORMATION ANALYSIS:`, {
-      inputLength: query.length,
-      outputLength: standardizedQuery.length,
-      characterDifference: standardizedQuery.length - query.length,
-      transformationsByCategory: transformations.reduce((acc: any, t: any) => {
-        acc[t.category] = (acc[t.category] || 0) + 1;
-        return acc;
-      }, {}),
-      preAnalyzedVsActual: {
-        preAnalyzedIndustries: preAnalyzedTerms.industries,
-        preAnalyzedFunctions: preAnalyzedTerms.functions,
-        preAnalyzedLevels: preAnalyzedTerms.levels,
-        actualTransformations: transformations
-      }
-    });
-
-    return {
-      standardizedQuery: standardizedQuery,
-      termMappings: preAnalyzedTerms,
-      transformations: transformations
-    };
-  } catch (error) {
-    console.error(`[STAGE 1] ❌ Failed to parse standardization response:`, {
-      error: error,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      rawContent: content,
-      llmProcessingTime: llmDuration + 'ms'
-    });
-    
-    // Fallback: use original query with pre-analyzed terms
-    console.log(`[STAGE 1] 🔄 Using fallback with pre-analyzed terms`);
-    
-    return {
-      standardizedQuery: query,
-      termMappings: preAnalyzedTerms,
-      transformations: []
-    };
-  }
-}
-
-// STAGE 2: Filter Extraction from Standardized Query
-async function extractFiltersFromStandardizedQuery(
-  standardizedQuery: string,
-  termMappings: any,
-  transformations: any[]
-): Promise<ChronologicalFilters> {
-  console.log(`[STAGE 2] 📊 Starting filter extraction from standardized query: "${standardizedQuery}"`);
-  console.log(`[STAGE 2] 🔍 Available term mappings:`, termMappings);
-  console.log(`[STAGE 2] 🔄 Applied transformations:`, transformations);
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
-    temperature: 0,
-    messages: [
-      {
-        role: 'system',
-        content: `You are a specialized filter extraction system. Your ONLY job is to extract structured JSON filters from a pre-standardized query.
-
-**YOUR MISSION:** Convert the standardized query into precise JSON filters. The query has already been processed for term standardization, so focus purely on extraction logic.
-
-**AVAILABLE FILTER CATEGORIES:**
-
-**Text-Based Filters:**
-- school_filter: Specific educational institutions (string)
-- company_filter: Specific company names (string)  
-- industry_filter: Industry categories (string)
-- title_filter: Job titles/functions (string)
-- location_filter: Geographic locations (string)
-- company_size_filter: Company size categories (string)
-- degree_level_filter: Educational degree levels (string)
-
-**Numeric Experience Filters:**
-- total_experience_years: Minimum total years of experience (number)
-- min_years_in_industry: Minimum years in specific industry (number)
-
-**Boolean Timeline Filters:**
-- concurrent_activities: Worked while studying or overlapping activities (boolean)
-- geographic_mobility: Moved locations throughout career (boolean)
-
-**EXTRACTION RULES:**
-
-**ENTITY PRIORITY:**
-- If multiple companies mentioned: Choose the most specific or target company
-- If multiple schools mentioned: Choose the most relevant or recent
-- If multiple titles mentioned: Choose the most specific role
-- If multiple industries mentioned: Choose the target or current industry
-
-**EXPERIENCE EXTRACTION:**
-- "5+ years" → total_experience_years: 5
-- "10+ years in tech" → min_years_in_industry: 10
-- "experienced" → total_experience_years: 5
-- "senior level" → total_experience_years: 7
-- "seasoned" → total_experience_years: 7
-
-**BOOLEAN PATTERN DETECTION:**
-- "worked while studying" → concurrent_activities: true
-- "part-time education" → concurrent_activities: true
-- "relocated for work" → geographic_mobility: true
-- "moved cities" → geographic_mobility: true
-- "international experience" → geographic_mobility: true
-
-**EXTRACTION EXAMPLES:**
-
-Input: "Find Software Engineering professionals at Startup (1-50 employees) with Master of Business Administration (MBA)"
-Output:
-{
-  "title_filter": "Software Engineering",
-  "company_size_filter": "Startup (1-50 employees)",
-  "degree_level_filter": "Master of Business Administration (MBA)"
-}
-
-Input: "Senior Level Data Science/Analytics professionals in Technology & Software companies"
-Output:
-{
-  "title_filter": "Data Science/Analytics",
-  "industry_filter": "Technology & Software",
-  "total_experience_years": 7
-}
-
-Input: "Harvard graduates working at Google with 8+ years experience"
-Output:
-{
-  "school_filter": "Harvard",
-  "company_filter": "Google",
-  "total_experience_years": 8
-}
-
-Input: "People who worked while getting Master's Degree and moved locations"
-Output:
-{
-  "degree_level_filter": "Master's Degree",
-  "concurrent_activities": true,
-  "geographic_mobility": true
-}
-
-**EXTRACTION GUIDELINES:**
-1. **Extract specific entities** (school names, company names, exact locations)
-2. **Use standardized terms exactly** as they appear in the query
-3. **Don't over-interpret** - extract only what's clearly stated
-4. **Prefer specific filters** over generic ones
-5. **Don't extract if ambiguous** - better to omit than guess wrong
-
-**OUTPUT FORMAT:**
-Return only valid JSON with extracted filters. If no clear filters detected, return empty object {}.
-
-Focus ONLY on filter extraction. Do NOT perform term standardization or analysis.`
-      },
-      {
-        role: 'user',
-        content: `Standardized Query: "${standardizedQuery}"
-
-**CONTEXT FROM STAGE 1:**
-Applied Transformations: ${JSON.stringify(transformations)}
-Available Term Mappings: ${JSON.stringify(termMappings)}
-
-Extract precise JSON filters from this pre-standardized query.`
-      }
-    ]
-  });
-
-  console.log(`[STAGE 2] 🤖 OpenAI filter extraction response received`);
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    console.log(`[STAGE 2] ⚠️ Empty response from OpenAI, returning empty filters`);
-    return {};
-  }
-
-  try {
-    const parsed = JSON.parse(content);
-    console.log(`[STAGE 2] ✅ Filter extraction successful:`, {
-      extractedFilters: parsed,
-      filterCount: Object.keys(parsed).length,
-      hasBasicFilters: {
-        school_filter: !!parsed.school_filter,
-        company_filter: !!parsed.company_filter,
-        industry_filter: !!parsed.industry_filter,
-        title_filter: !!parsed.title_filter,
-        location_filter: !!parsed.location_filter
-      },
-      hasExperienceFilters: {
-        total_experience_years: !!parsed.total_experience_years,
-        min_years_in_industry: !!parsed.min_years_in_industry
-      },
-      hasBooleanFilters: {
-        concurrent_activities: !!parsed.concurrent_activities,
-        geographic_mobility: !!parsed.geographic_mobility
-      }
-    });
-    
-    return parsed;
-  } catch (error) {
-    console.error(`[STAGE 2] ❌ Failed to parse filter extraction response:`, {
-      error: error,
-      rawContent: content
-    });
-    return {};
-  }
-}
-
-// UPDATED: Two-Stage Translation with Comprehensive Error Handling  
-async function translateWithoutClassificationContext(
-  query: string
-): Promise<ChronologicalFilters> {
-  console.log(`[TRANSLATION PIPELINE] 🚀 Starting two-stage translation for: "${query}"`);
-  const pipelineStartTime = Date.now();
-
-  try {
-    // STAGE 1: Term Standardization
-    console.log(`[TRANSLATION PIPELINE] 📝 STAGE 1: Term Standardization`);
-    const stage1StartTime = Date.now();
-    
-    const standardizationResult = await standardizeQueryTerms(query);
-    
-    const stage1Duration = Date.now() - stage1StartTime;
-    console.log(`[TRANSLATION PIPELINE] ✅ STAGE 1 COMPLETE:`, {
-      duration: stage1Duration + 'ms',
-      originalQuery: query,
-      standardizedQuery: standardizationResult.standardizedQuery,
-      transformationCount: standardizationResult.transformations.length,
-      wasTransformed: standardizationResult.standardizedQuery !== query
-    });
-
-    // STAGE 2: Filter Extraction
-    console.log(`[TRANSLATION PIPELINE] 🔍 STAGE 2: Filter Extraction`);
-    const stage2StartTime = Date.now();
-    
-    const filters = await extractFiltersFromStandardizedQuery(
-      standardizationResult.standardizedQuery,
-      standardizationResult.termMappings,
-      standardizationResult.transformations
-    );
-    
-    const stage2Duration = Date.now() - stage2StartTime;
-    const totalDuration = Date.now() - pipelineStartTime;
-    
-    console.log(`[TRANSLATION PIPELINE] ✅ STAGE 2 COMPLETE:`, {
-      duration: stage2Duration + 'ms',
-      extractedFilters: filters,
-      filterCount: Object.keys(filters).length
-    });
-
-    console.log(`[TRANSLATION PIPELINE] 🎉 TWO-STAGE PIPELINE COMPLETE:`, {
-      totalDuration: totalDuration + 'ms',
-      stage1Duration: stage1Duration + 'ms',
-      stage2Duration: stage2Duration + 'ms',
-      finalFilters: filters,
-      pipelineSuccess: true
-    });
-
-    return filters;
-
-  } catch (stage1Error) {
-    console.error(`[TRANSLATION PIPELINE] ❌ STAGE 1 FAILED, attempting fallback:`, {
-      error: stage1Error,
-      fallbackStrategy: 'Direct filter extraction from original query'
-    });
-
-    try {
-      // FALLBACK: Direct filter extraction from original query
-      console.log(`[TRANSLATION PIPELINE] 🔄 FALLBACK: Direct extraction from original query`);
-      const fallbackStartTime = Date.now();
-      
-      const fallbackFilters = await extractFiltersFromStandardizedQuery(
-        query, // Use original query
-        getAllStandardizedTerms(query), // Get pre-analyzed terms
-        [] // No transformations
-      );
-      
-      const fallbackDuration = Date.now() - fallbackStartTime;
-      console.log(`[TRANSLATION PIPELINE] ✅ FALLBACK SUCCESSFUL:`, {
-        duration: fallbackDuration + 'ms',
-        fallbackFilters: fallbackFilters,
-        filterCount: Object.keys(fallbackFilters).length
-      });
-
-      return fallbackFilters;
-
-    } catch (stage2Error) {
-      console.error(`[TRANSLATION PIPELINE] ❌ STAGE 2 FALLBACK FAILED:`, {
-        stage1Error: stage1Error,
-        stage2Error: stage2Error,
-        finalFallback: 'Empty filters'
-      });
-
-      // FINAL FALLBACK: Return empty filters
-      return {};
-    }
-  }
 }
 
 // NEW: Generate intelligent search expansions (returns complete variants)
@@ -3321,40 +2683,6 @@ interface StandardSearchFilters {
   
   graduate_schools_filter?: string[];
   graduate_schools_or_logic?: boolean;
-} 
-
-// NEW: Debug function to demonstrate fuzzy matching effectiveness
-async function debugFuzzyMatchingForQuery(query: string): Promise<void> {
-  console.log(`[FUZZY MATCHING DEBUG] 🔬 Testing fuzzy matching capabilities for: "${query}"`);
-  
-  // Test common variations that users might type
-  const testTerms = [
-    "tech", "technology", "software", "engineering", "finance", "consulting",
-    "healthcare", "data science", "marketing", "sales", "startup", "big tech",
-    "senior", "manager", "director", "vp", "ceo", "founder", "mba", "bachelor",
-    "harvard", "stanford", "ivy league", "top 10"
-  ];
-  
-  for (const term of testTerms) {
-    if (query.toLowerCase().includes(term.toLowerCase())) {
-      console.log(`[FUZZY MATCHING DEBUG] 🎯 Found test term "${term}" in query`);
-      
-      // Test each category
-      const categories: (keyof typeof DATABASE_TERM_MAPPINGS)[] = [
-        'industry_mappings', 'function_mappings', 'level_mappings', 
-        'size_mappings', 'degree_mappings', 'ranking_mappings', 'major_mappings'
-      ];
-      
-      for (const category of categories) {
-        const matches = standardizeTerms(term, category);
-        if (matches.length > 0 && matches[0] !== term) {
-          console.log(`[FUZZY MATCHING DEBUG] ✅ "${term}" → ${category}: ${matches.join(', ')}`);
-        }
-      }
-    }
-  }
-  
-  console.log(`[FUZZY MATCHING DEBUG] 🏁 Fuzzy matching test completed for query`);
 }
 
 // NEW: Function to verify chronological search integration
@@ -3370,7 +2698,7 @@ function verifyChronologicalSearchIntegration(
     step2_fuzzy_matching_applied: true, // Fuzzy matching is always applied in standardizeQueryTerms
     step3_filters_extracted: !!filters && Object.keys(filters).length > 0,
     step4_organization_configured: !!organizationName,
-    step5_sql_function_ready: `llm_integrated_chronological_search_${organizationName}`,
+    step5_sql_function_ready: `chronological_search_function_${organizationName}`,
     step6_ready_for_execution: !!(query && filters && organizationName)
   });
   
@@ -3378,7 +2706,7 @@ function verifyChronologicalSearchIntegration(
     inputQuery: `"${query}"`,
     extractedFilterCount: Object.keys(filters).length,
     filterTypes: Object.keys(filters),
-    sqlFunction: `llm_integrated_chronological_search_chick_fil_a`,
+    sqlFunction: `chronological_search_function_chick_fil_a`,
     isReadyForDB: !!(filters && Object.keys(filters).length >= 0) // Even empty filters are valid
   });
   
@@ -3750,5 +3078,512 @@ Generate 3 intelligent temporal search expansion variants that maintain the core
       rawContent: content
     });
     return [];
+  }
+}
+
+// UPDATE: Replace the complex translateWithoutClassificationContext function
+async function translateWithoutClassificationContext(
+  query: string
+): Promise<ChronologicalFilters> {
+  console.log(`[TRANSLATION PIPELINE] 🚀 Starting 4-step chronological translation: "${query}"`);
+  const pipelineStartTime = Date.now();
+
+  try {
+    // Step 1: LLM-mapping
+    const mappingResult = await standardizeQueryWithLLM(query, 'chronological');
+    
+    // Step 2: Fine-tuned translator
+    const filters = await translateChronologicalQueryWithFineTuning(
+      mappingResult.standardizedQuery,
+      mappingResult.mappedTerms,
+      mappingResult.transformations
+    );
+    
+    const totalDuration = Date.now() - pipelineStartTime;
+    
+    console.log(`[TRANSLATION PIPELINE] 🎉 4-step translation complete:`, {
+      totalDuration: totalDuration + 'ms',
+      finalFilters: filters,
+      filterCount: Object.keys(filters).length,
+      pipelineSuccess: true
+    });
+
+    return filters;
+
+  } catch (error) {
+    console.error(`[TRANSLATION PIPELINE] ❌ 4-step translation failed:`, {
+      error: error,
+      fallbackStrategy: 'Empty filters'
+    });
+
+    return {};
+  }
+}
+
+// NEW: LLM-mapping function that standardizes terms based on search type
+async function standardizeQueryWithLLM(
+  query: string, 
+  searchType: 'chronological' | 'temporal' | 'standard'
+): Promise<{
+  standardizedQuery: string;
+  mappedTerms: {
+    industries: string[];
+    functions: string[];
+    levels: string[];
+    sizes: string[];
+    degrees: string[];
+    rankings: string[];
+    majors: string[];
+  };
+  transformations: Array<{
+    original: string;
+    standardized: string;
+    category: string;
+  }>;
+}> {
+  console.log(`[LLM MAPPING] 🗺️ Starting LLM-based term mapping for ${searchType} search: "${query}"`);
+  const mappingStartTime = Date.now();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a specialized term mapping system for alumni search queries. Your job is to standardize natural language terms into exact database values while preserving the original query structure.
+
+**SEARCH TYPE: ${searchType.toUpperCase()}**
+
+**YOUR MISSION:**
+1. Identify terms that need standardization using the DATABASE_TERM_MAPPINGS
+2. Replace natural language variations with exact database terms
+3. Return the standardized query + detailed mapping information
+4. Focus on terms relevant to ${searchType} search patterns
+
+**COMPLETE DATABASE TERM MAPPINGS:**
+
+**INDUSTRY MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.industry_mappings, null, 2)}
+
+**FUNCTION MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.function_mappings, null, 2)}
+
+**LEVEL MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.level_mappings, null, 2)}
+
+**SIZE MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.size_mappings, null, 2)}
+
+**DEGREE MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.degree_mappings, null, 2)}
+
+**RANKING MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.ranking_mappings, null, 2)}
+
+**MAJOR MAPPINGS:**
+${JSON.stringify(DATABASE_TERM_MAPPINGS.major_mappings, null, 2)}
+
+**SEARCH TYPE SPECIFIC FOCUS:**
+
+${searchType === 'chronological' ? `
+**CHRONOLOGICAL SEARCH FOCUS:**
+- Career progression patterns and experience depth
+- Industry transitions and function changes
+- Educational background and career alignment
+- Geographic mobility and concurrent activities
+- Focus on: industries, functions, levels, degrees, schools, companies
+` : searchType === 'temporal' ? `
+**TEMPORAL SEARCH FOCUS:**
+- Time-based sequences and specific years
+- Exit timing and subsequent career moves
+- Function transitions with temporal constraints
+- Focus on: functions, industries, timing-related terms
+` : `
+**STANDARD SEARCH FOCUS:**
+- Current state attributes and semantic matching
+- Company affiliations and role descriptions
+- Educational credentials and skill sets
+- Focus on: all categories for comprehensive matching
+`}
+
+**MAPPING STRATEGY:**
+1. **Exact Match Priority** - Use exact mappings when available
+2. **Semantic Similarity** - Map related terms to closest database values
+3. **Context Awareness** - Consider the search type when choosing mappings
+4. **Preserve Intent** - Don't change the core meaning of the query
+5. **Conservative Approach** - Only map terms you're confident about
+
+**MAPPING EXAMPLES:**
+
+Input: "Find tech engineers at startups with MBA degrees"
+Output:
+{
+  "standardized_query": "Find Technology & Software Software Engineering professionals at Startup (1-50 employees) with Master of Business Administration (MBA) degrees",
+  "mapped_terms": {
+    "industries": ["Technology & Software"],
+    "functions": ["Software Engineering"],
+    "sizes": ["Startup (1-50 employees)"],
+    "degrees": ["Master of Business Administration (MBA)"],
+    "levels": [],
+    "rankings": [],
+    "majors": []
+  },
+  "transformations": [
+    {"original": "tech", "standardized": "Technology & Software", "category": "industry"},
+    {"original": "engineers", "standardized": "Software Engineering", "category": "function"},
+    {"original": "startups", "standardized": "Startup (1-50 employees)", "category": "size"},
+    {"original": "MBA", "standardized": "Master of Business Administration (MBA)", "category": "degree"}
+  ]
+}
+
+Input: "Senior consultants in healthcare companies"
+Output:
+{
+  "standardized_query": "Senior Level Management Consulting professionals in Healthcare & Pharmaceuticals companies",
+  "mapped_terms": {
+    "industries": ["Healthcare & Pharmaceuticals"],
+    "functions": ["Management Consulting"],
+    "levels": ["Senior Level"],
+    "sizes": [],
+    "degrees": [],
+    "rankings": [],
+    "majors": []
+  },
+  "transformations": [
+    {"original": "senior", "standardized": "Senior Level", "category": "level"},
+    {"original": "consultants", "standardized": "Management Consulting", "category": "function"},
+    {"original": "healthcare", "standardized": "Healthcare & Pharmaceuticals", "category": "industry"}
+  ]
+}
+
+**IMPORTANT RULES:**
+1. **Only map terms that have exact matches** in the DATABASE_TERM_MAPPINGS
+2. **Preserve proper nouns** - Don't map specific school/company names
+3. **Maintain natural language flow** - The standardized query should read naturally
+4. **Log all transformations** - Track every mapping for transparency
+5. **Handle synonyms intelligently** - Map variations to the same standard term
+6. **Consider search type context** - Prioritize relevant mappings
+
+**OUTPUT FORMAT:**
+Return valid JSON with:
+- standardized_query: The query with mapped terms
+- mapped_terms: Arrays of all mapped terms by category
+- transformations: Detailed log of all mappings made
+
+Focus ONLY on term mapping. Do NOT extract filters or perform search logic.`
+      },
+      {
+        role: 'user',
+        content: `Search Type: ${searchType}
+Original Query: "${query}"
+
+Map natural language terms to exact database values while preserving query structure and intent.`
+      }
+    ]
+  });
+
+  const mappingDuration = Date.now() - mappingStartTime;
+  console.log(`[LLM MAPPING] 🤖 LLM mapping response received (${mappingDuration}ms)`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[LLM MAPPING] ⚠️ Empty response from LLM, using original query`);
+    return {
+      standardizedQuery: query,
+      mappedTerms: {
+        industries: [],
+        functions: [],
+        levels: [],
+        sizes: [],
+        degrees: [],
+        rankings: [],
+        majors: []
+      },
+      transformations: []
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[LLM MAPPING] ✅ LLM mapping successful:`, {
+      originalQuery: query,
+      standardizedQuery: parsed.standardized_query || query,
+      searchType: searchType,
+      transformationCount: parsed.transformations?.length || 0,
+      mappedCategories: Object.keys(parsed.mapped_terms || {}),
+      processingTime: mappingDuration + 'ms'
+    });
+    
+    return {
+      standardizedQuery: parsed.standardized_query || query,
+      mappedTerms: parsed.mapped_terms || {
+        industries: [],
+        functions: [],
+        levels: [],
+        sizes: [],
+        degrees: [],
+        rankings: [],
+        majors: []
+      },
+      transformations: parsed.transformations || []
+    };
+  } catch (error) {
+    console.error(`[LLM MAPPING] ❌ Failed to parse LLM mapping response:`, {
+      error: error,
+      rawContent: content,
+      processingTime: mappingDuration + 'ms'
+    });
+    
+    // Fallback to original query
+    return {
+      standardizedQuery: query,
+      mappedTerms: {
+        industries: [],
+        functions: [],
+        levels: [],
+        sizes: [],
+        degrees: [],
+        rankings: [],
+        majors: []
+      },
+      transformations: []
+    };
+  }
+}
+
+// UPDATE: Modify the chronological translation function to be a pure fine-tuned translator
+async function translateChronologicalQueryWithFineTuning(
+  standardizedQuery: string,
+  mappedTerms: any,
+  transformations: any[]
+): Promise<ChronologicalFilters> {
+  console.log(`[FINE-TUNED TRANSLATOR] 🎯 Starting fine-tuned translation for chronological query: "${standardizedQuery}"`);
+  const translationStartTime = Date.now();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a fine-tuned chronological search translator. Your ONLY job is to convert a pre-standardized query into precise chronological search filters.
+
+**MISSION:** Extract chronological filters from a query that has already been term-mapped. Focus purely on logical translation.
+
+**AVAILABLE CHRONOLOGICAL FILTERS (ONLY THESE 9):**
+
+**Basic Entity Filters:**
+- school_filter (string): Educational institution name
+- company_filter (string): Company name  
+- industry_filter (string): Industry category (use mapped values)
+- title_filter (string): Job title/function (use mapped values)
+- location_filter (string): Geographic location
+
+**Experience & Timeline Filters:**
+- total_experience_years (number): Minimum total years of experience
+- min_years_in_industry (number): Minimum years in specific industry
+- geographic_mobility (boolean): Whether person moved locations for career
+- concurrent_activities (boolean): Whether person worked while studying
+
+**TRANSLATION RULES:**
+1. **Use mapped terms exactly** - The query has been pre-standardized
+2. **Extract experience patterns** - Look for progression indicators
+3. **Detect mobility patterns** - Look for geographic/activity patterns
+4. **Focus on chronological logic** - Career progression over time
+5. **Only use the 9 available filters** - Ignore everything else
+
+**EXPERIENCE LEVEL TO YEARS:**
+- "Entry Level" → total_experience_years: 1
+- "Mid Level" → total_experience_years: 3  
+- "Senior Level" → total_experience_years: 5
+- "Lead/Principal" → total_experience_years: 8
+- "Manager" → total_experience_years: 5
+- "Director" → total_experience_years: 10
+- "VP/SVP" → total_experience_years: 15
+- "C-Suite" → total_experience_years: 20
+
+**PATTERN DETECTION:**
+- "worked while studying", "concurrent activities" → concurrent_activities: true
+- "moved locations", "relocated", "geographic mobility" → geographic_mobility: true
+- "X+ years in [industry]" → min_years_in_industry: X
+- "X+ years experience" → total_experience_years: X
+
+**OUTPUT FORMAT:**
+Return only valid JSON with chronological filters. No explanation needed.
+
+**EXAMPLES:**
+
+Input: "Find Georgetown graduates working in Technology & Software companies"
+Context: Already mapped, no transformations needed
+Output:
+{
+  "school_filter": "Georgetown",
+  "industry_filter": "Technology & Software"
+}
+
+Input: "Senior Level Software Engineering professionals with 8+ years experience"
+Context: Terms already mapped to standard values
+Output:
+{
+  "title_filter": "Software Engineering", 
+  "total_experience_years": 8
+}
+
+Focus ONLY on logical filter extraction from pre-standardized terms.`
+      },
+      {
+        role: 'user',
+        content: `Standardized Query: "${standardizedQuery}"
+
+Mapped Terms: ${JSON.stringify(mappedTerms)}
+Applied Transformations: ${JSON.stringify(transformations)}
+
+Extract chronological filters from this pre-standardized query.`
+      }
+    ]
+  });
+
+  const translationDuration = Date.now() - translationStartTime;
+  console.log(`[FINE-TUNED TRANSLATOR] 🤖 Translation response received (${translationDuration}ms)`);
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[FINE-TUNED TRANSLATOR] ⚠️ Empty response, returning empty filters`);
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[FINE-TUNED TRANSLATOR] ✅ Fine-tuned translation successful:`, {
+      standardizedQuery: standardizedQuery,
+      extractedFilters: parsed,
+      filterCount: Object.keys(parsed).length,
+      processingTime: translationDuration + 'ms'
+    });
+    
+    return parsed;
+  } catch (error) {
+    console.error(`[FINE-TUNED TRANSLATOR] ❌ Failed to parse translation response:`, {
+      error: error,
+      rawContent: content,
+      processingTime: translationDuration + 'ms'
+    });
+    return {};
+  }
+}
+
+// Fine-tuned translator for temporal search
+async function translateTemporalQueryWithFineTuning(
+  standardizedQuery: string,
+  mappedTerms: any,
+  transformations: any[]
+): Promise<TemporalElements> {
+  console.log(`[FINE-TUNED TRANSLATOR] 🕐 Starting fine-tuned temporal translation: "${standardizedQuery}"`);
+  const translationStartTime = Date.now();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a fine-tuned temporal search translator. Extract temporal elements from a pre-standardized query.
+
+**MISSION:** Convert pre-mapped query into temporal search elements focusing on time-based patterns.
+
+**AVAILABLE TEMPORAL ELEMENTS:**
+- specific_years: number[] (specific years mentioned)
+- year_ranges: Array<{start: number, end: number}> (year ranges)
+- exit_year: number (specific exit year)
+- exit_year_range: [number, number] (exit year range)
+- target_company_functions: string[] (functions at target company)
+- subsequent_functions: string[] (functions after leaving)
+- sequence_type: "exit_then_function" | "function_then_function" | "concurrent" | "gap_then_function"
+- timing_constraints: {max_gap_months?: number, min_gap_months?: number}
+- education_timing: {school?: string, degree?: string, year?: number, concurrent_with_company?: boolean}
+
+**TEMPORAL PATTERN DETECTION:**
+- "left in 2019" → exit_year: 2019
+- "2018-2020" → year_ranges: [{"start": 2018, "end": 2020}]
+- "then became consultants" → subsequent_functions: ["Management Consulting"], sequence_type: "exit_then_function"
+- "within 6 months" → timing_constraints: {"max_gap_months": 6}
+
+**OUTPUT FORMAT:** Return only valid JSON with temporal elements.`
+      },
+      {
+        role: 'user',
+        content: `Standardized Query: "${standardizedQuery}"
+Mapped Terms: ${JSON.stringify(mappedTerms)}
+Extract temporal elements from this pre-standardized query.`
+      }
+    ]
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) return {};
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[FINE-TUNED TRANSLATOR] ✅ Temporal translation successful:`, parsed);
+    return parsed;
+  } catch (error) {
+    console.error(`[FINE-TUNED TRANSLATOR] ❌ Temporal translation failed:`, error);
+    return {};
+  }
+}
+
+// Fine-tuned translator for standard search
+async function translateStandardQueryWithFineTuning(
+  standardizedQuery: string,
+  mappedTerms: any,
+  transformations: any[]
+): Promise<StandardSearchFilters> {
+  console.log(`[FINE-TUNED TRANSLATOR] 📊 Starting fine-tuned standard translation: "${standardizedQuery}"`);
+  const translationStartTime = Date.now();
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a fine-tuned standard search translator. Extract standard search filters from a pre-standardized query.
+
+**MISSION:** Convert pre-mapped query into standard search filters focusing on current-state attributes.
+
+**KEY STANDARD FILTER CATEGORIES:**
+- Basic entity filters (company, industry, title, location, school)
+- Career progression filters (current_job_level, is_current_leader, management_experience)
+- Company intelligence (company_size_category, has_startup_experience, has_enterprise_experience)
+- Skills & experience (technical_background, sales_experience, consulting_experience)
+- Educational background (highest_degree_level, school_ranking_tier, stem_education)
+- Salary analysis (min_current_salary, salary_growth_indicator)
+- Array fields with OR logic for comprehensive matching
+
+**FOCUS:** Current state attributes, semantic matching, no progression patterns.
+
+**USE MAPPED TERMS:** Apply the standardized terms from the mapping phase.
+
+**OUTPUT FORMAT:** Return only valid JSON with standard search filters.`
+      },
+      {
+        role: 'user',
+        content: `Standardized Query: "${standardizedQuery}"
+Mapped Terms: ${JSON.stringify(mappedTerms)}
+Extract standard search filters from this pre-standardized query.`
+      }
+    ]
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) return {};
+
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[FINE-TUNED TRANSLATOR] ✅ Standard translation successful:`, parsed);
+    return parsed;
+  } catch (error) {
+    console.error(`[FINE-TUNED TRANSLATOR] ❌ Standard translation failed:`, error);
+    return {};
   }
 }

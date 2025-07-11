@@ -1,7 +1,8 @@
+
 -- Create the comprehensive standard search function with JSON parameter approach
-DROP FUNCTION IF EXISTS comprehensive_standard_search_chick_fil_a;
+DROP FUNCTION IF EXISTS standard_search_function_demo(jsonb, text, int);
 -- Create the comprehensive standard search function with JSON parameter approach
-CREATE OR REPLACE FUNCTION comprehensive_standard_search_chick_fil_a(
+CREATE OR REPLACE FUNCTION standard_search_function_demo(
   search_filters JSONB DEFAULT '{}',
   search_query TEXT DEFAULT NULL,
   limit_count INTEGER DEFAULT 50
@@ -167,7 +168,7 @@ BEGIN
     v.chick_fil_a_exit_year,
     COALESCE(v.had_multiple_company_stints, FALSE) as had_multiple_company_stints,
     v.years_since_chick_fil_a
-  FROM chick_fil_a_alumni_standard_search v
+  FROM demo.demo_alumni_standard_table v
   WHERE 1=1
     -- 1. BASIC ENTITY FILTERS (searches current state first, then arrays)
     AND (
@@ -567,3 +568,4 @@ BEGIN
   LIMIT limit_count;
 END;
 $$;
+

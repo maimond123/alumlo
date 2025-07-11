@@ -223,7 +223,7 @@ export class LinkedInProfileSearchEngine {
       }
       
       // Construct dynamic RPC function name
-      const rpcFunctionName = `comprehensive_standard_search_${storedOrganizationName}`;
+      const rpcFunctionName = `standard_search_function_${storedOrganizationName}`;
       console.log(`[AI_SEARCH STANDARD] 🎯 Target SQL function: ${rpcFunctionName}`);
       
       // Build comprehensive search filters as a single JSON object
@@ -526,7 +526,7 @@ export class LinkedInProfileSearchEngine {
       }
       
       // Construct dynamic RPC function name
-      const rpcFunctionName = `llm_integrated_chronological_search_${storedOrganizationName}`;
+      const rpcFunctionName = `chronological_search_function_${storedOrganizationName}`;
       console.log(`[AI_SEARCH CHRONOLOGICAL] 🎯 Target SQL function: ${rpcFunctionName}`);
       
       // Call the chronological search RPC function

@@ -1,13 +1,10 @@
 -- Drop the old version of the function with different parameters
-DROP FUNCTION IF EXISTS llm_integrated_chronological_search_chick_fil_a(jsonb, jsonb, int, text);
+DROP FUNCTION IF EXISTS chronological_search_function_demo(jsonb, int);
 
-CREATE OR REPLACE FUNCTION llm_integrated_chronological_search_chick_fil_a(
+CREATE OR REPLACE FUNCTION chronological_search_function_demo(
   -- LLM PIPELINE INPUTS
   chronological_filters jsonb DEFAULT '{}',  -- Output from translateWithoutClassificationContext
-  
-  -- ADDITIONAL SEARCH PARAMETERS
   limit_count int DEFAULT 20,
-  organization_name text DEFAULT 'chick_fil_a'
 )
 RETURNS TABLE (
   -- RICH PROFILE DATA (matching standard search)
@@ -103,11 +100,6 @@ RETURNS TABLE (
   sequence_gap_months int,
   has_concurrent_activities boolean
 ) AS $$
-DECLARE
-  -- Dynamic table name based on organization
-  career_events_table text := organization_name || '_alumni_career_events';
-  education_events_table text := organization_name || '_alumni_education_events';
-  standard_search_table text := organization_name || '_alumni_standard_search';
 BEGIN
   RETURN QUERY
   EXECUTE format('
@@ -472,15 +464,15 @@ BEGIN
   ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
-  career_events_table, 
-  education_events_table, 
-  education_events_table,  -- ee2 for school filter
-  career_events_table,     -- ce2 for company filter  
-  career_events_table,     -- ce3 for industry filter
-  career_events_table,     -- ce4 for title filter
-  career_events_table,     -- ce5 for location filter
-  career_events_table,     -- ce6 for company size filter
-  standard_search_table    -- Changed from vector_table to standard_search_table
+  'demo_alumni_career_events_table',       -- ce
+  'demo_alumni_education_events_table',    -- ee
+  'demo_alumni_education_events_table',    -- ee2 (school filter)
+  'demo_alumni_career_events_table',       -- ce2 (company filter)
+  'demo_alumni_career_events_table',       -- ce3 (industry filter)
+  'demo_alumni_career_events_table',       -- ce4 (title filter)
+  'demo_alumni_career_events_table',       -- ce5 (location filter)
+  'demo_alumni_career_events_table',       -- ce6 (company size filter)
+  'demo_alumni_standard_search_table'      -- ss
   ) 
   USING 
     chronological_filters,           -- $1 (JSON with all filters)
@@ -490,7 +482,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Add documentation
-COMMENT ON FUNCTION llm_integrated_chronological_search_chick_fil_a IS 'Enhanced chronological search with RICH PROFILE DATA and EDUCATION FILTERS. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
+COMMENT ON FUNCTION chronological_search_function_demo IS 'Enhanced chronological search with RICH PROFILE DATA and EDUCATION FILTERS. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
 
 SUPPORTED FILTERS:
 - Text Filters: school_filter, company_filter, industry_filter, title_filter, location_filter, company_size_filter, degree_level_filter

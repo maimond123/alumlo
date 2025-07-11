@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { setDemoMode } from '../app/utils/demo'
@@ -8,11 +8,23 @@ import { setDemoMode } from '../app/utils/demo'
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 25, y: 50 }) // Default to left-1/4, top-1/2
+  const heroRef = useRef<HTMLElement>(null)
   const router = useRouter()
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (!heroRef.current) return
+
+    const rect = heroRef.current.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = Math.min(((e.clientY - rect.top) / rect.height) * 100, 75) // Limit to top 75% of the page
+    
+    setMousePosition({ x, y })
+  }
 
   const handleDemoAccess = async () => {
     setIsLoading(true)
@@ -33,20 +45,22 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center pb-20">
+    <section 
+      ref={heroRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen flex items-center pb-20"
+    >
       {/* Fading emerald background element */}
       <div
         className="absolute inset-0 overflow-hidden z-0"
         aria-hidden="true"
       >
         <div
-          className="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 z-0"
+          className="absolute inset-0 transition-all duration-300 ease-out"
           aria-hidden="true"
           style={{
-            width: '100%',
-            height: '100%',
             background:
-              'radial-gradient(ellipse at center, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%)',
+              `radial-gradient(ellipse at ${mousePosition.x}% ${mousePosition.y}%, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0) 70%)`,
             filter: 'blur(50px)', 
           }}
         />

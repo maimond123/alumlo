@@ -312,7 +312,7 @@ export async function POST(req: NextRequest) {
       else if ( searchConfig.type === 'standard') {
         debug.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
         debug.log(`[API SEARCH] 📋 DETAILED: Standard search configuration:`, {
-          rpcFunction: `comprehensive_standard_search_${organizationName}`,
+          rpcFunction: `standard_search_function_${organizationName}`,
           hasFilters: !!searchConfig.enhancedFilters,
           filterKeys: Object.keys(searchConfig.enhancedFilters || {}),
           filterValues: searchConfig.enhancedFilters,
@@ -322,7 +322,7 @@ export async function POST(req: NextRequest) {
         
         // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING
         debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, searchConfig.enhancedFilters);
-        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: comprehensive_standard_search_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, limit_count: ${top_k})`);
+        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: standard_search_function_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, limit_count: ${top_k})`);
         
         // Call the standardSearch with the enhanced filters
         const startTime = performance.now();
@@ -355,7 +355,7 @@ export async function POST(req: NextRequest) {
           hasResults: !!results && Array.isArray(results),
           isArray: Array.isArray(results),
           firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none',
-          sqlFunction: `comprehensive_standard_search_${organizationName}`,
+          sqlFunction: `standard_search_function_${organizationName}`,
           filtersUsed: Object.keys(searchConfig.enhancedFilters || {}),
           queryUsed: query
         });
@@ -363,11 +363,11 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] ✅ Comprehensive SQL filtering completed: ${Array.isArray(results) ? results.length : 0} results`);
         
         searchMetadata = {
-          search_method: 'comprehensive_standard_search',
+          search_method: 'standard_search_function',
           enhanced_filters: searchConfig.enhancedFilters,
           filter_count: Object.keys(searchConfig.enhancedFilters || {}).length,
           configuration_source: 'pipeline',
-          sql_function: `comprehensive_standard_search_${organizationName}`,
+          sql_function: `standard_search_function_${organizationName}`,
           organization_specific: true
         };
         
@@ -522,7 +522,7 @@ export async function POST(req: NextRequest) {
       debug.log(`[API SEARCH] 📊 Executing final fallback search`);
       
       // Determine effective organization name
-      const effectiveOrgName = organizationName || (isDemo ? 'chick_fil_a' : null);
+      const effectiveOrgName = organizationName || (isDemo ? 'demo' : null);
       
       if (effectiveOrgName) {
         debug.log(`[API SEARCH] 🏢 Using standard search fallback for organization: ${effectiveOrgName}`);
