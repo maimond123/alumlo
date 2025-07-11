@@ -1,5 +1,4 @@
 'use client'
- 
 
 import { useState, FormEvent } from 'react'
 import { motion } from 'framer-motion'
@@ -95,126 +94,135 @@ export default function SignInPage() {
   // Styles for the main "Sign In" button on the form
   const formSignInButtonClasses = "w-full py-[11px] px-[38px] text-[19px] rounded-full bg-emerald-500/30 text-black border border-gray-300 hover:bg-emerald-500/40 transition-colors duration-300 font-semibold shadow-md shadow-emerald-600/30 hover:shadow-emerald-500/40 flex items-center justify-center"
 
-  const gradientCenterColor = activeTab === 'signin' 
-    ? 'rgba(16, 185, 129, 0.35)'  // Emerald for Sign In
-    : 'rgba(250, 204, 21, 0.35)'; // Yellow for Sign Up
-
   return (
-    <div 
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-white/20 backdrop-blur-xl"
-      style={{
-        backgroundImage: `radial-gradient(ellipse at center, ${gradientCenterColor} 0%, rgba(255,255,255,0) 70%)`
-      }}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg border border-gray-300"
+    <div className="min-h-screen w-full relative overflow-hidden">
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-[42px] font-bold text-black">Alumlo</h1>
-          <p className="text-gray-500 text-[15px] mt-1">Turn Alumni Data into Action.</p>
-        </div>
+        <source src="/videos/sign-in.mov" type="video/mp4" />
+        {/* Fallback for browsers that don't support the video element */}
+      </video>
+      
+      {/* Blur Overlay */}
+      <div className="absolute inset-0 backdrop-blur-md bg-white/10"></div>
+      
+      {/* Content Container */}
+      <div className="relative z-10 min-h-screen w-full flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-11 rounded-xl w-full max-w-lg shadow-lg border border-gray-300"
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-[42px] font-bold text-black">Alumlo</h1>
+            <p className="text-gray-500 text-[15px] mt-1">Turn Alumni Data into Action.</p>
+          </div>
 
-        <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border border-gray-300">
-          <button
-            onClick={() => setActiveTab('signin')}
-            className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signin' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setActiveTab('signup')}
-            className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
-              activeTab === 'signup' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+          <div className="mb-6 p-1 bg-gray-100 rounded-lg flex border border-gray-300">
+            <button
+              onClick={() => setActiveTab('signin')}
+              className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
+                activeTab === 'signin' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setActiveTab('signup')}
+              className={`flex-1 py-[11px] px-4 rounded-md text-[15px] font-medium transition-colors duration-200 ${
+                activeTab === 'signup' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:bg-gray-200/50'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {activeTab === 'signup' && (
-            <>
-              <div className="flex space-x-4">
-                <div className="flex-1">
-                  <label htmlFor="firstName" className={labelClasses}>First name</label>
-                  <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClasses} required />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {activeTab === 'signup' && (
+              <>
+                <div className="flex space-x-4">
+                  <div className="flex-1">
+                    <label htmlFor="firstName" className={labelClasses}>First name</label>
+                    <input type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClasses} required />
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="lastName" className={labelClasses}>Last name</label>
+                    <input type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClasses} required />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label htmlFor="lastName" className={labelClasses}>Last name</label>
-                  <input type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClasses} required />
+                <div>
+                  <label htmlFor="email" className={labelClasses}>Email</label>
+                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="johndoe@example.com" required />
                 </div>
-              </div>
-              <div>
-                <label htmlFor="email" className={labelClasses}>Email</label>
-                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="johndoe@example.com" required />
-              </div>
-              <div>
-                <label htmlFor="organization" className={labelClasses}>Organization</label>
-                <input type="text" id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} className={inputClasses} required />
-              </div>
-              <div>
-                <label htmlFor="role" className={labelClasses}>Role</label>
-                <input type="text" id="role" value={role} onChange={(e) => setRole(e.target.value)} className={inputClasses} required />
-              </div>
-            </>
-          )}
-
-          {activeTab === 'signin' && (
-            <>
-              <div>
-                <label htmlFor="email" className={labelClasses}>Email</label>
-                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="johndoe@example.com" required />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className={labelClasses}>Password</label>
-                  <a href="#" className="text-[13px] text-gray-700 hover:text-black">Forgot password?</a>
+                <div>
+                  <label htmlFor="organization" className={labelClasses}>Organization</label>
+                  <input type="text" id="organization" value={organization} onChange={(e) => setOrganization(e.target.value)} className={inputClasses} required />
                 </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={inputClasses}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                  </button>
+                <div>
+                  <label htmlFor="role" className={labelClasses}>Role</label>
+                  <input type="text" id="role" value={role} onChange={(e) => setRole(e.target.value)} className={inputClasses} required />
                 </div>
-              </div>
-            </>
-          )}
-          
-          {error && (
-            <p className="text-red-500 text-[13px] text-center">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={activeTab === 'signup' ? scheduleDemoButtonClasses : formSignInButtonClasses}
-          >
-            {isLoading ? (
-              <Loader2 className="animate-spin h-[22px] w-[22px]" />
-            ) : (
-              activeTab === 'signup' ? 'Schedule Demo' : 'Sign In'
+              </>
             )}
-          </button>
-        </form>
-      </motion.div>
+
+            {activeTab === 'signin' && (
+              <>
+                <div>
+                  <label htmlFor="email" className={labelClasses}>Email</label>
+                  <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClasses} placeholder="johndoe@example.com" required />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label htmlFor="password" className={labelClasses}>Password</label>
+                    <a href="#" className="text-[13px] text-gray-700 hover:text-black">Forgot password?</a>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={inputClasses}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+            
+            {error && (
+              <p className="text-red-500 text-[13px] text-center">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={activeTab === 'signup' ? scheduleDemoButtonClasses : formSignInButtonClasses}
+            >
+              {isLoading ? (
+                <Loader2 className="animate-spin h-[22px] w-[22px]" />
+              ) : (
+                activeTab === 'signup' ? 'Schedule Demo' : 'Sign In'
+              )}
+            </button>
+          </form>
+        </motion.div>
+      </div>
 
       {showCalendly && (
         <motion.div
@@ -248,4 +256,3 @@ export default function SignInPage() {
     </div>
   )
 }
-
