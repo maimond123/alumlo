@@ -23,8 +23,33 @@ export default function SignInPage() {
   const [showCalendly, setShowCalendly] = useState(false)
 
   const handleSignUp = async () => {
-    // Just show Calendly widget for scheduling demo
-    setShowCalendly(true)
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      // Insert demo request data into Supabase
+      const { error } = await supabase
+        .from('demo_requests')
+        .insert([
+          {
+            full_name: `${firstName} ${lastName}`,
+            email: email,
+            organization: organization,
+            role: role
+          }
+        ])
+      
+      if (error) {
+        setError(error.message)
+      } else {
+        // Show Calendly widget for scheduling demo after successful data insertion
+        setShowCalendly(true)
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSignIn = async () => {
