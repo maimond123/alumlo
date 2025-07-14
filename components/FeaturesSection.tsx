@@ -122,12 +122,12 @@ export default function FeaturesSection() {
       // Set demo mode in session storage
       setDemoMode('demo', '{Your Organization}')
       
-      // Redirect to dashboard - no authentication needed!
-      router.push('/dashboard')
+      // Redirect to search- no authentication needed!
+      router.push('/search')
     } catch (err) {
       console.error('Demo setup error:', err)
-      // Still redirect to dashboard as demo mode is set
-      router.push('/dashboard')
+      // Still redirect to search as demo mode is set
+      router.push('/search')
     } finally {
       setIsLoading(false)
     }

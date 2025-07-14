@@ -90,7 +90,7 @@ export default function SignInPage() {
           setError(signInError.message || "Failed to sign in. Please try again.");
         }
       } else {
-        router.push('/dashboard');
+        router.push('/search');
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");

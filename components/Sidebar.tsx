@@ -155,7 +155,7 @@ export default function Sidebar() {
   // Load page-specific data when sidebar opens and pathname changes
   useEffect(() => {
     if (isSidebarOpen) {
-      if (pathname === '/dashboard') {
+      if (pathname === '/search') {
         loadRecentSearches()
       } else if (pathname === '/learn') {
         loadRecentConversations()
@@ -196,9 +196,9 @@ export default function Sidebar() {
   }
 
   // Determine what to show in the recent section
-  const shouldShowRecentSection = pathname === '/dashboard' || pathname === '/learn'
-  const recentSectionTitle = pathname === '/dashboard' ? 'Recent Searches' : 'Recent Chats'
-  const recentItems = pathname === '/dashboard' ? recentSearches : recentConversations
+  const shouldShowRecentSection = pathname === '/search' || pathname === '/learn'
+  const recentSectionTitle = pathname === '/search' ? 'Recent Searches' : 'Recent Chats'
+  const recentItems = pathname === '/search' ? recentSearches : recentConversations
 
   // Function to load a search into the dashboard
   const loadSearchInDashboard = (searchId: string, query: string) => {
@@ -212,12 +212,9 @@ export default function Sidebar() {
     }))
     
     // Navigate to dashboard if not already there
-    if (pathname !== '/dashboard') {
-      console.log(`[SIDEBAR DEBUG] Navigating to dashboard from ${pathname}`);
-      router.push('/dashboard')
-    } else {
-      // If already on dashboard, trigger a custom event to reload the search
-      console.log(`[SIDEBAR DEBUG] Already on dashboard, dispatching loadSearch event`);
+    if (pathname !== '/search') {
+      console.log(`[SIDEBAR DEBUG] Navigating to search from ${pathname}`);
+      router.push('/search')
       window.dispatchEvent(new CustomEvent('loadSearch', {
         detail: { id: searchId, query: query }
       }))
@@ -295,7 +292,7 @@ export default function Sidebar() {
 
         {/* Navigation Links with more space between them */}
         <nav>
-          <SidebarLink href="/dashboard" icon={Search} isOpen={isSidebarOpen} currentPath={pathname}>
+          <SidebarLink href="/search" icon={Search} isOpen={isSidebarOpen} currentPath={pathname}>
             Search
           </SidebarLink>
           <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen} currentPath={pathname}>
@@ -325,10 +322,10 @@ export default function Sidebar() {
                   <RecentItem
                     key={item.id}
                     item={item}
-                    type={pathname === '/dashboard' ? 'search' : 'learn'}
+                    type={pathname === '/search' ? 'search' : 'learn'}
                     formatTime={formatTime}
                     onClick={() => {
-                      if (pathname === '/dashboard') {
+                      if (pathname === '/search') {
                         // Load the search into the dashboard
                         loadSearchInDashboard(item.id, item.query || '')
                       } else {
@@ -340,7 +337,7 @@ export default function Sidebar() {
                 ))
               ) : (
                 <div className="text-gray-500 text-sm py-2">
-                  {pathname === '/dashboard' ? 'No recent searches' : 'No recent chats'}
+                  {pathname === '/search' ? 'No recent searches' : 'No recent chats'}
                 </div>
               )}
             </div>

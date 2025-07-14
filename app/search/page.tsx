@@ -666,7 +666,6 @@ export default function DashboardPage() {
       e.preventDefault(); // Prevent newline on Enter
       handleSearch(e as unknown as React.FormEvent); // Trigger search
     }
-    // Allow Shift+Enter for newlines (default textarea behavior)
   };
 
   // Update handleSearch to include replay snapshot on search
@@ -1095,10 +1094,9 @@ export default function DashboardPage() {
         stack: error instanceof Error ? error.stack : 'No stack'
       });
     } finally {
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting isSearching to false`);
-      console.log(`[DASHBOARD CLEANUP] 🧹 Cleaning up search state`);
+
       setIsSearching(false);
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search complete, isSearching set to false`);
+  
     }
   };
 

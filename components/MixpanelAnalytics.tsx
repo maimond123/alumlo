@@ -2,10 +2,10 @@
 
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import analytics from '../utils/analytics'
-import { getUserEmail } from '../utils/auth'
-import { useAuth } from '../../components/AuthProvider'
-import { isDemoMode as checkIsDemoMode } from '../utils/demo'
+import analytics from '../app/utils/analytics'
+import { getUserEmail } from '../app/utils/auth'
+import { useAuth } from './AuthProvider'
+import { isDemoMode as checkIsDemoMode } from '../app/utils/demo'
 
 export default function MixpanelAnalytics() {
   const pathname = usePathname()
