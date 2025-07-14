@@ -118,7 +118,6 @@ export async function POST(req: NextRequest) {
       searchConfig // New: pipeline search config
     } = body;
     
-    // BUGFIX: Use enhanced filters from pipeline when available
     const effectiveFilters = searchConfig?.enhancedFilters || filters;
     
     if (!query || typeof query !== 'string') {

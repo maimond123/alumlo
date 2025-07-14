@@ -10,11 +10,9 @@ import { getUserEmail } from "../utils/auth"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import analytics from "../utils/analytics"
-import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
 import { useAuth } from "../../components/AuthProvider"
 import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
-import { InlineWidget } from "react-calendly"
 
 // Add the new interface for search results
 interface SearchResult {
@@ -258,26 +256,9 @@ const tagScrollAnimation = `
   }
 `;
 
-// Helper function to extract location from natural language format
-const extractLocationFromText = (text: string): string => {
-  if (!text) return '';
-  const match = text.match(/currently located in (.+)/i);
-  return match ? match[1].trim() : '';
-};
 
 // Helper function to get education display
 const getEducationDisplay = (result: SearchResult): string => {
-  // Add debugging for education fields
-  console.log('[DEBUG] Education fields:', {
-    graduate_school: result.graduate_school,
-    undergraduate_school: result.undergraduate_school,
-    high_school: result.high_school,
-    pre_company_education: result.pre_company_education,
-    during_company_education: result.during_company_education,
-    post_company_education: result.post_company_education,
-    natural_language_education: result.natural_language_education
-  });
-
   // Check if graduate_school exists and has data
   if (result.graduate_school) {
     if (Array.isArray(result.graduate_school) && result.graduate_school.length > 0) {
@@ -330,20 +311,6 @@ const getEducationDisplay = (result: SearchResult): string => {
 
 // Helper function to get standard profile info
 const getStandardProfileInfo = (result: SearchResult) => {
-  // Add debugging to see what data is actually available
-  console.log('[DEBUG] Profile data available:', {
-    name: result.name,
-    current_company: result.current_company,
-    post_company_current_company: result.post_company_current_company,
-    current_title: result.current_title,
-    post_company_current_title: result.post_company_current_title,
-    current_job_location: result.current_job_location,
-    post_company_current_location: result.post_company_current_location,
-    home_location: (result as any).home_location,
-    undergraduate_school: result.undergraduate_school,
-    graduate_school: result.graduate_school
-  });
-
   // Use home_location as fallback when post_company_current_location is empty
   const getLocationFallback = () => {
     if (result.current_job_location) {
@@ -433,16 +400,7 @@ const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: strin
 
 // Helper function to ensure search result compatibility
 const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
-  console.log('[DEBUG COMPATIBILITY] Raw results from API:', results);
-  console.log('[DEBUG COMPATIBILITY] Number of results:', results.length);
-  
   const mappedResults = results.map((result, index) => {
-    console.log(`[DEBUG COMPATIBILITY] Processing result ${index}:`, {
-      id: result.id,
-      name: result.name,
-      rawResult: result
-    });
-    
     const mapped = {
       ...result,
       // Ensure new fields exist with fallbacks to legacy fields
@@ -509,42 +467,9 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
     // moved_to_leadership_post_[organizationName]
     // They will be accessible via mapped[`${organizationName}_provided_salary_lift`] etc.
     
-    console.log(`[DEBUG COMPATIBILITY] Mapped result ${index}:`, {
-      id: mapped.id,
-      name: mapped.name,
-      profile_url: mapped.profile_url,
-      post_company_current_company: mapped.post_company_current_company,
-      boolean_fields: {
-        is_current_leader: mapped.is_current_leader,
-        management_experience: mapped.management_experience,
-        technical_background: mapped.technical_background,
-        sales_experience: mapped.sales_experience,
-        has_startup_experience: mapped.has_startup_experience,
-        has_enterprise_experience: mapped.has_enterprise_experience,
-        is_remote_worker: mapped.is_remote_worker,
-        mentor_potential: mapped.mentor_potential
-      },
-      salary_fields: {
-        current_estimated_salary: mapped.current_estimated_salary,
-        highest_career_salary: mapped.highest_career_salary
-      },
-      education_fields: {
-        undergraduate_school: mapped.undergraduate_school,
-        graduate_school: mapped.graduate_school,
-        natural_language_education: mapped.natural_language_education
-      },
-      career_fields: {
-        career_stage: mapped.career_stage,
-        school_ranking_tier: mapped.school_ranking_tier,
-        current_job_level: mapped.current_job_level,
-        current_job_function: mapped.current_job_function
-      }
-    });
-    
     return mapped;
   });
   
-  console.log('[DEBUG COMPATIBILITY] All results mapped successfully');
   return mappedResults;
 };
 
@@ -651,8 +576,6 @@ export default function DashboardPage() {
   // Add function to classify query for temporal search
   const classifyQuery = async (query: string): Promise<any> => {
     try {
-      console.log(`[DEBUG ${new Date().toISOString()}] Classifying query for temporal elements: "${query}"`);
-      
       const response = await fetch('/api/classify-query', {
         method: 'POST',
         headers: {
@@ -662,24 +585,19 @@ export default function DashboardPage() {
       });
       
       if (!response.ok) {
-        console.error('Query classification failed:', response.statusText);
         return { type: 'standard' };
       }
       
       const classification = await response.json();
-      console.log(`[DEBUG ${new Date().toISOString()}] Query classification result:`, classification);
       
       return classification;
     } catch (error) {
-      console.error('Error classifying query:', error);
       return { type: 'standard' };
     }
   };
 
   // Add function to convert extracted filters to API format
   const convertFiltersToAPI = (extractedFilters: {[key: string]: string[]}): any => {
-    console.log(`🔧🔧🔧 [DASHBOARD] CONVERTING FILTERS:`, extractedFilters);
-    
     const apiFilters: any = {};
     
     // Map extracted filter categories to API parameters
@@ -709,33 +627,22 @@ export default function DashboardPage() {
       'Salary Impact': 'salary_lift_only'
     };
     
-    console.log(`[DASHBOARD DEBUG] Filter mappings available:`, {
-      textFilterMapping: filterMapping,
-      booleanFilterMapping: booleanMapping
-    });
-    
     // Convert text filters
     Object.entries(extractedFilters).forEach(([category, values]) => {
-      console.log(`[DASHBOARD DEBUG] Processing filter category: "${category}" with values:`, values);
-      
       if (filterMapping[category] && values.length > 0) {
         apiFilters[filterMapping[category]] = values[0]; // Use first value for text filters
-        console.log(`[DASHBOARD DEBUG] ✅ Mapped text filter: ${category} -> ${filterMapping[category]} = "${values[0]}"`);
       }
       
       // Convert boolean filters (if the category exists, set to true)
       if (booleanMapping[category] && values.length > 0) {
         apiFilters[booleanMapping[category]] = true;
-        console.log(`[DASHBOARD DEBUG] ✅ Mapped boolean filter: ${category} -> ${booleanMapping[category]} = true`);
       }
       
       // Log if category not recognized
       if (!filterMapping[category] && !booleanMapping[category]) {
-        console.log(`[DASHBOARD DEBUG] ⚠️ Unrecognized filter category: "${category}"`);
       }
     });
     
-    console.log(`[DASHBOARD DEBUG] Final converted filters:`, apiFilters);
     return apiFilters;
   };
 
@@ -776,19 +683,11 @@ export default function DashboardPage() {
     const timeoutId = setTimeout(() => {
       const checkAuth = async () => {
         try {
-          console.log('[DEBUG] Dashboard: Checking auth state', {
-            authLoading,
-            contextAuthenticated,
-            timestamp: new Date().toISOString()
-          })
-          console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
-          
           // Check for demo mode from URL parameters first
           initDemoFromUrl()
           
           // Check if this is demo mode (session-based)
           if (checkIsDemoMode()) {
-            console.log("Demo mode activated from session")
             setIsDemoMode(true)
             setFormattedOrganizationName(getDemoOrganization()) // Get from session
             setDisplayOrganizationName(getDemoDisplayName()) // Get from session
@@ -797,7 +696,6 @@ export default function DashboardPage() {
 
             // Track as a unique visitor while maintaining demo status
             const visitorId = analytics.getVisitorId()
-            console.log(`Demo visitor identified with unique ID: ${visitorId}`)
 
             analytics.identifyUser("demo_user", {
               isDemoUser: true,
@@ -815,24 +713,17 @@ export default function DashboardPage() {
           
           // Wait until global auth loading finishes
           if (authLoading) {
-            console.log('[DEBUG] Dashboard: Auth still loading, waiting...')
             return;
           }
 
           // Don't redirect immediately after mount to allow auth to stabilize
           const timeSinceMount = Date.now() - mountTime
           if (timeSinceMount < 300) {
-            console.log('[DEBUG] Dashboard: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
             return
           }
 
-          console.log("[DEBUG] Dashboard: Authentication (from context) result:", contextAuthenticated, {
-            authLoading,
-            timestamp: new Date().toISOString()
-          })
 
           if (!contextAuthenticated) {
-            console.log("[DEBUG] Dashboard: Not authenticated, redirecting to signin")
             setAuthState({
               isLoading: false,
               isAuthenticated: false
@@ -842,18 +733,14 @@ export default function DashboardPage() {
           }
 
           // For authenticated real users, proceed with normal flow
-          console.log("[DEBUG] Dashboard: Real user authenticated")
-
           // Finally, update the auth state
           setAuthState({
             isLoading: false,
             isAuthenticated: true
           })
         } catch (error) {
-          console.error("Auth check error:", error)
           // Don't sign out on API rate limiting errors
           if ((error as Error)?.message?.includes('429') || (error as Error)?.message?.includes('API key')) {
-            console.log('API rate limiting detected, not signing out')
             return
           }
           setAuthState({
@@ -873,7 +760,6 @@ export default function DashboardPage() {
   // Only fetch school name for non-demo users
   useEffect(() => {
     if (authState.isAuthenticated && !isDemoMode) {
-      console.log("Dashboard: User authenticated, fetching data...")
       const fetchOrganizationName = async () => {
         if (isDemoMode) {
           setFormattedOrganizationName("Your Organization");
@@ -898,10 +784,7 @@ export default function DashboardPage() {
             .eq('organization_email', userEmail)
             .single();
 
-          console.log("[DEBUG] Raw data from customer_information:", data);
-
           if (error) {
-            console.error("Error fetching organization name:", error);
             setError("Failed to load school data.");
             setFormattedOrganizationName("Your Organization"); // Fallback
             setIsOrganizationNameReadyToAnimate(true);
@@ -912,7 +795,6 @@ export default function DashboardPage() {
           if (data && data.organization_name) {
             const rawOrganizationName = data.organization_name;
             const formattedName = formatOrganizationName(rawOrganizationName);
-            console.log("[DEBUG] Result from formatOrganizationName function:", formattedName);
             setFormattedOrganizationName(formattedName);
             setDisplayOrganizationName(formattedName); // Use same name for display for real users
             
@@ -924,7 +806,6 @@ export default function DashboardPage() {
              // Store the original school name in localStorage for the search engine
             if (typeof window !== 'undefined') {
               localStorage.setItem('organizationName', rawOrganizationName);
-              console.log(`[DEBUG] Stored original organization name in localStorage: "${rawOrganizationName}"`);
             }
           } else {
             setError("School name not found for this user.");
@@ -933,7 +814,6 @@ export default function DashboardPage() {
             setIsOrganizationNameReadyToAnimate(true);
           }
         } catch (err) {
-          console.error("Exception in fetchOrganizationName:", err);
           setError("An error occurred while fetching school data.");
           setFormattedOrganizationName("Your Organization"); // Fallback for internal
           setDisplayOrganizationName("Your Organization"); // Fallback for display
@@ -1115,10 +995,6 @@ export default function DashboardPage() {
       return;
     }
     
-    console.log(`🔥🔥🔥 [DASHBOARD] SEARCH INITIATED! Query: "${queryToUse}" 🔥🔥🔥`);
-    console.log(`[DASHBOARD DEBUG] Search initiated for query: "${queryToUse}"`);
-    console.log(`[DASHBOARD DEBUG] isDemoMode: ${isDemoMode}, formattedOrganizationName: "${formattedOrganizationName}"`);
-    
     // Capture a replay snapshot for this important user interaction
     analytics.captureReplaySnapshot('search_initiated');
     
@@ -1126,7 +1002,6 @@ export default function DashboardPage() {
     analytics.trackSearch(queryToUse, 0, { source: directQuery ? 'tag_click' : 'search_input' });
     
     if (searchTimerRef.current) {
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Cancelling previous search timer`);
       clearTimeout(searchTimerRef.current);
     }
 
@@ -1150,7 +1025,6 @@ export default function DashboardPage() {
     
     // Store the current query to ensure consistency 
     const currentQuery = queryToUse;
-    console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Using query: "${currentQuery}"`);
     
     // Reset displayed text
     setDisplayedText({
@@ -1163,21 +1037,14 @@ export default function DashboardPage() {
     
     // Get the original school name from localStorage for the API
     const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
-    console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Original organization name for API: "${originalOrganizationName}"`);
     
     // Start the AI animation sequence
     try {
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Starting animation sequence for query: "${currentQuery}"`);
-      
       // Phase 1: Analyzing query with unified search pipeline
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 1: Analyzing with unified search pipeline`);
       const analyzingText = `Analyzing search query: "${currentQuery}"`;
       await typewriterEffect(analyzingText, (text) => setDisplayedText(prev => ({ ...prev, analyzing: text })));
       
       // STEP 1: Try unified search pipeline
-      console.log(`🔍🔍🔍 [DASHBOARD] ATTEMPTING UNIFIED SEARCH PIPELINE for: "${currentQuery}"`);
-      console.log(`[DASHBOARD PIPELINE] 🚀 Starting search pipeline request at ${new Date().toISOString()}`);
-      
       let searchConfig = null;
       let pipelineResult: any = null;
       let apiFilters = {};
@@ -1185,13 +1052,6 @@ export default function DashboardPage() {
       let filterText = '';
       
       try {
-        console.log(`[DASHBOARD PIPELINE] 📡 Making fetch request to /api/search-pipeline`);
-        console.log(`[DASHBOARD PIPELINE] 📝 Request body:`, { 
-          query: currentQuery, 
-          organizationName: originalOrganizationName,
-          isDemo: isDemoMode
-        });
-        
         const pipelineResponse = await fetch('/api/search-pipeline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1202,16 +1062,11 @@ export default function DashboardPage() {
           }),
         });
         
-        console.log(`[DASHBOARD PIPELINE] 📡 Pipeline response status: ${pipelineResponse.status} ${pipelineResponse.statusText}`);
-        
         if (pipelineResponse.ok) {
           pipelineResult = await pipelineResponse.json();
-          console.log(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE RESULT:`, pipelineResult);
           
           // NEW: Check for invalid query response
           if (pipelineResult.searchType === 'invalid') {
-            console.log(`[DASHBOARD PIPELINE] ❌ Invalid query detected by pipeline`);
-            
             setSearchPhase('invalid');
             setIsSearching(false);
             
@@ -1241,19 +1096,13 @@ export default function DashboardPage() {
             return; // Exit early for invalid queries
           }
           
-          console.log(`[DASHBOARD PIPELINE] ✅ Pipeline success - searchType: ${pipelineResult.searchType}`);
-          console.log(`[DASHBOARD PIPELINE] 📊 Pipeline metadata:`, pipelineResult.metadata);
-          console.log(`[DASHBOARD PIPELINE] 🎯 Search configuration:`, pipelineResult.searchConfig);
-          
           searchConfig = pipelineResult.searchConfig;
           queryClassification = pipelineResult.classification;
           
           setSearchPhase('searching');
           
           if (pipelineResult.searchType === 'temporal') {
-            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal search detected - processing temporal elements`);
             const temporalElements = searchConfig.temporalElements;
-            console.log(`[DASHBOARD PIPELINE] 🕐 Temporal elements extracted:`, temporalElements);
             
             const temporalSummary = [];
             if (temporalElements.exit_year) temporalSummary.push(`exit year: ${temporalElements.exit_year}`);
@@ -1263,19 +1112,14 @@ export default function DashboardPage() {
             filterText = `Applied temporal filters (${temporalSummary.join(', ')})`;
             
           } else if (pipelineResult.searchType === 'chronological') {
-            console.log(`[DASHBOARD PIPELINE] 📈 Chronological search detected - processing filters`);
             const filterCount = Object.keys(searchConfig.filters).length;
-            console.log(`[DASHBOARD PIPELINE] 📈 Chronological filters applied:`, searchConfig.filters);
             
             filterText = `Applied ${filterCount} chronological filters (experience: ${searchConfig.filters.min_years_in_function || 'any'}, pattern: ${searchConfig.filters.career_progression_pattern || 'general'})`;
             
           } else if (pipelineResult.searchType === 'standard') {
-            console.log(`[DASHBOARD PIPELINE] 📊 Standard search detected - processing semantic filters`);
             setSearchPhase('profiling');
-            console.log(`[DASHBOARD PIPELINE] 📊 Processing standard search filters`);
             
             const enhancedFilters = searchConfig.enhancedFilters;
-            console.log(`[DASHBOARD PIPELINE] 📊 Enhanced filters extracted:`, enhancedFilters);
             
             const filterDescriptions = [];
 
@@ -1380,25 +1224,12 @@ export default function DashboardPage() {
             }
           }
           
-          console.log(`🎯🎯🎯 [DASHBOARD] SEARCH CONFIG READY:`, searchConfig);
         } else {
-          console.error(`[DASHBOARD PIPELINE] ❌ Pipeline response not ok:`, {
-            status: pipelineResponse.status,
-            statusText: pipelineResponse.statusText
-          });
           throw new Error(`Pipeline returned ${pipelineResponse.status}: ${pipelineResponse.statusText}`);
         }
       } catch (pipelineError) {
-        console.error(`🔍🔍🔍 [DASHBOARD] SEARCH PIPELINE FAILED:`, pipelineError);
-        console.error(`[DASHBOARD PIPELINE] ❌ Pipeline error details:`, {
-          error: pipelineError,
-          message: pipelineError instanceof Error ? pipelineError.message : 'Unknown error',
-          stack: pipelineError instanceof Error ? pipelineError.stack : 'No stack'
-        });
-        
         filterText = "Could not determine filters. Using basic search.";
         
-        console.log(`[DASHBOARD PIPELINE] 🔄 Creating fallback pipeline result`);
         pipelineResult = {
           searchType: 'standard',
           searchConfig: { type: 'standard', enhancedFilters: {} },
@@ -1409,14 +1240,11 @@ export default function DashboardPage() {
         
         searchConfig = pipelineResult.searchConfig;
         queryClassification = pipelineResult.classification;
-        console.log(`[DASHBOARD PIPELINE] 🔄 Fallback config created:`, { searchConfig, queryClassification });
       }
 
       await typewriterEffect(filterText, (text) => setDisplayedText(prev => ({ ...prev, filters: text })));
       
       // Phase 2: Searching database
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 2: Searching database`);
-      console.log(`[DASHBOARD SEARCH] 🚀 Starting database search phase`);
       setSearchPhase('searching');
       
       // Custom message for demo account
@@ -1452,102 +1280,50 @@ export default function DashboardPage() {
         },
         body: JSON.stringify(searchRequestBody),
       }).then(response => {
-        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search API response received, status: ${response.status}`);
-        console.log(`🌐🌐🌐 [DASHBOARD] API RESPONSE STATUS: ${response.status} ${response.statusText}`);
-        console.log(`[DASHBOARD SEARCH] 📡 Search API response: ${response.status} ${response.statusText}`);
         if (!response.ok) {
           throw new Error('Search failed');
         }
         return response.json();
       }).then(rawData => {
-        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search data parsed, found ${rawData.results?.length || 0} results`);
-        console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} First result:`, rawData.results?.[0] || 'No results');
-        console.log(`📊📊📊 [DASHBOARD] RAW API RESPONSE:`, {
-          resultCount: rawData.results?.length || 0,
-          searchType: rawData.searchType,
-          filterCount: rawData.filterCount,
-          fullResponse: rawData
-        });
-        
         // 🔍 PRODUCTION DEBUG: Display all server-side debug logs
         if (rawData.debug && Array.isArray(rawData.debug)) {
-          console.log('🔍 [SERVER DEBUG LOGS] ='.repeat(30));
           rawData.debug.forEach((logEntry: string, index: number) => {
-            console.log(`🔍 [${index + 1}] ${logEntry}`);
           });
-          console.log('🔍 [END SERVER DEBUG] ='.repeat(30));
         }
         
-        console.log(`[DASHBOARD SEARCH] ✅ Search completed successfully:`, {
-          resultCount: rawData.results?.length || 0,
-          searchType: rawData.searchType,
-          metadata: rawData.searchMetadata
-        });
         return rawData;
       }).catch(searchError => {
-        console.error(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search API call failed:`, {
-          error: searchError,
-          message: searchError instanceof Error ? searchError.message : 'Unknown error',
-          stack: searchError instanceof Error ? searchError.stack : 'No stack'
-        });
-        console.error(`[DASHBOARD SEARCH] ❌ Search API error:`, searchError);
         throw searchError;
       });
 
       await typewriterEffect(searchingText, (text) => setDisplayedText(prev => ({ ...prev, searching: text })));
       
       // Get initial search results
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Waiting for search promise to resolve for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD SEARCH] ⏳ Waiting for initial search results...`);
       const searchData = await searchPromise;
       const initialResults = searchData.results;
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search promise resolved with ${initialResults?.length || 0} results for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD SEARCH] ✅ Initial search results received: ${initialResults?.length || 0} results`);
       
       // Phase 3: Display initial results
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Phase 3: Displaying initial results`);
-      console.log(`[DASHBOARD RESULTS] 🎨 Starting initial results display phase`);
       setSearchPhase('complete');
       
       // Display initial results message
       let displayMessage = `Displaying ${initialResults.length} initial results`;
       
-      console.log(`[DASHBOARD RESULTS] 📄 Initial display message: ${displayMessage}`);
       await typewriterEffect(displayMessage, (text) => setDisplayedText(prev => ({ ...prev, displaying: text })));
       
       // Set initial results
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Setting initial search results state for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD RESULTS] 🔄 Processing initial results for display`);
-      
       const compatibleInitialResults = ensureSearchResultCompatibility(initialResults);
-      console.log(`[DASHBOARD DEBUG] After compatibility mapping, got ${compatibleInitialResults.length} initial results`);
-      console.log(`[DASHBOARD RESULTS] ✅ Initial results processed and ready for display: ${compatibleInitialResults.length} results`);
       
       setSearchResults(compatibleInitialResults);
       setInitialSearchResults(compatibleInitialResults); // Store initial results separately
-      console.log(`[DASHBOARD DEBUG] Initial search results state has been set`);
       
       // Phase 4: Check if expansion is available (now supports all search types)
-      console.log(`[DASHBOARD EXPANSION] 🔍 Checking expansion availability:`, {
-        searchType: searchData.searchType,
-        hasPipelineResult: !!pipelineResult,
-        hasExpansionMetadata: !!pipelineResult?.expansionMetadata,
-        canExpand: !!pipelineResult?.expansionMetadata?.canExpand
-      });
-      
       if (pipelineResult?.expansionMetadata && pipelineResult.expansionMetadata.canExpand) {
-        console.log(`[DASHBOARD EXPANSION] ✅ Expansion available for ${searchData.searchType} search`);
-        
         // Store expansion metadata for on-demand expansion
         setPipelineExpansionData(pipelineResult.expansionMetadata);
         setCanExpand(true);
         setHasExpanded(false); // Reset expansion state
         
-        console.log(`[DASHBOARD EXPANSION] 🎯 Expansion button enabled for ${searchData.searchType} search`);
-        
       } else {
-        console.log(`[DASHBOARD EXPANSION] ❌ No expansion available - disabling expand option`);
-        
         // Reset expansion states
         setPipelineExpansionData(null);
         setCanExpand(false);
@@ -1557,15 +1333,10 @@ export default function DashboardPage() {
       // Automatically collapse the search analysis when results are presented
       if (initialResults && initialResults.length > 0) {
         setIsAnalysisCollapsed(true);
-        console.log(`[DASHBOARD RESULTS] 📁 Analysis collapsed due to results being available`);
       }
-      
-      console.log(`[DASHBOARD DEBUG] ${new Date().toISOString()} Search process completed for query: "${currentQuery}"`);
-      console.log(`[DASHBOARD RESULTS] 🎉 Search process completed successfully!`);
       
       // Save search to history with complete session data (use final results)
       if (!isDemoMode) {
-        console.log(`[DASHBOARD HISTORY] 💾 Saving search to history`);
         // Get the final results (which may include expansion results)
         const finalResults = searchResults.length > 0 ? searchResults : compatibleInitialResults;
         
@@ -1648,7 +1419,6 @@ export default function DashboardPage() {
 
   // Fix the handleTagClick function
   const handleTagClick = async (query: string) => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Tag clicked with query: "${query}"`);
     setSearchQuery(query);
     handleSearch(new Event('submit') as any, query);
   };
@@ -1656,11 +1426,9 @@ export default function DashboardPage() {
   // NEW: Manual expansion function
   const handleExpandSearch = async () => {
     if (!pipelineExpansionData || isExpanding || hasExpanded) {
-      console.log(`[DASHBOARD EXPANSION] ❌ Cannot expand: no data, already expanding, or already expanded`);
       return;
     }
     
-    console.log(`[DASHBOARD EXPANSION] 🔍 Starting on-demand expansion search`);
     setIsExpanding(true);
     setSearchPhase('expanding');
     
@@ -1680,8 +1448,6 @@ export default function DashboardPage() {
         (text) => setExpansionMessages(text)
       );
       
-      console.log(`[DASHBOARD EXPANSION] 📡 Making on-demand expansion API request`);
-      
       // Call the search-pipeline API with expansion request
       const expansionResponse = await fetch('/api/search-pipeline', {
         method: 'POST',
@@ -1700,7 +1466,7 @@ export default function DashboardPage() {
       });
       
       if (!expansionResponse.ok) {
-        throw new Error(`Expansion API failed: ${expansionResponse.status}`);
+        throw new Error('Invalid expansion response');
       }
       
       const expansionData = await expansionResponse.json();
@@ -1709,18 +1475,12 @@ export default function DashboardPage() {
         throw new Error('Invalid expansion response');
       }
       
-      console.log(`[DASHBOARD EXPANSION] ✅ Expansion variants generated:`, {
-        variantCount: expansionData.expansionResults.variants?.length || 0,
-        searchType: expansionData.searchType
-      });
-      
       // Show the expansion queries being processed
       let accumulatedExpansionText = expansionHeader;
       const variants = expansionData.expansionResults.variants;
       
       for (let i = 0; i < variants.length; i++) {
         const variant = variants[i];
-        console.log(`[DASHBOARD EXPANSION] 📝 Processing expansion query ${i + 1}: "${variant.natural_language_query}"`);
         
         const queryMessage = `\n• Searching: "${variant.natural_language_query}"`;
         accumulatedExpansionText += queryMessage;
@@ -1731,7 +1491,6 @@ export default function DashboardPage() {
       }
       
       // Now execute the expansion searches using the search API
-      console.log(`[DASHBOARD EXPANSION] 🔍 Executing expansion searches`);
       const searchPromises = expansionData.expansionResults.additionalSearchConfigs.map(async (config: any, index: number) => {
         try {
           const searchResponse = await fetch('/api/search', {
@@ -1751,11 +1510,9 @@ export default function DashboardPage() {
             const searchData = await searchResponse.json();
             return searchData.results || [];
           } else {
-            console.warn(`[DASHBOARD EXPANSION] ⚠️ Expansion search ${index + 1} failed`);
             return [];
           }
         } catch (error) {
-          console.warn(`[DASHBOARD EXPANSION] ⚠️ Expansion search ${index + 1} error:`, error);
           return [];
         }
       });
@@ -1763,11 +1520,6 @@ export default function DashboardPage() {
       // Wait for all expansion searches to complete
       const expansionResults = await Promise.all(searchPromises);
       const allExpansionResults = expansionResults.flat();
-      
-      console.log(`[DASHBOARD EXPANSION] ✅ Expansion searches completed:`, {
-        expansionResultCount: allExpansionResults.length,
-        searchCount: expansionResults.length
-      });
       
       if (allExpansionResults.length > 0) {
         // Show expansion completion message
@@ -1784,14 +1536,6 @@ export default function DashboardPage() {
         const allResults = [...initialSearchResults, ...uniqueExpansionResults];
         const compatibleAllResults = ensureSearchResultCompatibility(allResults);
         
-        console.log(`[DASHBOARD EXPANSION] 🔄 Combining results:`, {
-          initialCount: initialSearchResults.length,
-          expansionCount: allExpansionResults.length,
-          uniqueExpansionCount: uniqueExpansionResults.length,
-          totalCount: allResults.length,
-          compatibleCount: compatibleAllResults.length
-        });
-        
         // Update results with combined data
         setSearchResults(compatibleAllResults);
         setHasExpanded(true);
@@ -1804,7 +1548,6 @@ export default function DashboardPage() {
         );
         
       } else {
-        console.log(`[DASHBOARD EXPANSION] ⚠️ No additional results from expansion search`);
         const noResultsMessage = `\n• No additional relevant profiles found from expanded search`;
         accumulatedExpansionText += noResultsMessage;
         
@@ -1820,7 +1563,6 @@ export default function DashboardPage() {
       }, 2000); // 2 second delay before auto-collapsing
       
     } catch (expansionError) {
-      console.error(`[DASHBOARD EXPANSION] ❌ On-demand expansion error:`, expansionError);
       const errorMessage = `\n⚠️ Expansion search encountered an issue - showing initial results`;
       
       await typewriterEffect(errorMessage, 
@@ -1834,18 +1576,12 @@ export default function DashboardPage() {
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
-      console.log(`[DASHBOARD EXPANSION] ✅ On-demand expansion phase completed`);
     }
   };
 
   // Replace the existing generateExpandedQueries function with this AI-powered version
   const generateExpandedQueries = async (query: string): Promise<void> => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Generating AI query expansions for: "${query}"`);
-    
     try {
-      console.log(`[DEBUG ${new Date().toISOString()}] Making fetch request to /api/expand-query`);
-      console.log(`[DEBUG ${new Date().toISOString()}] Request body:`, JSON.stringify({ query }));
-      
       // Set up event source for the streaming response
       const response = await fetch('/api/expand-query', {
         method: 'POST',
@@ -1855,22 +1591,12 @@ export default function DashboardPage() {
         body: JSON.stringify({ query }),
       });
       
-      console.log(`[DEBUG ${new Date().toISOString()}] Received response:`, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries([...response.headers.entries()]),
-        ok: response.ok
-      });
-      
       // Handle non-streaming fallback case
       if (!response.ok) {
-        console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error from expand-query API:`, response.statusText);
         try {
           // Try to get more error details from the response body
           const errorText = await response.text();
-          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error response body:`, errorText);
         } catch (readError) {
-          console.error(`[DEBUG ERROR ${new Date().toISOString()}] Could not read error response:`, readError);
         }
         
         const fallbackText = "Alternative search suggestions unavailable";
@@ -1894,7 +1620,6 @@ export default function DashboardPage() {
           const { done, value } = await reader.read();
           
           if (done) {
-            console.log(`[DEBUG ${new Date().toISOString()}] Stream complete, final text: "${accumulatedText}"`);
             break;
           }
           
@@ -1919,7 +1644,6 @@ export default function DashboardPage() {
                   }));
                 }
               } catch (e) {
-                console.error('Error parsing SSE data:', e);
               }
             }
           }
@@ -1934,100 +1658,11 @@ export default function DashboardPage() {
       setExpandedQueries(expandedQueriesArray);
       
     } catch (error) {
-      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in generateExpandedQueries:`, error);
-      
       // Fallback in case of error
       const fallbackText = "Error generating alternative search suggestions";
       await typewriterEffect(fallbackText, 
         (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
       );
-    }
-  };
-
-  // Extract metadata filters from query using AI
-  const extractMetadataFilters = async (query: string): Promise<{[key: string]: string[]}> => {
-    console.log(`[DEBUG ${new Date().toISOString()}] Extracting metadata filters for query: "${query}"`);
-    
-    try {
-      const response = await fetch('/api/extract-filters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Filter extraction failed');
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No reader available');
-      }
-
-      const processStream = async () => {
-        let currentText = '';
-        const decoder = new TextDecoder();
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.content) {
-                  currentText += data.content;
-                  console.log(`[DEBUG ${new Date().toISOString()}] Filter extraction stream:`, data.content);
-                  
-                  // Update UI in real-time
-                  setDisplayedText(prev => ({ 
-                    ...prev, 
-                    filters: `Detecting relevant filters: ${currentText}` 
-                  }));
-                }
-              } catch (error) {
-                console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error parsing stream data:`, error);
-              }
-            }
-          }
-        }
-        
-        console.log(`[DEBUG ${new Date().toISOString()}] Filter extraction complete, final text:`, currentText);
-        return currentText;
-      };
-
-      const filtersText = await processStream();
-      console.log(`[DEBUG ${new Date().toISOString()}] Filters text received:`, filtersText);
-      
-      if (!filtersText || filtersText.includes('No specific filters detected')) {
-        return {};
-      }
-      
-      const filters: {[key: string]: string[]} = {};
-      const lines = filtersText.split('\n').filter(line => line.trim());
-      
-      for (const line of lines) {
-        const colonIndex = line.indexOf(':');
-        if (colonIndex > 0) {
-          const key = line.substring(0, colonIndex).trim();
-          const values = line.substring(colonIndex + 1).trim().split(',').map(v => v.trim()).filter(v => v);
-          if (values.length > 0) {
-            filters[key] = values;
-          }
-        }
-      }
-      
-      console.log(`[DEBUG ${new Date().toISOString()}] Parsed filters:`, filters);
-      return filters;
-    } catch (error) {
-      console.error(`[DEBUG ERROR ${new Date().toISOString()}] Error in extractMetadataFilters:`, error);
-      return {};
     }
   };
 
@@ -2045,7 +1680,6 @@ export default function DashboardPage() {
     const handleLoadSearch = async (event: Event) => {
       const customEvent = event as CustomEvent;
       const { id, query } = customEvent.detail;
-      console.log(`[DASHBOARD DEBUG] Received loadSearch event: ${id}, "${query}"`);
       await loadPastSearch(id, query);
     };
 
@@ -2057,17 +1691,13 @@ export default function DashboardPage() {
     if (pendingSearch) {
       try {
         const searchData = JSON.parse(pendingSearch);
-        console.log(`[DASHBOARD DEBUG] Found pending search in localStorage:`, searchData);
         // Only load if it's recent (within 5 seconds) to avoid stale data
         if (Date.now() - searchData.timestamp < 5000) {
-          console.log(`[DASHBOARD DEBUG] Loading pending search: ${searchData.id}`);
           loadPastSearch(searchData.id, searchData.query);
         } else {
-          console.log(`[DASHBOARD DEBUG] Pending search too old, ignoring`);
         }
         localStorage.removeItem('loadSearch');
       } catch (error) {
-        console.error('Error parsing pending search:', error);
         localStorage.removeItem('loadSearch');
       }
     } else {
@@ -2081,26 +1711,19 @@ export default function DashboardPage() {
   // Function to load a past search
   const loadPastSearch = async (searchId: string, query: string) => {
     try {
-      console.log(`[DASHBOARD DEBUG] loadPastSearch called with: ${searchId}, "${query}"`);
-      
       // Set the search query in the input
       setSearchQuery(query);
-      console.log(`[DASHBOARD DEBUG] Set search query to: "${query}"`);
       
       // Load the search details including results
-      console.log(`[DASHBOARD DEBUG] Loading search details for ID: ${searchId}`);
       const searchDetails = await loadSearchDetails(searchId);
-      console.log(`[DASHBOARD DEBUG] Search details loaded:`, searchDetails);
       
       if (searchDetails) {
         // Set the search results
         setSearchResults(ensureSearchResultCompatibility(searchDetails.results));
         setSearchPhase('complete');
-        console.log(`[DASHBOARD DEBUG] Set ${searchDetails.results.length} search results`);
         
         // Check if we have complete session data saved
         const sessionData = searchDetails.search.metadata?.searchSession;
-        console.log(`[DASHBOARD DEBUG] Session data:`, sessionData);
         
         if (sessionData && sessionData.displayedText) {
           // Restore complete search session
@@ -2115,15 +1738,6 @@ export default function DashboardPage() {
             setExtractedFilters(searchDetails.search.metadata.extractedFilters);
           }
           
-          console.log('[DASHBOARD DEBUG] Restored complete search session data:', {
-            hasAnalyzing: !!sessionData.displayedText.analyzing,
-            hasSearching: !!sessionData.displayedText.searching,
-            hasProfiling: !!sessionData.displayedText.profiling,
-            hasFilters: !!sessionData.displayedText.filters,
-            hasDisplaying: !!sessionData.displayedText.displaying,
-            expandedQueriesCount: searchDetails.search.metadata?.expandedQueries?.length || 0,
-            extractedFiltersKeys: Object.keys(searchDetails.search.metadata?.extractedFilters || {})
-          });
         } else {
           // Fallback for searches without complete session data
           setDisplayedText({
@@ -2135,7 +1749,6 @@ export default function DashboardPage() {
           });
           setIsAnalysisCollapsed(false);
           
-          console.log('[DASHBOARD DEBUG] Used fallback display for search without session data');
         }
         
         // Track the loaded search
@@ -2145,12 +1758,9 @@ export default function DashboardPage() {
           hasSessionData: !!sessionData
         });
         
-        console.log(`[DASHBOARD DEBUG] loadPastSearch completed successfully`);
       } else {
-        console.log(`[DASHBOARD DEBUG] No search details found for ID: ${searchId}`);
       }
     } catch (error) {
-      console.error('[DASHBOARD DEBUG] Error loading past search:', error);
     }
   };
 
@@ -2190,7 +1800,6 @@ export default function DashboardPage() {
   const handleSaveLead = async (result: SearchResult) => {
     if (isDemoMode) {
       setSavedStatusMap(prev => ({ ...prev, [result.id.toString()]: 'demo_no_save' }));
-      console.log('Save functionality disabled in demo mode.');
       // Optionally, show a toast or notification to the user
       return;
     }
@@ -2202,14 +1811,12 @@ export default function DashboardPage() {
       const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
 
       if (!originalOrganizationName) {
-        console.error("Organization name not found in localStorage. Cannot save lead.");
         setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
         return;
       }
       
       // Construct table name like 'some_organization_alumni_saved_leads'
       const tableName = `${originalOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_saved_leads`;
-      console.log(`[DEBUG] Attempting to save lead to table: ${tableName}`);
 
       // Need to get standardInfo for the specific result within this function's scope
       const standardInfo = getStandardProfileInfo(result);
@@ -2228,28 +1835,19 @@ export default function DashboardPage() {
 
       if (error) {
         if (error.code === '23505') { // Unique constraint violation
-          console.warn(`Lead already saved: ${leadData.linkedin_url}`);
           setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'already_saved' }));
         } else if (error.code === '42P01') { // Undefined table
-          console.error(`Table ${tableName} does not exist. Please ensure it's created.`);
           setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
           // Potentially alert the user or log this more visibly
         } else {
-          console.error('Error saving lead:', error);
           setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
         }
       } else {
-        console.log('Lead saved successfully:', leadData);
         setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'saved' }));
         // TODO: Replace with appropriate analytics tracking if a generic trackEvent is not available
         // For example: analytics.trackButtonClick('LeadSaved', { leadName: leadData.name, organization: originalOrganizationName });
-        console.log('Analytics Event: Lead Saved', { 
-          leadName: leadData.name, 
-          organization: originalOrganizationName 
-        });
       }
     } catch (err) {
-      console.error('Exception while saving lead:', err);
       setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
     }
   };
@@ -2646,36 +2244,13 @@ export default function DashboardPage() {
                 
                 <div className="grid gap-6">
                   {searchResults.map((result, index) => {
-                    console.log(`[DEBUG RENDER] Rendering result ${index}:`, {
-                      id: result.id,
-                      name: result.name,
-                      hasCurrentCompany: !!result.current_company,
-                      hasPostCurrentCompany: !!result.post_company_current_company,
-                      hasCurrentTitle: !!result.current_title,
-                      hasPostCurrentTitle: !!result.post_company_current_title,
-                      hasCurrentJobLocation: !!result.current_job_location,
-                      hasPostCurrentLocation: !!result.post_company_current_location,
-                      hasNaturalLanguageGeo: !!result.natural_language_geographic_profile,
-                      hasUndergraduateSchool: !!result.undergraduate_school,
-                      hasGraduateSchool: !!result.graduate_school,
-                      fullResult: result
-                    });
-                    
                     // Get standard profile info
                     const standardInfo = getStandardProfileInfo(result);
-                    
-                    console.log(`[DEBUG RENDER] Standard info for ${result.name}:`, standardInfo);
                     
                     // Get matching filters for this result
                     const matchingFilters = getMatchingFilters(result, extractedFilters);
                     
                     // Add debugging for match highlights
-                    console.log('[DEBUG] Match highlights for', result.name, ':', {
-                      extractedFilters,
-                      matchingFilters,
-                      filterCount: matchingFilters.length
-                    });
-                    
                     // Use compatible field access
                     const profileUrl = result.profile_url || result.linkedin_url || '';
                     const profilePhotoUrl = result.picture_url || result.profile_photo_url;
