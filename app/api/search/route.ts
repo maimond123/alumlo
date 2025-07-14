@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
     debug.log(`[API SEARCH] 🎯 Starting search execution`);
     
     // Route to appropriate search method
-    let results;
+    let results: any[] = [];
     let searchType = 'standard';
     let searchMetadata: any = {};
     
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
           
           // Log but don't throw - let it fall through to fallback
           debug.log(`[API SEARCH] 🔄 Temporal search failed, will try fallback methods`);
-          results = null;
+          results = [];
         }
       }
       
@@ -305,7 +305,7 @@ export async function POST(req: NextRequest) {
           
           // Log but don't throw - let it fall through to fallback
           debug.log(`[API SEARCH] 🔄 Chronological search failed, will try fallback methods`);
-          results = null;
+          results = [];
         }
       }
       
@@ -347,7 +347,7 @@ export async function POST(req: NextRequest) {
             debug.log(`[API SEARCH] ⏰ TIMEOUT CONFIRMED. The operation took longer than ${SEARCH_TIMEOUT_MS / 1000}s.`);
           }
           // Let fallback logic handle the failure
-          results = null;
+          results = [];
         }
         
         debug.log(`[API SEARCH] 🔍 DETAILED: Standard search completed:`, {
@@ -378,142 +378,11 @@ export async function POST(req: NextRequest) {
     
     if (!isDemo && organizationName && !results) {
       
-      // NEW: Check if we should use the pre-configured chronological setup
-      if (useChronologicalConfig && chronologicalConfig) {
-        debug.log(`[API DEBUG] 🔗 USING PRE-CONFIGURED CHRONOLOGICAL SEARCH`);
-        debug.log(`[API DEBUG] 🔗 Chronological config:`, chronologicalConfig);
-        debug.log(`[API SEARCH] 🔗 Processing pre-configured chronological setup`);
-        
-        try {
-          results = await search_engine.searchChronological(
-            query,
-            chronologicalConfig.enhancedFilters,
-            50,
-            organizationName,
-            chronologicalConfig.sqlParameters?.weight_assignment
-          );
-          
-          if (results.length > 0) {
-            debug.log(`[API DEBUG] 🔗 Pre-configured chronological search returned ${results.length} results`);
-            debug.log(`[API SEARCH] ✅ Pre-configured chronological search successful: ${results.length} results`);
-            searchType = 'chronological';
-            searchMetadata = {
-              chronological_config: chronologicalConfig,
-              configuration_source: 'pre-configured'
-            };
-          } else {
-            debug.log(`[API DEBUG] 🔗 Pre-configured chronological search returned no results, falling back`);
-            debug.log(`[API SEARCH] ⚠️ Pre-configured chronological search returned no results`);
-            results = null; // Will fall through to standard search
-          }
-        } catch (error: unknown) {
-          debug.log(`[API DEBUG] 🔗 Pre-configured chronological search failed, falling back:`, error);
-          debug.log(`[API SEARCH] ❌ Pre-configured chronological search failed:`, error);
-          results = null; // Will fall through to standard search
-        }
-      }
-      
-      // LEGACY: Old temporal and chronological routing (only if not using pre-configured)
-      else if (queryClassification?.type && !searchConfig) {
-        debug.log(`[API SEARCH] 🔄 Processing legacy classification routing`);
-        
-        // 1. TEMPORAL SEARCH - For date-specific timeline queries
-        if (queryClassification.type === 'temporal') {
-          debug.log(`[API DEBUG] 🕐 TEMPORAL search detected for ${organizationName}`);
-          debug.log(`[API DEBUG] 🕐 Using temporal search method`);
-          debug.log(`[API SEARCH] 🕐 Executing legacy temporal search`);
-          
-          try {
-            // For temporal search, we'll need to extract temporal elements within the search method
-            // or pass a flag to indicate temporal processing is needed
-            results = await search_engine.searchTemporal(
-              query,
-              {}, // Let the search method extract temporal elements
-              50, // Use higher limit for gap-based filtering
-              organizationName
-            );
-            
-            if (results.length > 0) {
-              debug.log(`[API DEBUG] 🕐 Temporal search returned ${results.length} results`);
-              debug.log(`[API SEARCH] ✅ Legacy temporal search successful: ${results.length} results`);
-              searchType = 'temporal';
-              searchMetadata = { search_method: 'temporal_legacy' };
-            } else {
-              debug.log(`[API DEBUG] 🕐 Temporal search returned no results, falling back to standard search`);
-              debug.log(`[API SEARCH] ⚠️ Legacy temporal search returned no results`);
-              results = null; // Will fall through to standard search
-            }
-          } catch (error: unknown) {
-            debug.log(`[API DEBUG] 🕐 Temporal search failed, falling back to standard search:`, error);
-            debug.log(`[API SEARCH] ❌ Legacy temporal search failed:`, error);
-            results = null; // Will fall through to standard search
-          }
-        }
-        
-        // 2. LEGACY CHRONOLOGICAL SEARCH - For career progression pattern queries (with redundant LLM calls)
-        else if (queryClassification.type === 'chronological') {
-          debug.log(`[API DEBUG] 📈 LEGACY CHRONOLOGICAL search detected for ${organizationName}`);
-          debug.log(`[API DEBUG] ⚠️  WARNING: Using legacy chronological path with redundant LLM calls`);
-          debug.log(`[API SEARCH] 📈 Executing legacy chronological search with redundant LLM calls`);
-          
-          try {
-            // Legacy chronological filter translation
-          let translatedFilters = {};
-            debug.log(`[API SEARCH] 🔄 Performing redundant filter translation`);
-          try {
-            const translateResponse = await fetch('/api/translate-chronological', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query })
-            });
-            if (translateResponse.ok) {
-              translatedFilters = await translateResponse.json();
-                debug.log(`[API DEBUG] 📈 Legacy translated chronological filters:`, translatedFilters);
-                debug.log(`[API SEARCH] ✅ Legacy filter translation completed`);
-            }
-          } catch (translateError) {
-              debug.log(`[API DEBUG] 📈 Legacy filter translation failed, using basic filters:`, translateError);
-              debug.log(`[API SEARCH] ❌ Legacy filter translation failed`);
-            translatedFilters = { gap_tolerance: 6 };
-          }
-          
-            // Combine translated filters with existing filters
-          const chronologicalFilters = {
-            ...translatedFilters,
-            ...effectiveFilters, // Include any existing filters from dashboard or pipeline
-          };
-          
-            debug.log(`[API DEBUG] 📈 Legacy final chronological filters:`, chronologicalFilters);
-            debug.log(`[API SEARCH] 📊 Final legacy chronological configuration prepared`);
-          
-          results = await search_engine.searchChronological(
-            query,
-            chronologicalFilters,
-            50,
-            organizationName
-          );
-          
-          if (results.length > 0) {
-              debug.log(`[API DEBUG] 📈 Legacy chronological search returned ${results.length} results`);
-              debug.log(`[API SEARCH] ✅ Legacy chronological search successful: ${results.length} results`);
-            searchType = 'chronological';
-            searchMetadata = { 
-                search_method: 'legacy_chronological',
-              translated_filters: translatedFilters,
-              chronological_filters: chronologicalFilters,
-                configuration_source: 'legacy'
-            };
-          } else {
-              debug.log(`[API DEBUG] 📈 Legacy chronological search returned no results, falling back to standard search`);
-              debug.log(`[API SEARCH] ⚠️ Legacy chronological search returned no results`);
-              results = null; // Will fall through to standard search
-            }
-          } catch (error: unknown) {
-            debug.log(`[API DEBUG] 📈 Legacy chronological search failed, falling back to standard search:`, error);
-            debug.log(`[API SEARCH] ❌ Legacy chronological search failed:`, error);
-            results = null; // Will fall through to standard search
-          }
-        }
+      // Log when no search configuration is available from the unified pipeline
+      if (!searchConfig) {
+        debug.log(`[API SEARCH] ⚠️ No search configuration available from unified pipeline`);
+        debug.log(`[API SEARCH] 📊 This indicates a pipeline failure or invalid query classification`);
+        debug.log(`[API SEARCH] 🔄 Pipeline should handle all search routing - no legacy fallbacks`);
       }
     }
     
