@@ -12,7 +12,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import analytics from "../utils/analytics"
 import { FaLightbulb, FaTimes } from "react-icons/fa"
 import { useSearchHistory } from "../../hooks/useSearchHistory"
-import OAuthHandler from "../../components/OAuthHandler"
 import { useAuth } from "../../components/AuthProvider"
 import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
 import { InlineWidget } from "react-calendly"
@@ -560,9 +559,6 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
   
-  // Add OAuth handling state
-  const [isOAuthCallback, setIsOAuthCallback] = useState(false)
-  
   // Add new states for search functionality
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -774,19 +770,18 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Check for OAuth callback and auth state on component mount
+  // Check for auth state on component mount
   useEffect(() => {
     // Debounce rapid auth checks
     const timeoutId = setTimeout(() => {
       const checkAuth = async () => {
         try {
-          console.log('[DEBUG] Dashboard: Checking auth state and OAuth callback', {
+          console.log('[DEBUG] Dashboard: Checking auth state', {
             authLoading,
             contextAuthenticated,
             timestamp: new Date().toISOString()
           })
           console.log('[DEBUG] Dashboard: Current URL:', window.location.href)
-          console.log('[DEBUG] Dashboard: URL hash:', window.location.hash)
           
           // Check for demo mode from URL parameters first
           initDemoFromUrl()
@@ -818,21 +813,6 @@ export default function DashboardPage() {
             return
           }
           
-          // Check if this is an OAuth callback
-          // OAuth callbacks can have various hash parameters
-          const isOAuthCallback = window.location.hash && (
-            window.location.hash.includes('access_token') || 
-            window.location.hash.includes('refresh_token') ||
-            window.location.hash.includes('type=recovery') ||
-            window.location.search.includes('code=')
-          )
-          
-          if (isOAuthCallback) {
-            console.log('[DEBUG] Dashboard: OAuth callback detected')
-            setIsOAuthCallback(true)
-            return
-          }
-
           // Wait until global auth loading finishes
           if (authLoading) {
             console.log('[DEBUG] Dashboard: Auth still loading, waiting...')
@@ -889,18 +869,6 @@ export default function DashboardPage() {
     
     return () => clearTimeout(timeoutId)
   }, [router, authLoading, contextAuthenticated, mountTime])
-
-  // Handle OAuth completion
-  const handleOAuthComplete = () => {
-    setIsOAuthCallback(false)
-    // Re-check auth state after OAuth completion
-    window.location.reload()
-  }
-
-  // Show OAuth handler if this is an OAuth callback
-  if (isOAuthCallback) {
-    return <OAuthHandler onComplete={handleOAuthComplete} />
-  }
 
   // Only fetch school name for non-demo users
   useEffect(() => {
@@ -2315,7 +2283,7 @@ export default function DashboardPage() {
   const [showCalendly, setShowCalendly] = useState(false)
 
   useEffect(() => {
-    // Check if this is a new user from OAuth callback
+    // Check if this is a new user and should show Calendly
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('new_user') === 'true') {
       setShowCalendly(true)
