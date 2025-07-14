@@ -318,9 +318,7 @@ export default function DashboardPage() {
 
   // Add ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Add state for query classification
-  const [queryClassification, setQueryClassification] = useState<any>(null);
+  
 
   // Add new state for invalid query handling
   const [queryValidationError, setQueryValidationError] = useState<{
@@ -332,78 +330,6 @@ export default function DashboardPage() {
   // Add new state for expansion messages
   const [expansionMessages, setExpansionMessages] = useState<string>('');
 
-  // Add function to classify query for temporal search
-  const classifyQuery = async (query: string): Promise<any> => {
-    try {
-      const response = await fetch('/api/classify-query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-      
-      if (!response.ok) {
-        return { type: 'standard' };
-      }
-      
-      const classification = await response.json();
-      
-      return classification;
-    } catch (error) {
-      return { type: 'standard' };
-    }
-  };
-
-  // Add function to convert extracted filters to API format
-  const convertFiltersToAPI = (extractedFilters: {[key: string]: string[]}): any => {
-    const apiFilters: any = {};
-    
-    // Map extracted filter categories to API parameters
-    const filterMapping: {[key: string]: string} = {
-      'Job Levels': 'job_level_filter',
-      'Job Functions': 'job_function_filter', 
-      'Industries': 'industry',
-      'Company Names': 'company',
-      'Locations': 'location',
-      'School Names': 'school',
-      'Degree Levels': 'degree_level_filter',
-      'School Tiers': 'school_tier_filter',
-      'Career Stages': 'career_stage_filter',
-      'Exit Years': 'exit_year_min', // For simplicity, use the first year as min
-    };
-    
-    // Boolean filter mapping
-    const booleanMapping: {[key: string]: string} = {
-      'Leadership': 'leadership_only',
-      'Management Experience': 'management_exp_only',
-      'Technical Background': 'technical_background_only',
-      'Sales Experience': 'sales_exp_only',
-      'Startup Experience': 'startup_exp_only',
-      'Enterprise Experience': 'enterprise_exp_only',
-      'Remote Work': 'remote_worker_only',
-      'Mentor Potential': 'mentor_potential_only',
-      'Salary Impact': 'salary_lift_only'
-    };
-    
-    // Convert text filters
-    Object.entries(extractedFilters).forEach(([category, values]) => {
-      if (filterMapping[category] && values.length > 0) {
-        apiFilters[filterMapping[category]] = values[0]; // Use first value for text filters
-      }
-      
-      // Convert boolean filters (if the category exists, set to true)
-      if (booleanMapping[category] && values.length > 0) {
-        apiFilters[booleanMapping[category]] = true;
-      }
-      
-      // Log if category not recognized
-      if (!filterMapping[category] && !booleanMapping[category]) {
-      }
-    });
-    
-    return apiFilters;
-  };
 
   // Define formatOrganizationName function here
   const formatOrganizationName = (name: string): string => {
@@ -1335,93 +1261,6 @@ export default function DashboardPage() {
     } finally {
       setIsExpanding(false);
       setSearchPhase('complete');
-    }
-  };
-
-  // Replace the existing generateExpandedQueries function with this AI-powered version
-  const generateExpandedQueries = async (query: string): Promise<void> => {
-    try {
-      // Set up event source for the streaming response
-      const response = await fetch('/api/expand-query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-      
-      // Handle non-streaming fallback case
-      if (!response.ok) {
-        try {
-          // Try to get more error details from the response body
-          const errorText = await response.text();
-        } catch (readError) {
-        }
-        
-        const fallbackText = "Alternative search suggestions unavailable";
-        await typewriterEffect(fallbackText, 
-          (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-        );
-        return;
-      }
-      
-      // Set up streaming with text accumulation
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Response body is null');
-      }
-      
-      let accumulatedText = '';
-      let currentDisplayText = '';
-      
-      const processStream = async () => {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) {
-            break;
-          }
-          
-          // Decode and parse the chunk
-          const chunk = new TextDecoder().decode(value);
-          const lines = chunk.split('\n\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const parsedData = JSON.parse(line.substring(6));
-                if (parsedData.content) {
-                  accumulatedText += parsedData.content;
-                  
-                  // Update the display with typewriter-like effect
-                  const newPortion = parsedData.content;
-                  currentDisplayText += newPortion;
-                  
-                  setDisplayedText(prev => ({ 
-                    ...prev, 
-                    profiling: currentDisplayText 
-                  }));
-                }
-              } catch (e) {
-              }
-            }
-          }
-        }
-      };
-      
-      await processStream();
-      
-      // Extract the expanded queries from the accumulated text
-      // The format should be query1 • query2 • query3
-      const expandedQueriesArray = accumulatedText.split('•').map(q => q.trim()).filter(q => q);
-      setExpandedQueries(expandedQueriesArray);
-      
-    } catch (error) {
-      // Fallback in case of error
-      const fallbackText = "Error generating alternative search suggestions";
-      await typewriterEffect(fallbackText, 
-        (text) => setDisplayedText(prev => ({ ...prev, profiling: text }))
-      );
     }
   };
 
