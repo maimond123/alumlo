@@ -108,9 +108,11 @@ export default function SettingsPage() {
         setSavedLeads([]);
         return;
     }
+    const schemaName = organizationName.toLowerCase().replace(/ /g, '_');
     const tableName = `${organizationName.toLowerCase().replace(/ /g, '_')}_alumni_saved_leads`;
     try {
       const { data, error } = await supabase
+        .schema(schemaName)
         .from(tableName)
         .select('*')
         .order('saved_at', { ascending: false });
