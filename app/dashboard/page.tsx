@@ -1401,7 +1401,7 @@ export default function DashboardPage() {
         console.log(`[DASHBOARD PIPELINE] 🔄 Creating fallback pipeline result`);
         pipelineResult = {
           searchType: 'standard',
-          searchConfig: { type: 'standard', enhancedFilters: {}, searchMethod: 'comprehensive_sql_filtering' },
+          searchConfig: { type: 'standard', enhancedFilters: {} },
           classification: { type: 'standard' },
           shouldExecuteSearch: true,
           fallbackToStandard: true

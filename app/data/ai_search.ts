@@ -199,7 +199,7 @@ export class LinkedInProfileSearchEngine {
     top_k: number = 50,
     organizationName?: string
   ): Promise<CompanySearchResult[]> {
-    console.log(`[AI_SEARCH STANDARD] 🚀 Starting comprehensive standard search for: "${query}"`);
+    console.log(`[AI_SEARCH STANDARD] 🚀 Starting standard search for: "${query}"`);
     console.log(`[AI_SEARCH STANDARD] 📊 Filters provided:`, filters);
     console.log(`[AI_SEARCH STANDARD] 🔍 DETAILED filter analysis:`, {
       filtersType: typeof filters,
@@ -610,12 +610,8 @@ export class LinkedInProfileSearchEngine {
       }
       
       // Construct dynamic RPC function name based on temporal elements
-      let rpcFunctionName = `temporal_filter_search_${storedOrganizationName}`;
+      let rpcFunctionName = `temporal_search_function_${storedOrganizationName}`;
       
-      // Use more specific function if we have exit year and subsequent functions
-      if (temporalElements.target_company_year && temporalElements.subsequent_function) {
-        rpcFunctionName = `temporal_career_search_${storedOrganizationName}`;
-      }
       
       console.log(`[AI_SEARCH TEMPORAL] 🎯 Target SQL function: ${rpcFunctionName}`);
       

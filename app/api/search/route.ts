@@ -519,78 +519,20 @@ export async function POST(req: NextRequest) {
     
     // 3. FINAL FALLBACK - Use standard search with basic filters
     if (!results) {
-      debug.log(`[API SEARCH] 📊 Executing final fallback search`);
+      debug.log(`[API SEARCH] 📊 No results found from any search method`);
+      debug.log(`[API SEARCH] ❌ Search execution completed without results`);
       
-      // Determine effective organization name
-      const effectiveOrgName = organizationName || (isDemo ? 'demo' : null);
+      searchType = 'standard';
+      searchMetadata = {
+        search_method: 'no_results_found',
+        configuration_source: 'none',
+        organization_name: organizationName,
+        is_demo_mode: isDemo,
+        attempted_methods: 'pipeline_config_and_legacy_routing'
+      };
       
-      if (effectiveOrgName) {
-        debug.log(`[API SEARCH] 🏢 Using standard search fallback for organization: ${effectiveOrgName}`);
-        
-        // Use basic filters for fallback
-        const basicFallbackFilters = {
-          company_filter: effectiveFilters.company || effectiveFilters.company_filter || null,
-          industry_filter: effectiveFilters.industry || effectiveFilters.industry_filter || null,
-          title_filter: effectiveFilters.title || effectiveFilters.title_filter || null,
-          location_filter: effectiveFilters.location || effectiveFilters.location_filter || null,
-          school_filter: effectiveFilters.school || effectiveFilters.school_filter || null
-        };
-        
-        debug.log(`[API SEARCH] 🔍 Fallback filters:`, basicFallbackFilters);
-        
-        try {
-          results = await search_engine.standardSearch(
-            query,
-            basicFallbackFilters,
-            50,
-            effectiveOrgName
-          );
-          
-          debug.log(`[API SEARCH] ✅ Final fallback completed: ${Array.isArray(results) ? results.length : 0} results`);
-          
-          searchType = 'standard';
-          searchMetadata = {
-            search_method: 'standard_search_final_fallback',
-            filters: basicFallbackFilters,
-            configuration_source: 'final_fallback',
-            organization_name: effectiveOrgName,
-            is_demo_mode: isDemo,
-            fallback_reason: 'no_pipeline_config_or_previous_search_failed'
-          };
-          
-        } catch (error) {
-          debug.error(`[API SEARCH] ❌ Final standard search fallback failed:`, {
-            error: error,
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            organization: effectiveOrgName
-          });
-          
-          // Set error metadata and re-throw
-          searchType = 'standard';
-          searchMetadata = {
-            search_method: 'failed_final_fallback',
-            error_message: error instanceof Error ? error.message : 'Unknown error',
-            configuration_source: 'final_fallback_failed',
-            organization_name: effectiveOrgName,
-            is_demo_mode: isDemo
-          };
-          
-          throw error;
-        }
-      } else {
-        debug.error(`[API SEARCH] ❌ No organization available for search - cannot proceed`);
-        
-        searchType = 'standard';
-        searchMetadata = {
-          search_method: 'no_organization_error',
-          error_message: 'No organization name available for search',
-          configuration_source: 'final_fallback_failed',
-          is_demo_mode: isDemo
-        };
-        
-        // Return empty results instead of throwing
-        results = [];
-      }
+      // Return empty results instead of attempting fallback
+      results = [];
     }
     
     debug.log(`[API DEBUG] 📊 Final search results:`, {

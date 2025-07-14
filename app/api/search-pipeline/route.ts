@@ -70,7 +70,6 @@ interface TemporalElements {
 interface TemporalConfig {
   type: 'temporal';
   temporalElements: TemporalElements;
-  searchMethod: string;
   sqlFunction: string;
   sqlParameters: any;
 }
@@ -87,7 +86,6 @@ interface ChronologicalConfig {
 interface StandardConfig {
   type: 'standard';
   enhancedFilters: any;
-  searchMethod: 'semantic_with_filters' | 'comprehensive_sql_filtering';
 }
 
 interface InvalidConfig {
@@ -961,8 +959,7 @@ export async function POST(req: NextRequest) {
         classification: { type: 'standard' },
         searchConfig: {
           type: 'standard',
-          enhancedFilters: {},
-          searchMethod: 'comprehensive_sql_filtering'
+          enhancedFilters: {}
         },
         shouldExecuteSearch: true,
         metadata: {
@@ -1105,8 +1102,7 @@ export async function POST(req: NextRequest) {
       classification: { type: 'standard' },
       searchConfig: {
         type: 'standard',
-        enhancedFilters: {},
-        searchMethod: 'comprehensive_sql_filtering' // Use SQL filtering instead of semantic search even for errors
+        enhancedFilters: {}
       },
       shouldExecuteSearch: true,
       fallbackToStandard: true,
@@ -1148,8 +1144,7 @@ async function handleExpansionRequest(
       
       const additionalSearchConfigs = variants.map(variant => ({
         type: 'standard',
-        enhancedFilters: variant.filters,
-        searchMethod: 'comprehensive_sql_filtering'
+        enhancedFilters: variant.filters
       }));
       
       expansionResults = { variants, additionalSearchConfigs };
@@ -1160,18 +1155,13 @@ async function handleExpansionRequest(
       llmCalls++;
       
       const additionalSearchConfigs = variants.map(variant => {
-        let searchMethod = 'general_filter';
         let sqlFunction = `temporal_filter_search_${organizationName}`;
-        
         if (variant.temporalElements.exit_year && variant.temporalElements.subsequent_functions && variant.temporalElements.subsequent_functions.length > 0) {
-          searchMethod = 'specific_sequence';
           sqlFunction = `temporal_career_search_${organizationName}`;
         }
-        
         return {
           type: 'temporal',
           temporalElements: variant.temporalElements,
-          searchMethod,
           sqlFunction,
           sqlParameters: mapTemporalParameters(variant.temporalElements)
         };
@@ -1256,7 +1246,6 @@ async function processTemporalSearchWithExpansion(
   const primaryConfig: TemporalConfig = {
     type: 'temporal',
     temporalElements,
-    searchMethod,
     sqlFunction,
     sqlParameters: mapTemporalParameters(temporalElements)
   };
@@ -1339,7 +1328,6 @@ async function processTemporalSearch(
   return {
     type: 'temporal',
     temporalElements,
-    searchMethod,
     sqlFunction,
     sqlParameters: mapTemporalParameters(temporalElements)
   };
@@ -1641,7 +1629,6 @@ async function processStandardSearchWithExpansion(
   const primaryConfig: StandardConfig = {
     type: 'standard',
     enhancedFilters,
-    searchMethod: 'comprehensive_sql_filtering'
   };
   
   console.log(`[PIPELINE STANDARD] ✅ Primary standard search config created:`, primaryConfig);
@@ -1657,8 +1644,7 @@ async function processStandardSearchWithExpansion(
     
     return {
       type: 'standard',
-      enhancedFilters: variant.filters,
-      searchMethod: 'comprehensive_sql_filtering'
+      enhancedFilters: variant.filters
     };
   });
   
@@ -1702,8 +1688,7 @@ async function processStandardSearch(
   
   return {
     type: 'standard',
-    enhancedFilters,
-    searchMethod: 'comprehensive_sql_filtering'
+    enhancedFilters
   };
 }
 
