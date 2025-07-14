@@ -21,8 +21,8 @@ export function isDemoMode(): boolean {
  * Get demo organization name for API calls
  */
 export function getDemoOrganization(): string {
-  if (typeof window === 'undefined') return 'chick_fil_a';
-  return sessionStorage.getItem('demoOrganization') || 'chick_fil_a';
+  if (typeof window === 'undefined') return 'demo';
+  return sessionStorage.getItem('demoOrganization') || 'demo';
 }
 
 /**
@@ -57,7 +57,7 @@ export function getDemoConfig(): DemoConfig {
 /**
  * Set demo mode (used by demo entry points)
  */
-export function setDemoMode(organizationName: string = 'chick_fil_a', displayName: string = '{Your Organization}') {
+export function setDemoMode(organizationName: string = 'demo', displayName: string = '{Your Organization}') {
   if (typeof window === 'undefined') return;
   
   sessionStorage.setItem('demoMode', 'true');

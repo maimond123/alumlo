@@ -14,7 +14,7 @@ export default function Navigation() {
   const handleGetStarted = async () => {
     try {
       // Set demo mode in session storage
-      setDemoMode('chick_fil_a', '{Your Organization}')
+      setDemoMode('demo', '{Your Organization}')
       
       // Redirect to dashboard - no authentication needed!
       router.push('/dashboard')

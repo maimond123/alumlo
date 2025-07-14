@@ -271,8 +271,8 @@ export default function DataInsightsPage() {
     loadInitialData();
   }, []); // Empty dependency array means this runs once on mount
 
-  // Generate dummy data for Chick-fil-A demo user
-  const generateChickFilADummyData = (year: string) => {
+  // Generate dummy data for demo user
+  const generateDemoDummyData = (year: string) => {
     const yearNum = parseInt(year)
     
     // Calculate how many people left each year (total 1,371 over 15 years: 2010-2024)
@@ -537,7 +537,7 @@ export default function DataInsightsPage() {
     setGraduateSchoolData(gradSchoolData)
     setIndustrySalaryData(industrySalaryData)
     
-    console.log("DEBUG: Data set in generateChickFilADummyData:", {
+    console.log("DEBUG: Data set in generateDemoDummyData:", {
       salaryDataLength: salaryData.length,
       industryDataLength: industryData.length,
       locationDataLength: locationData.length,
@@ -577,7 +577,7 @@ export default function DataInsightsPage() {
     
     setIndustryProgressionData(sampleProgressionData)
     
-    console.log("DEBUG: Enhanced Chick-fil-A dummy data generated for year", year, {
+    console.log("DEBUG: Enhanced demo dummy data generated for year", year, {
       totalForYear,
       yearsExperience,
       salaryRange: `${Math.min(...salaryData.map(s => parseInt(s.name.split('-')[0].replace(/\D/g, ''))))}k - ${Math.max(...salaryData.map(s => parseInt(s.name.split('-')[1]?.replace(/\D/g, '') || '90')))}k+`,
@@ -613,8 +613,8 @@ export default function DataInsightsPage() {
       console.log("DEBUG: Is Demo Mode:", isDemo)
 
       if (userEmail === "david@alulo.com" || isDemo) {
-        console.log("DEBUG: ✅ CHICK-FIL-A USER OR DEMO MODE DETECTED - Generating dummy data for year:", selectedYear)
-        generateChickFilADummyData(selectedYear)
+        console.log("DEBUG: ✅ DEMO MODE DETECTED - Generating dummy data for year:", selectedYear)
+        generateDemoDummyData(selectedYear)
         return
       } 
       
