@@ -27,6 +27,24 @@ export default function SignInPage() {
     setError(null)
     
     try {
+      // First, check if the email already exists
+      const { data: existingRequest, error: checkError } = await supabase
+        .from('demo_requests')
+        .select('email')
+        .eq('email', email)
+        .single()
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
+        setError(checkError.message)
+        return
+      }
+
+      if (existingRequest) {
+        // Email already exists, show error message
+        setError("An account with this email has already been used to schedule a demo.")
+        return
+      }
+
       // Insert demo request data into Supabase
       const { error } = await supabase
         .from('demo_requests')
@@ -40,7 +58,12 @@ export default function SignInPage() {
         ])
       
       if (error) {
-        setError(error.message)
+        if (error.code === '23505' && error.message.includes('demo_requests_email_key')) {
+          // Handle duplicate email constraint violation
+          setError("An account with this email has already been used to schedule a demo.")
+        } else {
+          setError(error.message)
+        }
       } else {
         // Show Calendly widget for scheduling demo after successful data insertion
         setShowCalendly(true)
