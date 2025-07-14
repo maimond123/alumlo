@@ -1,6 +1,7 @@
 // app/layout.tsx
 'use client'
 
+
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { OrganizationProvider } from './contexts/OrganizationContext'
