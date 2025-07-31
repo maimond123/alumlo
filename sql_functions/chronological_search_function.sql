@@ -138,10 +138,10 @@ BEGIN
         END
       ) / 12.0 as total_years_experience,
       
-      -- Industry experience calculation
+      -- ENHANCED: Temporal industry experience calculation
       COALESCE(
         SUM(
-          CASE WHEN (($1->>''industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'') THEN
+          CASE WHEN (($1->>''target_industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''target_industry_filter'') || ''%%'') THEN
             CASE WHEN ce.end_year = 9999 THEN 
               (EXTRACT(YEAR FROM NOW()) - ce.start_year) * 12 + 
               (EXTRACT(MONTH FROM NOW()) - ce.start_month)
@@ -151,6 +151,33 @@ BEGIN
           ELSE 0 END
         ) / 12.0, 0
       ) as years_in_target_industry,
+      
+      -- ENHANCED: Phase-specific industry experience calculations
+      COALESCE(
+        SUM(
+          CASE WHEN ce.is_pre_company_position = true AND (($1->>''pre_company_industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''pre_company_industry_filter'') || ''%%'') THEN
+            CASE WHEN ce.end_year = 9999 THEN 
+              (EXTRACT(YEAR FROM NOW()) - ce.start_year) * 12 + 
+              (EXTRACT(MONTH FROM NOW()) - ce.start_month)
+            ELSE 
+              (ce.end_year - ce.start_year) * 12 + (ce.end_month - ce.start_month)
+            END
+          ELSE 0 END
+        ) / 12.0, 0
+      ) as years_in_pre_company_industry,
+      
+      COALESCE(
+        SUM(
+          CASE WHEN ce.is_post_company_position = true AND (($1->>''post_company_industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''post_company_industry_filter'') || ''%%'') THEN
+            CASE WHEN ce.end_year = 9999 THEN 
+              (EXTRACT(YEAR FROM NOW()) - ce.start_year) * 12 + 
+              (EXTRACT(MONTH FROM NOW()) - ce.start_month)
+            ELSE 
+              (ce.end_year - ce.start_year) * 12 + (ce.end_month - ce.start_month)
+            END
+          ELSE 0 END
+        ) / 12.0, 0
+      ) as years_in_post_company_industry,
       
       -- Geographic mobility check
       COUNT(DISTINCT ce.location) > 1 as has_geographic_mobility,
@@ -171,11 +198,47 @@ BEGIN
       
     FROM %I ce
     WHERE 
-      -- Apply career filters using JSON extraction
+      -- LEGACY FILTERS: Apply general career filters using JSON extraction (kept for backward compatibility)
       (($1->>''company_filter'') IS NULL OR ce.company ILIKE ''%%'' || ($1->>''company_filter'') || ''%%'')
       AND (($1->>''industry_filter'') IS NULL OR ce.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'')
       AND (($1->>''title_filter'') IS NULL OR ce.title ILIKE ''%%'' || ($1->>''title_filter'') || ''%%'')
       AND (($1->>''location_filter'') IS NULL OR ce.location ILIKE ''%%'' || ($1->>''location_filter'') || ''%%'')
+      
+      -- NEW: TEMPORAL-SCOPED FILTERS for precise chronological matching
+      AND (($1->>''pre_company_company_filter'') IS NULL OR 
+           (ce.is_pre_company_position = true AND ce.company ILIKE ''%%'' || ($1->>''pre_company_company_filter'') || ''%%''))
+      AND (($1->>''post_company_company_filter'') IS NULL OR 
+           (ce.is_post_company_position = true AND ce.company ILIKE ''%%'' || ($1->>''post_company_company_filter'') || ''%%''))
+      AND (($1->>''during_company_company_filter'') IS NULL OR 
+           (ce.is_during_company_position = true AND ce.company ILIKE ''%%'' || ($1->>''during_company_company_filter'') || ''%%''))
+      
+      AND (($1->>''pre_company_industry_filter'') IS NULL OR 
+           (ce.is_pre_company_position = true AND ce.industry ILIKE ''%%'' || ($1->>''pre_company_industry_filter'') || ''%%''))
+      AND (($1->>''post_company_industry_filter'') IS NULL OR 
+           (ce.is_post_company_position = true AND ce.industry ILIKE ''%%'' || ($1->>''post_company_industry_filter'') || ''%%''))
+      AND (($1->>''during_company_industry_filter'') IS NULL OR 
+           (ce.is_during_company_position = true AND ce.industry ILIKE ''%%'' || ($1->>''during_company_industry_filter'') || ''%%''))
+      
+      AND (($1->>''pre_company_title_filter'') IS NULL OR 
+           (ce.is_pre_company_position = true AND ce.title ILIKE ''%%'' || ($1->>''pre_company_title_filter'') || ''%%''))
+      AND (($1->>''post_company_title_filter'') IS NULL OR 
+           (ce.is_post_company_position = true AND ce.title ILIKE ''%%'' || ($1->>''post_company_title_filter'') || ''%%''))
+      AND (($1->>''during_company_title_filter'') IS NULL OR 
+           (ce.is_during_company_position = true AND ce.title ILIKE ''%%'' || ($1->>''during_company_title_filter'') || ''%%''))
+      
+      AND (($1->>''pre_company_location_filter'') IS NULL OR 
+           (ce.is_pre_company_position = true AND ce.location ILIKE ''%%'' || ($1->>''pre_company_location_filter'') || ''%%''))
+      AND (($1->>''post_company_location_filter'') IS NULL OR 
+           (ce.is_post_company_position = true AND ce.location ILIKE ''%%'' || ($1->>''post_company_location_filter'') || ''%%''))
+      AND (($1->>''during_company_location_filter'') IS NULL OR 
+           (ce.is_during_company_position = true AND ce.location ILIKE ''%%'' || ($1->>''during_company_location_filter'') || ''%%''))
+      
+      AND (($1->>''pre_company_size_filter'') IS NULL OR 
+           (ce.is_pre_company_position = true AND ce.company_size ILIKE ''%%'' || ($1->>''pre_company_size_filter'') || ''%%''))
+      AND (($1->>''post_company_size_filter'') IS NULL OR 
+           (ce.is_post_company_position = true AND ce.company_size ILIKE ''%%'' || ($1->>''post_company_size_filter'') || ''%%''))
+      AND (($1->>''during_company_size_filter'') IS NULL OR 
+           (ce.is_during_company_position = true AND ce.company_size ILIKE ''%%'' || ($1->>''during_company_size_filter'') || ''%%''))
     GROUP BY ce.profile_id
   ),
   
@@ -221,9 +284,18 @@ BEGIN
       
     FROM %I ee
     WHERE 
-      -- Apply school filter using JSON extraction
+      -- LEGACY FILTERS: Apply general school filter using JSON extraction (kept for backward compatibility)
       (($1->>''school_filter'') IS NULL OR ee.institution ILIKE ''%%'' || ($1->>''school_filter'') || ''%%'')
-      -- NEW EDUCATION FILTERS
+      
+      -- NEW: TEMPORAL-SCOPED EDUCATION FILTERS for precise chronological matching
+      AND (($1->>''pre_company_school_filter'') IS NULL OR 
+           (ee.is_pre_company_education = true AND ee.institution ILIKE ''%%'' || ($1->>''pre_company_school_filter'') || ''%%''))
+      AND (($1->>''during_company_school_filter'') IS NULL OR 
+           (ee.is_during_company_education = true AND ee.institution ILIKE ''%%'' || ($1->>''during_company_school_filter'') || ''%%''))
+      AND (($1->>''post_company_school_filter'') IS NULL OR 
+           (ee.is_post_company_education = true AND ee.institution ILIKE ''%%'' || ($1->>''post_company_school_filter'') || ''%%''))
+      
+      -- EXISTING EDUCATION FILTERS
       AND (($1->>''major_category_filter'') IS NULL OR ee.major_category ILIKE ''%%'' || ($1->>''major_category_filter'') || ''%%'')
       AND (($1->>''school_type_filter'') IS NULL OR ee.school_type ILIKE ''%%'' || ($1->>''school_type_filter'') || ''%%'')
     GROUP BY ee.profile_id
@@ -236,6 +308,8 @@ BEGIN
       ea.education_timeline,
       ca.total_years_experience,
       ca.years_in_target_industry,
+      ca.years_in_pre_company_industry,
+      ca.years_in_post_company_industry,
       COALESCE(ea.highest_degree_level_calculated, '''') as highest_degree_level_calculated,
       ca.has_geographic_mobility,
       
@@ -284,9 +358,14 @@ BEGIN
     FROM career_analysis ca
     FULL OUTER JOIN education_analysis ea ON ca.profile_id = ea.profile_id
     WHERE 
-      -- Experience filters
+      -- Experience filters with enhanced temporal accuracy
       ((($1->>''total_experience_years'')::numeric) IS NULL OR COALESCE(ca.total_years_experience, 0) >= (($1->>''total_experience_years'')::numeric))
       AND ((($1->>''min_years_in_industry'')::numeric) IS NULL OR COALESCE(ca.years_in_target_industry, 0) >= (($1->>''min_years_in_industry'')::numeric))
+      
+      -- NEW: Phase-specific experience requirements  
+      AND ((($1->>''min_pre_company_years'')::numeric) IS NULL OR COALESCE(ca.years_in_pre_company_industry, 0) >= (($1->>''min_pre_company_years'')::numeric))
+      AND ((($1->>''min_post_company_years'')::numeric) IS NULL OR COALESCE(ca.years_in_post_company_industry, 0) >= (($1->>''min_post_company_years'')::numeric))
+      
       AND ((($1->>''geographic_mobility'')::boolean) IS NULL OR COALESCE(ca.has_geographic_mobility, FALSE) = (($1->>''geographic_mobility'')::boolean))
       AND ((($1->>''concurrent_activities'')::boolean) IS NULL OR 
            CASE 
@@ -315,37 +394,32 @@ BEGIN
       -- TIER 1 FILTERS: Degree Level
       AND ((($1->>''degree_level_filter'') IS NULL OR COALESCE(ea.highest_degree_level_calculated, '''') ILIKE ''%%'' || ($1->>''degree_level_filter'') || ''%%''))
       
-      -- HARD SCHOOL FILTER ENFORCEMENT
+      -- LEGACY HARD FILTERS (kept for backward compatibility but now temporal-aware when scoped filters are used)
       AND (($1->>''school_filter'') IS NULL OR 
            (ea.profile_id IS NOT NULL AND 
             EXISTS (SELECT 1 FROM %I ee2 WHERE ee2.profile_id = ea.profile_id 
                     AND ee2.institution ILIKE ''%%'' || ($1->>''school_filter'') || ''%%'')))
       
-      -- HARD COMPANY FILTER ENFORCEMENT  
       AND (($1->>''company_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce2 WHERE ce2.profile_id = ca.profile_id
                     AND ce2.company ILIKE ''%%'' || ($1->>''company_filter'') || ''%%'')))
       
-      -- HARD INDUSTRY FILTER ENFORCEMENT
       AND (($1->>''industry_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce3 WHERE ce3.profile_id = ca.profile_id
                     AND ce3.industry ILIKE ''%%'' || ($1->>''industry_filter'') || ''%%'')))
       
-      -- HARD TITLE FILTER ENFORCEMENT
       AND (($1->>''title_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce4 WHERE ce4.profile_id = ca.profile_id
                     AND ce4.title ILIKE ''%%'' || ($1->>''title_filter'') || ''%%'')))
       
-      -- HARD LOCATION FILTER ENFORCEMENT
       AND (($1->>''location_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce5 WHERE ce5.profile_id = ca.profile_id
                     AND ce5.location ILIKE ''%%'' || ($1->>''location_filter'') || ''%%'')))
       
-      -- TIER 1 FILTERS: Company Size (Hard Filter)
       AND (($1->>''company_size_filter'') IS NULL OR 
            (ca.profile_id IS NOT NULL AND
             EXISTS (SELECT 1 FROM %I ce6 WHERE ce6.profile_id = ca.profile_id
@@ -438,6 +512,8 @@ BEGIN
     jsonb_build_object(
       ''total_years_experience'', cda.total_years_experience,
       ''years_in_target_industry'', cda.years_in_target_industry,
+      ''years_in_pre_company_industry'', cda.years_in_pre_company_industry,
+      ''years_in_post_company_industry'', cda.years_in_post_company_industry,
       ''timeline_pattern'', cda.timeline_pattern,
       ''sequence_gap_months'', cda.sequence_gap_months,
       ''has_concurrent_activities'', cda.has_concurrent_activities,
@@ -481,13 +557,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add documentation
-COMMENT ON FUNCTION chronological_search_function_demo IS 'Enhanced chronological search with RICH PROFILE DATA and EDUCATION FILTERS. Combines strict chronological filtering with comprehensive alumni profiles from the standard search table. 
+-- Add comprehensive documentation
+COMMENT ON FUNCTION chronological_search_function_demo IS 'Enhanced chronological search with TEMPORAL-SCOPED FILTERING and RICH PROFILE DATA. 
 
-SUPPORTED FILTERS:
+NEW TEMPORAL-SCOPED FILTERS (guarantee temporal precision):
+- Career Phase Filters: pre_company_company_filter, post_company_company_filter, during_company_company_filter
+- Industry Phase Filters: pre_company_industry_filter, post_company_industry_filter, during_company_industry_filter  
+- Title Phase Filters: pre_company_title_filter, post_company_title_filter, during_company_title_filter
+- Location Phase Filters: pre_company_location_filter, post_company_location_filter, during_company_location_filter
+- Size Phase Filters: pre_company_size_filter, post_company_size_filter, during_company_size_filter
+- Education Phase Filters: pre_company_school_filter, during_company_school_filter, post_company_school_filter
+- Experience Phase Filters: min_pre_company_years, min_post_company_years
+
+LEGACY FILTERS (maintained for backward compatibility):
 - Text Filters: school_filter, company_filter, industry_filter, title_filter, location_filter, company_size_filter, degree_level_filter
-- NEW Education Filters: major_category_filter, school_type_filter
 - Numeric Filters: total_experience_years (>=), min_years_in_industry (>=)
 - Boolean Filters: geographic_mobility, concurrent_activities
 
-All filters use ILIKE pattern matching with wildcards for partial matching. All filters are hard requirements that must be satisfied. Results are ordered by total years of experience.'; 
+All temporal-scoped filters enforce precise chronological matching. Legacy filters search across all time periods. Results are ordered by total years of experience.'; 
