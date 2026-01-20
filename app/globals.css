@@ -1,0 +1,64 @@
+@import 'normalize.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+/* Cross-browser reset and consistent base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Set a consistent base font size across browsers */
+  font-size: 16px;
+  /* Remove default scaling issues */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Remove overflow hidden that might cause issues */
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Global 95% visual scale for Chrome/Safari */
+  zoom: .88;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  /* Remove all custom scaling */
+  transform: none !important;
+  /* Use the real viewport width across browsers. Safari & Chrome treat 100vw slightly differently when scroll-bars are present, so we rely on the default auto behaviour instead of forcing 100vw. */
+  width: 100%;
+  height: auto !important;
+  overflow-x: hidden;
+  overflow-y:  auto;
+}
+
+/* Custom styles below */
+@keyframes typing {
+    0% { opacity: .2; }
+    20% { opacity: 1; }
+    100% { opacity: .2; }
+}
+  
+.typing-indicator {
+    position: relative;
+}
+  
+.typing-indicator::after  {
+    content: '...';
+    position: absolute;
+    right: -12px;
+    animation: typing 1.5s infinite;
+}

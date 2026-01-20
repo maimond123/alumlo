@@ -1,0 +1,1064 @@
+# CHRONOLOGICAL SEARCH TRAINING DATA GENERATION
+
+## MISSION
+You are helping generate training data for a fine-tuned LLM that specializes in chronological alumni search. This model will translate natural language queries about career progression and timeline patterns into precise JSON filters for database queries.
+
+## ITERATIVE GENERATION & PROGRESS TRACKING
+
+### CONTEXT WINDOW LIMITATION
+Due to output context window constraints, this data generation must be broken into multiple iterations. Each iteration should focus on a specific subset of the coverage matrix and generate 50-75 examples maximum.
+
+### COVERAGE MATRIX TRACKING
+
+#### COMPLEXITY DISTRIBUTION (Target: 400-500 total examples)
+- **Simple Chronological Examples (20% = 80-100 examples)**: ⬜ NOT STARTED
+  - Temporal-scoped proper noun extraction
+  - Single-phase queries (pre/post/during company)
+  - Basic chronological relationships
+  
+- **Medium Complexity Examples (50% = 200-250 examples)**: ⬜ NOT STARTED  
+  - Temporal context + category combinations
+  - Multi-constraint queries with 2-3 filters
+  - Career transition patterns
+  
+- **Complex Chronological Examples (30% = 120-150 examples)**: ⬜ NOT STARTED
+  - Multi-phase temporal analysis
+  - 4+ filters with complex relationships
+  - Advanced chronological patterns
+
+#### DIVERSITY DISTRIBUTION (Cross-cutting across all complexity levels)
+- **Common Folk Examples (50% = 200-250 examples)**: ⬜ NOT STARTED
+  - State schools, regional companies, entry-mid level roles
+  
+- **Mid-Tier Professional Examples (30% = 120-150 examples)**: ⬜ NOT STARTED
+  - State schools + regional businesses, manager-level roles
+  
+- **Elite Professional Examples (20% = 80-100 examples)**: ⬜ NOT STARTED
+  - Prestigious institutions, Fortune 500, executive roles
+
+### ITERATION PLANNING INSTRUCTIONS
+
+#### FOR EACH ITERATION:
+1. **Choose Focus Area**: Select one specific combination (e.g., "Simple + Common Folk", "Medium + Mid-Tier", etc.)
+2. **Target Count**: Generate 50-75 examples maximum per iteration
+3. **Update Progress**: After completion, update the coverage matrix above with ✅ COMPLETED
+4. **Track Examples**: List specific example ranges completed (e.g., "Examples 1-50: Simple Common Folk")
+
+#### SUGGESTED ITERATION SEQUENCE:
+1. **Iteration 1**: Simple + Common Folk (50-60 examples)
+2. **Iteration 2**: Simple + Mid-Tier (25-30 examples)  
+3. **Iteration 3**: Simple + Elite (15-20 examples)
+4. **Iteration 4**: Medium + Common Folk (75 examples)
+5. **Iteration 5**: Medium + Mid-Tier (50 examples)
+6. **Iteration 6**: Medium + Elite (40 examples)
+7. **Iteration 7**: Complex + Common Folk (60 examples)
+8. **Iteration 8**: Complex + Mid-Tier (40 examples)
+9. **Iteration 9**: Complex + Elite (30 examples)
+
+### PROGRESS TRACKING LOG
+**Update after each iteration with format: [Date] - [Iteration] - [Focus] - [Count] - [Status]**
+
+**ITERATION LOG:**
+- [ ] Iteration 1: Simple + Common Folk (Target: 50-60 examples)
+- [ ] Iteration 2: Simple + Mid-Tier (Target: 25-30 examples)
+- [ ] Iteration 3: Simple + Elite (Target: 15-20 examples)
+- [ ] Iteration 4: Medium + Common Folk (Target: 75 examples)
+- [ ] Iteration 5: Medium + Mid-Tier (Target: 50 examples)
+- [ ] Iteration 6: Medium + Elite (Target: 40 examples)
+- [ ] Iteration 7: Complex + Common Folk (Target: 60 examples)
+- [ ] Iteration 8: Complex + Mid-Tier (Target: 40 examples)
+- [ ] Iteration 9: Complex + Elite (Target: 30 examples)
+
+**TOTAL COMPLETED: 0/400-500 examples**
+
+### CURRENT ITERATION FOCUS
+**🎯 FOCUS FOR THIS RUN**: [UPDATE BEFORE EACH GENERATION]
+- **Complexity Level**: [Simple/Medium/Complex]
+- **Diversity Tier**: [Common Folk/Mid-Tier/Elite]
+- **Target Count**: [50-75 examples]
+- **Specific Requirements**: [Any additional constraints for this iteration]
+
+## CRITICAL DESIGN REQUIREMENT
+
+### PROPER NOUN EXTRACTION
+The fine-tuned model must be able to **extract specific names directly from queries**:
+- **Company Names**: Google, Amazon, McKinsey, Goldman Sachs, etc.
+- **University Names**: Harvard, Stanford, MIT, Georgia Tech, etc. 
+- **Locations**: San Francisco, New York, Atlanta, California, etc.
+- **Job Titles**: Director, VP, Manager, Engineer, etc.
+
+These should be extracted as-is and NOT included in mapped_terms. Only categorical terms (industry, function, level, size, degree, ranking, major) should appear in mapped_terms.
+
+### NATURAL LANGUAGE VARIETY
+**CRITICAL**: Create diverse, natural-sounding original queries that vary in:
+- **Sentence starters**: Avoid repetitive "Find" or "Show" patterns
+- **Question formats**: Use questions, commands, conversational phrases
+- **Phrasing styles**: Formal, casual, technical, business language
+- **Sentence structures**: Short/long, simple/complex, different word orders
+
+**Examples of varied query starters:**
+- "I'm looking for..."
+- "Can you help me identify..."
+- "Who are the people that..."
+- "I need to see alumni who..."
+- "Looking for candidates that..."
+- "Which graduates have..."
+- "I want to connect with..."
+- "Help me find professionals who..."
+- "Are there any alumni that..."
+- "Search for people who..."
+- "I'm interested in..."
+- "Can we pull up..."
+- "Let me see..."
+- "I'd like to find..."
+- "Pull profiles of..."
+- "Get me a list of..."
+- "Identify alumni who..."
+- "Searching for folks who..."
+- "I'm curious about people who..."
+- "Can you surface..."
+
+## SYSTEM ARCHITECTURE CONTEXT
+
+### Search Pipeline Flow
+1. **Input**: Raw natural language query + target_company context
+2. **LLM Mapping**: Standardize terms using DATABASE_TERM_MAPPINGS ← **REFERENCE BELOW**
+3. **Fine-tuned Translation**: Convert to chronological JSON filters ← **YOUR FOCUS**
+4. **SQL Execution**: Query chronological_search_function_demo()
+
+### Database Function Overview
+The `chronological_search_function_demo()` function analyzes career and education events across time, building timeline patterns and calculating progression metrics. It differs from standard search by focusing on:
+- Career sequence analysis
+- Education-career overlap patterns  
+- Geographic mobility tracking
+- Leadership progression timeline
+- Company relationship phases (pre/during/post target company)
+
+### TARGET COMPANY HANDLING
+
+**Critical Context**: The chronological search system is designed around a specific "target company" (e.g., Chick-fil-A) that serves as the temporal anchor for career analysis. The system tracks:
+- **Pre-company experience**: Careers before joining the target company
+- **During-company experience**: Work at the target company itself
+- **Post-company experience**: Careers after leaving the target company
+
+**In Training Data Generation**:
+- The target company will be provided as context in the fine-tuning prompt
+- When generating examples, assume "Chick-fil-A" is the target company
+- Career phase filters (has_pre_company_experience, etc.) relate to this target company
+- Company relationship analysis is always relative to Chick-fil-A
+
+**Fine-tuning Input Format**:
+```
+User: "Target Company: Chick-fil-A
+Original Query: [query]
+Standardized Query: [mapped query]
+Mapped Terms: {...}
+Translate to chronological filters."
+```
+
+## DATABASE_TERM_MAPPINGS (Complete Reference)
+
+**IMPORTANT**: In the mappings below, the LEFT side (keys) shows common variations that appear in original search queries, and the RIGHT side (values) shows the exact standardized database terms that should appear in "Mapped Terms".
+
+### INDUSTRY MAPPINGS
+```json
+{
+  "tech": "Technology & Software",
+  "technology": "Technology & Software", 
+  "software": "Technology & Software",
+  "it": "IT/Systems",
+  "information technology": "IT/Systems",
+  "fintech": "Fintech",
+  "financial technology": "Fintech",
+  "ecommerce": "Internet/E-commerce",
+  "e-commerce": "Internet/E-commerce",
+  "finance": "Financial Services",
+  "financial": "Financial Services",
+  "banking": "Banking",
+  "investment": "Investment Management",
+  "private equity": "Private Equity/VC",
+  "pe": "Private Equity/VC",
+  "venture capital": "Private Equity/VC",
+  "vc": "Private Equity/VC",
+  "healthcare": "Healthcare & Pharmaceuticals",
+  "health": "Healthcare & Pharmaceuticals",
+  "medical": "Healthcare & Pharmaceuticals",
+  "pharma": "Healthcare & Pharmaceuticals",
+  "pharmaceutical": "Healthcare & Pharmaceuticals",
+  "biotech": "Healthcare & Pharmaceuticals",
+  "consulting": "Management Consulting",
+  "management consulting": "Management Consulting",
+  "food": "Food & Beverage",
+  "restaurant": "Restaurant/Hospitality",
+  "hospitality": "Restaurant/Hospitality",
+  "retail": "Retail & Consumer Goods",
+  "consumer": "Retail & Consumer Goods",
+  "manufacturing": "Manufacturing",
+  "media": "Media & Entertainment",
+  "entertainment": "Media & Entertainment",
+  "education": "Education",
+  "real estate": "Real Estate",
+  "government": "Government & Public Sector",
+  "nonprofit": "Non-Profit & NGO",
+  "energy": "Energy"
+}
+```
+
+### FUNCTION MAPPINGS
+```json
+{
+  "engineering": "Software Engineering",
+  "software engineering": "Software Engineering",
+  "development": "Software Engineering",
+  "developer": "Software Engineering",
+  "product": "Product Management",
+  "product management": "Product Management",
+  "pm": "Product Management",
+  "data science": "Data Science/Analytics",
+  "data": "Data Science/Analytics",
+  "analytics": "Data Science/Analytics",
+  "sales": "Sales",
+  "business development": "Business Development",
+  "marketing": "Marketing",
+  "finance": "Finance",
+  "accounting": "Accounting",
+  "operations": "Operations Management",
+  "management": "General Management",
+  "consulting": "Consulting",
+  "hr": "Human Resources",
+  "human resources": "Human Resources",
+  "recruiting": "Recruiting/Talent",
+  "design": "Design",
+  "legal": "Legal"
+}
+```
+
+### LEVEL MAPPINGS
+```json
+{
+  "entry": "Entry Level",
+  "junior": "Entry Level",
+  "associate": "Associate",
+  "senior": "Senior Level",
+  "manager": "Manager",
+  "director": "Director",
+  "vp": "VP/SVP",
+  "vice president": "VP/SVP",
+  "executive": "VP/SVP",
+  "ceo": "C-Suite",
+  "founder": "Founder/Owner"
+}
+```
+
+### SIZE MAPPINGS
+```json
+{
+  "startup": "Startup (1-50 employees)",
+  "small": "Small (51-200 employees)",
+  "medium": "Medium (201-1000 employees)",
+  "large": "Large (1001-5000 employees)",
+  "enterprise": "Enterprise (5000+ employees)",
+  "fortune 500": "Enterprise (5000+ employees)",
+  "big tech": "Enterprise (5000+ employees)"
+}
+```
+
+### DEGREE MAPPINGS
+```json
+{
+  "bachelor": "Bachelor's Degree",
+  "bachelors": "Bachelor's Degree",
+  "master": "Master's Degree",
+  "masters": "Master's Degree",
+  "mba": "Master of Business Administration (MBA)",
+  "phd": "Doctor of Philosophy (PhD)",
+  "doctorate": "Doctor of Philosophy (PhD)",
+  "md": "Doctor of Medicine (MD)",
+  "jd": "Juris Doctor (JD)"
+}
+```
+
+### RANKING MAPPINGS
+```json
+{
+  "ivy league": "Ivy League",
+  "ivy": "Ivy League",
+  "top 10": "Top 10",
+  "top 25": "Top 25",
+  "top 50": "Top 50",
+  "elite": "Top 10",
+  "prestigious": "Top 25",
+  "state school": "State University"
+}
+```
+
+### MAJOR MAPPINGS
+```json
+{
+  "computer science": "Computer Science/Technology",
+  "cs": "Computer Science/Technology",
+  "engineering": "Engineering",
+  "business": "Business Administration",
+  "finance": "Finance",
+  "economics": "Economics",
+  "english": "English/Literature",
+  "psychology": "Psychology",
+  "medicine": "Medicine",
+  "law": "Law"
+}
+```
+
+## LLM MAPPING PROMPT REFERENCE
+
+This is the actual prompt used in the pipeline for term mapping. Use this to understand how mapped terms are generated:
+
+```
+You are a specialized term mapping system for alumni search queries. Your job is to standardize natural language terms into exact database values while preserving the original query structure.
+
+**SEARCH TYPE: CHRONOLOGICAL**
+
+**YOUR MISSION:**
+1. Identify terms that need standardization using the DATABASE_TERM_MAPPINGS
+2. Replace natural language variations with exact database terms
+3. Return the standardized query + detailed mapping information
+4. Focus on terms relevant to chronological search patterns
+
+**CHRONOLOGICAL SEARCH FOCUS:**
+- Career progression patterns and experience depth
+- Industry transitions and function changes
+- Educational background and career alignment
+- Geographic mobility and concurrent activities
+- Focus on: industries, functions, levels, degrees, schools, companies
+
+**OUTPUT FORMAT:**
+Return valid JSON with:
+- standardized_query: The query with mapped terms
+- mapped_terms: Arrays of all mapped terms by category
+- transformations: Detailed log of all mappings made
+```
+
+## AVAILABLE FILTERS (Complete Set)
+
+### TEMPORAL-SCOPED FILTERS (NEW - Use these for precise chronological matching)
+
+#### CAREER PHASE FILTERS (Extract company/industry/title/location with temporal context)
+- **pre_company_company_filter**: Companies worked at BEFORE target company
+- **post_company_company_filter**: Companies worked at AFTER target company  
+- **during_company_company_filter**: Companies worked at WHILE at target company
+- **pre_company_industry_filter**: Industries worked in BEFORE target company
+- **post_company_industry_filter**: Industries worked in AFTER target company
+- **during_company_industry_filter**: Industries worked in WHILE at target company
+- **pre_company_title_filter**: Job titles held BEFORE target company
+- **post_company_title_filter**: Job titles held AFTER target company
+- **during_company_title_filter**: Job titles held WHILE at target company
+- **pre_company_location_filter**: Locations worked in BEFORE target company
+- **post_company_location_filter**: Locations worked in AFTER target company
+- **during_company_location_filter**: Locations worked in WHILE at target company
+- **pre_company_size_filter**: Company sizes worked at BEFORE target company
+- **post_company_size_filter**: Company sizes worked at AFTER target company
+- **during_company_size_filter**: Company sizes worked at WHILE at target company
+
+#### EDUCATION PHASE FILTERS (Extract schools with temporal context)
+- **pre_company_school_filter**: Schools attended BEFORE target company
+- **during_company_school_filter**: Schools attended WHILE at target company
+- **post_company_school_filter**: Schools attended AFTER target company
+
+#### EXPERIENCE PHASE FILTERS (Calculate experience within specific time periods)
+- **min_pre_company_years**: Minimum years of experience BEFORE target company
+- **min_post_company_years**: Minimum years of experience AFTER target company
+
+### LEGACY FILTERS (Backward compatibility - search across all time periods)
+
+#### TEXT FILTERS
+- **school_filter**: Educational institutions (any time period)
+- **company_filter**: Company names (any time period)
+- **industry_filter**: Industry sectors (any time period)
+- **title_filter**: Job titles and roles (any time period)
+- **location_filter**: Geographic locations (any time period)
+- **company_size_filter**: Company size categories (any time period)
+- **degree_level_filter**: Education levels (use mapped terms)
+- **major_category_filter**: Academic fields of study (use mapped terms)
+- **school_type_filter**: Institution types (extract from context)
+
+#### NUMERIC FILTERS
+- **total_experience_years**: Minimum total work experience (>=)
+- **min_years_in_industry**: Minimum industry-specific experience (>=)
+- **target_industry_filter**: Specific industry for min_years_in_industry calculation
+
+#### BOOLEAN PATTERN FILTERS
+- **geographic_mobility**: Has worked in multiple locations
+- **concurrent_activities**: Overlapping education and career activities
+
+#### ADVANCED CHRONOLOGICAL FILTERS (Boolean)
+- **has_leadership_experience**: Has held leadership roles
+- **has_management_responsibility**: Has managed teams
+- **has_pre_company_experience**: Worked before target company
+- **has_post_company_experience**: Worked after target company  
+- **worked_at_target_company**: Specifically worked at target company
+- **worked_during_company**: Worked elsewhere while at target company
+- **educated_before_company**: Educated before target company
+- **educated_during_company**: Educated while at target company
+- **educated_after_company**: Educated after target company
+
+## CRITICAL: TEMPORAL PRECISION REQUIREMENTS
+
+**The key insight**: Every proper noun (company, school, industry, title, location) should be extracted with explicit temporal context when chronological relationships are mentioned.
+
+### CORRECT vs WRONG Examples:
+
+**Query**: "Cornell grads who worked in hospitality before joining us"
+
+❌ **WRONG** (causes false positives):
+```json
+{
+  "school_filter": "Cornell",
+  "industry_filter": "Restaurant/Hospitality",
+  "has_pre_company_experience": true
+}
+```
+
+✅ **CORRECT** (temporally precise):
+```json
+{
+  "pre_company_school_filter": "Cornell",
+  "pre_company_industry_filter": "Restaurant/Hospitality"
+}
+```
+
+**Query**: "Harvard MBAs who moved to tech after leaving"
+
+❌ **WRONG**:
+```json
+{
+  "school_filter": "Harvard",
+  "industry_filter": "Technology & Software",
+  "has_post_company_experience": true
+}
+```
+
+✅ **CORRECT**:
+```json
+{
+  "pre_company_school_filter": "Harvard",
+  "degree_level_filter": "Master's",
+  "major_category_filter": "Business Administration", 
+  "post_company_industry_filter": "Technology & Software"
+}
+```
+
+## COMPREHENSIVE TRAINING EXAMPLES WITH TEMPORAL PRECISION
+
+### 1. SIMPLE CHRONOLOGICAL EXAMPLES (20%) - UPDATED
+
+#### Temporal-Scoped Proper Noun Extraction
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Looking for alumni who ended up at Google post-graduation"
+Standardized Query: "Looking for alumni who ended up at Google post-graduation"
+Mapped Terms: {"industries": [], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "post_company_company_filter": "Google"
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Which Cornell grads worked in hospitality before joining us?"
+Standardized Query: "Which Cornell graduates worked in Restaurant/Hospitality before joining us?"
+Mapped Terms: {"industries": ["Restaurant/Hospitality"], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Cornell",
+  "pre_company_industry_filter": "Restaurant/Hospitality"
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Can you help me find people who moved to San Francisco after their time here?"
+Standardized Query: "Can you help me find people who moved to San Francisco after their time here?"
+Mapped Terms: {"industries": [], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "post_company_location_filter": "San Francisco",
+  "geographic_mobility": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "I'm interested in alumni who became directors after their time here"
+Standardized Query: "I'm interested in alumni who became Director after their time here"
+Mapped Terms: {"industries": [], "functions": [], "levels": ["Director"], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "post_company_title_filter": "Director",
+  "has_leadership_experience": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Pull profiles of people with 5+ years in consulting before they joined us"
+Standardized Query: "Pull profiles of people with 5+ years in Management Consulting before they joined us"
+Mapped Terms: {"industries": ["Management Consulting"], "functions": ["Consulting"], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "min_pre_company_years": 5,
+  "pre_company_industry_filter": "Management Consulting"
+}
+```
+
+### 2. MEDIUM COMPLEXITY EXAMPLES (50%) - UPDATED
+
+#### Temporal Context + Category Combinations
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "I need people who worked at McKinsey before joining us, then got their MBA while here"
+Standardized Query: "I need people who worked at McKinsey before joining us, then got their Master of Business Administration (MBA) while here"
+Mapped Terms: {"industries": [], "functions": [], "levels": [], "sizes": [], "degrees": ["Master of Business Administration (MBA)"], "rankings": [], "majors": ["Business Administration"]}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_company_filter": "McKinsey",
+  "during_company_school_filter": "Harvard Business School",
+  "degree_level_filter": "Master's",
+  "major_category_filter": "Business Administration",
+  "concurrent_activities": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Any Harvard grads who transitioned into tech after leaving us?"
+Standardized Query: "Any Harvard graduates who transitioned into Technology & Software after leaving us?"
+Mapped Terms: {"industries": ["Technology & Software"], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Harvard",
+  "post_company_industry_filter": "Technology & Software"
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Looking for seasoned folks (8+ years) who worked at Goldman before us, then moved to startups after"
+Standardized Query: "Looking for seasoned folks (8+ years) who worked at Goldman Sachs before us, then moved to Startup (1-50 employees) after"
+Mapped Terms: {"industries": [], "functions": [], "levels": [], "sizes": ["Startup (1-50 employees)"], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "total_experience_years": 8,
+  "pre_company_company_filter": "Goldman Sachs",
+  "post_company_size_filter": "Startup"
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Who worked in finance before us and now runs teams in NYC?"
+Standardized Query: "Who worked in Financial Services before us and now runs teams in New York?"
+Mapped Terms: {"industries": ["Financial Services"], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_industry_filter": "Financial Services",
+  "post_company_location_filter": "New York",
+  "has_management_responsibility": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Can we pull up MIT engineers who pivoted to product management after leaving?"
+Standardized Query: "Can we pull up MIT Engineering who pivoted to Product Management after leaving?"
+Mapped Terms: {"industries": [], "functions": ["Product Management"], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": ["Engineering"]}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "MIT",
+  "major_category_filter": "Engineering",
+  "post_company_title_filter": "Product Management"
+}
+```
+
+### 3. COMPLEX CHRONOLOGICAL EXAMPLES (30%) - UPDATED
+
+#### Multi-Phase Temporal Analysis
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "I want to connect with people who studied at Wharton before joining us, worked at Microsoft before that, then moved to VP roles at Google after leaving"
+Standardized Query: "I want to connect with people who studied at Wharton before joining us, worked at Microsoft before that, then moved to VP/SVP roles at Google after leaving"
+Mapped Terms: {"industries": [], "functions": [], "levels": ["VP/SVP"], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Wharton",
+  "pre_company_company_filter": "Microsoft",
+  "post_company_company_filter": "Google",
+  "post_company_title_filter": "VP",
+  "has_leadership_experience": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Are there people who worked in consulting before us, got promoted here, and now lead tech teams in Austin?"
+Standardized Query: "Are there people who worked in Management Consulting before us, got promoted here, and now lead Technology & Software teams in Austin?"
+Mapped Terms: {"industries": ["Management Consulting", "Technology & Software"], "functions": ["Consulting"], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_industry_filter": "Management Consulting",
+  "worked_at_target_company": true,
+  "post_company_industry_filter": "Technology & Software",
+  "post_company_location_filter": "Austin",
+  "has_management_responsibility": true,
+  "geographic_mobility": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Help me find people who had 5+ years at Facebook before joining us, then founded startups in SF after leaving"
+Standardized Query: "Help me find people who had 5+ years at Facebook before joining us, then founded Founder/Owner startups in San Francisco after leaving"
+Mapped Terms: {"industries": [], "functions": [], "levels": ["Founder/Owner"], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "min_pre_company_years": 5,
+  "pre_company_company_filter": "Facebook",
+  "post_company_title_filter": "Founder",
+  "post_company_location_filter": "San Francisco",
+  "has_startup_experience": true,
+  "geographic_mobility": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Can you surface people who worked at JPMorgan before us, studied while here, and now lead tech teams in Seattle?"
+Standardized Query: "Can you surface people who worked at JPMorgan before us, studied while here, and now lead Technology & Software teams in Seattle?"
+Mapped Terms: {"industries": ["Technology & Software"], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_company_filter": "JPMorgan",
+  "educated_during_company": true,
+  "post_company_industry_filter": "Technology & Software",
+  "post_company_location_filter": "Seattle",
+  "has_management_responsibility": true,
+  "geographic_mobility": true,
+  "concurrent_activities": true
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Let me see people who went to Stanford before joining, have 3+ years in consulting before us, and now lead product teams at Apple"
+Standardized Query: "Let me see people who went to Stanford before joining, have 3+ years in Management Consulting before us, and now lead Product Management teams at Apple"
+Mapped Terms: {"industries": ["Management Consulting"], "functions": ["Product Management", "Consulting"], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Stanford",
+  "min_pre_company_years": 3,
+  "pre_company_industry_filter": "Management Consulting",
+  "post_company_company_filter": "Apple",
+  "post_company_title_filter": "Product Management",
+  "has_leadership_experience": true
+}
+```
+
+## GENERATION INSTRUCTIONS - UPDATED FOR ITERATIVE APPROACH
+
+### PRE-GENERATION CHECKLIST
+1. **Review Current Iteration Focus**: Check the "🎯 FOCUS FOR THIS RUN" section above
+2. **Understand Target**: Note the specific complexity level + diversity tier combination
+3. **Set Example Count**: Aim for the target count specified (50-75 examples maximum)
+4. **Prepare Progress Update**: Be ready to update progress tracking after completion
+
+### CORE GENERATION PRINCIPLES
+1. **Temporal Precision is CRITICAL**: Always use temporal-scoped filters when chronological context is specified
+2. **Focus on Current Iteration**: Only generate examples that match the specified complexity + diversity combination
+3. **Emphasize natural language variety**: Use different sentence starters, question formats, and conversational styles
+4. **Use temporal-scoped filters**: 60% of examples should use pre/post/during company filters
+5. **Use realistic mapped terms**: Reference the DATABASE_TERM_MAPPINGS above for authentic examples
+6. **Focus on chronological aspects**: career progression, timeline patterns, sequence analysis
+7. **Include proper temporal keywords**: before, after, while, then, currently, prior to, post, pre
+8. **Ensure JSON validity**: All assistant responses must be valid JSON
+9. **Omit null filters**: Only include relevant filters, leave out unused ones
+10. **Create proper mapped terms**: Use the exact standardized terms from the mappings above
+
+### ITERATION-SPECIFIC REQUIREMENTS
+
+#### FOR SIMPLE EXAMPLES (When complexity = Simple):
+- Focus on temporal-scoped proper noun extraction
+- Single-phase queries (pre_company_X OR post_company_X OR during_company_X)
+- Basic chronological relationships
+- 1-2 filters maximum
+- Clear temporal indicators (before/after/while)
+
+#### FOR MEDIUM EXAMPLES (When complexity = Medium):
+- Temporal context + category combinations
+- Multi-constraint queries with 2-3 filters
+- Career transition patterns
+- Mix temporal-scoped with legacy filters
+- Include boolean pattern filters (geographic_mobility, concurrent_activities)
+
+#### FOR COMPLEX EXAMPLES (When complexity = Complex):
+- Multi-phase temporal analysis
+- 4+ filters with complex relationships
+- Advanced chronological patterns
+- Multiple temporal scopes (pre + post + during)
+- Advanced boolean filters (has_leadership_experience, has_management_responsibility)
+
+#### FOR COMMON FOLK EXAMPLES (When diversity = Common Folk):
+- State universities (40%) and regional schools (25%) and community colleges (15%)
+- Regional companies and local businesses
+- Entry to mid-level positions (assistant manager, coordinator, team lead, etc.)
+- Southeast geographic focus
+- Service industries (retail, food service, healthcare, education)
+
+#### FOR MID-TIER EXAMPLES (When diversity = Mid-Tier):
+- State universities with some regional private schools
+- Regional companies and mid-market businesses
+- Manager-level and senior individual contributor roles
+- Mix of southeast and secondary cities
+- Professional services and traditional industries
+
+#### FOR ELITE EXAMPLES (When diversity = Elite):
+- Top universities (20% of total examples only)
+- Fortune 500 and prestigious companies
+- Director-level and above positions
+- Major cities with some geographic diversity
+- High-level professional services and technology
+
+### POST-GENERATION REQUIREMENTS
+
+**🔄 CRITICAL: The model MUST update this prompt document after each iteration to track progress dynamically.**
+
+After generating examples, the model should:
+
+1. **Count Examples**: Verify the exact number generated matches the target
+2. **Save Examples to JSON-L File**: Create/append examples to a JSON Lines file (one example per line)
+   - File format: `chronological_training_data.jsonl` 
+   - Each line should be a complete training example in JSON format
+   - Include both the user input and assistant response
+   - Format: `{"messages": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}`
+3. **Edit This Document**: Update the progress tracking sections in this same file:
+   - Mark the completed iteration as ✅ in the ITERATION LOG
+   - Change ⬜ NOT STARTED to ✅ COMPLETED in the coverage matrix for completed sections  
+   - Update the "TOTAL COMPLETED" counter
+   - Add completion date to the iteration log
+4. **Quality Check**: Ensure all examples match the specified focus area
+5. **Save Changes**: The updated document becomes the reference for the next iteration
+
+### JSON-L FILE FORMAT REQUIREMENTS
+
+**File Structure:**
+- **Filename**: `chronological_training_data.jsonl`
+- **Format**: One JSON object per line (JSON Lines format)
+- **Append Mode**: Add new examples to existing file (don't overwrite)
+
+**Example JSON-L Entry:**
+```json
+{"messages": [{"role": "user", "content": "Target Company: Chick-fil-A\nOriginal Query: \"Looking for Georgia State grads who became assistant managers at Publix\"\nStandardized Query: \"Looking for Georgia State graduates who became Assistant Manager at Publix\"\nMapped Terms: {\"industries\": [], \"functions\": [], \"levels\": [\"Associate\"], \"sizes\": [], \"degrees\": [], \"rankings\": [], \"majors\": []}\nTranslate to chronological filters."}, {"role": "assistant", "content": "{\n  \"pre_company_school_filter\": \"Georgia State\",\n  \"post_company_company_filter\": \"Publix\",\n  \"post_company_title_filter\": \"Assistant Manager\"\n}"}]}
+```
+
+**File Management:**
+- Create the file if it doesn't exist
+- Append new examples (don't overwrite existing ones)
+- Each iteration should add its examples to the same file
+- Final file will contain all 400-500 examples when complete
+
+### DYNAMIC PROGRESS TRACKING WORKFLOW
+
+**Step 1: Generate Examples**
+- Generate 50-75 examples for the specified focus area
+- Output the training examples in the required format
+
+**Step 2: Save to JSON-L File**
+- Create/append examples to `chronological_training_data.jsonl`
+- Each example as one line in JSON format
+- Include the complete user-assistant conversation pair
+
+**Step 3: Update This Document** 
+- Edit the ITERATION LOG to mark completion: `- [✅] Iteration 1: Simple + Common Folk (Completed: 55 examples) - 2024-01-15`
+- Update COVERAGE MATRIX: Change `⬜ NOT STARTED` to `✅ COMPLETED` for the finished section
+- Update TOTAL COMPLETED: Add the new count (e.g., `TOTAL COMPLETED: 55/400-500 examples`)
+- Update the 🎯 FOCUS FOR THIS RUN section for the next iteration (or mark as PENDING if unsure)
+
+**Step 4: Document State**
+- The updated document now reflects current progress
+- The JSON-L file contains all examples generated so far
+- Next iteration can reference the updated progress tracking
+- User can see exactly what's been completed at any time
+
+### EXAMPLE COMPLETION UPDATE
+
+**Before generating examples:**
+```
+**TOTAL COMPLETED: 0/400-500 examples** 
+
+**🎯 FOCUS FOR THIS RUN**: Simple + Common Folk
+- **Complexity Level**: Simple
+- **Diversity Tier**: Common Folk  
+- **Target Count**: 50-60 examples
+```
+
+**After generating examples (model updates document):**
+```
+**TOTAL COMPLETED: 55/400-500 examples**
+
+**ITERATION LOG:**
+- [✅] Iteration 1: Simple + Common Folk (Completed: 55 examples) - 2024-01-15
+- [ ] Iteration 2: Simple + Mid-Tier (Target: 25-30 examples)
+
+**🎯 FOCUS FOR THIS RUN**: Simple + Mid-Tier  
+- **Complexity Level**: Simple
+- **Diversity Tier**: Mid-Tier
+- **Target Count**: 25-30 examples
+```
+
+### CRITICAL REMINDERS
+11. **Include target company context**: Always include "Target Company: Chick-fil-A" in user messages
+12. **Emphasize chronological patterns**: Every example should have some temporal/progression element
+13. **Balance extraction types**: Mix temporal-scoped with legacy filters appropriately
+14. **Test temporal precision**: Ensure examples would not return false positives with wrong temporal filters
+15. **Maintain iteration focus**: Do not mix complexity levels or diversity tiers within a single iteration
+16. **Proper noun diversity**: Use the expanded lists provided for each diversity tier
+17. **Geographic relevance**: Emphasize Southeast and regional focus appropriate to diversity tier
+18. **Industry variety**: Move beyond tech/finance/consulting based on diversity tier requirements
+19. **Title realism**: Focus on actual job titles people have at the specified professional level
+20. **Avoid repetition**: Don't use the same school/company combinations repeatedly within an iteration
+
+## CRITICAL: PROPER NOUN DIVERSITY REQUIREMENTS
+
+**The current training data is too focused on elite institutions and prestigious companies.** We need much more diversity to reflect real-world alumni searches across all professional levels.
+
+### SCHOOL DIVERSITY (Use varied mix, not just elite)
+
+#### Elite Universities (20% of examples)
+- Harvard, Stanford, MIT, Princeton, Yale, Columbia, Wharton, Kellogg, Chicago Booth
+
+#### State Universities (40% of examples)  
+- University of Georgia, Georgia State University, University of Florida, Florida State University, University of Texas, Texas A&M, University of California Berkeley, UCLA, UC San Diego, Arizona State University, University of Michigan, Michigan State, Ohio State University, Penn State, University of Virginia, Virginia Tech, University of North Carolina, NC State, University of Alabama, Auburn University, University of Tennessee, Vanderbilt, University of Kentucky, Louisiana State University, University of Arkansas, University of South Carolina, Clemson University
+
+#### Regional/Technical Schools (25% of examples)
+- Georgia Tech, Virginia Tech, Purdue University, University of Illinois, Iowa State, Kansas State, Oklahoma State, Colorado State, Oregon State, Washington State, Boise State, Utah State, New Mexico State, Nevada State, Idaho State, Montana State, North Dakota State, South Dakota State, Wyoming University, Maine State, Vermont State, New Hampshire State, Rhode Island State
+
+#### Community Colleges & Lesser-Known Schools (15% of examples)
+- Atlanta Metropolitan State College, Georgia Perimeter College, Kennesaw State University, Columbus State University, Albany State University, Georgia Southern University, Valdosta State University, Armstrong State University, Clayton State University, Dalton State College
+
+### COMPANY DIVERSITY (Use varied mix across all industries)
+
+#### Fortune 500 / Big Tech (25% of examples)
+- Google, Amazon, Microsoft, Apple, Facebook, Netflix, Tesla, Uber, Airbnb, Salesforce, Oracle, IBM, Intel, Adobe
+
+#### Regional Companies (30% of examples)
+- Home Depot, Coca-Cola, Delta Airlines, UPS, SunTrust Bank, Southern Company, Norfolk Southern, Aflac, Genuine Parts Company, Newell Brands, Rollins Inc, Aaron's Inc, Cardlytics, Kabbage, Mailchimp, Calendly, OneTrust
+
+#### Small-Medium Businesses (25% of examples)
+- Local restaurants, regional retail chains, small consulting firms, family businesses, local banks, credit unions, regional hospitals, school districts, municipal governments, non-profits
+
+#### Mid-Market Companies (20% of examples)
+- Waffle House, Zaxby's, Publix, kroger, Chick-fil-A competitors, regional food chains, mid-size manufacturers, regional banks, local consulting groups
+
+### TITLE/ROLE DIVERSITY (Focus on common positions)
+
+#### Entry-Mid Level Roles (50% of examples)
+- Assistant Manager, Team Lead, Coordinator, Specialist, Analyst, Associate, Representative, Supervisor, Shift Manager, Store Manager, Branch Manager, Account Manager, Project Manager, Operations Manager, Regional Manager
+
+#### Senior Individual Contributors (25% of examples)
+- Senior Analyst, Lead Specialist, Principal Consultant, Senior Manager, Director, Senior Director, Regional Director, Area Manager, District Manager
+
+#### Leadership Roles (15% of examples)
+- VP, Senior VP, Executive VP, Chief Officer, President, General Manager, Division Head
+
+#### Specialized Roles (10% of examples)
+- Franchise Owner, Independent Consultant, Real Estate Agent, Insurance Agent, Financial Advisor, Teacher, Nurse, Engineer, Lawyer, Accountant
+
+### INDUSTRY DIVERSITY (Beyond tech/finance/consulting)
+
+#### Service Industries (30% of examples)
+- Restaurant/Food Service, Retail, Healthcare, Education, Real Estate, Insurance, Banking, Hospitality, Transportation, Logistics
+
+#### Traditional Industries (25% of examples)
+- Manufacturing, Construction, Agriculture, Energy, Utilities, Government, Non-Profit, Religious Organizations
+
+#### Professional Services (25% of examples)
+- Accounting, Legal, Consulting, Marketing, Advertising, HR Services, Recruiting, Training
+
+#### Modern Industries (20% of examples)
+- Technology, Fintech, E-commerce, Digital Marketing, SaaS, Startups
+
+### LOCATION DIVERSITY (Beyond major tech hubs)
+
+#### Southeast Focus (40% of examples)
+- Atlanta, Birmingham, Charlotte, Nashville, Memphis, Jacksonville, Tampa, Orlando, Miami, Raleigh, Charleston, Savannah, Greenville, Knoxville, Chattanooga, Huntsville, Mobile, Augusta, Columbus, Macon
+
+#### Secondary Cities (35% of examples)
+- Kansas City, Indianapolis, Louisville, Cincinnati, Columbus, Milwaukee, Minneapolis, St. Louis, Oklahoma City, Tulsa, Little Rock, Richmond, Norfolk, Greensboro, Asheville, Lexington
+
+#### Major Cities (20% of examples)
+- New York, San Francisco, Los Angeles, Chicago, Boston, Seattle, Washington DC, Philadelphia, Denver, Dallas, Houston, Phoenix
+
+#### Small Towns/Rural (5% of examples)
+- Dahlonega GA, Rome GA, Warner Robins GA, Valdosta GA, small town America
+
+## ENHANCED TRAINING EXAMPLES WITH PROPER NOUN DIVERSITY
+
+### 1. COMMON FOLK EXAMPLES (50% of all examples)
+
+#### Entry-Mid Level Professional Focus
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "I'm looking for Georgia State grads who became assistant managers at Publix"
+Standardized Query: "I'm looking for Georgia State graduates who became Assistant Manager at Publix"
+Mapped Terms: {"industries": [], "functions": [], "levels": ["Associate"], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Georgia State",
+  "post_company_company_filter": "Publix",
+  "post_company_title_filter": "Assistant Manager"
+}
+```
+
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Can you find people who worked at Home Depot before joining us and now run teams in Atlanta?"
+Standardized Query: "Can you find people who worked at Home Depot before joining us and now run teams in Atlanta?"
+Mapped Terms: {"industries": [], "functions": [], "levels": [], "sizes": [], "degrees": [], "rankings": [], "majors": []}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_company_filter": "Home Depot",
+  "post_company_location_filter": "Atlanta",
+  "has_management_responsibility": true
+}
+```
+
+### 2. MID-TIER PROFESSIONAL EXAMPLES (30% of all examples)
+
+#### State School + Regional Company Focus
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "Looking for University of Georgia business grads who worked at SunTrust before us and became managers"
+Standardized Query: "Looking for University of Georgia Business Administration graduates who worked at SunTrust before us and became Manager"
+Mapped Terms: {"industries": [], "functions": [], "levels": ["Manager"], "sizes": [], "degrees": [], "rankings": [], "majors": ["Business Administration"]}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "University of Georgia",
+  "major_category_filter": "Business Administration",
+  "pre_company_company_filter": "SunTrust",
+  "post_company_title_filter": "Manager",
+  "has_management_responsibility": true
+}
+```
+
+### 3. HIGH-LEVEL EXAMPLES (20% of all examples)
+
+#### Keep some elite examples but with more variety
+**User**: 
+```
+Target Company: Chick-fil-A
+Original Query: "I need Duke MBA grads who worked at Coca-Cola before us and became directors in healthcare"
+Standardized Query: "I need Duke Master of Business Administration (MBA) graduates who worked at Coca-Cola before us and became Director in Healthcare & Pharmaceuticals"
+Mapped Terms: {"industries": ["Healthcare & Pharmaceuticals"], "functions": [], "levels": ["Director"], "sizes": [], "degrees": ["Master of Business Administration (MBA)"], "rankings": [], "majors": ["Business Administration"]}
+Translate to chronological filters.
+```
+
+**Assistant**:
+```json
+{
+  "pre_company_school_filter": "Duke",
+  "degree_level_filter": "Master's",
+  "major_category_filter": "Business Administration",
+  "pre_company_company_filter": "Coca-Cola",
+  "post_company_title_filter": "Director",
+  "post_company_industry_filter": "Healthcare & Pharmaceuticals",
+  "has_leadership_experience": true
+}
+``` 
