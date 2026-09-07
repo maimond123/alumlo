@@ -2,6 +2,9 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../data/supabase';
 
+// Hits the database on every call; never evaluate this at build time.
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Get all ongoing uploads (not completed or error)

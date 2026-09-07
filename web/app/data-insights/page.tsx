@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, Suspense} from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, RefreshCw, Plus } from "lucide-react"
 import { BarChart, PieChart } from "../../components/chart"
@@ -43,7 +43,7 @@ function YearSelector({ selectedYear, onChange }: { selectedYear: string; onChan
   )
 }
 
-export default function DataInsightsPage() {
+function DataInsightsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromSignin = searchParams?.get('from') === 'signin'
@@ -1762,3 +1762,12 @@ export default function DataInsightsPage() {
   )
 }
 
+// useSearchParams() forces this route to bail out of static rendering. Next
+// requires the boundary to be explicit so the rest of the tree can stream.
+export default function DataInsightsPage() {
+  return (
+    <Suspense fallback={null}>
+      <DataInsightsContent />
+    </Suspense>
+  )
+}

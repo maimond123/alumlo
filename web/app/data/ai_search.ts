@@ -437,7 +437,7 @@ export class LinkedInProfileSearchEngine {
           // search_query: query,  // ← TEMPORARILY DISABLED TO TEST
           limit_count: top_k
         })
-        .returns<any[]>();
+        .returns<any>();
       
       // 🔍 DEBUG: Log the exact response from Supabase
       console.log(`[AI_SEARCH STANDARD] 📥 SUPABASE RESPONSE:`, {
@@ -536,7 +536,7 @@ export class LinkedInProfileSearchEngine {
           limit_count: top_k,
           organization_name: storedOrganizationName
         })
-        .returns<any[]>();
+        .returns<any>();
       
       if (error) {
         console.error(`[AI_SEARCH CHRONOLOGICAL] ❌ SQL function error:`, {
@@ -631,7 +631,7 @@ export class LinkedInProfileSearchEngine {
       // Call the temporal search RPC function
       const { data, error } = await this.supabase
         .rpc(rpcFunctionName, rpcParams)
-        .returns<any[]>();
+        .returns<any>();
       
       if (error) {
         console.error(`[AI_SEARCH TEMPORAL] ❌ SQL function error:`, {
