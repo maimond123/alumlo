@@ -4,7 +4,7 @@ DROP FUNCTION IF EXISTS chronological_search_function_demo(jsonb, int);
 CREATE OR REPLACE FUNCTION chronological_search_function_demo(
   -- LLM PIPELINE INPUTS
   chronological_filters jsonb DEFAULT '{}',  -- Output from translateWithoutClassificationContext
-  limit_count int DEFAULT 20,
+  limit_count int DEFAULT 20
 )
 RETURNS TABLE (
   -- RICH PROFILE DATA (matching standard search)
@@ -540,15 +540,15 @@ BEGIN
   ORDER BY cda.total_years_experience DESC NULLS LAST, cda.profile_id
   LIMIT $2
   ', 
-  'demo_alumni_career_events_table',       -- ce
-  'demo_alumni_education_events_table',    -- ee
-  'demo_alumni_education_events_table',    -- ee2 (school filter)
-  'demo_alumni_career_events_table',       -- ce2 (company filter)
-  'demo_alumni_career_events_table',       -- ce3 (industry filter)
-  'demo_alumni_career_events_table',       -- ce4 (title filter)
-  'demo_alumni_career_events_table',       -- ce5 (location filter)
-  'demo_alumni_career_events_table',       -- ce6 (company size filter)
-  'demo_alumni_standard_search_table'      -- ss
+  'demo.demo_alumni_career_events_table',       -- ce
+  'demo.demo_alumni_education_events_table',    -- ee
+  'demo.demo_alumni_education_events_table',    -- ee2 (school filter)
+  'demo.demo_alumni_career_events_table',       -- ce2 (company filter)
+  'demo.demo_alumni_career_events_table',       -- ce3 (industry filter)
+  'demo.demo_alumni_career_events_table',       -- ce4 (title filter)
+  'demo.demo_alumni_career_events_table',       -- ce5 (location filter)
+  'demo.demo_alumni_career_events_table',       -- ce6 (company size filter)
+  'demo.demo_alumni_standard_search_table'      -- ss
   ) 
   USING 
     chronological_filters,           -- $1 (JSON with all filters)

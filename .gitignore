@@ -30,3 +30,18 @@ yarn-error.log*
 next-env.d.ts
 alum/node_modules/
 alum/
+
+# --- Data corpus: real profile data never enters the repo ---
+data/raw/
+data/profiles/
+ingest/PROFILES/
+ingest/**/*.csv
+pipeline/PROFILES/
+pipeline/**/*.csv
+*.jsonl.raw
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem

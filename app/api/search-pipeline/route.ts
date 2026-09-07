@@ -3346,7 +3346,7 @@ async function translateChronologicalQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    model: 'ft:gpt-4.1-mini-2025-04-14:alumlo:1-alumlo:BzUQ9FHU', // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
       {
