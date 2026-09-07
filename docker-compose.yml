@@ -1,0 +1,22 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: alumlo-db
+    environment:
+      POSTGRES_USER: alumlo
+      POSTGRES_PASSWORD: alumlo
+      POSTGRES_DB: alumlo
+    ports:
+      - "54322:5432"
+    volumes:
+      - alumlo-pgdata:/var/lib/postgresql/data
+      # Migrations run in filename order on first boot of an empty volume.
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alumlo -d alumlo"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  alumlo-pgdata:
