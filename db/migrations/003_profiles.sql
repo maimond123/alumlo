@@ -16,7 +16,7 @@ CREATE TABLE profiles (
     tenant_id bigint NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     profile_id bigint,
     name text,
-    embedding vector(1536),
+    embedding vector(1024),   -- BGE-M3, generated locally by ingest/embed.py
     embedding_text text,
     
     -- Profile information

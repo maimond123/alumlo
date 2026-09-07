@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { llm } from '../../config/llm';
 import { MODELS } from '../../config/models';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
 
 interface SearchPipelineRequest {
   query: string;
@@ -751,7 +748,7 @@ async function translateChronologicalQueryWithLLM(query: string): Promise<Chrono
   console.log(`[LLM TRANSLATION] 🤖 Starting LLM-only translation for chronological query: "${query}"`);
   const translationStartTime = Date.now();
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.TRANSLATE,
     temperature: 0,
     messages: [
@@ -1338,7 +1335,7 @@ async function processTemporalSearch(
 async function extractTemporalElements(query: string): Promise<TemporalElements> {
   console.log(`[PIPELINE TEMPORAL] 🕐 Starting temporal element extraction for: "${query}"`);
   
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0,
     messages: [
@@ -1693,10 +1690,9 @@ async function processStandardSearch(
   };
 }
 
-// STEP 1: Use the main classification API instead of specialized function
 async function classifyQuery(query: string): Promise<QueryClassification> {
   // Routes the query to the standard, chronological or temporal pipeline.
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0,
     messages: [
@@ -1869,7 +1865,7 @@ async function generateSearchExpansionVariants(
   console.log(`[SEARCH EXPANSION] 📊 Initial filters:`, initialFilters);
   console.log(`[SEARCH EXPANSION] 📈 Initial result count:`, initialResultCount);
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
@@ -2051,7 +2047,7 @@ async function translateStandardSearchQuery(
 ): Promise<StandardSearchFilters> {
   console.log(`[PIPELINE STANDARD] 📊 Starting standard search translation for: "${query}"`);
   
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0,
     messages: [
@@ -2682,7 +2678,7 @@ async function generateStandardExpansionVariants(
   console.log(`[STANDARD EXPANSION] 📊 Initial filters:`, initialFilters);
   console.log(`[STANDARD EXPANSION] 📈 Initial result count:`, initialResultCount);
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
@@ -2872,7 +2868,7 @@ async function generateTemporalExpansionVariants(
   console.log(`[TEMPORAL EXPANSION] 📊 Initial temporal elements:`, initialElements);
   console.log(`[TEMPORAL EXPANSION] 📈 Initial result count:`, initialResultCount);
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
@@ -3103,7 +3099,7 @@ async function standardizeQueryWithLLM(
   console.log(`[LLM MAPPING] 🗺️ Starting LLM-based term mapping for ${searchType} search: "${query}"`);
   const mappingStartTime = Date.now();
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.TRANSLATE,
     temperature: 0,
     messages: [
@@ -3319,7 +3315,7 @@ async function translateChronologicalQueryWithFineTuning(
   console.log(`[FINE-TUNED TRANSLATOR] 🎯 Starting fine-tuned translation for chronological query: "${standardizedQuery}"`);
   const translationStartTime = Date.now();
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.FINE_TUNED ?? MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
@@ -3440,7 +3436,7 @@ async function translateTemporalQueryWithFineTuning(
   console.log(`[FINE-TUNED TRANSLATOR] 🕐 Starting fine-tuned temporal translation: "${standardizedQuery}"`);
   const translationStartTime = Date.now();
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
@@ -3500,7 +3496,7 @@ async function translateStandardQueryWithFineTuning(
   console.log(`[FINE-TUNED TRANSLATOR] 📊 Starting fine-tuned standard translation: "${standardizedQuery}"`);
   const translationStartTime = Date.now();
 
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [

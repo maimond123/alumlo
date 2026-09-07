@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     debug.log('[API] 🔑 Environment check:', {
       hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
       nodeEnv: process.env.NODE_ENV
     });
     

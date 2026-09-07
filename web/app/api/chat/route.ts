@@ -1,4 +1,4 @@
-import OpenAI from 'openai'
+import { llm } from '../../config/llm';
 import { MODELS } from '../../config/models';
 
 // Define an interface for the chart data structure
@@ -68,10 +68,6 @@ const presetAnswers = {
   }
 };
 
-// Initialize the OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || ''
-})
 
 export async function POST(req: Request) {
   try {
@@ -119,7 +115,7 @@ async function handleChartAnalysis(chartId: string, chartType: string, chartTitl
       ).join('\n');
 
   // Use the OpenAI client for chart analysis
-    const response = await openai.chat.completions.create({
+    const response = await llm.chat.completions.create({
       model: MODELS.CHAT,
       stream: true,
       messages: [
@@ -196,7 +192,7 @@ async function handleLearnModeChat(message: string, organizationName: string, hi
   }));
 
   // Use the OpenAI client for other questions
-  const response = await openai.chat.completions.create({
+  const response = await llm.chat.completions.create({
     model: MODELS.CHAT,
     stream: true,
     messages: [
