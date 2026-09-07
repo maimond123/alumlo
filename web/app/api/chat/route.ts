@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { MODELS } from '../../config/models';
 
 // Define an interface for the chart data structure
 interface ChartItem {
@@ -119,7 +120,7 @@ async function handleChartAnalysis(chartId: string, chartType: string, chartTitl
 
   // Use the OpenAI client for chart analysis
     const response = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
+      model: MODELS.CHAT,
       stream: true,
       messages: [
         {
@@ -196,7 +197,7 @@ async function handleLearnModeChat(message: string, organizationName: string, hi
 
   // Use the OpenAI client for other questions
   const response = await openai.chat.completions.create({
-    model: '-4o-mini',
+    model: MODELS.CHAT,
     stream: true,
     messages: [
       {

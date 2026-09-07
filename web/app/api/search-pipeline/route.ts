@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { MODELS } from '../../config/models';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
@@ -751,7 +752,7 @@ async function translateChronologicalQueryWithLLM(query: string): Promise<Chrono
   const translationStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: MODELS.TRANSLATE,
     temperature: 0,
     messages: [
       {
@@ -981,7 +982,7 @@ export async function POST(req: NextRequest) {
     console.log(`[PIPELINE] 🔍 Step 1: Classifying query...`);
     processingSteps.push('query_classification');
     
-    const classification = await classifyQueryUsingMainAPI(query);
+    const classification = await classifyQuery(query);
     llmCalls++;
     
     console.log(`[PIPELINE] 🎯 Classification result:`, {
@@ -1338,7 +1339,7 @@ async function extractTemporalElements(query: string): Promise<TemporalElements>
   console.log(`[PIPELINE TEMPORAL] 🕐 Starting temporal element extraction for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: MODELS.CLASSIFY,
     temperature: 0,
     messages: [
       {
@@ -1693,41 +1694,15 @@ async function processStandardSearch(
 }
 
 // STEP 1: Use the main classification API instead of specialized function
-async function classifyQueryUsingMainAPI(query: string): Promise<QueryClassification> {
-  try {
-    console.log(`[PIPELINE CLASSIFY] 🔗 Attempting main API classification for: "${query}"`);
-    
-    const response = await fetch('/api/classify-query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Main API returned ${response.status}: ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    console.log(`[PIPELINE CLASSIFY] ✅ Main API classification successful: ${result.type}`);
-    
-    return result;
-  } catch (error) {
-    console.error('🔗 [CLASSIFICATION ERROR] Main API failed, using fallback:', error);
-    console.error(`[PIPELINE CLASSIFY] ❌ Main API failed, switching to fallback:`, {
-      error: error,
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-    
-    console.log(`[PIPELINE CLASSIFY] 🔄 Starting OpenAI fallback classification`);
-    
-    // Fallback to direct OpenAI call with the same logic as classify-query/route.ts
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      temperature: 0,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a search query classifier for an alumni database. Analyze the user's query and determine the most appropriate search type.
+async function classifyQuery(query: string): Promise<QueryClassification> {
+  // Routes the query to the standard, chronological or temporal pipeline.
+  const response = await openai.chat.completions.create({
+    model: MODELS.CLASSIFY,
+    temperature: 0,
+    messages: [
+      {
+        role: 'system',
+        content: `You are a search query classifier for an alumni database. Analyze the user's query and determine the most appropriate search type.
 
 **FIRST: VALIDATE QUERY APPROPRIATENESS**
 
@@ -1830,30 +1805,29 @@ For invalid queries, return:
 - If impossible: Fix the contradiction and suggest realistic alternatives
 
 Respond only with valid JSON.`,
-        },
-        {
-          role: 'user',
-          content: query
-        },
-      ],
-    });
+      },
+      {
+        role: 'user',
+        content: query
+      },
+    ],
+  });
 
-    console.log(`[PIPELINE CLASSIFY] 🤖 OpenAI fallback response received`);
+  console.log(`[PIPELINE CLASSIFY] 🤖 OpenAI fallback response received`);
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      console.log(`[PIPELINE CLASSIFY] ⚠️ Empty response from OpenAI, defaulting to standard`);
-      return { type: 'standard' };
-    }
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    console.log(`[PIPELINE CLASSIFY] ⚠️ Empty response from OpenAI, defaulting to standard`);
+    return { type: 'standard' };
+  }
 
-    try {
-      const parsed = JSON.parse(content);
-      console.log(`[PIPELINE CLASSIFY] ✅ OpenAI fallback successful: ${parsed.type}`);
-      return parsed;
-    } catch {
-      console.log(`[PIPELINE CLASSIFY] ❌ Failed to parse OpenAI response, defaulting to standard`);
-      return { type: 'standard' };
-    }
+  try {
+    const parsed = JSON.parse(content);
+    console.log(`[PIPELINE CLASSIFY] ✅ OpenAI fallback successful: ${parsed.type}`);
+    return parsed;
+  } catch {
+    console.log(`[PIPELINE CLASSIFY] ❌ Failed to parse OpenAI response, defaulting to standard`);
+    return { type: 'standard' };
   }
 }
 
@@ -1896,7 +1870,7 @@ async function generateSearchExpansionVariants(
   console.log(`[SEARCH EXPANSION] 📈 Initial result count:`, initialResultCount);
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
       {
@@ -2078,7 +2052,7 @@ async function translateStandardSearchQuery(
   console.log(`[PIPELINE STANDARD] 📊 Starting standard search translation for: "${query}"`);
   
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: MODELS.CLASSIFY,
     temperature: 0,
     messages: [
       {
@@ -2709,7 +2683,7 @@ async function generateStandardExpansionVariants(
   console.log(`[STANDARD EXPANSION] 📈 Initial result count:`, initialResultCount);
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
       {
@@ -2899,7 +2873,7 @@ async function generateTemporalExpansionVariants(
   console.log(`[TEMPORAL EXPANSION] 📈 Initial result count:`, initialResultCount);
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4.1-mini',
+    model: MODELS.CLASSIFY,
     temperature: 0.3, // Slightly higher for creative alternatives
     messages: [
       {
@@ -3130,7 +3104,7 @@ async function standardizeQueryWithLLM(
   const mappingStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: MODELS.TRANSLATE,
     temperature: 0,
     messages: [
       {
@@ -3346,7 +3320,7 @@ async function translateChronologicalQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'ft:gpt-4.1-mini-2025-04-14:alumlo:1-alumlo:BzUQ9FHU', // This will be replaced with fine-tuned model later
+    model: MODELS.FINE_TUNED ?? MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
       {
@@ -3467,7 +3441,7 @@ async function translateTemporalQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
       {
@@ -3527,7 +3501,7 @@ async function translateStandardQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini', // This will be replaced with fine-tuned model later
+    model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
     temperature: 0,
     messages: [
       {
