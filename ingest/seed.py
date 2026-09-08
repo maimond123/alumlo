@@ -45,19 +45,30 @@ def norm(s: str | None) -> str:
     return re.sub(r"[^a-z0-9]+", "", (s or "").lower())
 
 
-def strip_nul(v):
-    """Remove NUL bytes, which Postgres text columns cannot store.
+def normalize(v):
+    """Make the raw scrape storable and honest about what it does not have.
 
-    The scrape left \\u0000 inside some profile descriptions. This is the
-    trust boundary for external data, so the cleaning happens here once
-    rather than at each insert.
+    Two things, both once, at the trust boundary for external data:
+
+    NUL bytes go, because Postgres text columns cannot store them; the scrape
+    left \\u0000 inside some profile descriptions.
+
+    The empty string becomes None, because that is what the scrape writes when
+    a field is absent and Postgres counts \'\' as a value. count(current_job_
+    location) read 397 where 273 profiles actually had one -- a 31% overstatement
+    that reached /learn as a stated coverage figure. Storing NULL for absent
+    makes every reader correct without each one remembering to ask.
+
+    Arrays are unaffected: they are built with truthiness filters that already
+    dropped the empty strings and drop None the same way.
     """
     if isinstance(v, str):
-        return v.replace("\x00", "")
+        v = v.replace("\x00", "")
+        return v or None
     if isinstance(v, list):
-        return [strip_nul(x) for x in v]
+        return [normalize(x) for x in v]
     if isinstance(v, dict):
-        return {k: strip_nul(x) for k, x in v.items()}
+        return {k: normalize(x) for k, x in v.items()}
     return v
 
 
@@ -205,10 +216,12 @@ def to_row(p: dict, tenant_id: int, tenant_key: str, idx: int) -> dict:
         "undergraduate_school": under,
         "graduate_school": grad,
         "natural_language_experiences": " | ".join(
-            f"{e.get('title')} at {e.get('company')} ({e.get('duration')})"
+            f"{e.get('title')} at {e.get('company') or 'unknown'}"
+            f" ({e.get('duration') or 'unknown'})"
             for e in exp if e.get("title")),
         "natural_language_education": " | ".join(
-            f"{e.get('degree')} from {e.get('school')}" for e in edu if e.get("school")),
+            f"{e.get('degree') or 'degree'} from {e.get('school')}"
+            for e in edu if e.get("school")),
 
         "career_timeline": json.dumps(exp),
         "education_timeline": json.dumps(edu),
@@ -234,7 +247,7 @@ def main() -> int:
 
     raw = []
     for f in files:
-        raw.extend(strip_nul(json.load(open(f))))
+        raw.extend(normalize(json.load(open(f))))
     print(f"read {len(raw)} profiles from {len(files)} files")
 
     rng = random.Random(20250731)  # fixed seed: the sample is reproducible
