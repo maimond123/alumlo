@@ -11,10 +11,26 @@ let pool: Pool | undefined;
 
 export function db(): Pool {
   if (!pool) {
+    // No localhost fallback. One used to live here, and on Vercel it turned an
+    // unset DATABASE_URL into "connect ECONNREFUSED 127.0.0.1:54322" -- an
+    // error that reads as a network fault and sends you looking at the
+    // database instead of at the configuration. Local runs get the value from
+    // the repo-root .env, which web/next.config.js loads.
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error(
+        'DATABASE_URL is not set. Locally it comes from the repo-root .env; ' +
+          'on Vercel it is a project environment variable, and a deployment ' +
+          'only picks one up if it was built after the variable was added.'
+      );
+    }
+
     pool = new Pool({
-      connectionString:
-        process.env.DATABASE_URL ??
-        'postgresql://alumlo:alumlo@localhost:54322/alumlo',
+      connectionString,
+      // Sized for the widest in-request fan-out: getTenantInsights issues eight
+      // queries through Promise.all. Each serverless instance holds its own
+      // pool, so use the host's pooled endpoint (Neon's -pooler) and let
+      // pgbouncer multiplex rather than shrinking this.
       max: 10,
       idleTimeoutMillis: 30_000,
     });
