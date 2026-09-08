@@ -10,26 +10,26 @@ import { useOrganization } from "../contexts/OrganizationContext"
 
 // Add  realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
-  "What's the average salary of our alumni?",
-  "How do our alumni compare to the general population?",
-  "What industries are our alumni working in?",
-  "How many of our alumni have founded companies?",
-  "What are the career progression patterns of our alumni?",
-  "What percentage of alumni reach executive positions?",
-  "In which countries do our alumni work?",
-  "How quickly do our alumni change jobs?",
-  "What's the entrepreneurship success rate of our alumni?",
-  "How can alumni data help with student recruitment?",
-  "What's the average salary by industry?",
-  "How do our alumni compare to the general population in terms of salary?",
-  "What are the most common career paths?",
-  "How many alumni work in technology?",
-  "What percentage work in healthcare?",
-  "How many alumni have advanced degrees?",
-  "What's the retention rate in first jobs?",
-  "How long do alumni stay at their first job?",
-  "What skills are most valued by employers?",
-  "How can we improve alumni outcomes?"
+  "Where do our alumni work now?",
+  "Which companies employ the most alumni?",
+  "Where are our alumni located?",
+  "Which schools did our alumni attend?",
+  "How long did alumni stay before leaving?",
+  "What years did most alumni leave?",
+  "What job titles do alumni hold now?",
+  "How many positions has the average alum held?",
+  "How many alumni went to graduate school?",
+  "What share of alumni are in Atlanta?",
+  "Which alumni employers are outside food service?",
+  "How complete is our alumni data?",
+  "What do we know about each alum?",
+  "How many profiles list a current employer?",
+  "Which undergraduate school is most common?",
+  "What is the median tenure before leaving?",
+  "Which locations have the most alumni?",
+  "How many alumni left in the last five years?",
+  "What are the most common current job titles?",
+  "Which companies appear most in alumni careers?"
 ]
 
 const tagScrollAnimation = `
@@ -164,7 +164,7 @@ export default function LearnPage() {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          organizationName: tenant.name,
+          organizationName: tenant.slug,
           history: conversations
         }),
       });
