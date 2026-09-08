@@ -5,13 +5,8 @@ import { useState, useEffect, useRef } from "react"
 import { Loader2, Search, BrainCog } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
-import { getUserEmail } from "../utils/auth"
-import { useRouter } from "next/navigation"
 import analytics from "../utils/analytics"
-import { supabase } from "../data/supabase"
-import { useLearnConversations } from "../../hooks/useLearnConversations"
-import { useAuth } from "../../components/AuthProvider"
-import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
+import { useOrganization } from "../contexts/OrganizationContext"
 
 // Add  realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
@@ -80,35 +75,10 @@ const tagScrollAnimation = `
 `;
 
 export default function LearnPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [mountTime] = useState(Date.now())
-  const [error, setError] = useState<string | null>(null)
-  const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
-  const [displayOrganizationName, setDisplayOrganizationName] = useState("")
-  const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
-  const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
+  const { tenant, isLoading: orgLoading, error: orgError } = useOrganization()
+  /** The tenant name as the typewriter effect has revealed it so far. */
+  const [typedName, setTypedName] = useState("")
   const { isSidebarOpen } = useSidebar()
-  
-  // Add new state for demo mode
-  const [isDemoMode, setIsDemoMode] = useState(false)
-  const [showLearnDemoModal, setShowLearnDemoModal] = useState(false)
-  
-  const [authState, setAuthState] = useState({
-    isLoading: true,
-    isAuthenticated: false
-  })
-
-  // NEW: Auth context
-  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
-
-  // Sync local authState with context
-  useEffect(() => {
-    setAuthState({
-      isLoading: authLoading,
-      isAuthenticated: contextAuthenticated
-    });
-  }, [authLoading, contextAuthenticated]);
 
   // Add these new states for the Learn mode
   const [conversations, setConversations] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
@@ -116,39 +86,9 @@ export default function LearnPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentAnswer, setCurrentAnswer] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Add conversation history hook
-  const { 
-    createConversation, 
-    addMessage, 
-    generateConversationTitle,
-    loadMessages,
-    currentMessages
-  } = useLearnConversations();
-  
-  // Add state for current conversation ID
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
-  // Load conversation ID from sessionStorage on mount
-  useEffect(() => {
-    const savedConversationId = sessionStorage.getItem('currentLearnConversationId');
-    if (savedConversationId) {
-      setCurrentConversationId(savedConversationId);
-    }
-  }, []);
-
-  // Save conversation ID to sessionStorage whenever it changes
-  useEffect(() => {
-    if (currentConversationId) {
-      sessionStorage.setItem('currentLearnConversationId', currentConversationId);
-    } else {
-      sessionStorage.removeItem('currentLearnConversationId');
-    }
-  }, [currentConversationId]);
-
   // Initialize randomized tags on component mount
   useEffect(() => {
     // Create a random starting position in the tag list
@@ -170,146 +110,10 @@ export default function LearnPage() {
     }
   }, []);
 
-  // Check auth state on component mount
-  useEffect(() => {
-    // Debounce rapid auth checks
-    const timeoutId = setTimeout(() => {
-      const checkAuth = async () => {
-        try {
-          // Check for demo mode from URL parameters first
-          initDemoFromUrl()
-          
-          // Check if this is demo mode (session-based)
-          if (checkIsDemoMode()) {
-            console.log("Demo mode activated from session")
-            setIsDemoMode(true)
-            setFormattedOrganizationName(getDemoOrganization()) // Get from session
-            setDisplayOrganizationName(getDemoDisplayName()) // Get from session
-            setIsOrganizationNameReadyToAnimate(true)
-            setIsLoading(false)
-
-            const visitorId = analytics.getVisitorId()
-            analytics.identifyUser("demo_user", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your Organization"
-            })
-
-            // Set auth state for demo mode
-            setAuthState({
-              isLoading: false,
-              isAuthenticated: true
-            })
-            return
-          }
-
-          if (authLoading) {
-            return;
-          }
-
-          // Don't redirect immediately after mount to allow auth to stabilize
-          const timeSinceMount = Date.now() - mountTime
-          if (timeSinceMount < 300) {
-            console.log('[DEBUG] Learn: Too soon after mount, waiting for auth to stabilize...', { timeSinceMount })
-            return
-          }
-
-          if (!contextAuthenticated) {
-            setAuthState({ isLoading: false, isAuthenticated: false })
-            router.push("/signin")
-            return
-          }
-
-          // For authenticated real users, proceed with normal flow
-          console.log("[DEBUG] Learn: Real user authenticated")
-
-          // Set auth state after handling demo mode check
-          setAuthState({
-            isLoading: false,
-            isAuthenticated: contextAuthenticated
-          })
-        } catch (error) {
-          console.error("Auth check error:", error)
-          // Don't sign out on API rate limiting errors
-          if ((error as Error)?.message?.includes('429') || (error as Error)?.message?.includes('API key')) {
-            console.log('API rate limiting detected, not signing out')
-            return
-          }
-          setAuthState({
-            isLoading: false,
-            isAuthenticated: false
-          })
-          router.push('/signin')
-        }
-      }
-
-      checkAuth()
-    }, 100) // 100ms debounce
-    
-    return () => clearTimeout(timeoutId)
-  }, [router, authLoading, contextAuthenticated, mountTime])
-
-  // Only fetch school name for non-demo users
-  useEffect(() => {
-    if (authState.isAuthenticated && !isDemoMode) {
-      console.log("Learn: User authenticated, fetching data...")
-      const fetchSchoolName = async () => {
-        try {
-          const userEmail = await getUserEmail()
-
-          if (!userEmail) {
-            console.error("No email found in user data:", userEmail)
-            throw new Error("No user email found")
-          }
-
-          const { data, error } = await supabase
-            .from("customer_information")
-            .select("organization_name")
-            .eq("organization_email", userEmail)
-            .single()
-
-          if (error) {
-            console.error("Supabase query error:", error)
-            throw error
-          }
-
-          const formatted = data.organization_name
-            .replace(/_/g, " ")
-            .split(" ")
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")
-          setFormattedOrganizationName(formatted)
-          setDisplayOrganizationName(formatted) // Use same name for display for real users
-
-          // Introduce a short delay before signaling animation readiness
-          setTimeout(() => {
-            setIsOrganizationNameReadyToAnimate(true)
-          }, 100) // 100ms delay
-
-          setIsLoading(false)
-        } catch (err: any) {
-          if (err.message?.includes("not authenticated")) {
-            router.push("/signin")
-            return
-          }
-          setError("Failed to load school data")
-          setIsLoading(false)
-        }
-      }
-
-      fetchSchoolName()
-    } else if (isDemoMode) {
-      // If in demo mode, ensure loading is complete
-      setIsLoading(false)
-    }
-  }, [authState.isAuthenticated, router, isDemoMode])
-
   // Track page view when component mounts
   useEffect(() => {
-    if (!authState.isLoading && authState.isAuthenticated) {
-      analytics.trackPageView('Learn');
-    }
-  }, [authState.isLoading, authState.isAuthenticated]);
+    analytics.trackPageView('Learn');
+  }, []);
 
   // Track scroll depth
   useEffect(() => {
@@ -335,48 +139,13 @@ export default function LearnPage() {
     };
   }, []);
 
-  // Identify user when authenticated
-  useEffect(() => {
-    const identifyUserInAnalytics = async () => {
-      if (authState.isAuthenticated) {
-        try {
-          const userEmail = await getUserEmail();
-          if (userEmail) {
-            if (isDemoMode) {
-              // For demo users, we already identinted them in the checkAuth function
-              // This ensures we maintain the visitor ID while still using the demo email
-              // for Supabase data retrieval
-              console.log("Demo user already identified with unique visitor ID");
-            } else {
-              // For real users, identify them with their actual email
-              analytics.identifyUser(userEmail, {
-                email: userEmail,
-                isDemoUser: false,
-                organization: formattedOrganizationName
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error identifying user in analytics:", error);
-        }
-      }
-    };
-
-    identifyUserInAnalytics();
-  }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
-
   // Add handleLearnSubmit function to handle questions in learn mode
   const handleLearnSubmit = async (e: React.FormEvent, questionOverride?: string) => {
     e.preventDefault();
     
     const questionToUse = questionOverride || currentQuestion.trim();
-    if (!questionToUse) return;
-    
-    if (isDemoMode) {
-      setShowLearnDemoModal(true);
-      return;
-    }
-    
+    // The chat is scoped to a tenant. The page does not render without one.
+    if (!questionToUse || !tenant) return;
     // Add the user's question to the conversation
     const userQuestion = questionToUse;
     setConversations(prev => [...prev, { role: 'user', content: userQuestion }]);
@@ -385,17 +154,6 @@ export default function LearnPage() {
     
     // Track the question in analytics
     analytics.trackLearnModeQuestion(userQuestion);
-    
-    // Create conversation only if this is truly the first message (no existing conversations) and not in demo mode
-    let conversationId = currentConversationId;
-    if (!conversationId && conversations.length === 0 && !isDemoMode) {
-      const title = generateConversationTitle(userQuestion);
-      conversationId = await createConversation({
-        title,
-        initialMessage: userQuestion
-      });
-      setCurrentConversationId(conversationId);
-    }
     
     try {
       // Call the API to get the response
@@ -406,7 +164,7 @@ export default function LearnPage() {
         },
         body: JSON.stringify({ 
           message: userQuestion,
-          organizationName: formattedOrganizationName || "Your School",
+          organizationName: tenant.name,
           history: conversations
         }),
       });
@@ -446,14 +204,6 @@ export default function LearnPage() {
       setConversations(prev => [...prev, { role: 'assistant', content: responseText }]);
       setCurrentAnswer('');
       
-      // Save assistant message to database if not in demo mode
-      if (conversationId && !isDemoMode) {
-        await addMessage({
-          conversationId,
-          role: 'assistant',
-          content: responseText
-        });
-      }
       
     } catch (error) {
       console.error('Error in learn mode chat:', error);
@@ -494,100 +244,32 @@ export default function LearnPage() {
     }
   }, [conversations, currentAnswer]);
 
-  // Refined Typewriter effect for school name (matches dashboard)
+  // Typewriter effect for the tenant name
   useEffect(() => {
-    if (isOrganizationNameReadyToAnimate && displayOrganizationName) {
-      setDisplayedOrganizationName(""); // Initialize for animation
-      let i = 0;
-      const organizationNameToAnimate = displayOrganizationName;
-      
-      const typingInterval = setInterval(() => {
-        if (i < organizationNameToAnimate.length) {
-          setDisplayedOrganizationName(organizationNameToAnimate.substring(0, i + 1));
-          i++;
-        } else {
-          clearInterval(typingInterval);
-        }
-      }, 70); // Speed of typing
-      return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!displayOrganizationName) {
-      setDisplayedOrganizationName(""); // Clear if no formatted name
-    }
-  }, [displayOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
-
-  // Add function to load a conversation from the sidebar or URL
-  const loadConversation = async (conversationId: string) => {
-    try {
-      // Don't load conversations in demo mode
-      if (isDemoMode) {
-        console.log('[DEBUG] Cannot load conversations in demo mode');
-        return;
+    if (!tenant) return
+    setTypedName("")
+    let i = 0
+    const typingInterval = setInterval(() => {
+      if (i < tenant.name.length) {
+        setTypedName(tenant.name.substring(0, i + 1))
+        i++
+      } else {
+        clearInterval(typingInterval)
       }
-      
-      console.log(`[DEBUG] Loading conversation: ${conversationId}`);
-      setCurrentConversationId(conversationId);
-      
-      // Load messages and wait for them
-      await loadMessages(conversationId);
-      
-      // Note: currentMessages will be updated by the useLearnConversations hook
-      // The conversion to conversations format will happen in the useEffect below
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-    }
-  };
+    }, 70)
+    return () => clearInterval(typingInterval)
+  }, [tenant])
 
-  // Listen for conversation load events from the sidebar
-  useEffect(() => {
-    const handleLoadConversation = (event: CustomEvent) => {
-      const { conversationId } = event.detail;
-      loadConversation(conversationId);
-    };
 
-    window.addEventListener('loadConversation', handleLoadConversation as EventListener);
-    
-    return () => {
-      window.removeEventListener('loadConversation', handleLoadConversation as EventListener);
-    };
-  }, [loadMessages]);
 
-  // Check URL parameters for conversation ID on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const conversationId = urlParams.get('conversation');
-      if (conversationId && conversationId !== currentConversationId) {
-        loadConversation(conversationId);
-      }
-    }
-  }, [currentConversationId, loadMessages]);
 
-  // Update conversations when currentMessages changes
-  useEffect(() => {
-    if (currentMessages.length > 0) {
-      const convertedMessages = currentMessages.map(msg => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content
-      }));
-      setConversations(convertedMessages);
-      console.log(`[DEBUG] Loaded ${currentMessages.length} messages for conversation`);
-    }
-  }, [currentMessages]);
 
-  if (authState.isLoading) {
-    return <div>Loading authentication status...</div>
+  if (orgLoading) {
+    return <div>Loading...</div>
   }
 
-  if (!authState.isAuthenticated) {
-    return <div>Please log in to access the learn page. Error: {error}</div>
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div>Loading...</div>
-      </div>
-    )
+  if (!tenant) {
+    return <div>No tenant found. {orgError}</div>
   }
 
   return (
@@ -598,14 +280,9 @@ export default function LearnPage() {
           {conversations.length === 0 ? (
             <>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 text-center">
-                Learn
-                {/* Conditional space, only if school name will be rendered */}
-                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-                  <span className="text-black">{displayedOrganizationName}</span>
-                ) : null}
-                {/* Conditional space, only if school name was rendered */}
-                {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                Learn{typedName ? " " : ""}
+                {typedName ? <span className="text-black">{typedName}</span> : null}
+                {typedName ? " " : ""}
                 Alumni
               </h1>
 
@@ -630,15 +307,6 @@ export default function LearnPage() {
                         e.preventDefault();
                         setCurrentQuestion('');
                         setConversations([]);
-                        setCurrentConversationId(null);
-                        sessionStorage.removeItem('currentLearnConversationId');
-                        
-                        // Clear URL parameters if any
-                        if (typeof window !== 'undefined') {
-                          const url = new URL(window.location.href);
-                          url.searchParams.delete('conversation');
-                          window.history.replaceState({}, document.title, url.pathname);
-                        }
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-white text-black rounded-lg border border-black hover:bg-gray-100 transition-colors"
                       aria-label="Clear"
@@ -745,14 +413,9 @@ export default function LearnPage() {
                 {/* Centered title - positioned between the vertical lines */}
                 <div className="fixed top-16 z-10 pt-4" style={{left: '20%', right: '20%'}}>
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center">
-                    Learn
-                    {/* Conditional space, only if school name will be rendered */}
-                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-                      <span className="text-black">{displayedOrganizationName}</span>
-                    ) : null}
-                    {/* Conditional space, only if school name was rendered */}
-                    {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+                    Learn{typedName ? " " : ""}
+                    {typedName ? <span className="text-black">{typedName}</span> : null}
+                    {typedName ? " " : ""}
                     Alumni
                   </h1>
                 </div>
@@ -824,15 +487,6 @@ export default function LearnPage() {
                         e.preventDefault();
                         setCurrentQuestion('');
                         setConversations([]);
-                        setCurrentConversationId(null);
-                        sessionStorage.removeItem('currentLearnConversationId');
-                        
-                        // Clear URL parameters if any
-                        if (typeof window !== 'undefined') {
-                          const url = new URL(window.location.href);
-                          url.searchParams.delete('conversation');
-                          window.history.replaceState({}, document.title, url.pathname);
-                        }
                       }}
                       className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transform transition-all duration-300 border border-gray-300 focus:outline-none"
                       aria-label="Clear"
@@ -863,45 +517,6 @@ export default function LearnPage() {
           )}
         </div>
       </main>
-
-      {/* Learn Demo Modal */}
-      {isDemoMode && showLearnDemoModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-md flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowLearnDemoModal(false)
-            }
-          }}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BrainCog className="h-8 w-8 text-emerald-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Learn Alumni</h2>
-              <p className="text-gray-600 mb-6">
-                This feature is only for paid users.
-                <button
-                  onClick={() => window.open('https://calendly.com/david-alumlo/30min', '_blank')}
-                  className="text-emerald-600 underline hover:text-emerald-700 font-medium transition-colors ml-1"
-                >
-                  Want Alumlo for your organization?
-                </button>
-              </p>
-              <button
-                onClick={() => setShowLearnDemoModal(false)}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 } 

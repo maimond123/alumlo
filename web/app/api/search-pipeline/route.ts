@@ -6,7 +6,6 @@ import { MODELS } from '../../config/models';
 interface SearchPipelineRequest {
   query: string;
   organizationName: string;
-  isDemo?: boolean;
 }
 
 interface QueryClassification {
@@ -944,11 +943,10 @@ export async function POST(req: NextRequest) {
       hasQuery: !!body.query,
       queryLength: body.query?.length || 0,
       organizationName: body.organizationName,
-      isDemo: body.isDemo,
       requestType: body.requestType || 'search'
     });
 
-    const { query, organizationName, isDemo = false, requestType = 'search' } = body;
+    const { query, organizationName, requestType = 'search' } = body;
 
     if (!query) {
       console.log(`[PIPELINE] ❌ No query provided`);

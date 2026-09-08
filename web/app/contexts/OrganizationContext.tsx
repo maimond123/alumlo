@@ -1,91 +1,64 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { supabase } from '../data/supabase'
-import { getUserEmail } from '../utils/auth'
 import type { ReactNode } from 'react'
 
+export interface Tenant {
+  /** Identifies the tenant to /api/search. 'demo', 'chick_fil_a'. */
+  slug: string
+  /** What the UI renders. 'Chick-fil-A'. */
+  name: string
+  /** How many profiles the tenant has, for the search page's result copy. */
+  profileCount: number
+}
+
 interface OrganizationContextType {
-  organizationName: string | null
-  tableId: string | null
-  setOrganizationName: (name: string | null) => void
+  tenant: Tenant | null
   isLoading: boolean
+  error: string | null
 }
 
 const OrganizationContext = createContext<OrganizationContextType>({
-  organizationName: null,
-  tableId: null,
-  setOrganizationName: () => {},
-  isLoading: true
+  tenant: null,
+  isLoading: true,
+  error: null
 })
 
+const DEFAULT_TENANT_SLUG = 'demo'
+
+/**
+ * Resolves which tenant the session is looking at.
+ *
+ * This replaces a Supabase lookup that mapped the signed-in user's email to a
+ * row in customer_information. There are no accounts now, so the slug comes
+ * from ?tenant= and defaults to 'demo'. The slug and the display name are kept
+ * apart because they are different values: the 2025 code derived one from the
+ * other by lowercasing and underscoring, which is what migration 002 removed.
+ */
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const [organizationName, setOrganizationName] = useState<string | null>(null)
-  const [tableId, setTableId] = useState<string | null>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  // Add debug log when organizationName changes
-  useEffect(() => {
-    console.log("DEBUG: OrganizationContext - organizationName changed to:", organizationName)
-  }, [organizationName])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const getOrganizationInfo = async () => {
-      try {
-        console.log("DEBUG: OrganizationContext - fetching organization info")
-        // Get user email from Supabase auth
-        const userEmail = await getUserEmail()
-        
-        // If no user email, just set loading to false and return
-        if (!userEmail) {
-          console.log("DEBUG: OrganizationContext - no user found")
-          setIsLoading(false)
-          return
-        }
-  
-        console.log("DEBUG: OrganizationContext - user email:", userEmail)
-        
-        // If we have a user, get their organization info
-        console.log("DEBUG: OrganizationContext - querying Supabase for organization info")
-        const { data, error } = await supabase
-          .from('customer_information')
-          .select('organization_name, table_name') 
-          .eq('organization_email', userEmail)
-          .single()
-        
-        if (error) {
-          console.error("DEBUG: OrganizationContext - Supabase error:", error)
-        }
-        
-        console.log("DEBUG: OrganizationContext - Supabase response:", data)
-        
-        if (data) {
-          console.log("DEBUG: OrganizationContext - setting organization name to:", data.organization_name)
-          setOrganizationName(data.organization_name) // Value from DB column 'organization_name'
-          setTableId(data.table_name)
-        } else {
-          console.log("DEBUG: OrganizationContext - no data returned from Supabase")
-        }
-      } catch (error) {
-        console.error('Error in getOrganizationInfo:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-  
-    getOrganizationInfo()
+    const slug =
+      new URLSearchParams(window.location.search).get('tenant') ||
+      DEFAULT_TENANT_SLUG
+
+    fetch(`/api/tenants?slug=${encodeURIComponent(slug)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unknown tenant "${slug}"`)
+        setTenant(await res.json())
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setIsLoading(false))
   }, [])
 
   return (
-    <OrganizationContext.Provider value={{ 
-      organizationName, 
-      tableId,
-      setOrganizationName,
-      isLoading
-    }}>
+    <OrganizationContext.Provider value={{ tenant, isLoading, error }}>
       {children}
     </OrganizationContext.Provider>
   )
 }
 
-export const useOrganization = () => useContext(OrganizationContext) 
+export const useOrganization = () => useContext(OrganizationContext)

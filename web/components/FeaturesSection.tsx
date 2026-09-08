@@ -6,7 +6,6 @@ import { useInView } from 'react-intersection-observer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
 import Image from 'next/image'
-import { setDemoMode } from '../app/utils/demo'
 
 // Suggestion tags for the slot machine animation
 const secondRowSuggestionTags = [
@@ -90,7 +89,6 @@ export default function FeaturesSection() {
   const [reportPage, setReportPage] = useState(0)
 
   // Demo access loading state
-  const [isLoading, setIsLoading] = useState(false)
 
   // Slot machine animation state
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(-1) // Start with -1 to show initial text
@@ -115,22 +113,8 @@ export default function FeaturesSection() {
     return () => clearInterval(interval)
   }, [part2InView])
 
-  const handleDemoAccess = async () => {
-    setIsLoading(true)
-    
-    try {
-      // Set demo mode in session storage
-      setDemoMode('demo', '{Your Organization}')
-      
-      // Redirect to search- no authentication needed!
-      router.push('/search')
-    } catch (err) {
-      console.error('Demo setup error:', err)
-      // Still redirect to search as demo mode is set
-      router.push('/search')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleDemoAccess = () => {
+    router.push('/search')
   }
 
   return (
@@ -381,19 +365,11 @@ export default function FeaturesSection() {
           {/* Get a demo button */}
           <motion.button
             onClick={handleDemoAccess}
-            disabled={isLoading}
             whileHover={{ scale: 1.05, backgroundColor: '#047857' }}
             whileTap={{ scale: 0.95 }}
             className="bg-emerald-600 text-white px-10 py-4 text-xl rounded-full hover:bg-emerald-700 transition-colors duration-300 font-semibold shadow-lg"
           >
-            {isLoading ? (
-              <>
-                <span className="animate-spin mr-2">⟳</span>
-                Loading...
-              </>
-            ) : (
-              "Try Demo"
-            )}
+            Try Demo
           </motion.button>
           {/* Added spacing at the bottom of  this now last section */}
           <div className="pb-48"></div> 

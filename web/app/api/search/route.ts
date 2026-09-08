@@ -75,8 +75,7 @@ export async function POST(req: NextRequest) {
     
     // Add debugging for environment variables
     debug.log('[API] 🔑 Environment check:', {
-      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
       hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
       nodeEnv: process.env.NODE_ENV
     });
@@ -88,7 +87,6 @@ export async function POST(req: NextRequest) {
       hasQuery: !!body.query,
       queryLength: body.query?.length || 0,
       organizationName: body.organizationName,
-      isDemo: body.isDemo,
       hasClassification: !!body.queryClassification,
       hasSearchConfig: !!body.searchConfig,
       hasFilters: !!body.filters && Object.keys(body.filters).length > 0
@@ -98,8 +96,7 @@ export async function POST(req: NextRequest) {
       query, 
       top_k = 10, 
       filters = {}, 
-      organizationName, 
-      isDemo = false,
+      organizationName,
       queryClassification,
       useChronologicalConfig = false,
       chronologicalConfig,
@@ -121,7 +118,6 @@ export async function POST(req: NextRequest) {
     debug.log(`[API DEBUG] Received parameters:`, {
       query,
       organizationName,
-      isDemo,
       hasClassification: !!queryClassification,
       classificationType: queryClassification?.type,
       hasFilters: Object.keys(effectiveFilters).length > 0,
@@ -135,13 +131,12 @@ export async function POST(req: NextRequest) {
       searchType: queryClassification?.type || 'unknown',
       configSource: searchConfig ? 'pipeline' : 'legacy',
       filterCount: Object.keys(effectiveFilters).length,
-      isAuthenticated: !isDemo && !!organizationName,
       usingPipelineFilters: !!searchConfig?.enhancedFilters
     });
     
 
     // Try each step separately to identify where the error occurs
-    debug.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
+    debug.log(`[API] Executing search with query: "${query}"`);
     debug.log(`[API DEBUG] Organization context: "${organizationName}"`);
     debug.log(`[API SEARCH] 🎯 Starting search execution`);
     
@@ -359,16 +354,6 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    if (!isDemo && organizationName && !results) {
-      
-      // Log when no search configuration is available from the unified pipeline
-      if (!searchConfig) {
-        debug.log(`[API SEARCH] ⚠️ No search configuration available from unified pipeline`);
-        debug.log(`[API SEARCH] 📊 This indicates a pipeline failure or invalid query classification`);
-        debug.log(`[API SEARCH] 🔄 Pipeline should handle all search routing - no legacy fallbacks`);
-      }
-    }
-    
     // 3. FINAL FALLBACK - Use standard search with basic filters
     if (!results) {
       debug.log(`[API SEARCH] 📊 No results found from any search method`);
@@ -379,7 +364,6 @@ export async function POST(req: NextRequest) {
         search_method: 'no_results_found',
         configuration_source: 'none',
         organization_name: organizationName,
-        is_demo_mode: isDemo,
         attempted_methods: 'pipeline_config_and_legacy_routing'
       };
       

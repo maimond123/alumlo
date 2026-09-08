@@ -5,14 +5,9 @@ import { useState, useEffect, useRef } from "react"
 import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown, RefreshCw, Download } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
-import { supabase } from "../data/supabase"
-import { getUserEmail } from "../utils/auth"
-import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import analytics from "../utils/analytics"
-import { useSearchHistory } from "../../hooks/useSearchHistory"
-import { useAuth } from "../../components/AuthProvider"
-import { isDemoMode as checkIsDemoMode, getDemoOrganization, getDemoDisplayName, initDemoFromUrl } from "../utils/demo"
+import { useOrganization } from "../contexts/OrganizationContext"
 import { SearchResult } from "../types/search"
 import { suggestionTags, secondRowSuggestionTags, tagScrollAnimation } from "../../components/search/constants"
 
@@ -233,42 +228,16 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
 };
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [mountTime] = useState(Date.now())
+  const { tenant, isLoading: orgLoading, error: orgError } = useOrganization()
   const [error, setError] = useState<string | null>(null)
-  const [formattedOrganizationName, setFormattedOrganizationName] = useState("")
-  const [displayOrganizationName, setDisplayOrganizationName] = useState("")
-  const [displayedOrganizationName, setDisplayedOrganizationName] = useState("")
+  /** The tenant name as the typewriter effect has revealed it so far. */
+  const [typedName, setTypedName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const { isSidebarOpen } = useSidebar()
-  
+
   // Add new states for search functionality
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
-
-  // Add search history hook
-  const { saveSearch, loadSearchDetails } = useSearchHistory()
-
-  const [authState, setAuthState] = useState({
-    isLoading: true,
-    isAuthenticated: false
-  })
-
-  // NEW: Pull auth status from global AuthProvider
-  const { user: authUser, isAuthenticated: contextAuthenticated, isLoading: authLoading } = useAuth();
-
-  // Sync local authState with context
-  useEffect(() => {
-    setAuthState({
-      isLoading: authLoading,
-      isAuthenticated: contextAuthenticated
-    });
-  }, [authLoading, contextAuthenticated]);
-
-  // Add these new states near the top with your other state declarations
-  const [totalAlumniCount, setTotalAlumniCount] = useState(0);
-  const [isLoadingCount, setIsLoadingCount] = useState(false);
 
   // Add these new states to your component
   const [searchPhase, setSearchPhase] = useState<'idle' | 'analyzing' | 'searching' | 'profiling' | 'filtering' | 'expanding' | 'complete' | 'invalid'>('idle');
@@ -296,25 +265,8 @@ export default function DashboardPage() {
   // Add state for randomized tags
   const [randomizedTags, setRandomizedTags] = useState<string[]>([]);
   
-  // Add state for save status of each result
-  const [savedStatusMap, setSavedStatusMap] = useState<{[key: string]: 'idle' | 'saving' | 'saved' | 'error' | 'already_saved' | 'demo_no_save'}>({});
-  
-  
-  // Add new state for demo mode
-  const [isDemoMode, setIsDemoMode] = useState(false)
-  
-  // Add new state for the Want More modal
-  const [showWantMoreModal, setShowWantMoreModal] = useState(false)
-  
   // Add state for Pro Tip visibility
   const [showProTip, setShowProTip] = useState(true)
-  
-  // Add new state to control animation start
-  const [isOrganizationNameReadyToAnimate, setIsOrganizationNameReadyToAnimate] = useState(false)
-
-  // Add new state for  onboarding flow
-  const [showDemoOnboarding, setShowDemoOnboarding] = useState(false)
-  const [demoStep, setDemoStep] = useState(0)
 
   // Add ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -330,16 +282,6 @@ export default function DashboardPage() {
   // Add new state for expansion messages
   const [expansionMessages, setExpansionMessages] = useState<string>('');
 
-
-  // Define formatOrganizationName function here
-  const formatOrganizationName = (name: string): string => {
-    if (!name) return "Your Organization"; // Fallback for empty or null names
-    return name
-      .replace(/_/g, ' ')
-      .split(' ')
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
 
   // Initialize randomized tags on component mount
   useEffect(() => {
@@ -362,191 +304,13 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Check for auth state on component mount
-  useEffect(() => {
-    // Debounce rapid auth checks
-    const timeoutId = setTimeout(() => {
-      const checkAuth = async () => {
-        try {
-          // Check for demo mode from URL parameters first
-          initDemoFromUrl()
-          
-          // Check if this is demo mode (session-based)
-          if (checkIsDemoMode()) {
-            setIsDemoMode(true)
-            setFormattedOrganizationName(getDemoOrganization()) // Get from session
-            setDisplayOrganizationName(getDemoDisplayName()) // Get from session
-            setIsOrganizationNameReadyToAnimate(true)
-            setIsLoading(false)
-
-            // Track as a unique visitor while maintaining demo status
-            const visitorId = analytics.getVisitorId()
-
-            analytics.identifyUser("demo_user", {
-              isDemoUser: true,
-              visitorId: visitorId,
-              school: "Your Organization"
-            })
-
-            // Set auth state for demo mode
-            setAuthState({
-              isLoading: false,
-              isAuthenticated: true
-            })
-            return
-          }
-          
-          // Wait until global auth loading finishes
-          if (authLoading) {
-            return;
-          }
-
-          // Don't redirect immediately after mount to allow auth to stabilize
-          const timeSinceMount = Date.now() - mountTime
-          if (timeSinceMount < 300) {
-            return
-          }
 
 
-          if (!contextAuthenticated) {
-            setAuthState({
-              isLoading: false,
-              isAuthenticated: false
-            })
-            router.push("/signin")
-            return
-          }
-
-          // For authenticated real users, proceed with normal flow
-          // Finally, update the auth state
-          setAuthState({
-            isLoading: false,
-            isAuthenticated: true
-          })
-        } catch (error) {
-          // Don't sign out on API rate limiting errors
-          if ((error as Error)?.message?.includes('429') || (error as Error)?.message?.includes('API key')) {
-            return
-          }
-          setAuthState({
-            isLoading: false,
-            isAuthenticated: false
-          })
-          router.push('/signin')
-        }
-      }
-      
-      checkAuth()
-    }, 100) // 100ms debounce
-    
-    return () => clearTimeout(timeoutId)
-  }, [router, authLoading, contextAuthenticated, mountTime])
-
-  // Only fetch school name for non-demo users
-  useEffect(() => {
-    if (authState.isAuthenticated && !isDemoMode) {
-      const fetchOrganizationName = async () => {
-        if (isDemoMode) {
-          setFormattedOrganizationName("Your Organization");
-          setIsOrganizationNameReadyToAnimate(true); // Allow animation for demo
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          const userEmail = await getUserEmail();
-          if (!userEmail) {
-            setError("Unable to retrieve user email.");
-            setFormattedOrganizationName("Your Organization"); // Fallback
-            setIsOrganizationNameReadyToAnimate(true);
-            setIsLoading(false);
-            return;
-          }
-
-          const { data, error } = await supabase
-            .from('customer_information')
-            .select('organization_name')
-            .eq('organization_email', userEmail)
-            .single();
-
-          if (error) {
-            setError("Failed to load school data.");
-            setFormattedOrganizationName("Your Organization"); // Fallback
-            setIsOrganizationNameReadyToAnimate(true);
-            setIsLoading(false);
-            return;
-          }
-
-          if (data && data.organization_name) {
-            const rawOrganizationName = data.organization_name;
-            const formattedName = formatOrganizationName(rawOrganizationName);
-            setFormattedOrganizationName(formattedName);
-            setDisplayOrganizationName(formattedName); // Use same name for display for real users
-            
-            // Introduce a short delay before signaling animation readiness
-            setTimeout(() => {
-              setIsOrganizationNameReadyToAnimate(true);
-            }, 100); // 100ms delay
-
-             // Store the original school name in localStorage for the search engine
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('organizationName', rawOrganizationName);
-            }
-          } else {
-            setError("School name not found for this user.");
-            setFormattedOrganizationName("Your Organization"); // Fallback for internal
-            setDisplayOrganizationName("Your Organization"); // Fallback for display
-            setIsOrganizationNameReadyToAnimate(true);
-          }
-        } catch (err) {
-          setError("An error occurred while fetching school data.");
-          setFormattedOrganizationName("Your Organization"); // Fallback for internal
-          setDisplayOrganizationName("Your Organization"); // Fallback for display
-          setIsOrganizationNameReadyToAnimate(true);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchOrganizationName()
-    }
-  }, [authState.isAuthenticated, isDemoMode]) // Removed router from dependencies as it might not be needed for just fetching school name
-
-  // Add this useEffect to fetch the total count on component mount
-  useEffect(() => {
-    const fetchTotalAlumniCount = async () => {
-      if (formattedOrganizationName) {
-        setIsLoadingCount(true);
-        try {
-          const tableName = `${formattedOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_standard_search`;
-          const { count, error } = await supabase
-            .from(tableName)
-            .select('*', { count: 'exact', head: true });
-          
-          if (error) {
-            // Handle error silently
-          } else {
-            setTotalAlumniCount(count || 0);
-          }
-        } catch (error) {
-          // Catch error silently
-        } finally {
-          setIsLoadingCount(false);
-        }
-      }
-    };
-    
-    if (formattedOrganizationName) {
-      fetchTotalAlumniCount();
-    }
-  }, [formattedOrganizationName]);
 
   // Track page view when component mounts
   useEffect(() => {
-    if (!authState.isLoading && authState.isAuthenticated) {
-      analytics.trackPageView('Dashboard');
-    }
-  }, [authState.isLoading, authState.isAuthenticated]);
+    analytics.trackPageView('Dashboard');
+  }, []);
 
   // Track scroll depth
   useEffect(() => {
@@ -572,35 +336,6 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Identify user when authenticated
-  useEffect(() => {
-    const identifyUserInAnalytics = async () => {
-      if (authState.isAuthenticated) {
-        try {
-          const userEmail = await getUserEmail();
-          if (userEmail) {
-            if (isDemoMode) {
-              // For demo users, we already identified them in the checkAuth function
-              // This ensures we maintain the visitor ID while still using the demo email
-              // for Supabase data retrieval
-              console.log("Demo user already identified with unique visitor ID");
-            } else {
-              // For real users, identify them with their actual email
-              analytics.identifyUser(userEmail, {
-                email: userEmail,
-                isDemoUser: false,
-                organization: formattedOrganizationName
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error identifying user in analytics:", error);
-        }
-      }
-    };
-
-    identifyUserInAnalytics();
-  }, [authState.isAuthenticated, isDemoMode, formattedOrganizationName]);
 
   // Add this helper function to simulate typewriter effect
   const typewriterEffect = (text: string, setter: (text: string) => void, speed: number = 30): Promise<void> => {
@@ -674,8 +409,9 @@ export default function DashboardPage() {
     
     // Use the direct query if provided (from tag click), otherwise use the state
     const queryToUse = directQuery || searchQuery.trim();
-    
-    if (!queryToUse) {
+
+    // A search is scoped to a tenant. The page does not render without one.
+    if (!queryToUse || !tenant) {
       return;
     }
     
@@ -693,7 +429,6 @@ export default function DashboardPage() {
     setSearchResults([]);
     setIsSearching(true);
     setSearchPhase('analyzing');
-    setSavedStatusMap({}); // Reset saved statuses on new search
     setQueryValidationError(null); // Clear any previous validation errors
     
     // Reset expansion states for new search
@@ -719,9 +454,6 @@ export default function DashboardPage() {
       displaying: ''
     });
     
-    // Get the original school name from localStorage for the API
-    const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
-    
     // Start the AI animation sequence
     try {
       // Phase 1: Analyzing query with unified search pipeline
@@ -740,9 +472,8 @@ export default function DashboardPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            query: currentQuery, 
-            organizationName: originalOrganizationName,
-            isDemo: isDemoMode
+            query: currentQuery,
+            organizationName: tenant.slug
           }),
         });
         
@@ -931,24 +662,14 @@ export default function DashboardPage() {
       // Phase 2: Searching database
       setSearchPhase('searching');
       
-      // Custom message for demo account
-      let searchingText = '';
-      if (isDemoMode) {
-        searchingText = "Searching across our database of sample alumni profiles. ";
-        const calendlyLink = `<a href="https://calendly.com/david-alumlo/30min" target="_blank" rel="noopener noreferrer" class="text-emerald-600 font-semibold hover:underline">Want alumni search for your organization?</a>`;
-
-        searchingText += calendlyLink;
-      } else {
-        searchingText = `Searching across our database of ${totalAlumniCount.toLocaleString()} ${formattedOrganizationName} alumni profiles`;
-      }
+      const searchingText = `Searching across our database of ${tenant.profileCount.toLocaleString()} ${tenant.name} alumni profiles`;
       
       // The search happens after filtering, so the searching message should also appear after.
       // The searchPromise will be awaited later, so this appears in order.
       
       const searchRequestBody = {
-        query: currentQuery, 
-        organizationName: originalOrganizationName,
-        isDemo: isDemoMode,
+        query: currentQuery,
+        organizationName: tenant.slug,
         searchConfig: searchConfig, // Always include searchConfig from pipeline
         queryClassification: queryClassification,
         // Include expansion results for metadata (for chronological searches)
@@ -1019,66 +740,6 @@ export default function DashboardPage() {
         setIsAnalysisCollapsed(true);
       }
       
-      // Save search to history with complete session data (use final results)
-      if (!isDemoMode) {
-        // Get the final results (which may include expansion results)
-        const finalResults = searchResults.length > 0 ? searchResults : compatibleInitialResults;
-        
-        // Capture current state at time of saving
-        const currentDisplayedText = {
-          analyzing: displayedText.analyzing,
-          searching: displayedText.searching,
-          profiling: displayedText.profiling,
-          filters: displayedText.filters,
-          displaying: displayedText.displaying
-        };
-        
-        const searchId = await saveSearch({
-          query: currentQuery,
-          results: finalResults.map(result => ({
-            id: result.id,
-            name: result.name,
-            linkedin_url: result.linkedin_url || result.profile_url || '', // Ensure linkedin_url is always a string
-            current_company: result.current_company || result.post_company_current_company || '',
-            current_title: result.current_title || result.post_company_current_title || '',
-            current_industry: result.current_industry || result.post_company_current_industry || '',
-            current_general_industry: result.current_general_industry || result.post_company_current_industry || '',
-            current_job_location: result.current_job_location || result.post_company_current_location || '',
-            years_experience: result.years_experience || 0,
-            similarity: result.similarity,
-            profile_photo_url: result.profile_photo_url || result.picture_url,
-            headline: result.headline,
-            current_job_level: result.current_job_level,
-            current_job_function: result.current_job_function,
-            undergraduate_school: result.undergraduate_school,
-            graduate_school: result.graduate_school,
-            highest_degree_level: result.highest_degree_level,
-            major_category: result.major_category
-          })),
-          metadata: {
-            source: directQuery ? 'tag_click' : 'search_input',
-            expandedQueries: expandedQueries,
-            extractedFilters: extractedFilters,
-            // Save complete search session data
-            searchSession: {
-              displayedText: currentDisplayedText,
-              searchPhase: 'complete',
-              isAnalysisCollapsed: isAnalysisCollapsed,
-              totalAlumniCount: totalAlumniCount,
-              formattedOrganizationName: formattedOrganizationName,
-              isDemoMode: isDemoMode,
-              timestamp: new Date().toISOString()
-            }
-          }
-        });
-        
-        console.log(`[DASHBOARD DEBUG] Saved complete search session with ID: ${searchId}`, {
-          hasDisplayedText: !!currentDisplayedText.analyzing,
-          expandedQueriesCount: expandedQueries.length,
-          extractedFiltersKeys: Object.keys(extractedFilters)
-        });
-        console.log(`[DASHBOARD HISTORY] ✅ Search saved with ID: ${searchId}`);
-      }
       
       // Track search completion with result count (use final results)
       const finalResultCount = searchResults.length > 0 ? searchResults.length : compatibleInitialResults.length;
@@ -1108,7 +769,7 @@ export default function DashboardPage() {
   
   // NEW: Manual expansion function
   const handleExpandSearch = async () => {
-    if (!pipelineExpansionData || isExpanding || hasExpanded) {
+    if (!pipelineExpansionData || isExpanding || hasExpanded || !tenant) {
       return;
     }
     
@@ -1140,7 +801,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           requestType: 'expand',
           query: pipelineExpansionData.originalQuery,
-          organizationName: pipelineExpansionData.organizationName || localStorage.getItem('organizationName'),
+          organizationName: tenant.slug,
           searchType: pipelineExpansionData.searchType || (pipelineExpansionData.primaryElements ? 'temporal' : 
                      pipelineExpansionData.primaryFilters ? 'standard' : 'standard'),
           primaryFilters: pipelineExpansionData.primaryFilters,
@@ -1183,7 +844,7 @@ export default function DashboardPage() {
             },
             body: JSON.stringify({
               searchConfig: config,
-              organizationName: pipelineExpansionData.organizationName || localStorage.getItem('organizationName'),
+              organizationName: tenant.slug,
               query: variants[index].natural_language_query,
               isExpansionSearch: true
             }),
@@ -1271,94 +932,7 @@ export default function DashboardPage() {
     };
   }, []);
 
-  // Listen for search loading events from sidebar
-  useEffect(() => {
-    const handleLoadSearch = async (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { id, query } = customEvent.detail;
-      await loadPastSearch(id, query);
-    };
 
-    // Listen for custom event
-    window.addEventListener('loadSearch', handleLoadSearch);
-
-    // Check localStorage for pending search load (when navigating from other pages)
-    const pendingSearch = localStorage.getItem('loadSearch');
-    if (pendingSearch) {
-      try {
-        const searchData = JSON.parse(pendingSearch);
-        // Only load if it's recent (within 5 seconds) to avoid stale data
-        if (Date.now() - searchData.timestamp < 5000) {
-          loadPastSearch(searchData.id, searchData.query);
-        } else {
-        }
-        localStorage.removeItem('loadSearch');
-      } catch (error) {
-        localStorage.removeItem('loadSearch');
-      }
-    } else {
-    }
-
-    return () => {
-      window.removeEventListener('loadSearch', handleLoadSearch);
-    };
-  }, []); // Fix: removed problematic dependency
-
-  // Function to load a past search
-  const loadPastSearch = async (searchId: string, query: string) => {
-    try {
-      // Set the search query in the input
-      setSearchQuery(query);
-      
-      // Load the search details including results
-      const searchDetails = await loadSearchDetails(searchId);
-      
-      if (searchDetails) {
-        // Set the search results
-        setSearchResults(ensureSearchResultCompatibility(searchDetails.results));
-        setSearchPhase('complete');
-        
-        // Check if we have complete session data saved
-        const sessionData = searchDetails.search.metadata?.searchSession;
-        
-        if (sessionData && sessionData.displayedText) {
-          // Restore complete search session
-          setDisplayedText(sessionData.displayedText);
-          setIsAnalysisCollapsed(sessionData.isAnalysisCollapsed || false);
-          
-          // Restore expanded queries and filters if available
-          if (searchDetails.search.metadata?.expandedQueries) {
-            setExpandedQueries(searchDetails.search.metadata.expandedQueries);
-          }
-          if (searchDetails.search.metadata?.extractedFilters) {
-            setExtractedFilters(searchDetails.search.metadata.extractedFilters);
-          }
-          
-        } else {
-          // Fallback for searches without complete session data
-          setDisplayedText({
-            analyzing: 'Loaded previous search',
-            searching: `Restored search for: "${query}"`,
-            profiling: 'Previous analysis results not available',
-            filters: 'Previous filters not available',
-            displaying: `Showing ${searchDetails.results.length} saved results`
-          });
-          setIsAnalysisCollapsed(false);
-          
-        }
-        
-        // Track the loaded search
-        analytics.trackSearch(query, searchDetails.results.length, { 
-          source: 'history_load',
-          status: 'loaded',
-          hasSessionData: !!sessionData
-        });
-        
-      } else {
-      }
-    } catch (error) {
-    }
-  };
 
   // Update handleSearchResultClick to capture snapshots
   const handleSearchResultClick = (url: string, resultIndex: number, resultName: string) => {
@@ -1371,82 +945,22 @@ export default function DashboardPage() {
   };
 
 
-  // Refined Typewriter effect for school name
+  // Typewriter effect for the tenant name
   useEffect(() => {
-    if (isOrganizationNameReadyToAnimate && displayOrganizationName) {
-      setDisplayedOrganizationName(""); // Initialize for animation
-      let i = 0;
-      const organizationNameToAnimate = displayOrganizationName;
-      
-      const typingInterval = setInterval(() => {
-        if (i < organizationNameToAnimate.length) {
-          setDisplayedOrganizationName(organizationNameToAnimate.substring(0, i + 1));
-          i++;
-        } else {
-          clearInterval(typingInterval);
-        }
-      }, 70); // Speed of typing
-      return () => clearInterval(typingInterval); // Cleanup interval
-    } else if (!displayOrganizationName) {
-      setDisplayedOrganizationName(""); // Clear if no formatted name
-    }
-  }, [displayOrganizationName, isOrganizationNameReadyToAnimate]); // Dependencies
-
-  // Add this new function to handle saving leads
-  const handleSaveLead = async (result: SearchResult) => {
-    if (isDemoMode) {
-      setSavedStatusMap(prev => ({ ...prev, [result.id.toString()]: 'demo_no_save' }));
-      // Optionally, show a toast or notification to the user
-      return;
-    }
-
-    const resultIdStr = result.id.toString();
-    setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'saving' }));
-
-    try {
-      const originalOrganizationName = typeof window !== 'undefined' ? localStorage.getItem('organizationName') : null;
-
-      if (!originalOrganizationName) {
-        setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
-        return;
-      }
-      
-      // Construct table name like 'some_organization_alumni_saved_leads'
-      const tableName = `${originalOrganizationName.toLowerCase().replace(/ /g, '_')}_alumni_saved_leads`;
-
-      // Need to get standardInfo for the specific result within this function's scope
-      const standardInfo = getStandardProfileInfo(result);
-
-      const leadData = {
-        name: result.name,
-        current_position: standardInfo.currentRole || 'Not specified', // Use standardInfo
-        current_company: standardInfo.currentCompany || 'Not specified', // Use standardInfo
-        linkedin_url: result.profile_url || result.linkedin_url || '',
-        // saved_at will be handled by Supabase default now()
-      };
-
-      const { error } = await supabase
-        .from(tableName)
-        .insert([leadData]); // Use leadData which is correctly defined now
-
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'already_saved' }));
-        } else if (error.code === '42P01') { // Undefined table
-          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
-          // Potentially alert the user or log this more visibly
-        } else {
-          setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
-        }
+    if (!tenant) return
+    setTypedName("")
+    let i = 0
+    const typingInterval = setInterval(() => {
+      if (i < tenant.name.length) {
+        setTypedName(tenant.name.substring(0, i + 1))
+        i++
       } else {
-        setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'saved' }));
-        // TODO: Replace with appropriate analytics tracking if a generic trackEvent is not available
-        // For example: analytics.trackButtonClick('LeadSaved', { leadName: leadData.name, organization: originalOrganizationName });
+        clearInterval(typingInterval)
       }
-    } catch (err) {
-      setSavedStatusMap(prev => ({ ...prev, [resultIdStr]: 'error' }));
-    }
-  };
+    }, 70)
+    return () => clearInterval(typingInterval)
+  }, [tenant])
+
 
   const handleClearSearch = () => {
     setSearchQuery('');
@@ -1474,32 +988,13 @@ export default function DashboardPage() {
     }
   };
 
-  const [showCalendly, setShowCalendly] = useState(false)
 
-  useEffect(() => {
-    // Check if this is a new user and should show Calendly
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('new_user') === 'true') {
-      setShowCalendly(true)
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-  }, [])
-
-  if (authState.isLoading) {
-    return <div>Loading authentication status...</div>
+  if (orgLoading) {
+    return <div>Loading...</div>
   }
 
-  if (!authState.isAuthenticated) {
-    return <div>Please log in to access the dashboard. Error: {error}</div>
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div>Loading...</div>
-      </div>
-    )
+  if (!tenant) {
+    return <div>No tenant found. {orgError}</div>
   }
 
   return (
@@ -1512,14 +1007,9 @@ export default function DashboardPage() {
              ? 'justify-center' : 'pt-24'
         }`}>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
-              Search
-              {/* Conditional space, only if school name will be rendered */}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? (
-                <span className="text-black">{displayedOrganizationName}</span>
-              ) : null}
-              {/* Conditional space, only if school name was rendered */}
-              {isOrganizationNameReadyToAnimate && displayedOrganizationName ? " " : ""}
+              Search{typedName ? " " : ""}
+              {typedName ? <span className="text-black">{typedName}</span> : null}
+              {typedName ? " " : ""}
               Alumni
             </h1>
 
@@ -1851,57 +1341,6 @@ export default function DashboardPage() {
                     const profileUrl = result.profile_url || result.linkedin_url || '';
                     const profilePhotoUrl = result.picture_url || result.profile_photo_url;
                     
-                    const currentSaveStatus = savedStatusMap[result.id.toString()] || 'idle';
-                    const isButtonDisabled = 
-                      isDemoMode ||
-                      currentSaveStatus === 'saving' ||
-                      currentSaveStatus === 'saved' ||
-                      currentSaveStatus === 'already_saved';
-
-                    let saveButtonContent;
-                    switch (currentSaveStatus) {
-                      case 'saving':
-                        saveButtonContent = (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Saving...</span>
-                          </>
-                        );
-                        break;
-                      case 'saved':
-                      case 'already_saved':
-                        saveButtonContent = (
-                          <>
-                            <CheckCircle className="h-4 w-4 text-emerald-700" />
-                            <span>Saved</span>
-                          </>
-                        );
-                        break;
-                      case 'error':
-                        saveButtonContent = (
-                          <>
-                            <AlertCircle className="h-4 w-4 text-red-500" />
-                            <span>Error</span>
-                          </>
-                        );
-                        break;
-                      case 'demo_no_save':
-                         saveButtonContent = (
-                          <>
-                            <BookmarkIcon className="h-4 w-4" />
-                            <span>Save (Demo)</span>
-                          </>
-                        );
-                        break;
-                      default: // idle
-                        saveButtonContent = (
-                          <>
-                            <BookmarkIcon className="h-4 w-4" />
-                            <span>Save</span>
-                          </>
-                        );
-                    }
-
                     return (
                       <div
                         key={result.id || index}
@@ -1922,34 +1361,6 @@ export default function DashboardPage() {
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                             </svg>
-                          </button>
-                          
-                          {/* Save Button - Pill shaped */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent card click
-                              handleSaveLead(result);
-                            }}
-                            disabled={isButtonDisabled}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg border flex items-center space-x-2 transition-all duration-200
-                              ${
-                                isButtonDisabled && (currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved')
-                                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200 cursor-not-allowed'
-                                  : isButtonDisabled && currentSaveStatus === 'saving'
-                                  ? 'bg-gray-200 text-gray-500 border-gray-200 cursor-wait'
-                                  : isButtonDisabled || currentSaveStatus === 'demo_no_save'
-                                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
-                                  : 'bg-white text-black border-black hover:bg-gray-50 hover:scale-105'
-                              }
-                            `}
-                            title={
-                              isDemoMode ? "Save feature disabled in demo" 
-                              : currentSaveStatus === 'saved' || currentSaveStatus === 'already_saved' ? "Profile saved" 
-                              : currentSaveStatus === 'saving' ? "Saving profile..."
-                              : "Save Profile"
-                            }
-                          >
-                            {saveButtonContent}
                           </button>
                         </div>
 
@@ -2052,439 +1463,9 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
-                
-                {/* Add "Want More?" button at the bottom of search results - only in demo mode */}
-                {isDemoMode && (
-                  <div className="mt-8 pb-12 flex justify-center">
-                    <button 
-                      onClick={() => {
-                        setShowWantMoreModal(true);
-                        analytics.trackModalOpen('WantMoreModal');
-                      }}
-                      className="px-6 py-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-md font-semibold text-lg"
-                    >
-                      Want More?
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </div>
-
-          {/* Want More Modal with analytics */}
-          {showWantMoreModal && (
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={(e) => {
-                // Close the modal when clicking the backdrop
-                if (e.target === e.currentTarget) {
-                  setShowWantMoreModal(false);
-                  analytics.trackModalClose('WantMoreModal', { userAction: 'backdrop_click' });
-                }
-              }}
-            >
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                <h2 className="text-xl font-bold text-center mb-4">Are you interested in having access to ALL of your alumni?</h2>
-                
-                <div className="flex justify-center space-x-4 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowWantMoreModal(false);
-                      analytics.trackButtonClick('WantMoreModal_Yes');
-                      analytics.trackModalClose('WantMoreModal', { userAction: 'yes_click' });
-                      router.push('/support');
-                      analytics.trackPageView('Support', { source: 'want_more_modal' });
-                    }}
-                    className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-                  >
-                    Yes
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setShowWantMoreModal(false); 
-                      analytics.trackButtonClick('WantMoreModal_No');
-                      analytics.trackModalClose('WantMoreModal', { userAction: 'no_click' });
-                    }}
-                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* New Multi-Step Demo Onboarding Flow */}
-          {isDemoMode && showDemoOnboarding && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-                
-                {/* Progress indicators */}
-                <div className="flex justify-center py-4 bg-gray-50 border-b">
-                  <div className="flex space-x-2">
-                    {[0, 1, 2, 3, 4].map((step) => (
-                      <div
-                        key={step}
-                        className={`h-2 w-12 rounded-full transition-all duration-300 ${
-                          step === demoStep 
-                            ? 'bg-purple-600' 
-                            : step < demoStep 
-                              ? 'bg-purple-300' 
-                              : 'bg-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Content Area */}
-                <div className="flex-1 p-8 text-center overflow-y-auto">
-                  
-                  {/* Step 0: Welcome */}
-                  {demoStep === 0 && (
-                    <div className="space-y-6">
-                      <h1 className="text-4xl font-bold text-gray-900">Welcome to Alumlo!</h1>
-                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Your tool to perform deep research on people data.
-                      </p>
-                      
-                      {/* Preview mockup */}
-                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                          {/* Mock browser header */}
-                          <div className="bg-gray-200 p-3 flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                            <div className="flex-1 bg-white rounded mx-4 px-3 py-1 text-sm text-gray-600">
-                              alumlo.ai/search
-                            </div>
-                          </div>
-                          
-                          {/* Mock Alumlo interface */}
-                          <div className="p-8">
-                            <h2 className="text-2xl font-bold mb-4">The People Search Engine for<br/>Your Organization</h2>
-                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                              <div className="flex items-center justify-between bg-white rounded-full px-4 py-3 shadow">
-                                <span className="text-gray-400">Search for people who...</span>
-                                <div className="bg-gray-100 rounded-full p-2">
-                                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2 justify-center">
-                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">CS grads</span>
-                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">Founders offering open source developer tools</span>
-                              <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm">People currently based in Europe</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Video placeholder */}
-                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 1: School Filtering */}
-                  {demoStep === 1 && (
-                    <div className="space-y-6">
-                      <h1 className="text-4xl font-bold text-gray-900">School filtering.</h1>
-                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Find the right people based on specific criteria like schools, companies, and roles.
-                      </p>
-                      
-                      {/* School selection mockup */}
-                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
-                        <div className="bg-white rounded-lg shadow-lg p-8">
-                          <div className="mb-6">
-                            <h2 className="text-3xl font-bold mb-2">Your Organization ↗</h2>
-                            <div className="relative">
-                              <input 
-                                type="text" 
-                                className="w-full p-4 border-2 border-gray-300 rounded-lg text-lg"
-                                placeholder="Search..."
-                                value="northwestern"
-                                readOnly
-                              />
-                              <div className="absolute top-full left-0 right-0 bg-white border-2 border-t-0 border-gray-300 rounded-b-lg">
-                                <div className="p-4 hover:bg-gray-50 border-b border-gray-200 cursor-pointer">
-                                  <div className="font-semibold text-lg">Northwestern College</div>
-                                  <div className="text-gray-600">Orange City, IA</div>
-                                </div>
-                                <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                  <div className="font-semibold text-lg">Northwestern Health Sciences University</div>
-                                  <div className="text-gray-600">Bloomington, MN</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Video placeholder */}
-                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 2: Natural Language Queries */}
-                  {demoStep === 2 && (
-                    <div className="space-y-6">
-                      <h1 className="text-4xl font-bold text-gray-900">Natural language queries.</h1>
-                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Utilize natural language to describe who you're looking for — we'll find the best matches.
-                      </p>
-                      
-                      {/* Natural language search mockup */}
-                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
-                        <div className="bg-white rounded-lg shadow-lg p-8">
-                          <div className="mb-6">
-                            <h2 className="text-3xl font-bold mb-6">Northwestern U...</h2>
-                            <div className="bg-gray-50 rounded-lg p-6">
-                              <div className="flex items-center justify-between bg-white rounded-full px-6 py-4 shadow-md mb-4">
-                                <span className="text-gray-600 text-lg">Search for people who...</span>
-                                <div className="bg-gray-100 rounded-full p-2">
-                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                  </svg>
-                                </div>
-                              </div>
-                              
-                              <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full inline-block mb-4">
-                                🧠 Deep Research
-                              </div>
-                              
-                              <div className="text-left space-y-2">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                  <span className="text-gray-700">People who started companies in 2019...</span>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                  <span className="text-gray-700">Founders building fintech or electronic startups</span>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                  <span className="text-gray-700">People working in A.I. agent generation</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Video placeholder */}
-                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 3: Advanced Search Algorithms */}
-                  {demoStep === 3 && (
-                    <div className="space-y-6">
-                      <h1 className="text-4xl font-bold text-gray-900">Advanced search algorithms.</h1>
-                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        We deploy 100,000+ AI agents along with our search algorithms to find the best matches.
-                      </p>
-                      
-                      {/* Advanced algorithms mockup */}
-                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                          <div className="mb-4">
-                            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                              <span className="text-gray-600">Biology, chemistry, and cog-sci undergraduates working on alzheimer's research</span>
-                              <button className="ml-2 bg-gray-200 rounded-full p-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                              </button>
-                            </div>
-                            
-                            <div className="text-left">
-                              <div className="text-purple-600 mb-2">Researching & Analyzing</div>
-                              <div className="text-sm text-gray-600 mb-4">
-                                Indexing through our database of 275,504,384 alumni profiles
-                              </div>
-                              
-                              <div className="mb-4">
-                                <div className="text-sm font-medium mb-2">🔍 Search Criteria</div>
-                                <div className="bg-gray-50 p-3 rounded text-xs">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a biology undergraduate</span>
-                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a chemistry undergraduate</span>
-                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Is a cognitive science undergraduate</span>
-                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Works on Alzheimer's research</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="mb-4">
-                                <div className="text-sm font-medium mb-2">💻 SQL Query</div>
-                                <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs">
-                                  SELECT<br/>
-                                  &nbsp;&nbsp;r.name, r.location, r.headline, r.title,<br/>
-                                  &nbsp;&nbsp;profile_picture_url, headline_picture_url,<br/>
-                                  &nbsp;&nbsp;r.summary,<br/>
-                                  &nbsp;&nbsp;r.twitter_handle, r.website,<br/>
-                                  &nbsp;&nbsp;r.location_country,<br/>
-                                  &nbsp;&nbsp;r.current_company
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Video placeholder */}
-                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 4: Profile Enrichment */}
-                  {demoStep === 4 && (
-                    <div className="space-y-6">
-                      <h1 className="text-4xl font-bold text-gray-900">Profile enrichment.</h1>
-                      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        View profiles, enrich emails, and export your results as CSV.
-                      </p>
-                      
-                      {/* Profile enrichment mockup */}
-                      <div className="bg-gray-100 rounded-lg p-8 max-w-3xl mx-auto border-2 border-gray-300">
-                        <div className="bg-white rounded-lg shadow-lg p-6">
-                          <div className="text-left">
-                            <div className="border-b border-gray-200 pb-4 mb-4">
-                              <h3 className="font-bold text-lg">Northwestern University</h3>
-                            </div>
-                            
-                            {/* Profile results */}
-                            <div className="space-y-4">
-                              {/* Profile 1 */}
-                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                    GT
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold">Giuseppe Terracina</div>
-                                    <div className="text-sm text-gray-600">Senior Research Associate at Keypoint</div>
-                                    <div className="text-xs text-gray-500">Kenilworth, New Jersey, United States</div>
-                                  </div>
-                                </div>
-                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
-                              </div>
-                              
-                              {/* Profile details popup */}
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-8">
-                                <div className="mb-3">
-                                  <h4 className="font-semibold mb-2">Giuseppe Terracina</h4>
-                                  <p className="text-sm text-gray-600 mb-3">Senior Research Associate at Keypoint Intelligence • Kenilworth, New Jersey, United States</p>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                  <div>
-                                    <h5 className="font-medium text-sm mb-1">📈 Experience</h5>
-                                    <div className="text-xs text-gray-600 space-y-1">
-                                      <div>Senior Research Associate at Keypoint Intelligence • March 2017 - Present</div>
-                                      <div>Scientist 2 at Amyris • June 2018 - November 2020</div>
-                                      <div>Scientist at Amyris Group • September 2017 - May 2018</div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div>
-                                    <h5 className="font-medium text-sm mb-1">🎓 Education</h5>
-                                    <div className="text-xs text-gray-600">
-                                      <div>Purdue University</div>
-                                      <div>Masters of Sciences in genetics</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* More profiles */}
-                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                    HX
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold">Hannah Xu</div>
-                                    <div className="text-sm text-gray-600">Research Scientist</div>
-                                    <div className="text-xs text-gray-500">Phoenix, Arizona, United States</div>
-                                  </div>
-                                </div>
-                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
-                              </div>
-                              
-                              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                    MM
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold">Melissa McFarland</div>
-                                    <div className="text-sm text-gray-600">Research Scientist</div>
-                                    <div className="text-xs text-gray-500">Chicago, Illinois</div>
-                                  </div>
-                                </div>
-                                <button className="bg-blue-600 text-white px-4 py-1 rounded text-sm">Contact</button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Video placeholder */}
-                        <div className="mt-4 bg-gray-300 rounded-lg h-32 flex items-center justify-center">
-                          <span className="text-gray-600 font-medium">[Video Preview Will Play Here]</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation buttons */}
-                <div className="flex justify-between items-center p-6 bg-gray-50 border-t">
-                  <button
-                    onClick={() => {
-                      if (demoStep > 0) {
-                        setDemoStep(demoStep - 1);
-                      } else {
-                        setShowDemoOnboarding(false);
-                        analytics.trackButtonClick('DemoOnboarding_ExitEarly', { step: demoStep });
-                      }
-                    }}
-                    className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Go back
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      if (demoStep < 4) {
-                        setDemoStep(demoStep + 1);
-                        analytics.trackButtonClick('DemoOnboarding_StepAdvance', { step: demoStep + 1 });
-                      } else {
-                        setShowDemoOnboarding(false);
-                        analytics.trackButtonClick('DemoOnboarding_Complete', { totalSteps: 5 });
-                      }
-                    }}
-                    className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    {demoStep === 4 ? 'Start Exploring' : 'Next'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>

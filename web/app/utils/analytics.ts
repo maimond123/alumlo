@@ -1,5 +1,4 @@
 import mixpanel from 'mixpanel-browser';
-import { isDemoMode as checkIsDemoMode } from './demo'
 
 // Initialize Mixpanel with your project token
 const MIXPANEL_TOKEN = '734da60febbf101dd204ef6d430dbfeb';
@@ -530,33 +529,19 @@ export const setUserProperties = (properties = {}) => {
   });
 };
 
-// Identify user with custom ID while maintaining the visitor tracking
-export const identifyUser = (userId: string, properties: Record<string, any> = {}) => {
+// Identify the session by its visitor ID. There are no accounts, so there is
+// no user ID to identify by.
+export const identifyVisitor = (properties: Record<string, any> = {}) => {
   try {
-    // Check if this is demo mode
-    if (checkIsDemoMode()) {
-      // For demo users, use a generic identifier with visitor ID
-      const visitorId = getVisitorId()
-      console.log(`Analytics: Demo user identified with visitor ID: ${visitorId}`)
-      
-      mixpanel.identify(visitorId)
-      mixpanel.people.set({
-        $name: "Demo User",
-        isDemoUser: true,
-        visitorId: visitorId,
-        ...properties
-      })
-      return
-    }
-
-    // For regular users, use their actual user ID
-    mixpanel.identify(userId)
+    const id = getVisitorId()
+    mixpanel.identify(id)
     mixpanel.people.set({
-      $email: userId,
+      $name: 'Visitor',
+      visitorId: id,
       ...properties
     })
   } catch (error) {
-    console.error('Error identifying user:', error)
+    console.error('Error identifying visitor:', error)
   }
 };
 
@@ -630,7 +615,7 @@ export default {
   trackFeatureSpotlight,
   trackProTip,
   setUserProperties,
-  identifyUser,
+  identifyVisitor,
   trackError,
   getVisitorId,
   captureReplaySnapshot

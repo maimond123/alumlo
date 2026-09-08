@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { db } from './db';
 import { llm } from '../config/llm';
 
 /**
@@ -15,23 +15,6 @@ import { llm } from '../config/llm';
  */
 
 const EMBEDDING_MODEL = process.env.ALUMLO_EMBED_MODEL ?? 'baai/bge-m3';
-
-// One pool per process. Next reuses module instances across requests, so
-// creating a client per request would exhaust Postgres connections under load.
-let pool: Pool | undefined;
-
-function db(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      connectionString:
-        process.env.DATABASE_URL ??
-        'postgresql://alumlo:alumlo@localhost:54322/alumlo',
-      max: 10,
-      idleTimeoutMillis: 30_000,
-    });
-  }
-  return pool;
-}
 
 export interface SearchFilters {
   [key: string]: string | number | null | undefined;

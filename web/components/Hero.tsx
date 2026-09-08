@@ -3,11 +3,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { setDemoMode } from '../app/utils/demo'
 
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 25, y: 50 }) // Default to left-1/4, top-1/2
   const heroRef = useRef<HTMLElement>(null)
   const router = useRouter()
@@ -26,22 +24,8 @@ export default function Hero() {
     setMousePosition({ x, y })
   }
 
-  const handleDemoAccess = async () => {
-    setIsLoading(true)
-    
-    try {
-      // Set demo mode in session storage
-      setDemoMode('demo', '{Your Organization}')
-      
-      // Redirect to search - no authentication needed!
-      router.push('/search')
-    } catch (err) {
-      console.error('Demo setup error:', err)
-      // Still redirect to search as demo mode is set
-      router.push('/search')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleDemoAccess = () => {
+    router.push('/search')
   }
 
   return (
@@ -74,25 +58,17 @@ export default function Hero() {
         </h1>
         
         <p className="text-xl text-emerald-700 mb-8 max-w-2xl">
-        Search. Learn. Visualize. Unparalleled access and insight to market your alumni's success.
+        Search and learn about your alumni. Unparalleled access and insight to market your alumni's success.
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <motion.button
             onClick={handleDemoAccess}
-            disabled={isLoading}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-white text-black border border-gray-300 px-10 py-4 text-xl rounded-full hover:bg-gray-100 transition-colors duration-300 flex items-center justify-center"
           >
-            {isLoading ? (
-              <>
-                <span className="animate-spin mr-2">⟳</span>
-                Loading...
-              </>
-            ) : (
-              "Try Now"
-            )}
+            Try Now
           </motion.button>
         </div>
       </div>

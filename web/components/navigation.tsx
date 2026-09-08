@@ -4,25 +4,14 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { setDemoMode } from '../app/utils/demo'
 
 // ... existing code ...
 
 export default function Navigation() {
   const router = useRouter()
 
-  const handleGetStarted = async () => {
-    try {
-      // Set demo mode in session storage
-      setDemoMode('demo', '{Your Organization}')
-      
-      // Redirect to search - no authentication needed!
-      router.push('/search')
-    } catch (err) {
-      console.error('Demo setup error:', err)
-      // Still redirect to search as demo mode is set
-      router.push('/search')
-    }
+  const handleGetStarted = () => {
+    router.push('/search')
   }
 
   const handleBookDemo = () => {
@@ -44,22 +33,13 @@ export default function Navigation() {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {/* <Link href="/signin">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-black px-10 py-4 text-xl rounded-full hover:bg-emerald-100 transition-colors border border-black"
-            >
-              Sign In
-            </motion.button>
-          </Link> */}
           <motion.button
-            onClick={() => router.push('/signin')}
+            onClick={handleGetStarted}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="bg-white text-black border border-gray-300 px-9 py-2.5 text-lg rounded-full hover:bg-gray-100 transition-colors duration-300"
           >
-            Sign In
+            Try Now
           </motion.button>
           <motion.button
             onClick={handleBookDemo}

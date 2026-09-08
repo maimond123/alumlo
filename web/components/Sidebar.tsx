@@ -1,265 +1,32 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { BarChart2, FileText, Search, Upload, Brain, MessageCircle, Settings, Calendar } from "lucide-react"
+import { Search, Brain, Calendar } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
-import { supabase } from "../app/data/supabase"
+import { useOrganization } from "../app/contexts/OrganizationContext"
 import type React from "react"
-import { getUserEmail } from "../app/utils/auth"
-import { isDemoMode as checkIsDemoMode, clearDemoMode } from "../app/utils/demo"
-import { useRecentActivity } from '../hooks/useRecentActivity'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
-interface UserInfo {
-  first_name: string;
-  last_name: string;
-  organization_name: string;
-}
-
+/**
+ * The sidebar identified the signed-in person and listed their saved searches
+ * and chats. There are no accounts and no per-user history, so it identifies
+ * the tenant instead and links to the two pages that still exist.
+ */
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-  const [isDemoUser, setIsDemoUser] = useState(false); // Add new state for demo mode
-  const router = useRouter()
+  const { tenant } = useOrganization()
   const pathname = usePathname()
-  
-  // Add recent activity hook
-  const { recentActivity, loadRecentActivity, formatActivityTitle, formatActivityTime } = useRecentActivity()
-  
-  // Add state for page-specific recent items
-  const [recentSearches, setRecentSearches] = useState<any[]>([])
-  const [recentConversations, setRecentConversations] = useState<any[]>([])
-  const [isLoadingRecent, setIsLoadingRecent] = useState(false)
-  const [isSpinning, setIsSpinning] = useState(false); // State for gear icon spin
 
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setIsDemoUser(false);
-        getUserInfo(session.user.email);
-      } else {
-        setIsDemoUser(checkIsDemoMode());
-        setUserInfo(null);
-      }
-    });
-
-    // Initial check in case the event listener is slow
-    const checkInitialAuth = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data.user) {
-        setIsDemoUser(false);
-        getUserInfo(data.user.email);
-      } else {
-        setIsDemoUser(checkIsDemoMode());
-      }
-    };
-    checkInitialAuth();
-
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, []);
-
-  const getUserInfo = async (userEmail: string | undefined) => {
-    if (!userEmail) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('customer_information')
-        .select('first_name, last_name, organization_name')
-        .eq('organization_email', userEmail)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching user info in Sidebar:", error);
-        return;
-      }
-      
-      if (data) {
-        setUserInfo(data);
-      }
-    } catch (error) {
-      console.error("Exception fetching user info in Sidebar:", error);
-    }
-  };
-
-  // Load page-specific recent data
-  const loadRecentSearches = async () => {
-    try {
-      setIsLoadingRecent(true)
-      const userEmail = await getUserEmail()
-      if (!userEmail) return
-
-      const { data, error } = await supabase
-        .from('search_history')
-        .select('id, query, created_at')
-        .eq('user_email', userEmail)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (error) throw error
-      setRecentSearches(data || [])
-    } catch (error) {
-      console.error('Error loading recent searches:', error)
-      setRecentSearches([])
-    } finally {
-      setIsLoadingRecent(false)
-    }
-  }
-
-  const loadRecentConversations = async () => {
-    try {
-      setIsLoadingRecent(true)
-      const userEmail = await getUserEmail()
-      if (!userEmail) return
-
-      const { data, error } = await supabase
-        .from('learn_conversations')
-        .select('id, title, updated_at')
-        .eq('user_email', userEmail)
-        .order('updated_at', { ascending: false })
-        .limit(10) // Get more initially to allow for deduplication
-
-      if (error) throw error
-      
-      // Deduplicate by title - keep only the most recent conversation for each unique title
-      const uniqueConversations = data?.reduce((acc: any[], current) => {
-        const existingIndex = acc.findIndex(item => item.title === current.title)
-        if (existingIndex === -1) {
-          // Title not found, add to accumulator
-          acc.push(current)
-        } else {
-          // Title exists, keep the one with more recent updated_at
-          if (new Date(current.updated_at) > new Date(acc[existingIndex].updated_at)) {
-            acc[existingIndex] = current
-          }
-        }
-        return acc
-      }, []) || []
-      
-      // Take only the first 5 unique conversations
-      setRecentConversations(uniqueConversations.slice(0, 5))
-    } catch (error) {
-      console.error('Error loading recent conversations:', error)
-      setRecentConversations([])
-    } finally {
-      setIsLoadingRecent(false)
-    }
-  }
-
-  // Load page-specific data when sidebar opens and pathname changes
-  useEffect(() => {
-    if (isSidebarOpen) {
-      if (pathname === '/search') {
-        loadRecentSearches()
-      } else if (pathname === '/learn') {
-        loadRecentConversations()
-      }
-    }
-  }, [isSidebarOpen, pathname])
-
-  // Get initials from full name
-  const getInitials = () => {
-    if (isDemoUser) return 'DA';
-    if (!userInfo) return '??'
-    return `${userInfo.first_name[0]}${userInfo.last_name[0]}`.toUpperCase()
-  }
-
-  // Get full name
-  const getFullName = () => {
-    if (isDemoUser) return 'Demo Account';
-    if (!userInfo) return 'Loading...'
-    return `${userInfo.first_name} ${userInfo.last_name}`
-  }
-
-  // Format time for recent items
-  const formatTime = (timestamp: string) => {
-    const now = new Date()
-    const time = new Date(timestamp)
-    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60))
-
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    
-    const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `${diffInDays}d ago`
-    
-    return time.toLocaleDateString()
-  }
-
-  // Determine what to show in the recent section
-  const shouldShowRecentSection = pathname === '/search' || pathname === '/learn'
-  const recentSectionTitle = pathname === '/search' ? 'Recent Searches' : 'Recent Chats'
-  const recentItems = pathname === '/search' ? recentSearches : recentConversations
-
-  // Function to load a search into the dashboard
-  const loadSearchInDashboard = (searchId: string, query: string) => {
-    console.log(`[SIDEBAR DEBUG] Loading search: ${searchId} with query: "${query}"`);
-    
-    // Store the search data in localStorage to be picked up by the dashboard
-    localStorage.setItem('loadSearch', JSON.stringify({
-      id: searchId,
-      query: query,
-      timestamp: Date.now()
-    }))
-    
-    // Navigate to dashboard if not already there
-    if (pathname !== '/search') {
-      console.log(`[SIDEBAR DEBUG] Navigating to search from ${pathname}`);
-      router.push('/search')
-      window.dispatchEvent(new CustomEvent('loadSearch', {
-        detail: { id: searchId, query: query }
-      }))
-    }
-  }
-
-  // Function to load a conversation into the learn page
-  const loadConversationInLearn = (conversationId: string, title: string) => {
-    console.log(`[SIDEBAR DEBUG] Loading conversation: ${conversationId} with title: "${title}"`);
-    
-    // Navigate to learn page if not already there
-    if (pathname !== '/learn') {
-      console.log(`[SIDEBAR DEBUG] Navigating to learn from ${pathname}`);
-      router.push(`/learn?conversation=${conversationId}`)
-    } else {
-      // If already on learn, trigger a custom event to load the conversation
-      console.log(`[SIDEBAR DEBUG] Already on learn, dispatching loadConversation event`);
-      window.dispatchEvent(new CustomEvent('loadConversation', {
-        detail: { conversationId: conversationId }
-      }))
-    }
-  }
-
-  // Add sign out function
-  const handleSignOut = async () => {
-    try {
-      clearDemoMode();
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error("Error signing out:", error)
-        // Optionally, show an error message to the user
-        return;
-      }
-      // Redirect to the first page instead of external website
-      router.push('/'); 
-    } catch (error) {
-      console.error("Error during sign out process:", error)
-      // Optionally, show an error message to the user
-    }
-  }
-
-  // Function to navigate to settings
-  const navigateToSettings = () => {
-    router.push('/settings')
-  }
+  const initials = tenant
+    ? tenant.name
+        .split(/[\s-]+/)
+        .map((word) => word[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : '--'
 
   return (
     <motion.div
@@ -298,106 +65,48 @@ export default function Sidebar() {
           <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen} currentPath={pathname}>
             Learn
           </SidebarLink>
-          <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen} currentPath={pathname}>
-            Visualize
-          </SidebarLink>
-          <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen} currentPath={pathname}>
-            Enrich Data
-          </SidebarLink>
         </nav>
-
-        {/* Recent Section - Positioned close below navigation */}
-        {isSidebarOpen && shouldShowRecentSection && (
-          <div className="mt-8">
-            <div className="px-6 mb-4">
-              <h3 className="text-lg font-semibold text-black">{recentSectionTitle}</h3>
-            </div>
-            <div className="space-y-2 px-6 max-h-64 overflow-y-auto">
-              {isLoadingRecent ? (
-                <div className="text-gray-500 text-sm py-2">
-                  Loading...
-                </div>
-              ) : recentItems.length > 0 ? (
-                recentItems.map((item) => (
-                  <RecentItem
-                    key={item.id}
-                    item={item}
-                    type={pathname === '/search' ? 'search' : 'learn'}
-                    formatTime={formatTime}
-                    onClick={() => {
-                      if (pathname === '/search') {
-                        // Load the search into the dashboard
-                        loadSearchInDashboard(item.id, item.query || '')
-                      } else {
-                        // Load the conversation into the learn page
-                        loadConversationInLearn(item.id, item.title || '')
-                      }
-                    }}
-                  />
-                ))
-              ) : (
-                <div className="text-gray-500 text-sm py-2">
-                  {pathname === '/search' ? 'No recent searches' : 'No recent chats'}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Spacer to push profile to bottom */}
         <div className="flex-1"></div>
 
         {/* Book Demo Button - positioned above profile */}
-        {isDemoUser && (
-          <div className="mb-8">
-            <a
-              href="https://calendly.com/david-alumlo/30min"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-black/90 hover:text-black transition-all duration-300 ease-in-out relative"
-              style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
-            >
-              <Calendar className="w-8 h-8 shrink-0" />
-              <span
-                className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
-                style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
-              >
-                Book Demo
-              </span>
-            </a>
-          </div>
-        )}
-
-        {/* Profile Section moved to bottom */}
-        <div
-          className="flex items-center justify-between transition-transform duration-300 ease-in-out w-full"
-          style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.5rem)" }}
-        >
-          <div className="flex items-center">
-            <div
-              className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
-            >
-              <span className="text-black font-semibold text-base">{getInitials()}</span>
-            </div>
-            <div
-              className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
+        <div className="mb-8">
+          <a
+            href="https://calendly.com/david-alumlo/30min"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-black/90 hover:text-black transition-all duration-300 ease-in-out relative"
+            style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
+          >
+            <Calendar className="w-8 h-8 shrink-0" />
+            <span
+              className="ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap"
               style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
             >
-              <h3 className="text-black font-medium text-lg whitespace-nowrap">{getFullName()}</h3>
-            </div>
+              Book Demo
+            </span>
+          </a>
+        </div>
+
+        {/* Tenant Section moved to bottom */}
+        <div
+          className="flex items-center transition-transform duration-300 ease-in-out w-full"
+          style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.5rem)" }}
+        >
+          <div
+            className={`w-10 h-10 rounded-full bg-emerald-green/20 border border-emerald-green/30 flex items-center justify-center shrink-0`}
+          >
+            <span className="text-black font-semibold text-base">{initials}</span>
           </div>
-          
-          {isSidebarOpen && (
-            <button 
-              onClick={navigateToSettings}
-              onMouseEnter={() => setIsSpinning(true)}
-              onMouseLeave={() => setIsSpinning(false)}
-              className={`p-2 rounded-full hover:bg-gray-200 transition-colors duration-200`}
-              aria-label="Settings"
-            >
-              <Settings className={`w-6 h-6 text-black ${isSpinning ? "animate-spin" : ""}`} />
-            </button>
-          )}
+          <div
+            className="ml-3 transition-all duration-300 ease-in-out origin-left overflow-hidden"
+            style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+          >
+            <h3 className="text-black font-medium text-lg whitespace-nowrap">
+              {tenant?.name ?? 'Loading...'}
+            </h3>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -418,7 +127,7 @@ function SidebarLink({
   currentPath: string
 }) {
   const isActive = currentPath === href
-  
+
   return (
     <Link
       href={href}
@@ -437,49 +146,3 @@ function SidebarLink({
     </Link>
   )
 }
-
-function RecentItem({
-  item,
-  type,
-  onClick,
-  formatTime,
-}: {
-  item: {
-    id: string;
-    query?: string;
-    title?: string;
-    created_at?: string;
-    updated_at?: string;
-  };
-  type: 'search' | 'learn';
-  onClick: () => void;
-  formatTime: (timestamp: string) => string;
-}) {
-  const getTitle = () => {
-    if (type === 'search') {
-      return item.query || 'Untitled search'
-    } else {
-      return item.title || 'Untitled conversation'
-    }
-  }
-
-  const getTimestamp = () => {
-    if (type === 'search') {
-      return item.created_at || ''
-    } else {
-      return item.updated_at || ''
-    }
-  }
-
-  return (
-    <div 
-      className="py-3 text-gray-800 hover:bg-emerald-500/10 cursor-pointer transition-colors duration-200 group border-b border-gray-100 last:border-b-0"
-      onClick={onClick}
-    >
-      <div className="text-base font-medium leading-relaxed">
-        {getTitle()}
-      </div>
-    </div>
-  )
-}
-
