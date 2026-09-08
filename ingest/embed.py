@@ -71,24 +71,30 @@ def embed_batch(texts: list[str], model: str, key: str, base: str) -> list[list[
         f"{base}/embeddings", data=payload,
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
 
-    delay = 2.0
-    for attempt in range(6):
+    # A 429 here is usually "the engine is overloaded" on the provider's side,
+    # not a per-key quota, and that can persist for minutes. Backoff caps at
+    # 60s and keeps trying rather than doubling into one long sleep.
+    attempts, delay, cap = 12, 2.0, 60.0
+    for attempt in range(attempts):
+        last = attempt == attempts - 1
         try:
-            with urllib.request.urlopen(req, timeout=120) as r:
+            with urllib.request.urlopen(req, timeout=180) as r:
                 body = json.load(r)
             # The API may return items out of order; index carries the position.
             items = sorted(body["data"], key=lambda d: d.get("index", 0))
             return [it["embedding"] for it in items]
         except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 502, 503, 504) and attempt < 5:
-                time.sleep(delay)
-                delay *= 2
+            if e.code in (429, 500, 502, 503, 504) and not last:
+                wait = float(e.headers.get("Retry-After") or delay)
+                print(f"    {e.code}, retrying in {wait:.0f}s", flush=True)
+                time.sleep(wait)
+                delay = min(delay * 2, cap)
                 continue
             raise RuntimeError(f"{e.code}: {e.read()[:300].decode(errors='replace')}") from e
         except (urllib.error.URLError, TimeoutError):
-            if attempt < 5:
+            if not last:
                 time.sleep(delay)
-                delay *= 2
+                delay = min(delay * 2, cap)
                 continue
             raise
     raise RuntimeError("exhausted retries")
