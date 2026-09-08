@@ -104,7 +104,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tenant", required=True, help="tenant slug")
     ap.add_argument("--model", default=os.environ.get("ALUMLO_EMBED_MODEL", DEFAULT_MODEL))
-    ap.add_argument("--batch", type=int, default=64)
+    # 8, not 64. A 64-profile request is roughly 25k tokens, which the
+    # provider serving bge-m3 rejects with 429; the retry logic then backs off
+    # 2s, 4s, 8s, 16s, 32s and the run makes no progress at all. It reads as
+    # provider capacity and is really request size -- at 8 the same corpus
+    # embeds in under two minutes.
+    ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--redo", action="store_true", help="re-embed rows that already have one")
     args = ap.parse_args()
 
