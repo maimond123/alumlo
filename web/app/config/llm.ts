@@ -8,9 +8,9 @@ import OpenAI from 'openai';
  * files each constructed their own OpenAI client from the same environment
  * variable; they now share this one.
  *
- * OpenRouter does not offer a usable embeddings endpoint, so nothing here
- * covers embeddings. Those are generated locally by ingest/embed.py using
- * BGE-M3, which needs no API and cannot rate-limit or lapse.
+ * Embeddings go through the same provider and key -- ingest/embed.py calls
+ * the embeddings endpoint directly with baai/bge-m3 rather than through this
+ * client, because ingest is Python.
  */
 export const llm = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY ?? '',

@@ -8,7 +8,7 @@
  * The 2025 system ran on gpt-4.1-mini and gpt-4o-mini. Those are gone from
  * this project, and the 2025 fine-tune
  * (ft:gpt-4.1-mini-2025-04-14:alumlo:1-alumlo:BzUQ9FHU) was deleted by OpenAI
- * along with its base model, so behaviour here is not identical to 2025.
+  * along with its base model, so behaviour here is not identical to 2025.
  */
 export const MODELS = {
   /**
