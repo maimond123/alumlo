@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Add debugging around the import
-console.log('[API] 🚀 Starting to import LinkedInProfileSearchEngine...');
-try {
-  var { LinkedInProfileSearchEngine } = require('../../data/ai_search');
-  console.log('[API] ✅ Successfully imported LinkedInProfileSearchEngine');
-} catch (importError: unknown) {
-  console.error('[API] ❌ FAILED TO IMPORT LinkedInProfileSearchEngine:', {
-    error: importError,
-    message: importError instanceof Error ? importError.message : 'Unknown import error',
-    stack: importError instanceof Error ? importError.stack : 'No stack'
-  });
-  throw importError;
-}
+import { searchProfiles } from '../../data/search';
 
 // Add timeout handling at the top
 const SEARCH_TIMEOUT_MS = 60000; // 60 seconds (Increased from 30)
@@ -153,10 +141,6 @@ export async function POST(req: NextRequest) {
     
 
     // Try each step separately to identify where the error occurs
-    debug.log('[API] Creating search engine instance');
-    debug.log(`[API SEARCH] 🔧 Initializing search engine`);
-    const search_engine = new LinkedInProfileSearchEngine();
-    
     debug.log(`[API] Executing search with query: "${query}", isDemo: ${isDemo}`);
     debug.log(`[API DEBUG] Organization context: "${organizationName}"`);
     debug.log(`[API SEARCH] 🎯 Starting search execution`);
@@ -188,12 +172,12 @@ export async function POST(req: NextRequest) {
           });
           
           results = await withTimeout(
-            search_engine.searchTemporal(
+            searchProfiles({
+              tenantSlug: organizationName,
+              filters: searchConfig.temporalElements,
               query,
-              searchConfig.temporalElements,
-              50,
-              organizationName
-            ),
+              limit: 50,
+            }),
             SEARCH_TIMEOUT_MS
           );
           
@@ -255,12 +239,12 @@ export async function POST(req: NextRequest) {
           
           // Execute primary search only (expansion will be handled separately)
           results = await withTimeout(
-            search_engine.searchChronological(
+            searchProfiles({
+              tenantSlug: organizationName,
+              filters: searchConfig.filters,
               query,
-              searchConfig.filters,
-              50,
-              organizationName
-            ),
+              limit: 50,
+            }),
             SEARCH_TIMEOUT_MS
           );
           
@@ -329,12 +313,12 @@ export async function POST(req: NextRequest) {
 
         try {
         results = await withTimeout(
-          search_engine.standardSearch(
+          searchProfiles({
+            tenantSlug: organizationName,
+            filters: searchConfig.enhancedFilters,
             query,
-            searchConfig.enhancedFilters,
-            top_k,
-            organizationName
-          ),
+            limit: top_k,
+          }),
           SEARCH_TIMEOUT_MS
         );
           const endTime = performance.now();

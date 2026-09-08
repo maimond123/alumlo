@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Import the search engine
-const { LinkedInProfileSearchEngine } = require('../../data/ai_search');
+import { searchProfiles } from '../../data/search';
 
 export async function POST(req: NextRequest) {
   console.log('[EXPANSION API] 🔍 Search expansion API called');
@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
     }
     
     console.log('[EXPANSION API] 🔧 Initializing search engine');
-    const search_engine = new LinkedInProfileSearchEngine();
     
     console.log('[EXPANSION API] 🔍 Starting expansion searches');
     const expansionSearchResults: any[] = [];
@@ -67,12 +66,12 @@ export async function POST(req: NextRequest) {
       expansionMetadata.expansion_queries.push(expansionVariant.natural_language_query);
       
       try {
-        const expansionSearchResults = await search_engine.searchChronological(
-          expansionVariant.natural_language_query,
-          expansionConfig.filters,
-          50,
-          organizationName
-        );
+        const expansionSearchResults = await searchProfiles({
+          tenantSlug: organizationName,
+          filters: expansionConfig.filters,
+          query: expansionVariant.natural_language_query,
+          limit: 50,
+        });
         
         console.log(`[EXPANSION API] ✅ Expansion search ${i + 1} completed: ${expansionSearchResults.length} results`);
         expansionMetadata.successful_searches++;
