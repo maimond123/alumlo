@@ -227,6 +227,61 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
   return mappedResults;
 };
 
+/**
+ * CSV export of the current result set.
+ *
+ * The button rendered a Download icon over an empty handler. These are the
+ * columns search_profiles actually returns; anything the corpus does not
+ * populate is left out rather than exported as a column of blanks.
+ */
+const CSV_COLUMNS: Array<[string, (r: SearchResult) => unknown]> = [
+  ['Name', (r) => r.name],
+  ['Headline', (r) => r.headline],
+  ['Current title', (r) => r.current_title],
+  ['Current company', (r) => r.current_company],
+  ['Location', (r) => r.current_job_location || r.home_location],
+  ['Exit year', (r) => r.exit_year],
+  ['Years tenure', (r) => r.total_years_tenure],
+  ['Prior companies', (r) => r.pre_company_companies],
+  ['Prior titles', (r) => r.pre_company_titles],
+  ['Later companies', (r) => r.post_company_companies],
+  ['Later titles', (r) => r.post_company_titles],
+  ['Undergraduate school', (r) => r.undergraduate_school],
+  ['Graduate school', (r) => r.graduate_school],
+  ['Similarity', (r) => (typeof r.similarity === 'number' ? r.similarity.toFixed(4) : '')],
+  ['Profile URL', (r) => r.profile_url],
+]
+
+/** Quote every field: names carry commas, headlines carry quotes and newlines. */
+const csvCell = (value: unknown): string => {
+  if (value === null || value === undefined) return '""'
+  const flat = Array.isArray(value) ? value.filter(Boolean).join('; ') : String(value)
+  return `"${flat.replace(/"/g, '""')}"`
+}
+
+const downloadResultsCsv = (results: SearchResult[], tenantName: string) => {
+  const rows = [
+    CSV_COLUMNS.map(([header]) => csvCell(header)).join(','),
+    ...results.map((r) => CSV_COLUMNS.map(([, get]) => csvCell(get(r))).join(',')),
+  ]
+
+  // The BOM makes Excel read it as UTF-8 instead of latin-1.
+  const blob = new Blob(['\ufeff' + rows.join('\r\n')], {
+    type: 'text/csv;charset=utf-8;',
+  })
+  const url = URL.createObjectURL(blob)
+  const slug = tenantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const stamp = new Date().toISOString().slice(0, 10)
+
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${slug || 'alumlo'}-results-${stamp}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 export default function DashboardPage() {
   const { tenant, isLoading: orgLoading, error: orgError } = useOrganization()
   const [error, setError] = useState<string | null>(null)
@@ -936,12 +991,16 @@ export default function DashboardPage() {
 
   // Update handleSearchResultClick to capture snapshots
   const handleSearchResultClick = (url: string, resultIndex: number, resultName: string) => {
+    // The pseudonymized corpus carries no profile_url, and window.open('')
+    // opens a blank tab rather than doing nothing. Callers already hide the
+    // affordance; this keeps a stray call from opening one anyway.
+    if (!url) return;
+
     // Track search result click and capture replay snapshot
     analytics.trackSearchResultClick(resultIndex, resultName, url);
     analytics.captureReplaySnapshot('search_result_click');
-    
-    // If not demo mode or already seen survey, navigate directly
-    window.open(url, '_blank');
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
 
@@ -1198,7 +1257,11 @@ export default function DashboardPage() {
                     )}
                     {!isSearching && searchResults.length > 0 && (
                       <button
-                        onClick={() => { /* No functionality for now */ }}
+                        onClick={() => {
+                          analytics.trackButtonClick('export_csv', { count: searchResults.length })
+                          downloadResultsCsv(searchResults, tenant?.name ?? 'alumlo')
+                        }}
+                        title={`Download ${searchResults.length} results as CSV`}
                         className="px-4 py-2 bg-white text-black border border-black rounded-lg hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-medium flex items-center space-x-2"
                       >
                         <Download className="h-4 w-4" />
@@ -1344,12 +1407,19 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={result.id || index}
-                        className="block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 cursor-pointer"
-                        onClick={() => handleSearchResultClick(profileUrl, index, result.name)}
+                        className={`block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 ${
+                          profileUrl ? 'cursor-pointer' : ''
+                        }`}
+                        onClick={
+                          profileUrl
+                            ? () => handleSearchResultClick(profileUrl, index, result.name)
+                            : undefined
+                        }
                       >
                         {/* Action Buttons - Top Right Corner */}
                         <div className="absolute top-4 right-4 flex items-center space-x-2">
                           {/* LinkedIn Button - Square with logo only */}
+                          {profileUrl && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent card click
@@ -1362,6 +1432,7 @@ export default function DashboardPage() {
                               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                             </svg>
                           </button>
+                          )}
                         </div>
 
                         {/* 4-Column Layout */}
