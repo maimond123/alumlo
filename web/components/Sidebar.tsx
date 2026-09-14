@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Search, Brain, Calendar } from "lucide-react"
+import { Search, Brain, BarChart2, Calendar } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { useOrganization } from "../app/contexts/OrganizationContext"
 import type React from "react"
@@ -11,8 +11,7 @@ import { usePathname } from 'next/navigation'
 
 /**
  * The sidebar identified the signed-in person and listed their saved searches
- * and chats. There are no accounts and no per-user history, so it identifies
- * the tenant instead and links to the two pages that still exist.
+ * and chats. There are no accounts, so it identifies the tenant instead.
  */
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
@@ -64,6 +63,9 @@ export default function Sidebar() {
           </SidebarLink>
           <SidebarLink href="/learn" icon={Brain} isOpen={isSidebarOpen} currentPath={pathname}>
             Learn
+          </SidebarLink>
+          <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen} currentPath={pathname}>
+            Visualize
           </SidebarLink>
         </nav>
 
