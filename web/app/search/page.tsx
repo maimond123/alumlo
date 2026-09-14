@@ -231,8 +231,8 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
  * CSV export of the current result set.
  *
  * The button rendered a Download icon over an empty handler. These are the
- * columns search_profiles actually returns; anything the corpus does not
- * populate is left out rather than exported as a column of blanks.
+ * columns search_profiles returns. Profile URL stays in the list even though
+ * the pseudonymized sample leaves it null, because a real tenant populates it.
  */
 const CSV_COLUMNS: Array<[string, (r: SearchResult) => unknown]> = [
   ['Name', (r) => r.name],
