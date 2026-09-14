@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Search, Brain, BarChart2, Calendar, Clock } from "lucide-react"
+import { Search, Brain, BarChart2, Calendar, Clock, Settings } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { useOrganization } from "../app/contexts/OrganizationContext"
 import type React from "react"
@@ -140,6 +140,27 @@ export default function Sidebar() {
 
         {/* Spacer to push profile to bottom */}
         <div className="flex-1"></div>
+
+        {/* Settings - secondary, so it sits with the footer controls */}
+        <div className="mb-6">
+          <Link
+            href="/settings"
+            className={`flex items-center transition-all duration-300 ease-in-out relative ${
+              pathname === '/settings' ? 'text-yellow-515' : 'text-black/90 hover:text-black'
+            }`}
+            style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
+          >
+            <Settings className="w-8 h-8 shrink-0" />
+            <span
+              className={`ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap ${
+                pathname === '/settings' ? 'font-semibold' : ''
+              }`}
+              style={{ opacity: isSidebarOpen ? 1 : 0, width: isSidebarOpen ? "auto" : 0 }}
+            >
+              Settings
+            </span>
+          </Link>
+        </div>
 
         {/* Book Demo Button - positioned above profile */}
         <div className="mb-8">
