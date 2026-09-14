@@ -63,15 +63,16 @@ as static shells and fetch at runtime, and every `/api/*` route is dynamic. So
 the app deploys and builds green before a database exists; it just returns
 errors until `DATABASE_URL` is set.
 
-**Root Directory must be `web`.** `package.json` moved there in `341ba0c`, and
-the setting still points at the repo root, which is why deployments since then
-fail at `Error: No Next.js version detected` two seconds in. This is a project
-setting; it cannot be changed through the API tokens available here or by any
-file in the repo.
+**Root Directory must be `web`.** `package.json` moved there in `341ba0c`. While
+the setting still pointed at the repo root, every deployment failed at
+`Error: No Next.js version detected` two seconds in. It is set correctly now.
+This is a project setting; it cannot be changed by any file in the repo, so a
+fresh import of this repository has to set it by hand.
 
 `web/vercel.json` sets `maxDuration: 60` on the API routes. `/api/search-pipeline`
 takes 9-24 seconds on its LLM calls, which is longer than the default allows.
-Whether Hobby honours 60 is worth checking on the first real search.
+Hobby does honour the 60: a 19.5-second classification returned 200 in
+production rather than timing out at the default.
 
 ### Connection pooling
 
