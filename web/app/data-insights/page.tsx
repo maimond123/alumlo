@@ -124,11 +124,11 @@ export default function DataInsightsPage() {
     <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       <main
-        className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${
+        className={`flex-1 min-w-0 relative transition-all duration-300 ease-in-out overflow-y-auto ${
           isSidebarOpen ? "ml-72" : "ml-24"
         }`}
       >
-        <div className="min-h-screen px-8 py-10 max-w-6xl">
+        <div className="min-h-screen w-full px-8 py-10">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             {tenant.name} Alumni
           </h1>

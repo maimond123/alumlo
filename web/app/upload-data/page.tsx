@@ -200,11 +200,11 @@ export default function UploadDataPage() {
     <div className="flex h-full bg-white overflow-hidden">
       <Sidebar />
       <main
-        className={`flex-1 relative transition-all duration-300 ease-in-out overflow-y-auto ${
+        className={`flex-1 min-w-0 relative transition-all duration-300 ease-in-out overflow-y-auto ${
           isSidebarOpen ? "ml-72" : "ml-24"
         }`}
       >
-        <div className="min-h-screen px-8 py-10 max-w-3xl">
+        <div className="min-h-screen w-full px-8 py-10">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Enrich Data</h1>
           <p className="text-gray-600 mb-8">
             Check a profile file against what <code className="px-1 bg-gray-100 rounded">ingest/seed.py</code>{" "}
