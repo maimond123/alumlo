@@ -10,6 +10,12 @@ import analytics from "../utils/analytics"
 import { useOrganization } from "../contexts/OrganizationContext"
 import { SearchResult } from "../types/search"
 import { suggestionTags, secondRowSuggestionTags, tagScrollAnimation } from "../../components/search/constants"
+import {
+  recordRecent,
+  getRecent,
+  takePendingRestore,
+  RESTORE_REQUESTED,
+} from "../utils/recents"
 
 // Helper function to get education display
 const getEducationDisplay = (result: SearchResult): string => {
@@ -775,6 +781,14 @@ export default function DashboardPage() {
       
       setSearchResults(compatibleInitialResults);
       setInitialSearchResults(compatibleInitialResults); // Store initial results separately
+
+      // Keep the results with the entry: restoring re-runs nothing.
+      if (tenant) {
+        recordRecent('searches', tenant.slug, {
+          label: queryToUse,
+          payload: { query: queryToUse, results: compatibleInitialResults },
+        });
+      }
       
       // Phase 4: Check if expansion is available (now supports all search types)
       if (pipelineResult?.expansionMetadata && pipelineResult.expansionMetadata.canExpand) {
@@ -1003,6 +1017,59 @@ export default function DashboardPage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+
+  /**
+   * Restores a search chosen in the sidebar.
+   *
+   * The entry carries its own results, so this repaints from storage rather
+   * than re-running a pipeline that already produced this answer. The request
+   * arrives as an event when the page is already mounted, and as a parked
+   * value in storage when the click happened on another route.
+   */
+  useEffect(() => {
+    if (!tenant) return
+
+    const restore = (id: string) => {
+      const entry = getRecent('searches', tenant.slug, id)
+      if (!entry) return
+      const payload = entry.payload as { query?: string; results?: SearchResult[] }
+      if (!Array.isArray(payload?.results)) return
+
+      setSearchQuery(payload.query ?? entry.label)
+      setSearchResults(payload.results)
+      setInitialSearchResults(payload.results)
+      setSearchPhase('complete')
+      setIsSearching(false)
+      setIsAnalysisCollapsed(true)
+      setCanExpand(false)
+      setIsExpanding(false)
+      setHasExpanded(false)
+      setPipelineExpansionData(null)
+      setQueryValidationError(null)
+      setDisplayedText({
+        analyzing: '',
+        searching: '',
+        profiling: '',
+        filters: '',
+        displaying: `Showing ${payload.results.length} saved results`,
+      })
+    }
+
+    const pending = takePendingRestore()
+    if (pending && pending.kind === 'searches' && pending.tenantSlug === tenant.slug) {
+      restore(pending.id)
+    }
+
+    const onRequest = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (detail?.kind !== 'searches' || detail?.tenantSlug !== tenant.slug) return
+      takePendingRestore() // drop the parked copy; this page is handling it
+      restore(detail.id)
+    }
+
+    window.addEventListener(RESTORE_REQUESTED, onRequest)
+    return () => window.removeEventListener(RESTORE_REQUESTED, onRequest)
+  }, [tenant])
 
   // Typewriter effect for the tenant name
   useEffect(() => {

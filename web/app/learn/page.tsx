@@ -7,6 +7,12 @@ import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import analytics from "../utils/analytics"
 import { useOrganization } from "../contexts/OrganizationContext"
+import {
+  recordRecent,
+  getRecent,
+  takePendingRestore,
+  RESTORE_REQUESTED,
+} from "../utils/recents"
 
 // Add  realistic question suggestion tags for learn mode
 const learnSuggestionTags = [
@@ -140,6 +146,45 @@ export default function LearnPage() {
   }, []);
 
   // Add handleLearnSubmit function to handle questions in learn mode
+  /**
+   * Restores a chat chosen in the sidebar.
+   *
+   * The thread is stored whole, so reopening it costs nothing and does not
+   * replay the model's answers.
+   */
+  useEffect(() => {
+    if (!tenant) return
+
+    const restore = (id: string) => {
+      const entry = getRecent('chats', tenant.slug, id)
+      if (!entry) return
+      const payload = entry.payload as {
+        conversations?: {role: 'user' | 'assistant', content: string}[]
+      }
+      if (!Array.isArray(payload?.conversations)) return
+
+      setConversations(payload.conversations)
+      setCurrentAnswer('')
+      setCurrentQuestion('')
+      setIsProcessing(false)
+    }
+
+    const pending = takePendingRestore()
+    if (pending && pending.kind === 'chats' && pending.tenantSlug === tenant.slug) {
+      restore(pending.id)
+    }
+
+    const onRequest = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (detail?.kind !== 'chats' || detail?.tenantSlug !== tenant.slug) return
+      takePendingRestore() // drop the parked copy; this page is handling it
+      restore(detail.id)
+    }
+
+    window.addEventListener(RESTORE_REQUESTED, onRequest)
+    return () => window.removeEventListener(RESTORE_REQUESTED, onRequest)
+  }, [tenant])
+
   const handleLearnSubmit = async (e: React.FormEvent, questionOverride?: string) => {
     e.preventDefault();
     
@@ -203,6 +248,20 @@ export default function LearnPage() {
       // Add the AI's answer to the conversation history
       setConversations(prev => [...prev, { role: 'assistant', content: responseText }]);
       setCurrentAnswer('');
+
+      // Built locally rather than read back from state, which is stale inside
+      // this closure. The label is the question that opened the thread.
+      const thread: {role: 'user' | 'assistant', content: string}[] = [
+        ...conversations,
+        { role: 'user', content: userQuestion },
+        { role: 'assistant', content: responseText },
+      ];
+      if (tenant) {
+        recordRecent('chats', tenant.slug, {
+          label: thread.find(m => m.role === 'user')?.content ?? userQuestion,
+          payload: { conversations: thread },
+        });
+      }
       
       
     } catch (error) {

@@ -3,20 +3,55 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Search, Brain, BarChart2, Calendar } from "lucide-react"
+import { Search, Brain, BarChart2, Calendar, Clock } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { useOrganization } from "../app/contexts/OrganizationContext"
 import type React from "react"
-import { usePathname } from 'next/navigation'
+import { useEffect, useState } from "react"
+import { usePathname, useRouter } from 'next/navigation'
+import {
+  listRecents,
+  requestRestore,
+  relativeTime,
+  RECENTS_CHANGED,
+  type RecentEntry,
+  type RecentKind,
+} from "../app/utils/recents"
 
 /**
  * The sidebar identified the signed-in person and listed their saved searches
- * and chats. There are no accounts, so it identifies the tenant instead.
+ * and chats. There are no accounts, so it identifies the tenant instead, and
+ * the history it lists is per-browser rather than per-user.
  */
 export default function Sidebar() {
   const { isSidebarOpen, openSidebar, closeSidebar } = useSidebar()
   const { tenant } = useOrganization()
   const pathname = usePathname()
+  const router = useRouter()
+
+  // Only these two routes produce history worth listing.
+  const recentKind: RecentKind | null =
+    pathname === '/search' ? 'searches' : pathname === '/learn' ? 'chats' : null
+
+  const [recents, setRecents] = useState<RecentEntry[]>([])
+
+  useEffect(() => {
+    if (!recentKind || !tenant) {
+      setRecents([])
+      return
+    }
+    const refresh = () => setRecents(listRecents(recentKind, tenant.slug))
+    refresh()
+    window.addEventListener(RECENTS_CHANGED, refresh)
+    return () => window.removeEventListener(RECENTS_CHANGED, refresh)
+  }, [recentKind, tenant, isSidebarOpen])
+
+  const openRecent = (entry: RecentEntry) => {
+    if (!recentKind || !tenant) return
+    requestRestore(recentKind, tenant.slug, entry.id)
+    const target = recentKind === 'searches' ? '/search' : '/learn'
+    if (pathname !== target) router.push(target)
+  }
 
   const initials = tenant
     ? tenant.name
@@ -68,6 +103,40 @@ export default function Sidebar() {
             Visualize
           </SidebarLink>
         </nav>
+
+        {/* Recent searches / chats. Hidden on the collapsed rail, which has no
+            room for labels, and hidden entirely until there is history. */}
+        {recentKind && isSidebarOpen && recents.length > 0 && (
+          <div
+            className="mt-2 mb-6 transition-all duration-300 ease-in-out"
+            style={{ transform: "translateX(1rem)" }}
+          >
+            <div className="flex items-center gap-2 mb-3 text-black/60">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span className="text-xs uppercase tracking-wide whitespace-nowrap">
+                {recentKind === 'searches' ? 'Recent Searches' : 'Recent Chats'}
+              </span>
+            </div>
+            <ul className="space-y-1 pr-6">
+              {recents.map((entry) => (
+                <li key={entry.id}>
+                  <button
+                    onClick={() => openRecent(entry)}
+                    title={entry.label}
+                    className="w-full text-left px-2 py-1.5 rounded-md hover:bg-black/5 transition-colors group"
+                  >
+                    <span className="block text-sm text-black/80 group-hover:text-black truncate">
+                      {entry.label}
+                    </span>
+                    <span className="block text-[11px] text-black/40">
+                      {relativeTime(entry.at)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Spacer to push profile to bottom */}
         <div className="flex-1"></div>
