@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Search, Brain, BarChart2, Calendar, Clock, Settings } from "lucide-react"
+import { Search, Brain, BarChart2, Upload, Calendar, Clock, Settings } from "lucide-react"
 import { useSidebar } from "./SidebarProvider"
 import { useOrganization } from "../app/contexts/OrganizationContext"
 import type React from "react"
@@ -101,6 +101,9 @@ export default function Sidebar() {
           </SidebarLink>
           <SidebarLink href="/data-insights" icon={BarChart2} isOpen={isSidebarOpen} currentPath={pathname}>
             Visualize
+          </SidebarLink>
+          <SidebarLink href="/upload-data" icon={Upload} isOpen={isSidebarOpen} currentPath={pathname}>
+            Enrich Data
           </SidebarLink>
         </nav>
 
