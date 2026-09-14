@@ -160,9 +160,11 @@ export default function FeaturesSection() {
                   <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-dashed border-gray-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <img 
-                          src="https://media.licdn.com/dms/image/v2/D4E03AQH3Y3XkSH_Lpw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1723857605737?e=1754524800&v=beta&t=rv-Xp7KZMF6xBI_MVnZ9O0DjXKojE7W8ZnSw5pkr84M"
+                        <img
+                          src="/assets/david-maimon.jpeg"
                           alt="David Maimon"
+                          width={64}
+                          height={64}
                           className="w-16 h-16 rounded-full object-cover"
                         />
                         <div>
