@@ -1,5 +1,13 @@
+/**
+ * Search results use the canonical profile_id, URL, and current company/title
+ * fields returned by search_profiles (see data/search.ts: ProfileResult).
+ * The UI also retains schema-backed enrichment fields from 003_profiles.sql:
+ * industry, job level/function, career stage, salary, education metadata,
+ * expertise, and boolean characteristics. These are currently unpopulated;
+ * display defaults do not mean enrichment has been run.
+ */
 export interface SearchResult {
-  id: number;
+  profile_id: number;
   name: string;
   profile_url: string;
   picture_url?: string;
@@ -49,14 +57,9 @@ export interface SearchResult {
   // Note: These will be accessed dynamically as [organizationName]_provided_salary_lift etc.
   [key: string]: any; // Allow dynamic field access for company-specific boolean fields
   
-  // Legacy fields for backward compatibility
-  linkedin_url?: string;
+  // Current profile details; current_job_location is schema-backed enrichment.
   current_company?: string;
   current_title?: string;
-  current_industry?: string;
-  current_general_industry?: string;
   current_job_location?: string;
-  years_experience?: number;
-  profile_photo_url?: string;
   home_location?: string;
 } 

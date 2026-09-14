@@ -67,14 +67,12 @@ interface TemporalElements {
 interface TemporalConfig {
   type: 'temporal';
   temporalElements: TemporalElements;
-  sqlFunction: string;
   sqlParameters: any;
 }
 
 interface ChronologicalConfig {
   type: 'chronological';
   filters: ChronologicalFilters;
-  sqlFunction: string;
   sqlParameters: {
       chronological_filters: ChronologicalFilters;
     };
@@ -1151,14 +1149,9 @@ async function handleExpansionRequest(
       llmCalls++;
       
       const additionalSearchConfigs = variants.map(variant => {
-        let sqlFunction = `temporal_filter_search_${organizationName}`;
-        if (variant.temporalElements.exit_year && variant.temporalElements.subsequent_functions && variant.temporalElements.subsequent_functions.length > 0) {
-          sqlFunction = `temporal_career_search_${organizationName}`;
-        }
         return {
           type: 'temporal',
           temporalElements: variant.temporalElements,
-          sqlFunction,
           sqlParameters: mapTemporalParameters(variant.temporalElements)
         };
       });
@@ -1173,7 +1166,6 @@ async function handleExpansionRequest(
       const additionalSearchConfigs = variants.map(variant => ({
         type: 'chronological',
         filters: variant.filters,
-        sqlFunction: `chronological_search_function_${organizationName}`,
         sqlParameters: { chronological_filters: variant.filters }
       }));
       
@@ -1231,18 +1223,9 @@ async function processTemporalSearchWithExpansion(
   console.log(`[PIPELINE TEMPORAL] ✅ Temporal elements extracted:`, temporalElements);
   
   // Step 2: Create primary search configuration
-  let searchMethod = 'general_filter';
-  let sqlFunction = `temporal_filter_search_${organizationName}`;
-  
-  if (temporalElements.exit_year && temporalElements.subsequent_functions && temporalElements.subsequent_functions.length > 0) {
-    searchMethod = 'specific_sequence';
-    sqlFunction = `temporal_career_search_${organizationName}`;
-  }
-  
   const primaryConfig: TemporalConfig = {
     type: 'temporal',
     temporalElements,
-    sqlFunction,
     sqlParameters: mapTemporalParameters(temporalElements)
   };
   
@@ -1259,18 +1242,15 @@ async function processTemporalSearchWithExpansion(
     
     // Determine search method for this variant
     let variantSearchMethod = 'general_filter';
-    let variantSqlFunction = `temporal_filter_search_${organizationName}`;
     
     if (variant.temporalElements.exit_year && variant.temporalElements.subsequent_functions && variant.temporalElements.subsequent_functions.length > 0) {
       variantSearchMethod = 'specific_sequence';
-      variantSqlFunction = `temporal_career_search_${organizationName}`;
     }
     
     return {
       type: 'temporal',
       temporalElements: variant.temporalElements,
       searchMethod: variantSearchMethod,
-      sqlFunction: variantSqlFunction,
       sqlParameters: mapTemporalParameters(variant.temporalElements)
     };
   });
@@ -1311,20 +1291,12 @@ async function processTemporalSearch(
   
   // Step 4: SQL configuration
   console.log(`[PIPELINE TEMPORAL] 🔧 Step 4: SQL configuration`);
-  let searchMethod = 'general_filter';
-  let sqlFunction = `temporal_filter_search_${organizationName}`;
-  
-  if (temporalElements.exit_year && temporalElements.subsequent_functions && temporalElements.subsequent_functions.length > 0) {
-    searchMethod = 'specific_sequence';
-    sqlFunction = `temporal_career_search_${organizationName}`;
-  }
   
   console.log(`[PIPELINE TEMPORAL] ✅ 4-step temporal pipeline complete`);
   
   return {
     type: 'temporal',
     temporalElements,
-    sqlFunction,
     sqlParameters: mapTemporalParameters(temporalElements)
   };
 }
@@ -1524,7 +1496,6 @@ async function processChronologicalSearch(
   const searchConfig: ChronologicalConfig = {
     type: 'chronological',
     filters: filters,
-    sqlFunction: 'chronological_search_function_chick_fil_a',
     sqlParameters: {
       chronological_filters: filters
     }
@@ -1534,9 +1505,8 @@ async function processChronologicalSearch(
     step1_classification: classification.type,
     step2_mapping: `${mappingResult.transformations.length} transformations`,
     step3_translation: `${Object.keys(filters).length} filters`,
-    step4_sql: searchConfig.sqlFunction,
     totalProcessingTime: (mappingDuration + translationDuration) + 'ms',
-    readyForExecution: !!(searchConfig.filters && searchConfig.sqlFunction)
+    readyForExecution: !!searchConfig.filters
   });
   
   return searchConfig;
@@ -1565,7 +1535,6 @@ async function processChronologicalSearchWithExpansion(
   const primaryConfig: ChronologicalConfig = {
     type: 'chronological',
     filters: filters,
-    sqlFunction: `chronological_search_function_${organizationName}`,
     sqlParameters: {
       chronological_filters: filters
     }
@@ -1585,7 +1554,6 @@ async function processChronologicalSearchWithExpansion(
     return {
       type: 'chronological',
       filters: variant.filters,
-      sqlFunction: `chronological_search_function_${organizationName}`,
       sqlParameters: {
         chronological_filters: variant.filters
       }
@@ -2651,7 +2619,6 @@ function verifyChronologicalSearchIntegration(
     step2_fuzzy_matching_applied: true, // Fuzzy matching is always applied in standardizeQueryTerms
     step3_filters_extracted: !!filters && Object.keys(filters).length > 0,
     step4_organization_configured: !!organizationName,
-    step5_sql_function_ready: `chronological_search_function_${organizationName}`,
     step6_ready_for_execution: !!(query && filters && organizationName)
   });
   
@@ -2659,7 +2626,6 @@ function verifyChronologicalSearchIntegration(
     inputQuery: `"${query}"`,
     extractedFilterCount: Object.keys(filters).length,
     filterTypes: Object.keys(filters),
-    sqlFunction: `chronological_search_function_chick_fil_a`,
     isReadyForDB: !!(filters && Object.keys(filters).length >= 0) // Even empty filters are valid
   });
   
@@ -3314,7 +3280,7 @@ async function translateChronologicalQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await llm.chat.completions.create({
-    model: MODELS.FINE_TUNED ?? MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
+    model: MODELS.FINE_TUNED ?? MODELS.TRANSLATE, // The 2025 fine-tune was deleted; an env override can supply a replacement.
     temperature: 0,
     messages: [
       {
@@ -3435,7 +3401,7 @@ async function translateTemporalQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await llm.chat.completions.create({
-    model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
+    model: MODELS.TRANSLATE, // Use the prompt-only translator after the 2025 fine-tune was deleted.
     temperature: 0,
     messages: [
       {
@@ -3495,7 +3461,7 @@ async function translateStandardQueryWithFineTuning(
   const translationStartTime = Date.now();
 
   const response = await llm.chat.completions.create({
-    model: MODELS.TRANSLATE, // This will be replaced with fine-tuned model later
+    model: MODELS.TRANSLATE, // Use the prompt-only translator after the 2025 fine-tune was deleted.
     temperature: 0,
     messages: [
       {

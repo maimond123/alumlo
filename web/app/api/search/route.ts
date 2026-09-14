@@ -19,7 +19,7 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = SEARCH_TIMEOUT_
   });
 };
 
-// NEW: Debug collector for production debugging
+// Collect response diagnostics in development; server logging stays enabled.
 class DebugCollector {
   private logs: string[] = [];
   private enabled: boolean = false;
@@ -64,8 +64,8 @@ class DebugCollector {
 }
 
 export async function POST(req: NextRequest) {
-  // Enable debug mode for production testing
-  const debug = new DebugCollector(true);
+  const debugEnabled = process.env.NODE_ENV !== 'production';
+  const debug = new DebugCollector(debugEnabled);
   
   debug.log('[API] 🏁 POST function called - starting execution...');
   debug.log(`[API SEARCH] 🚀 Search API started at ${new Date().toISOString()}`);
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ 
         results: [],
         error: 'Invalid query parameter',
-        debug: debug.getLogs()
+        ...(debugEnabled ? { debug: debug.getLogs() } : {})
       }, { status: 400 });
     }
 
@@ -154,7 +154,6 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] 🕐 Executing temporal search from pipeline`);
         debug.log(`[API SEARCH] 🕐 DETAILED: Temporal search configuration:`, {
           temporalElements: searchConfig.temporalElements,
-          sqlFunction: searchConfig.sqlFunction,
           organizationName: organizationName
         });
         
@@ -180,7 +179,7 @@ export async function POST(req: NextRequest) {
             resultCount: Array.isArray(results) ? results.length : 0,
             hasResults: !!results && Array.isArray(results),
             isArray: Array.isArray(results),
-            firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none'
+            firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.profile_id : 'none'
           });
           
           debug.log(`[API SEARCH] ✅ Temporal search completed with ${Array.isArray(results) ? results.length : 0} results`);
@@ -188,7 +187,6 @@ export async function POST(req: NextRequest) {
           searchMetadata = {
             search_method: 'temporal_pipeline',
             temporal_elements: searchConfig.temporalElements,
-            sql_function: searchConfig.sqlFunction,
             configuration_source: 'pipeline'
           };
           
@@ -212,7 +210,6 @@ export async function POST(req: NextRequest) {
         debug.log(`[API SEARCH] 📈 Executing chronological search from pipeline`);
         debug.log(`[API SEARCH] 📈 DETAILED: Chronological search configuration:`, {
           filters: searchConfig.filters,
-          sqlFunction: searchConfig.sqlFunction,
           organizationName: organizationName
         });
         
@@ -229,7 +226,6 @@ export async function POST(req: NextRequest) {
           
           // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING - CHRONOLOGICAL
           debug.log(`[API SEARCH] 🔍 EXACT CHRONOLOGICAL FILTERS BEING SENT TO SQL:`, JSON.stringify(searchConfig.filters, null, 2));
-          debug.log(`[API SEARCH] 🔍 CHRONOLOGICAL SQL FUNCTION CALL: ${searchConfig.sqlFunction}(chronological_filters: ${JSON.stringify(searchConfig.filters)}, limit_count: 50)`);
           debug.log(`[API SEARCH] 🎯 FUZZY MATCHING BENEFITS: These filters were enhanced through fuzzy term matching for better database compatibility`);
           
           // Execute primary search only (expansion will be handled separately)
@@ -247,8 +243,7 @@ export async function POST(req: NextRequest) {
             resultCount: Array.isArray(results) ? results.length : 0,
             hasResults: !!results && Array.isArray(results),
             isArray: Array.isArray(results),
-            firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none',
-            sqlFunction: searchConfig.sqlFunction,
+            firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.profile_id : 'none',
             filtersUsed: Object.keys(searchConfig.filters || {}),
             queryUsed: query,
             enhancedWithFuzzyMatching: true
@@ -258,7 +253,6 @@ export async function POST(req: NextRequest) {
           searchMetadata = {
             search_method: 'chronological_pipeline_primary',
             filters: searchConfig.filters,
-            sql_function: searchConfig.sqlFunction,
             configuration_source: 'pipeline',
             strict_filtering: true,
             fuzzy_matching_enabled: true,
@@ -290,7 +284,6 @@ export async function POST(req: NextRequest) {
       else if ( searchConfig.type === 'standard') {
         debug.log(`[API SEARCH] 📊 Standard search requested from pipeline`);
         debug.log(`[API SEARCH] 📋 DETAILED: Standard search configuration:`, {
-          rpcFunction: `standard_search_function_${organizationName}`,
           hasFilters: !!searchConfig.enhancedFilters,
           filterKeys: Object.keys(searchConfig.enhancedFilters || {}),
           filterValues: searchConfig.enhancedFilters,
@@ -300,7 +293,6 @@ export async function POST(req: NextRequest) {
         
         // 🔍 DETAILED FILTER LOGGING FOR DEBUGGING
         debug.log(`[API SEARCH] 🔍 EXACT FILTERS BEING SENT TO SQL:`, searchConfig.enhancedFilters);
-        debug.log(`[API SEARCH] 🔍 SQL FUNCTION CALL: standard_search_function_${organizationName}(search_filters: ${JSON.stringify(searchConfig.enhancedFilters)}, limit_count: ${top_k})`);
         
         // Call the standardSearch with the enhanced filters
         const startTime = performance.now();
@@ -332,8 +324,7 @@ export async function POST(req: NextRequest) {
           resultCount: Array.isArray(results) ? results.length : 0,
           hasResults: !!results && Array.isArray(results),
           isArray: Array.isArray(results),
-          firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.id : 'none',
-          sqlFunction: `standard_search_function_${organizationName}`,
+          firstResultId: Array.isArray(results) && results.length > 0 ? results[0]?.profile_id : 'none',
           filtersUsed: Object.keys(searchConfig.enhancedFilters || {}),
           queryUsed: query
         });
@@ -345,7 +336,6 @@ export async function POST(req: NextRequest) {
           enhanced_filters: searchConfig.enhancedFilters,
           filter_count: Object.keys(searchConfig.enhancedFilters || {}).length,
           configuration_source: 'pipeline',
-          sql_function: `standard_search_function_${organizationName}`,
           organization_specific: true
         };
         
@@ -376,7 +366,7 @@ export async function POST(req: NextRequest) {
       resultsType: typeof results,
       isArray: Array.isArray(results),
       firstResult: results?.[0] ? {
-        id: results[0].id,
+        profile_id: results[0].profile_id,
         name: results[0].name,
         similarity: results[0].similarity
       } : null,
@@ -392,7 +382,7 @@ export async function POST(req: NextRequest) {
       appliedFilters: effectiveFilters,
       searchMetadata,
       filterCount: Object.keys(effectiveFilters).length,
-      debug: debug.getLogs() // Include all debug logs in response
+      ...(debugEnabled ? { debug: debug.getLogs() } : {})
     });
   } catch (error: unknown) {
     debug.error('[API] Error in search:', error);
@@ -415,7 +405,7 @@ export async function POST(req: NextRequest) {
       error: 'Search failed', 
       details: errorMessage,
       stack: errorStack,
-      debug: debug.getLogs() // Include all debug logs even on error
+      ...(debugEnabled ? { debug: debug.getLogs() } : {})
     }, { status: 200 }); // Using 200 to ensure client gets the response
   }
 }

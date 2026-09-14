@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useInView } from 'react-intersection-observer'
-import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart, FileText, ArrowRight, ChevronLeft, ChevronRight, Search, Check, UserCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Search, Check } from 'lucide-react'
 import Image from 'next/image'
 
 // Suggestion tags for the slot machine animation

@@ -149,7 +149,7 @@ export default function Sidebar() {
           <Link
             href="/settings"
             className={`flex items-center transition-all duration-300 ease-in-out relative ${
-              pathname === '/settings' ? 'text-yellow-515' : 'text-black/90 hover:text-black'
+              pathname === '/settings' ? 'text-golden-yellow' : 'text-black/90 hover:text-black'
             }`}
             style={{ transform: isSidebarOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
           >
@@ -229,10 +229,10 @@ function SidebarLink({
       className="flex items-center text-black/90 hover:text-black mb-12 transition-all duration-300 ease-in-out relative"
       style={{ transform: isOpen ? "translateX(1rem)" : "translateX(0.75rem)" }}
     >
-      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-yellow-515' : ''}`} />
+      <Icon className={`w-8 h-8 shrink-0 ${isActive ? 'text-golden-yellow' : ''}`} />
       <span
         className={`ml-3 text-lg transition-all duration-300 ease-in-out origin-left overflow-hidden whitespace-nowrap ${
-          isActive ? 'text-yellow-515 font-semibold' : ''
+          isActive ? 'text-golden-yellow font-semibold' : ''
         }`}
         style={{ opacity: isOpen ? 1 : 0, width: isOpen ? "auto" : 0 }}
       >

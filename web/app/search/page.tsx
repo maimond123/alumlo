@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Search, Loader2, CheckCircle, AlertCircle, Bookmark as BookmarkIcon, BrainCog, Filter, Database, LayoutGrid, MessageSquare, ChevronUp, ChevronDown, RefreshCw, Download } from "lucide-react"
+import { Search, Loader2, AlertCircle, BrainCog, Filter, Database, LayoutGrid, ChevronUp, ChevronDown, RefreshCw, Download } from "lucide-react"
 import Sidebar from "../../components/Sidebar"
 import { useSidebar } from "../../components/SidebarProvider"
 import { motion, AnimatePresence } from "framer-motion"
@@ -101,7 +101,7 @@ const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: strin
   const filterMapping: {[key: string]: {field: keyof SearchResult | ((r: SearchResult) => string)}} = {
     'Job Functions': { field: 'current_job_function' },
     'Job Levels': { field: 'current_job_level' },
-    'Industries': { field: (r: SearchResult) => r.post_company_current_industry || r.industry || r.current_industry || '' },
+    'Industries': { field: (r: SearchResult) => r.post_company_current_industry || r.industry || '' },
     'Company Names': { field: (r: SearchResult) => r.post_company_current_company || r.current_company || '' },
     'Locations': { field: (r: SearchResult) => r.current_job_location || r.post_company_current_location || '' },
     'Degree Levels': { field: 'highest_degree_level' },
@@ -160,16 +160,15 @@ const getMatchingFilters = (result: SearchResult, extractedFilters: {[key: strin
 
 // Helper function to ensure search result compatibility
 const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
-  const mappedResults = results.map((result, index) => {
+  const mappedResults = results.map((result) => {
     const mapped = {
       ...result,
-      // Ensure new fields exist with fallbacks to legacy fields
-      profile_url: result.profile_url || result.linkedin_url || '',
-      picture_url: result.picture_url || result.profile_photo_url,
-      industry: result.industry || result.current_industry || '',
+      // Normalize display fields; current company/title/location come from search_profiles.
+      profile_url: result.profile_url || '',
+      industry: result.industry || '',
       post_company_current_company: result.post_company_current_company || result.current_company || '',
       post_company_current_title: result.post_company_current_title || result.current_title || '',
-      post_company_current_industry: result.post_company_current_industry || result.current_industry || '',
+      post_company_current_industry: result.post_company_current_industry || '',
       post_company_current_location: result.post_company_current_location || result.current_job_location || '',
       current_job_level: result.current_job_level || '',
       current_job_function: result.current_job_function || '',
@@ -209,15 +208,10 @@ const ensureSearchResultCompatibility = (results: any[]): SearchResult[] => {
       functional_expertise: result.functional_expertise || [],
       industry_expertise: result.industry_expertise || [],
       
-      // Keep legacy fields for backward compatibility
-      linkedin_url: result.linkedin_url || result.profile_url || '',
+      // Current profile details and location fallback
       current_company: result.current_company || result.post_company_current_company || '',
       current_title: result.current_title || result.post_company_current_title || '',
-      current_industry: result.current_industry || result.post_company_current_industry || result.industry || '',
-      current_general_industry: result.current_general_industry || '',
       current_job_location: result.current_job_location || result.post_company_current_location || '',
-      years_experience: result.years_experience || 0,
-      profile_photo_url: result.profile_photo_url || result.picture_url,
       home_location: result.home_location || ''
     };
     
@@ -309,7 +303,6 @@ export default function DashboardPage() {
     filters: '',
     displaying: ''
   });
-  const [expandedQueries, setExpandedQueries] = useState<string[]>([]);
   const [extractedFilters, setExtractedFilters] = useState<{[key: string]: string[]}>({});
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -944,8 +937,12 @@ export default function DashboardPage() {
         );
         
         // Combine initial and expansion results (remove duplicates by ID)
-        const seenIds = new Set(initialSearchResults.map(r => r.id));
-        const uniqueExpansionResults = allExpansionResults.filter((r: any) => !seenIds.has(r.id));
+        const seenIds = new Set(initialSearchResults.map(r => r.profile_id));
+        const uniqueExpansionResults = allExpansionResults.filter((r: SearchResult) => {
+          if (seenIds.has(r.profile_id)) return false;
+          seenIds.add(r.profile_id);
+          return true;
+        });
         const allResults = [...initialSearchResults, ...uniqueExpansionResults];
         const compatibleAllResults = ensureSearchResultCompatibility(allResults);
         
@@ -1093,7 +1090,6 @@ export default function DashboardPage() {
     setSearchResults([]);
     setSearchPhase('idle');
     setError(null);
-    setExpandedQueries([]);
     setExtractedFilters({});
     setDisplayedText({
       analyzing: '',
@@ -1468,12 +1464,12 @@ export default function DashboardPage() {
                     
                     // Add debugging for match highlights
                     // Use compatible field access
-                    const profileUrl = result.profile_url || result.linkedin_url || '';
-                    const profilePhotoUrl = result.picture_url || result.profile_photo_url;
+                    const profileUrl = result.profile_url || '';
+                    const profilePhotoUrl = result.picture_url;
                     
                     return (
                       <div
-                        key={result.id || index}
+                        key={result.profile_id}
                         className={`block p-8 bg-white border border-black rounded-lg hover:shadow-lg transition-all duration-300 relative group hover:bg-gray-50 hover:border-emerald-500 ${
                           profileUrl ? 'cursor-pointer' : ''
                         }`}
