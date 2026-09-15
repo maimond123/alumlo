@@ -18,7 +18,9 @@ Ultimately, I stopped working on Alumlo because I wanted to focus more on buildi
 
 I still think alumni outcomes have merit as a business. I was able to get large organizations to demo Alumlo on my own, which suggests the problem was worth their attention. That interest didn't turn into a sale, but I think a larger team and better search could make the idea worth pursuing again.
 
-I returned to the code in September 2026 to get the demo running again and clean up the repository. The original database was gone, so I rebuilt storage around Postgres and pgvector. The demo now uses 500 profiles with generated names and no profile URLs or photos. The full LinkedIn-derived dataset is not included in this repository.
+I returned to the code in September 2026 to get the demo running again and clean up the repository. The original database was gone, so I rebuilt storage around Postgres and pgvector. The hosted demo uses 500 profiles with generated names. The sample shipped in this repository is fully synthetic: its people, dates, and career histories are generated independently of the LinkedIn data. Company and school names are example search terms, not claims about their actual alumni.
+
+The original LinkedIn-derived dataset is not included. The Git history has also been cleaned of old credentials, profile exports, and internal planning notes. The 2025 development dates are preserved.
 
 ## How it works
 
@@ -43,7 +45,7 @@ There are no user accounts in the demo. Recent searches and chats are stored in 
 
 ## Run locally
 
-You need Node.js with npm, Python 3.10 or later, Docker Compose, and an OpenRouter API key for the model calls. Run these commands from the repository root.
+You need Node.js 22.13 or later with npm, Python 3.10 or later, Docker Compose, and an OpenRouter API key for the model calls. Run these commands from the repository root.
 
 Create a `.env` file with these two entries, replacing the API key:
 
@@ -78,7 +80,9 @@ npm ci
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). To check the production build, run `npm run build` from `web/`.
+Open [localhost:3000](http://localhost:3000). Run `npm run build`, `npm run typecheck`, and `npm run lint` from `web/` to check the app.
+
+Regenerate the sample with `python ingest/generate_sample.py`. Run its privacy and ingestion checks with `python -m unittest discover -s ingest -p 'test_*.py'` from the repository root, with the Python environment activated.
 
 See [deployment notes](docs/deploying.md) for hosting the app and using a managed database.
 

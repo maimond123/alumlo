@@ -293,7 +293,7 @@ export default function FeaturesSection() {
                 <h2 className="text-[42px] font-bold text-black mb-4">Find your Alumni with natural language</h2>
               </div>
               <p className="text-xl text-gray-700 mt-auto">
-                Use alumni search to find unique marketable stories that showcase your organization's impact. No more relying on self-reported data and complex filters for alumni outreach.
+                Use alumni search to find unique marketable stories that showcase your organization&apos;s impact. No more relying on self-reported data and complex filters for alumni outreach.
               </p>
             </div>
           </motion.div>

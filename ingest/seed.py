@@ -7,7 +7,7 @@ the tenant company.
 
 Columns that the 2025 pipeline produced with LLM calls -- career_stage,
 current_job_level, salary estimates, the expertise arrays -- are left null.
-They are enrichment, and enrichment is a separate stage (ingest/enrich.py).
+They require a separate enrichment stage, which is not included here.
 The embedding column is also left null; it needs an embedding model.
 
 Usage:
@@ -141,26 +141,49 @@ LAST = ["Hartley", "Vance", "Okafor", "Delgado", "Whitfield", "Nakamura", "Bran"
 
 
 def pseudonymize(p: dict, rng: random.Random) -> dict:
-    """Replace identity while preserving every field search actually ranks on.
+    """Remove direct identifiers and free text using an explicit field allowlist.
 
-    Relevance rides on titles, companies, schools and dates, so scrambling
-    names and stripping URLs and photos changes nothing measurable.
+    Career histories can still identify someone. This is for private analysis;
+    generate_sample.py creates the public fixture independently of real records.
     """
-    p = json.loads(json.dumps(p))
-    bi = p.setdefault("basic_info", {})
+    def date(value):
+        if not isinstance(value, dict):
+            return None
+        return {"year": year_of(value),
+                "month": value.get("month") if value.get("month") in MONTHS else None}
+
+    experience = []
+    for entry in p.get("experience") or []:
+        if not isinstance(entry, dict):
+            continue
+        start, end = date(entry.get("start_date")), date(entry.get("end_date"))
+        experience.append({
+            **{key: entry.get(key) for key in ("company", "title", "location")},
+            "start_date": start,
+            "end_date": end,
+            "is_current": bool(entry.get("is_current")),
+            "duration": f"{year_of(start) or '?'}-{year_of(end) or 'present'}",
+        })
+    education = [
+        {"school": e.get("school"), "degree": e.get("degree"),
+         "start_date": date(e.get("start_date")), "end_date": date(e.get("end_date"))}
+        for e in p.get("education") or [] if isinstance(e, dict)
+    ]
     fake = f"{rng.choice(FIRST)} {rng.choice(LAST)}"
-    bi["fullname"] = fake
-    bi["first_name"], bi["last_name"] = fake.split()
-    bi["profile_picture_url"] = None
-    bi["public_identifier"] = None
-    bi["about"] = None
-    p["original_url"] = None
-    p["original_username"] = None
-    for e in p.get("experience", []):
-        e.pop("company_logo_url", None)
-    for e in p.get("education", []):
-        e.pop("school_logo_url", None)
-    return p
+    current = next((e for e in experience if e["is_current"]), {})
+    location = ((p.get("basic_info") or {}).get("location") or {}).get("full")
+    return {
+        "basic_info": {
+            "fullname": fake,
+            "first_name": fake.split()[0],
+            "last_name": fake.split()[1],
+            "headline": f"{current['title']} at {current['company']}"
+                        if current.get("title") and current.get("company") else None,
+            "location": {"full": location},
+        },
+        "experience": experience,
+        "education": education,
+    }
 
 
 def to_row(p: dict, tenant_id: int, tenant_key: str, idx: int) -> dict:

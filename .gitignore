@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 .venv/
+__pycache__/
+*.pyc
+.vscode/
 .next/
 out/
 build/

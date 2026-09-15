@@ -1435,7 +1435,7 @@ export default function DashboardPage() {
                                 onClick={() => handleTagClick(suggestion)}
                                 className="block w-full text-left px-3 py-2 bg-white border border-red-200 rounded-md hover:border-red-300 hover:bg-red-50 transition-colors text-red-700"
                               >
-                                "{suggestion}"
+                                &quot;{suggestion}&quot;
                               </button>
                             ))}
                           </div>
